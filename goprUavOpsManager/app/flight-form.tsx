@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 import { FlightService } from '../services/flightService';
 import { DroneService } from '../services/droneService';
-import { Flight } from '../types/Flight';
 import { Drone } from '../types/Drone';
 
 interface FlightFormData {
@@ -50,14 +49,7 @@ export default function FlightFormScreen() {
     conditions: '',
   });
 
-  useEffect(() => {
-    fetchDrones();
-    if (isEditing && id && typeof id === 'string') {
-      fetchFlight(id);
-    }
-  }, [id, user]);
-
-  const fetchDrones = async () => {
+  const fetchDrones = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -71,9 +63,9 @@ export default function FlightFormScreen() {
     } finally {
       setDronesLoading(false);
     }
-  };
+  }, [user]);
 
-  const fetchFlight = async (flightId: string) => {
+  const fetchFlight = useCallback(async (flightId: string) => {
     if (!user) return;
 
     try {
@@ -102,7 +94,14 @@ export default function FlightFormScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, router]);
+
+  useEffect(() => {
+    fetchDrones();
+    if (isEditing && id && typeof id === 'string') {
+      fetchFlight(id);
+    }
+  }, [fetchDrones, fetchFlight, isEditing, id]);
 
   const updateFormData = (field: keyof FlightFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
