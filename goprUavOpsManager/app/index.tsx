@@ -1,6 +1,5 @@
 import React from "react";
-import { Text, View, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Text, View, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { signOut } from "firebase/auth";
 import { useAuth } from "../contexts/AuthContext";
 import { auth } from "../firebaseConfig";
@@ -58,7 +57,7 @@ export default function Index() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>GOPR UAV Ops Manager</Text>
         <Text style={styles.welcomeText}>Welcome, {user.email}</Text>
@@ -100,7 +99,7 @@ export default function Index() {
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutButtonText}>Sign Out</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </ScrollView>
   );
 }
 

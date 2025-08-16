@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 import { FlightService } from '../services/flightService';
@@ -129,7 +130,8 @@ export default function FlightsListScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+    <View>
       <View style={styles.header}>
         <TouchableOpacity style={styles.addButton} onPress={handleAddFlight}>
           <Text style={styles.addButtonText}>+ Add Flight</Text>
@@ -155,6 +157,7 @@ export default function FlightsListScreen() {
         />
       )}
     </View>
+    </SafeAreaView>
   );
 }
 
