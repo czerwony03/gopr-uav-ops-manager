@@ -3,14 +3,14 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 // Firebase configuration
-// Replace these values with your actual Firebase project configuration
 const firebaseConfig = {
-  apiKey: "your-api-key",
-  authDomain: "your-project-id.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project-id.appspot.com",
-  messagingSenderId: "your-sender-id",
-  appId: "your-app-id"
+  apiKey: "AIzaSyCjOcNPEYj3PSOA4VFY1wakalJmEYBdFlY",
+  authDomain: "gopr-uav-ops-manager.firebaseapp.com",
+  projectId: "gopr-uav-ops-manager",
+  storageBucket: "gopr-uav-ops-manager.firebasestorage.app",
+  messagingSenderId: "23394650584",
+  appId: "1:23394650584:web:53c833aa191391734a4aad",
+  measurementId: "G-RMHQ02Q0KX"
 };
 
 // Initialize Firebase
