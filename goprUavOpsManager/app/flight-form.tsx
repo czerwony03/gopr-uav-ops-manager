@@ -335,6 +335,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    minHeight: '100vh' as any,
+    overflow: 'auto' as any,
   },
   contentContainer: {
     padding: 16,
