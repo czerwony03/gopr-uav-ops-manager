@@ -8,7 +8,10 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
@@ -214,119 +217,126 @@ export default function FlightFormScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Flight Information</Text>
-        
-        <Text style={styles.label}>Date *</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.date}
-          onChangeText={(value) => updateFormData('date', value)}
-          placeholder="YYYY-MM-DD"
-        />
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView contentContainerStyle={styles.contentContainer}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Flight Information</Text>
+            
+            <Text style={styles.label}>Date *</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.date}
+              onChangeText={(value) => updateFormData('date', value)}
+              placeholder="YYYY-MM-DD"
+            />
 
-        <Text style={styles.label}>Location *</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.location}
-          onChangeText={(value) => updateFormData('location', value)}
-          placeholder="Enter flight location"
-        />
+            <Text style={styles.label}>Location *</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.location}
+              onChangeText={(value) => updateFormData('location', value)}
+              placeholder="Enter flight location"
+            />
 
-        <Text style={styles.label}>Flight Category *</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.flightCategory}
-          onChangeText={(value) => updateFormData('flightCategory', value)}
-          placeholder="Enter flight category"
-        />
+            <Text style={styles.label}>Flight Category *</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.flightCategory}
+              onChangeText={(value) => updateFormData('flightCategory', value)}
+              placeholder="Enter flight category"
+            />
 
-        <Text style={styles.label}>Operation Type *</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.operationType}
-          onChangeText={(value) => updateFormData('operationType', value)}
-          placeholder="Enter operation type"
-        />
+            <Text style={styles.label}>Operation Type *</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.operationType}
+              onChangeText={(value) => updateFormData('operationType', value)}
+              placeholder="Enter operation type"
+            />
 
-        <Text style={styles.label}>Activity Type *</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.activityType}
-          onChangeText={(value) => updateFormData('activityType', value)}
-          placeholder="Enter activity type"
-        />
+            <Text style={styles.label}>Activity Type *</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.activityType}
+              onChangeText={(value) => updateFormData('activityType', value)}
+              placeholder="Enter activity type"
+            />
 
-        <Text style={styles.label}>Drone *</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={formData.droneId}
-            onValueChange={(value) => updateFormData('droneId', value)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Select a drone" value="" />
-            {drones.map((drone) => (
-              <Picker.Item
-                key={drone.id}
-                label={`${drone.name} (${drone.callSign})`}
-                value={drone.id}
-              />
-            ))}
-          </Picker>
-        </View>
+            <Text style={styles.label}>Drone *</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={formData.droneId}
+                onValueChange={(value) => updateFormData('droneId', value)}
+                style={styles.picker}
+              >
+                <Picker.Item label="Select a drone" value="" />
+                {drones.map((drone) => (
+                  <Picker.Item
+                    key={drone.id}
+                    label={`${drone.name} (${drone.callSign})`}
+                    value={drone.id}
+                  />
+                ))}
+              </Picker>
+            </View>
 
-        <Text style={styles.label}>Start Time *</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.startTime}
-          onChangeText={(value) => updateFormData('startTime', value)}
-          placeholder="HH:mm"
-        />
+            <Text style={styles.label}>Start Time *</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.startTime}
+              onChangeText={(value) => updateFormData('startTime', value)}
+              placeholder="HH:mm"
+            />
 
-        <Text style={styles.label}>End Time *</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.endTime}
-          onChangeText={(value) => updateFormData('endTime', value)}
-          placeholder="HH:mm"
-        />
+            <Text style={styles.label}>End Time *</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.endTime}
+              onChangeText={(value) => updateFormData('endTime', value)}
+              placeholder="HH:mm"
+            />
 
-        <Text style={styles.label}>Conditions</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          value={formData.conditions}
-          onChangeText={(value) => updateFormData('conditions', value)}
-          placeholder="Weather and flight conditions (optional)"
-          multiline
-          numberOfLines={3}
-        />
-      </View>
+            <Text style={styles.label}>Conditions</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={formData.conditions}
+              onChangeText={(value) => updateFormData('conditions', value)}
+              placeholder="Weather and flight conditions (optional)"
+              multiline
+              numberOfLines={3}
+            />
+          </View>
 
-      <View style={styles.actionButtons}>
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={handleCancel}
-          disabled={loading}
-        >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.submitButton, loading && styles.disabledButton]}
-          onPress={handleSave}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.submitButtonText}>
-              {isEditing ? 'Update Flight' : 'Create Flight'}
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={handleCancel}
+              disabled={loading}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.submitButton, loading && styles.disabledButton]}
+              onPress={handleSave}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.submitButtonText}>
+                  {isEditing ? 'Update Flight' : 'Create Flight'}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -334,10 +344,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-    minHeight: '100vh' as any,
-    overflow: 'auto' as any,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   contentContainer: {
+    flexGrow: 1,
     padding: 16,
   },
   loadingContainer: {
