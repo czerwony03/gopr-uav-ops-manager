@@ -31,6 +31,32 @@ export default function RootLayout() {
             },
           }}
         />
+        <Stack.Screen
+          name="flights-list"
+          options={{
+            title: "Flights",
+            headerStyle: {
+              backgroundColor: '#0066CC',
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}
+        />
+        <Stack.Screen
+          name="flight-form"
+          options={{
+            title: "Flight",
+            headerStyle: {
+              backgroundColor: '#0066CC',
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}
+        />
       </Stack>
     </AuthProvider>
   );
