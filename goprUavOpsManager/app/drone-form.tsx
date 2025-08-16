@@ -162,14 +162,17 @@ export default function DroneFormScreen() {
     }));
   };
 
-  const updateNestedFormData = (parent: string, field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [parent]: {
-        ...prev[parent as keyof DroneFormData],
-        [field]: value,
-      },
-    }));
+  const updateNestedFormData = (parent: keyof DroneFormData, field: string, value: any) => {
+    setFormData(prev => {
+      const parentObj = prev[parent] as Record<string, any>;
+      return {
+        ...prev,
+        [parent]: {
+          ...parentObj,
+          [field]: value,
+        },
+      };
+    });
   };
 
   if (initialLoading) {
