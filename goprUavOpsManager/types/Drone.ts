@@ -3,7 +3,7 @@ export interface Drone {
   name: string;
   location: string;
   registrationNumber: string;
-  totalFlightTime: number; // in hours
+  totalFlightTime: number; // in hours - TODO: will be calculated based on flights list in the future
   equipmentRegistrationNumber: string;
   yearOfCommissioning: number;
   yearOfManufacture: number;
