@@ -57,7 +57,7 @@ export default function FlightFormScreen() {
 
     try {
       const fetchedDrones = await DroneService.getDrones(user.role);
-      // Filter out deleted drones
+      // Filter out deleted drones for flight creation (applies to all users including admins)
       const availableDrones = fetchedDrones.filter(drone => !drone.isDeleted);
       setDrones(availableDrones);
     } catch (error) {

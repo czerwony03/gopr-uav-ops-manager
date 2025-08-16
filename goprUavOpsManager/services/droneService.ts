@@ -30,7 +30,7 @@ export class DroneService {
         // Users and managers only see non-deleted drones
         q = query(
           dronesCollection, 
-          where('isDeleted', '!=', true),
+          where('isDeleted', '==', false),
           orderBy('createdAt', 'desc')
         );
       }
