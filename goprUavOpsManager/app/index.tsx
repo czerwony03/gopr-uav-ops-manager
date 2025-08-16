@@ -108,6 +108,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
     padding: 20,
+    minHeight: '100vh' as any,
+    overflow: 'auto' as any,
   },
   loadingContainer: {
     flex: 1,
