@@ -186,14 +186,16 @@ export default function FlightFormScreen() {
 
       if (isEditing && id && typeof id === 'string') {
         await FlightService.updateFlight(id, flightData, user.role, user.uid);
-        Alert.alert('Success', 'Flight updated successfully', [
-          { text: 'OK', onPress: () => router.back() }
-        ]);
+        // Navigate back immediately after successful update
+        router.back();
+        // Show success alert without blocking navigation
+        Alert.alert('Success', 'Flight updated successfully');
       } else {
         await FlightService.createFlight(flightData, user.uid, user.email);
-        Alert.alert('Success', 'Flight created successfully', [
-          { text: 'OK', onPress: () => router.back() }
-        ]);
+        // Navigate back immediately after successful creation
+        router.back();
+        // Show success alert without blocking navigation
+        Alert.alert('Success', 'Flight created successfully');
       }
     } catch (error) {
       console.error('Error saving flight:', error);
