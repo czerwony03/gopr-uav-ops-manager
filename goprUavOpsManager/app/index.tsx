@@ -1,13 +1,14 @@
-import React from "react";
-import { Text, View, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
-import { signOut } from "firebase/auth";
-import { useAuth } from "../contexts/AuthContext";
-import { auth } from "../firebaseConfig";
+import React, { useState } from "react";
+import { Text, View, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import { useAuth, UserData } from "../contexts/AuthContext";
 import LoginScreen from "../screens/LoginScreen";
-import { Link } from "expo-router";
 
 export default function Index() {
   const { user, loading } = useAuth();
+  const [testUser, setTestUser] = useState<UserData | null>(null);
+
+  // Use test user if available, otherwise use real auth user
+  const currentUser = testUser || user;
 
   if (loading) {
     return (
@@ -18,17 +19,9 @@ export default function Index() {
     );
   }
 
-  if (!user) {
-    return <LoginScreen />;
+  if (!currentUser) {
+    return <LoginScreen onTestUserSelected={setTestUser} />;
   }
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -60,7 +53,7 @@ export default function Index() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>GOPR UAV Ops Manager</Text>
-        <Text style={styles.welcomeText}>Welcome, {user.email}</Text>
+        <Text style={styles.welcomeText}>Welcome, {currentUser.email}</Text>
       </View>
 
       <View style={styles.roleContainer}>
@@ -78,27 +71,14 @@ export default function Index() {
         ))}
       </View>
 
-      <View style={styles.actionContainer}>
-        <Link href="/drones-list" asChild>
-          <TouchableOpacity style={styles.actionButton}>
-            <Text style={styles.actionButtonText}>View Drones List</Text>
-          </TouchableOpacity>
-        </Link>
-
-        <Link href="/flights-list" asChild>
-          <TouchableOpacity style={styles.actionButton}>
-            <Text style={styles.actionButtonText}>View Flights</Text>
-          </TouchableOpacity>
-        </Link>
-
+      <View style={styles.infoContainer}>
         <Text style={styles.infoText}>
-          Additional role-based functionality will be implemented based on your {user.role} permissions.
+          Use the menu (☰) to navigate between different sections of the app.
+        </Text>
+        <Text style={styles.infoSubtext}>
+          Additional role-based functionality is available based on your {currentUser.role} permissions.
         </Text>
       </View>
-
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>Sign Out</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -174,7 +154,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: '#555',
   },
-  actionContainer: {
+  infoContainer: {
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     padding: 20,
@@ -190,43 +170,16 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 16,
-    color: '#666',
+    color: '#333',
     textAlign: 'center',
     lineHeight: 24,
-    marginTop: 15,
+    fontWeight: '500',
   },
-  actionButton: {
-    backgroundColor: '#0066CC',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 2,
-  },
-  actionButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  logoutButton: {
-    backgroundColor: '#FF6B6B',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-    marginTop: 'auto',
-    marginBottom: 40,
-  },
-  logoutButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+  infoSubtext: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginTop: 10,
   },
 });

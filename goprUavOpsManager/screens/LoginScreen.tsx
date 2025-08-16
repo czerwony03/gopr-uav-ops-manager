@@ -10,11 +10,18 @@ import {
 } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
+import TestUserSelector from '../components/TestUserSelector';
+import { UserRole } from '../contexts/AuthContext';
 
-export default function LoginScreen() {
+interface LoginScreenProps {
+  onTestUserSelected?: (user: { uid: string; email: string; role: UserRole }) => void;
+}
+
+export default function LoginScreen({ onTestUserSelected }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [testMode, setTestMode] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -33,6 +40,10 @@ export default function LoginScreen() {
       setLoading(false);
     }
   };
+
+  if (testMode && onTestUserSelected) {
+    return <TestUserSelector onUserSelected={onTestUserSelected} />;
+  }
 
   return (
     <View style={styles.container}>
@@ -75,6 +86,13 @@ export default function LoginScreen() {
         <Text style={styles.infoText}>
           Contact your administrator for account access
         </Text>
+
+        <TouchableOpacity
+          style={styles.testModeButton}
+          onPress={() => setTestMode(true)}
+        >
+          <Text style={styles.testModeText}>Demo Mode (Test Navigation)</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -145,5 +163,17 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: '#666',
     fontSize: 14,
+  },
+  testModeButton: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  testModeText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });
