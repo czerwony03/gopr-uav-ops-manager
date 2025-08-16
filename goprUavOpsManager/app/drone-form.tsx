@@ -138,14 +138,16 @@ export default function DroneFormScreen() {
     try {
       if (isEditing && id) {
         await DroneService.updateDrone(id, formData, user.role);
-        Alert.alert('Success', 'Drone updated successfully', [
-          { text: 'OK', onPress: () => router.back() }
-        ]);
+        // Navigate back immediately after successful update
+        router.back();
+        // Show success alert without blocking navigation
+        Alert.alert('Success', 'Drone updated successfully');
       } else {
         await DroneService.createDrone(formData, user.role);
-        Alert.alert('Success', 'Drone created successfully', [
-          { text: 'OK', onPress: () => router.back() }
-        ]);
+        // Navigate back immediately after successful creation
+        router.back();
+        // Show success alert without blocking navigation
+        Alert.alert('Success', 'Drone created successfully');
       }
     } catch (error) {
       console.error('Error saving drone:', error);
