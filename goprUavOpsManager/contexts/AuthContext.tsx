@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, firestore } from '../firebaseConfig';
 
 export type UserRole = 'user' | 'manager' | 'admin';
@@ -45,6 +45,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (userDoc.exists()) {
             const userData = userDoc.data();
             role = userData.role as UserRole || 'user';
+          } else {
+              // Create user document if it doesn't exist
+              await setDoc(userDocRef, {
+                  email: firebaseUser.email || '',
+                  role: role,
+              });
           }
 
           setUser({

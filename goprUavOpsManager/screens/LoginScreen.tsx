@@ -57,6 +57,7 @@ export default function LoginScreen() {
           onChangeText={setPassword}
           secureTextEntry
           autoComplete="password"
+          onSubmitEditing={handleLogin}
         />
 
         <TouchableOpacity
