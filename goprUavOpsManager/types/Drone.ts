@@ -3,7 +3,7 @@ export interface Drone {
   name: string;
   location: string;
   registrationNumber: string;
-  totalFlightTime: number; // in hours - TODO: will be calculated based on flights list in the future
+  totalFlightTime: number; // in minutes - TODO: will be calculated based on flights list in the future
   equipmentRegistrationNumber: string;
   yearOfCommissioning: number;
   yearOfManufacture: number;
@@ -25,4 +25,8 @@ export interface Drone {
   };
   maxSpeed: number; // in km/h
   userManual?: string; // URL to user manual document
+  isDeleted?: boolean; // soft-delete flag
+  deletedAt?: Date; // timestamp when deleted
+  createdAt?: Date; // timestamp when created
+  updatedAt?: Date; // timestamp when last updated
 }
