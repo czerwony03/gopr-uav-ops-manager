@@ -1,0 +1,85 @@
+name: Build Expo Android APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: goprUavOpsManager/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./goprUavOpsManager
+        run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g @expo/eas-cli
+
+      - name: Login to Expo
+        if: ${{ secrets.EXPO_TOKEN != '' }}
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas whoami
+
+      - name: Build Android APK
+        working-directory: ./goprUavOpsManager
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          # Start the build and capture the build ID
+          BUILD_OUTPUT=$(eas build --platform android --profile preview --non-interactive --json)
+          BUILD_ID=$(echo "$BUILD_OUTPUT" | jq -r '.[] | select(.platform == "android") | .id')
+          echo "Build ID: $BUILD_ID"
+          echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
+
+      - name: Wait for build completion
+        working-directory: ./goprUavOpsManager
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          echo "Waiting for build $BUILD_ID to complete..."
+          # Wait for build to finish (timeout after 30 minutes)
+          timeout 1800 bash -c '
+            while true; do
+              STATUS=$(eas build:list --json --limit 10 | jq -r ".[] | select(.id == \"$BUILD_ID\") | .status")
+              echo "Build status: $STATUS"
+              if [ "$STATUS" = "finished" ]; then
+                echo "Build completed successfully!"
+                break
+              elif [ "$STATUS" = "errored" ] || [ "$STATUS" = "canceled" ]; then
+                echo "Build failed with status: $STATUS"
+                exit 1
+              fi
+              sleep 30
+            done
+          '
+
+      - name: Download APK
+        working-directory: ./goprUavOpsManager
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          echo "Downloading APK for build ID: $BUILD_ID"
+          eas build:download $BUILD_ID --output ./build.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: goprUavOpsManager/build.apk
+          retention-days: 30
