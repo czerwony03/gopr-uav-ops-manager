@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { Text, View, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth, UserData } from "../contexts/AuthContext";
 import LoginScreen from "../screens/LoginScreen";
 
 export default function Index() {
   const { user, loading } = useAuth();
+  const [testUser, setTestUser] = useState<UserData | null>(null);
+
+  // Use test user if available, otherwise use real auth user
+  const currentUser = testUser || user;
 
   if (loading) {
     return (
@@ -15,8 +19,8 @@ export default function Index() {
     );
   }
 
-  if (!user) {
-    return <LoginScreen />;
+  if (!currentUser) {
+    return <LoginScreen onTestUserSelected={setTestUser} />;
   }
 
   const getRoleColor = (role: string) => {
@@ -49,7 +53,7 @@ export default function Index() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>GOPR UAV Ops Manager</Text>
-        <Text style={styles.welcomeText}>Welcome, {user.email}</Text>
+        <Text style={styles.welcomeText}>Welcome, {currentUser.email}</Text>
       </View>
 
       <View style={styles.roleContainer}>
@@ -72,7 +76,7 @@ export default function Index() {
           Use the menu (☰) to navigate between different sections of the app.
         </Text>
         <Text style={styles.infoSubtext}>
-          Additional role-based functionality is available based on your {user.role} permissions.
+          Additional role-based functionality is available based on your {currentUser.role} permissions.
         </Text>
       </View>
     </ScrollView>
