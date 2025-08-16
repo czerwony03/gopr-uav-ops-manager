@@ -85,6 +85,12 @@ export default function Index() {
           </TouchableOpacity>
         </Link>
 
+        <Link href="/flights-list" asChild>
+          <TouchableOpacity style={styles.actionButton}>
+            <Text style={styles.actionButtonText}>View Flights</Text>
+          </TouchableOpacity>
+        </Link>
+
         <Text style={styles.infoText}>
           Additional role-based functionality will be implemented based on your {user.role} permissions.
         </Text>
