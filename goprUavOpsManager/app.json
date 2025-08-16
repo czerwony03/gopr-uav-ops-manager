@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "goprUavOpsManager",
-    "slug": "goprUavOpsManager",
+    "slug": "gopr-uav-ops-manager",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -37,6 +37,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "fadd4ce4-2909-4cd4-9f33-ab12c6b9557e"
+      }
+    },
+    "owner": "czerwony03"
   }
 }
