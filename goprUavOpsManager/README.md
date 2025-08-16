@@ -1,12 +1,13 @@
-# GOPR UAV Ops Manager 🚁
+# GOPR UAV Ops Manager
 
-This is an [Expo](https://expo.dev) project for managing UAV (drone) operations for GOPR (Volunteer Mountain Rescue Service).
+This is an [Expo](https://expo.dev) project for managing UAV operations with Firebase authentication and role-based access control.
 
 ## Features
 
-- **Drones List**: View and manage the organization's drone fleet with detailed information stored in Firebase Firestore
-- **Real-time Data**: Automatic synchronization with Firebase Firestore database
-- **Mobile-first**: Built with React Native for iOS and Android support
+- **Firebase Authentication**: Secure email/password authentication
+- **Role-based Access Control**: Three user roles (user, manager, admin) with different capabilities
+- **Firestore Integration**: User roles stored and retrieved from Firestore
+- **React Native/Expo**: Cross-platform mobile application
 
 ## Get started
 
@@ -16,9 +17,25 @@ This is an [Expo](https://expo.dev) project for managing UAV (drone) operations 
    npm install
    ```
 
-2. Configure Firebase (see [Firebase Setup](#firebase-setup) section below)
+2. Configure Firebase
 
-3. Start the app
+   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+   - Enable Authentication with Email/Password provider
+   - Create a Firestore database
+   - Copy your Firebase configuration and update `firebaseConfig.ts`
+
+3. Set up Firestore for user roles
+
+   Create a `users` collection in Firestore with documents structured as:
+   ```
+   Collection: users
+   Document ID: [user_uid]
+   Fields:
+     - email: string
+     - role: string (values: "user", "manager", or "admin")
+   ```
+
+4. Start the app
 
    ```bash
    npx expo start
@@ -31,107 +48,78 @@ In the output, you'll find options to open the app in a
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Firebase Setup Instructions
 
-## Firebase Setup
+### 1. Firebase Project Setup
 
-To enable the drones list functionality, you need to set up Firebase Firestore:
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create a new project or select an existing one
+3. Add your app to the project (iOS/Android/Web)
 
-### 1. Create a Firebase Project
+### 2. Authentication Setup
 
-1. Go to the [Firebase Console](https://console.firebase.google.com/)
-2. Click "Create a project" or select an existing project
-3. Follow the setup wizard to create your project
+1. In Firebase Console, go to Authentication > Sign-in method
+2. Enable "Email/Password" provider
+3. Optionally enable "Email link (passwordless sign-in)" for additional security
 
-### 2. Enable Firestore Database
+### 3. Firestore Setup
 
-1. In your Firebase project console, go to "Firestore Database"
-2. Click "Create database"
-3. Choose "Start in test mode" for development (remember to configure security rules for production)
-4. Select a location for your database
+1. In Firebase Console, go to Firestore Database
+2. Create database (start in test mode for development)
+3. Create a collection called `users`
+4. Add documents with the following structure:
+   ```
+   Document ID: [Firebase Auth UID]
+   {
+     "email": "user@example.com",
+     "role": "admin" // or "manager" or "user"
+   }
+   ```
 
-### 3. Configure the App
+### 4. Firebase Configuration
 
-1. In the Firebase console, go to "Project Settings" (gear icon)
-2. Scroll down to "Your apps" section
-3. Click "Add app" and select the web platform (</>) 
-4. Register your app with a nickname (e.g., "GOPR UAV Ops Manager")
-5. Copy the Firebase configuration object
-
-### 4. Update Firebase Configuration
-
-Replace the placeholder values in `firebaseConfig.ts` with your actual Firebase project configuration:
+Update the `firebaseConfig.ts` file with your project's configuration:
 
 ```typescript
 const firebaseConfig = {
-  apiKey: "your-actual-api-key",
-  authDomain: "your-project.firebaseapp.com", 
-  projectId: "your-actual-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "your-actual-app-id"
+  apiKey: "your-api-key",
+  authDomain: "your-project-id.firebaseapp.com", 
+  projectId: "your-project-id",
+  storageBucket: "your-project-id.appspot.com",
+  messagingSenderId: "your-sender-id",
+  appId: "your-app-id"
 };
 ```
 
-### 5. Add Sample Drone Data
+### 5. Security Rules (Production)
 
-In your Firestore database, create a collection called `drones` and add documents with the following structure:
-
-```json
-{
-  "name": "DJI Mavic 3",
-  "location": "Base Station Alpha",
-  "registrationNumber": "N12345",
-  "totalFlightTime": 125.5,
-  "equipmentRegistrationNumber": "EQ-001-2023",
-  "yearOfCommissioning": 2023,
-  "yearOfManufacture": 2023,
-  "insurance": "Aerocasco",
-  "callSign": "GOPR-01",
-  "weight": 0.895,
-  "maxTakeoffWeight": 0.895,
-  "operatingTime": 46,
-  "range": 15,
-  "dimensions": {
-    "length": 34.7,
-    "width": 28.3,
-    "height": 10.7
-  },
-  "battery": {
-    "type": "LiPo 4S",
-    "capacity": 5000,
-    "voltage": 15.4
-  },
-  "maxSpeed": 75,
-  "userManual": "https://example.com/mavic3-manual.pdf"
-}
-```
-
-### 6. Security Rules (Production)
-
-For production deployment, update your Firestore security rules to restrict access:
+For production, update your Firestore security rules:
 
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Add authentication and authorization rules here
-    match /drones/{document} {
-      allow read, write: if request.auth != null;
+    // Users can read their own document
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Only admins can write user documents
+      allow write: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
   }
 }
 ```
 
-## Get a fresh project
+## User Roles
 
-When you're ready, run:
+- **User**: Basic operations, view assigned tasks, update status
+- **Manager**: Operation management, team oversight, reports viewing, limited user management  
+- **Admin**: Full system access, user management, all operations, system configuration
 
-```bash
-npm run reset-project
-```
+## Development
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
 ## Learn more
 
