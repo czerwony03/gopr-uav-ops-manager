@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 import { FlightService } from '../services/flightService';
 import { Flight } from '../types/Flight';
@@ -21,7 +21,7 @@ export default function FlightsListScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchFlights = async () => {
+  const fetchFlights = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -34,11 +34,20 @@ export default function FlightsListScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchFlights();
-  }, [user]);
+  }, [fetchFlights]);
+
+  // Refresh flights when the screen comes into focus (e.g., returning from flight form)
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        fetchFlights();
+      }
+    }, [fetchFlights, user])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -131,7 +140,7 @@ export default function FlightsListScreen() {
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No flights found</Text>
           <Text style={styles.emptySubtext}>
-            Tap "Add Flight" to create your first flight log
+            Tap &quot;Add Flight&quot; to create your first flight log
           </Text>
         </View>
       ) : (
