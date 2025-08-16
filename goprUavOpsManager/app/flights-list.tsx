@@ -8,6 +8,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -131,32 +132,34 @@ export default function FlightsListScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-    <View>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.addButton} onPress={handleAddFlight}>
-          <Text style={styles.addButtonText}>+ Add Flight</Text>
-        </TouchableOpacity>
-      </View>
-
-      {flights.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No flights found</Text>
-          <Text style={styles.emptySubtext}>
-            Tap &quot;Add Flight&quot; to create your first flight log
-          </Text>
+      <ScrollView>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.addButton} onPress={handleAddFlight}>
+            <Text style={styles.addButtonText}>+ Add Flight</Text>
+          </TouchableOpacity>
         </View>
-      ) : (
-        <FlatList
-          data={flights}
-          renderItem={renderFlightItem}
-          keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          contentContainerStyle={styles.listContainer}
-        />
-      )}
-    </View>
+
+        {flights.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No flights found</Text>
+            <Text style={styles.emptySubtext}>
+              Tap &quot;Add Flight&quot; to create your first flight log
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={flights}
+            renderItem={renderFlightItem}
+            keyExtractor={(item) => item.id}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            contentContainerStyle={styles.listContainer}
+            nestedScrollEnabled={true}
+            scrollEnabled={false}
+          />
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -272,10 +275,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   emptyContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
+    paddingVertical: 60,
+    minHeight: 200,
   },
   emptyText: {
     fontSize: 18,
