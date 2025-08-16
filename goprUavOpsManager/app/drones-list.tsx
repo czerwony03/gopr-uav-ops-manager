@@ -9,6 +9,7 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useRouter } from 'expo-router';
 import { Drone } from '../types/Drone';
 import { useAuth } from '../contexts/AuthContext';
@@ -173,7 +174,7 @@ export default function DronesListScreen() {
   const canCreateDrones = user && (user.role === 'manager' || user.role === 'admin');
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Drones List</Text>
         {canCreateDrones && (
@@ -204,7 +205,7 @@ export default function DronesListScreen() {
           }
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -213,8 +214,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
     padding: 16,
-    minHeight: '100vh' as any,
-    overflow: 'auto' as any,
   },
   header: {
     flexDirection: 'row',

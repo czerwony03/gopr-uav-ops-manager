@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, View, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { signOut } from "firebase/auth";
 import { useAuth } from "../contexts/AuthContext";
 import { auth } from "../firebaseConfig";
@@ -57,7 +58,7 @@ export default function Index() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>GOPR UAV Ops Manager</Text>
         <Text style={styles.welcomeText}>Welcome, {user.email}</Text>
@@ -99,7 +100,7 @@ export default function Index() {
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutButtonText}>Sign Out</Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -108,8 +109,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
     padding: 20,
-    minHeight: '100vh' as any,
-    overflow: 'auto' as any,
   },
   loadingContainer: {
     flex: 1,
