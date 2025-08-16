@@ -121,6 +121,18 @@ export default function FlightFormScreen() {
       }
     }
 
+    // Check if drones are available
+    if (drones.length === 0) {
+      Alert.alert('Validation Error', 'No drones available. Please add drones first.');
+      return false;
+    }
+
+    // Validate selected drone exists
+    if (!drones.find(drone => drone.id === formData.droneId)) {
+      Alert.alert('Validation Error', 'Please select a valid drone');
+      return false;
+    }
+
     // Validate date format (YYYY-MM-DD)
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(formData.date)) {

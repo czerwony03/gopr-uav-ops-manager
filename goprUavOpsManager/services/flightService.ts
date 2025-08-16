@@ -32,11 +32,12 @@ export class FlightService {
         );
       } else {
         // Users only see their own flights
-        // Note: Firestore might require a composite index for this query:
+        // Note: Firestore requires a composite index for this query:
         // Collection: flights, Fields: userId (Ascending), date (Descending), startTime (Descending)
         q = query(
           flightsCollection,
           where('userId', '==', currentUserId),
+          orderBy('userId', 'asc'),
           orderBy('date', 'desc'),
           orderBy('startTime', 'desc')
         );
