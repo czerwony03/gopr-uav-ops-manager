@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link, useRouter } from 'expo-router';
+import { Link, useRouter, useFocusEffect } from 'expo-router';
 import { Drone } from '../types/Drone';
 import { useAuth } from '../contexts/AuthContext';
 import { DroneService } from '../services/droneService';
@@ -43,6 +43,15 @@ export default function DronesListScreen() {
   useEffect(() => {
     fetchDrones();
   }, [fetchDrones]);
+
+  // Refresh drones when the screen comes into focus (e.g., returning from drone form)
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        fetchDrones();
+      }
+    }, [fetchDrones, user])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
