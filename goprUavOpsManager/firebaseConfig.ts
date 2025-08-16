@@ -21,5 +21,6 @@ export const auth = getAuth(app);
 
 // Initialize Cloud Firestore and get a reference to the service
 export const firestore = getFirestore(app);
+export const db = firestore; // Alias for compatibility with existing code
 
 export default app;

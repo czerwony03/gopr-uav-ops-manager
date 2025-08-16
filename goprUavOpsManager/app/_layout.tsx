@@ -4,7 +4,34 @@ import { AuthProvider } from "../contexts/AuthContext";
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <Stack />
+      <Stack>
+        <Stack.Screen 
+          name="index" 
+          options={{ 
+            title: "GOPR UAV Ops Manager",
+            headerStyle: {
+              backgroundColor: '#0066CC',
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }} 
+        />
+        <Stack.Screen 
+          name="drones-list" 
+          options={{ 
+            title: "Drones List",
+            headerStyle: {
+              backgroundColor: '#0066CC',
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }} 
+        />
+      </Stack>
     </AuthProvider>
   );
 }

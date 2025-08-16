@@ -4,6 +4,7 @@ import { signOut } from "firebase/auth";
 import { useAuth } from "../contexts/AuthContext";
 import { auth } from "../firebaseConfig";
 import LoginScreen from "../screens/LoginScreen";
+import { Link } from "expo-router";
 
 export default function Index() {
   const { user, loading } = useAuth();
@@ -78,8 +79,14 @@ export default function Index() {
       </View>
 
       <View style={styles.actionContainer}>
+        <Link href="/drones-list" asChild>
+          <TouchableOpacity style={styles.actionButton}>
+            <Text style={styles.actionButtonText}>View Drones List</Text>
+          </TouchableOpacity>
+        </Link>
+        
         <Text style={styles.infoText}>
-          Role-based functionality will be implemented here based on your {user.role} permissions.
+          Additional role-based functionality will be implemented based on your {user.role} permissions.
         </Text>
       </View>
 
@@ -180,6 +187,28 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 24,
+    marginTop: 15,
+  },
+  actionButton: {
+    backgroundColor: '#0066CC',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 2,
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   logoutButton: {
     backgroundColor: '#FF6B6B',
