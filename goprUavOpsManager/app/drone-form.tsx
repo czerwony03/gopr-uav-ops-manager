@@ -9,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import { Drone } from '../types/Drone';
@@ -187,7 +188,8 @@ export default function DroneFormScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
       <View style={styles.card}>
         <Text style={styles.title}>{isEditing ? 'Edit Drone' : 'Add New Drone'}</Text>
 
@@ -426,6 +428,7 @@ export default function DroneFormScreen() {
         </View>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -434,8 +437,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
     padding: 16,
-    minHeight: '100vh' as any,
-    overflow: 'auto' as any,
   },
   loadingContainer: {
     flex: 1,

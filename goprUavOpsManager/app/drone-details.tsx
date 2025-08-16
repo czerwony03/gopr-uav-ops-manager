@@ -9,6 +9,7 @@ import {
   ScrollView,
   Linking,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Drone } from '../types/Drone';
 import { useAuth } from '../contexts/AuthContext';
@@ -135,7 +136,8 @@ export default function DroneDetailsScreen() {
   const canRestore = user?.role === 'admin' && drone.isDeleted;
 
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
       <View style={[styles.card, drone.isDeleted && styles.deletedCard]}>
         <View style={styles.header}>
           <Text style={styles.title}>{drone.name}</Text>
@@ -231,6 +233,7 @@ export default function DroneDetailsScreen() {
         </View>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -239,8 +242,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
     padding: 16,
-    minHeight: '100vh' as any,
-    overflow: 'auto' as any,
   },
   loadingContainer: {
     flex: 1,
