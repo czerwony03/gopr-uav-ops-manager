@@ -404,6 +404,14 @@ export default function DroneFormScreen() {
         </View>
 
         <View style={styles.actionButtons}>
+          <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => router.back()}
+              disabled={loading}
+          >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity 
             style={[styles.submitButton, loading && styles.disabledButton]} 
             onPress={handleSubmit}
@@ -416,14 +424,6 @@ export default function DroneFormScreen() {
                 {isEditing ? 'Update Drone' : 'Create Drone'}
               </Text>
             )}
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.cancelButton} 
-            onPress={() => router.back()}
-            disabled={loading}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
       </View>
