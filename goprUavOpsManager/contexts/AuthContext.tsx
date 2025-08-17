@@ -2,11 +2,13 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, firestore } from '../firebaseConfig';
+import { User as FullUser } from '../types/User';
+import { UserService } from '../services/userService';
 
 export type UserRole = 'user' | 'manager' | 'admin';
 
-// Legacy interface for backward compatibility
-export interface UserData {
+// Extended interface that includes all user profile data
+export interface UserData extends FullUser {
   uid: string;
   email: string;
   role: UserRole;
@@ -15,11 +17,13 @@ export interface UserData {
 interface AuthContextType {
   user: UserData | null;
   loading: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  refreshUser: async () => {},
 });
 
 export const useAuth = () => {
@@ -34,40 +38,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const loadFullUserData = async (firebaseUser: User): Promise<UserData | null> => {
+    try {
+      // First, get or create the basic user document
+      const userDocRef = doc(firestore, 'users', firebaseUser.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      let role: UserRole = 'user';
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        role = userData.role as UserRole || 'user';
+      } else {
+        // Create user document if it doesn't exist
+        await setDoc(userDocRef, {
+          email: firebaseUser.email || '',
+          role: role,
+        });
+      }
+
+      // Now fetch the full user data using UserService
+      try {
+        const fullUserData = await UserService.getUser(firebaseUser.uid, role, firebaseUser.uid);
+        if (fullUserData) {
+          return fullUserData as UserData;
+        }
+      } catch (error) {
+        console.warn('Could not fetch full user data, using basic data:', error);
+      }
+
+      // Fallback to basic user data if full data is not available
+      return {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        role,
+      } as UserData;
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      // Set user with default role if Firestore fails
+      return {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        role: 'user',
+      } as UserData;
+    }
+  };
+
+  const refreshUser = async () => {
+    const currentUser = auth.currentUser;
+    if (currentUser && user) {
+      setLoading(true);
+      try {
+        const updatedUserData = await loadFullUserData(currentUser);
+        setUser(updatedUserData);
+      } catch (error) {
+        console.error('Error refreshing user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
       if (firebaseUser) {
-        try {
-          // Fetch user role from Firestore
-          const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
-          
-          let role: UserRole = 'user'; // Default role
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            role = userData.role as UserRole || 'user';
-          } else {
-              // Create user document if it doesn't exist
-              await setDoc(userDocRef, {
-                  email: firebaseUser.email || '',
-                  role: role,
-              });
-          }
-
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            role,
-          });
-        } catch (error) {
-          console.error('Error fetching user role:', error);
-          // Set user with default role if Firestore fails
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            role: 'user',
-          });
-        }
+        const userData = await loadFullUserData(firebaseUser);
+        setUser(userData);
       } else {
         setUser(null);
       }
@@ -78,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
