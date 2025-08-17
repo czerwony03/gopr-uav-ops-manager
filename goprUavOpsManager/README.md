@@ -4,8 +4,8 @@ This is an [Expo](https://expo.dev) project for managing UAV operations with Fir
 
 ## Features
 
-- **Firebase Authentication**: Secure email/password authentication and Google Workspace SSO
-- **Google Workspace Integration**: Domain-restricted authentication for @bieszczady.gopr.pl users
+- **Firebase Authentication**: Secure email/password authentication and Google Workspace SSO using Firebase's built-in Google provider
+- **Google Workspace Integration**: Server-side domain restriction for @bieszczady.gopr.pl users via Firebase Functions
 - **Role-based Access Control**: Three user roles (user, manager, admin) with different capabilities
 - **Firestore Integration**: User roles stored and retrieved from Firestore
 - **React Native/Expo**: Cross-platform mobile application
@@ -123,53 +123,57 @@ service cloud.firestore {
 
 ### 6. Google Workspace Authentication Setup
 
-The app supports Google Workspace authentication restricted to the @bieszczady.gopr.pl domain.
+The app supports Google Workspace authentication restricted to the @bieszczady.gopr.pl domain using Firebase's built-in Google provider.
 
-#### 6.1. Google Cloud Console Setup
+#### 6.1. Firebase Console Configuration
+
+1. In Firebase Console, go to Authentication > Sign-in method
+2. Click on "Google" provider and enable it
+3. Add your Web SDK configuration (Client ID) from Google Cloud Console
+4. Configure authorized domains if needed
+5. Save the configuration
+
+#### 6.2. Google Cloud Console Setup
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select your existing project
-3. Enable the Google+ API:
+3. Enable the Google Identity Services API:
    - Go to APIs & Services > Library
-   - Search for "Google+ API" and enable it
+   - Search for "Google Identity Services API" and enable it
 4. Create OAuth 2.0 credentials:
    - Go to APIs & Services > Credentials
    - Click "Create Credentials" > "OAuth 2.0 Client IDs"
-   - Select "Mobile app" as application type
-   - Add your app's bundle identifier (e.g., `dev.redmed.gopruavopsmanager`)
-   - For iOS: Add your iOS bundle ID
-   - For Android: Add your package name and SHA-1 certificate fingerprint
+   - Select "Web application" as application type
+   - Add authorized JavaScript origins (your domain)
+   - Add authorized redirect URIs (your Firebase auth domain)
 
-#### 6.2. Firebase Console Configuration
+#### 6.3. Domain Restriction via Firebase Functions
 
-1. In Firebase Console, go to Authentication > Sign-in method
-2. Click on "Google" provider
-3. Enable the provider
-4. Add the OAuth client ID from Google Cloud Console
-5. Configure the authorized domains if needed
-6. Save the configuration
+Domain restriction to @bieszczady.gopr.pl is handled server-side using Firebase Functions with a `beforeCreate` trigger. This ensures that only users from the authorized workspace domain can create accounts, providing better security than client-side validation.
 
-#### 6.3. Client ID Configuration
+Example Firebase Function:
+```javascript
+// functions/index.js
+const functions = require('firebase-functions');
 
-Update the `GOOGLE_CLIENT_ID` constant in `screens/LoginScreen.tsx` with your actual OAuth client ID:
-
-```typescript
-const GOOGLE_CLIENT_ID = 'your-actual-client-id.apps.googleusercontent.com';
+exports.beforeCreate = functions.auth.user().beforeCreate((user, context) => {
+  const email = user.email;
+  if (!email || !email.endsWith('@bieszczady.gopr.pl')) {
+    throw new functions.auth.HttpsError(
+      'invalid-argument',
+      'Only @bieszczady.gopr.pl users are allowed.'
+    );
+  }
+});
 ```
 
-#### 6.4. Domain Restriction
+#### 6.4. Benefits of Firebase Native Approach
 
-The app automatically restricts Google sign-in to users with @bieszczady.gopr.pl email addresses:
-- The OAuth request includes `hd: 'bieszczady.gopr.pl'` parameter
-- Client-side validation ensures only the correct domain can authenticate
-- Users from other domains will see an access denied message
-
-#### 6.5. Testing
-
-For testing purposes, you can:
-- Create test Google Workspace accounts in the bieszczady.gopr.pl domain
-- Test with existing @bieszczady.gopr.pl accounts
-- Verify domain validation by attempting login with non-domain accounts
+- **Simplified Implementation**: No need for custom OAuth flows or token management
+- **Better Security**: Server-side domain validation via Firebase Functions
+- **Automatic Popup Handling**: Firebase SDK handles OAuth popup flow seamlessly
+- **Reduced Dependencies**: No need for expo-auth-session or expo-web-browser
+- **Firebase Integration**: Direct integration with Firebase Authentication system
 
 ## User Roles
 
