@@ -9,11 +9,13 @@ export default function Index() {
   const router = useRouter();
 
   // Refresh user data when component mounts to ensure we have the latest data
-  useEffect(() => {
-    if (user && refreshUser) {
-      refreshUser();
-    }
-  }, [user, refreshUser]);
+    useEffect(() => {
+        // Only refresh once on mount if user exists
+        if (user && refreshUser) {
+            refreshUser();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // <-- Only on initial mount
 
   const formatDate = (date: Date | undefined) => {
     if (!date) return 'Not set';
