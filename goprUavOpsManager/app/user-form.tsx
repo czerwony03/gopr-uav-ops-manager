@@ -20,6 +20,7 @@ import { UserService } from '../services/userService';
 export default function UserFormScreen() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { user, refreshUser } = useAuth();
   const router = useRouter();
@@ -120,27 +121,35 @@ export default function UserFormScreen() {
   const handleSubmit = async () => {
     if (!user) return;
 
+    // Clear previous errors
+    setErrors({});
+
     // Basic validation
+    const newErrors: Record<string, string> = {};
+    
     if (!formData.email.trim()) {
-      Alert.alert('Validation Error', 'Email is required');
-      return;
+      newErrors.email = 'Email is required';
     }
     if (!formData.firstname.trim()) {
-      Alert.alert('Validation Error', 'First name is required');
-      return;
+      newErrors.firstname = 'First name is required';
     }
     if (!formData.surname.trim()) {
-      Alert.alert('Validation Error', 'Surname is required');
-      return;
+      newErrors.surname = 'Surname is required';
     }
     
     // Validate operator/pilot numbers and qualifications
     if (!formData.operatorNumber.trim() && !formData.pilotNumber.trim()) {
-      Alert.alert('Validation Error', 'Either Operator Number or Pilot Number is required');
-      return;
+      newErrors.operatorNumber = 'Either Operator Number or Pilot Number is required';
+      newErrors.pilotNumber = 'Either Operator Number or Pilot Number is required';
     }
     if (formData.qualifications.length === 0) {
-      Alert.alert('Validation Error', 'At least one qualification/authorization must be selected');
+      newErrors.qualifications = 'At least one qualification/authorization must be selected';
+    }
+
+    // If there are validation errors, show them and stop
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      Alert.alert('Validation Error', 'Please correct the highlighted fields and try again.');
       return;
     }
 
@@ -185,10 +194,12 @@ export default function UserFormScreen() {
         await refreshUser();
       }
 
+      // Navigate back immediately after successful update
+      router.back();
+      // Show success alert without blocking navigation
       Alert.alert(
         'Success',
-        isEditing ? 'User updated successfully' : 'User created successfully',
-        [{ text: 'OK', onPress: () => router.back() }]
+        isEditing ? 'User updated successfully' : 'User created successfully'
       );
     } catch (error) {
       console.error('Error saving user:', error);
@@ -200,6 +211,14 @@ export default function UserFormScreen() {
 
   const updateFormData = (field: keyof UserFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error for this field when user starts typing
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const toggleQualification = (qualification: Qualification) => {
@@ -209,6 +228,14 @@ export default function UserFormScreen() {
         ? prev.qualifications.filter(q => q !== qualification)
         : [...prev.qualifications, qualification]
     }));
+    // Clear qualifications error when user makes a selection
+    if (errors.qualifications) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.qualifications;
+        return newErrors;
+      });
+    }
   };
 
   const renderQualificationItem = ({ item }: { item: Qualification }) => (
@@ -252,29 +279,36 @@ export default function UserFormScreen() {
             
             <Text style={styles.label}>Email *</Text>
             <TextInput
-              style={[styles.input, isEditing && styles.disabledInput]}
+              style={[
+                styles.input, 
+                isEditing && styles.disabledInput,
+                errors.email && styles.inputError
+              ]}
               value={formData.email}
               onChangeText={(value) => updateFormData('email', value)}
               placeholder="Enter email address"
               keyboardType="email-address"
               editable={!isEditing} // Email shouldn't be changed after creation
             />
+            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
             <Text style={styles.label}>First Name *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.firstname && styles.inputError]}
               value={formData.firstname}
               onChangeText={(value) => updateFormData('firstname', value)}
               placeholder="Enter first name"
             />
+            {errors.firstname && <Text style={styles.errorText}>{errors.firstname}</Text>}
 
             <Text style={styles.label}>Surname *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.surname && styles.inputError]}
               value={formData.surname}
               onChangeText={(value) => updateFormData('surname', value)}
               placeholder="Enter surname"
             />
+            {errors.surname && <Text style={styles.errorText}>{errors.surname}</Text>}
 
             <Text style={styles.label}>Phone</Text>
             <TextInput
@@ -318,11 +352,12 @@ export default function UserFormScreen() {
             
             <Text style={styles.label}>Operator Number *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.operatorNumber && styles.inputError]}
               value={formData.operatorNumber}
               onChangeText={(value) => updateFormData('operatorNumber', value)}
               placeholder="Enter operator number"
             />
+            {errors.operatorNumber && <Text style={styles.errorText}>{errors.operatorNumber}</Text>}
 
             <Text style={styles.label}>Operator Validity Date</Text>
             <TextInput
@@ -338,11 +373,12 @@ export default function UserFormScreen() {
             
             <Text style={styles.label}>Pilot Number *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.pilotNumber && styles.inputError]}
               value={formData.pilotNumber}
               onChangeText={(value) => updateFormData('pilotNumber', value)}
               placeholder="Enter pilot number"
             />
+            {errors.pilotNumber && <Text style={styles.errorText}>{errors.pilotNumber}</Text>}
 
             <Text style={styles.label}>Pilot Validity Date</Text>
             <TextInput
@@ -385,6 +421,7 @@ export default function UserFormScreen() {
               scrollEnabled={false}
               style={styles.qualificationsList}
             />
+            {errors.qualifications && <Text style={styles.errorText}>{errors.qualifications}</Text>}
           </View>
 
           <View style={styles.actionButtons}>
@@ -561,5 +598,16 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.6,
+  },
+  inputError: {
+    borderColor: '#FF3B30',
+    borderWidth: 2,
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 14,
+    marginTop: -12,
+    marginBottom: 16,
+    marginLeft: 4,
   },
 });
