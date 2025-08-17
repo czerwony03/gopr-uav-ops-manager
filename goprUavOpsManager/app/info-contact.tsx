@@ -14,9 +14,11 @@ export default function InfoContact() {
       </View>
 
       <View style={styles.logoContainer}>
-        <View style={styles.logoPlaceholder}>
-          <Text style={styles.logoText}>RedMed Software</Text>
-        </View>
+        <Image 
+          source={require('../assets/images/redmed-logo.png')}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
       </View>
 
       <View style={styles.infoCard}>
@@ -85,25 +87,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
-  logoPlaceholder: {
-    backgroundColor: '#FF6B6B',
-    borderRadius: 8,
-    paddingHorizontal: 40,
-    paddingVertical: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  logoText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
+  logoImage: {
+    width: 200,
+    height: 80,
+    alignSelf: 'center',
   },
   infoCard: {
     backgroundColor: '#FFFFFF',
