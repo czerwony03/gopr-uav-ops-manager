@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import ImageViewing from 'react-native-image-viewing';
 import { ProcedureChecklist, ChecklistItem } from '../types/ProcedureChecklist';
 import { useAuth } from '../contexts/AuthContext';
 import { ProcedureChecklistService } from '../services/procedureChecklistService';
@@ -20,6 +21,8 @@ import { ProcedureChecklistService } from '../services/procedureChecklistService
 export default function ProcedureChecklistDetailsScreen() {
   const [checklist, setChecklist] = useState<ProcedureChecklist | null>(null);
   const [loading, setLoading] = useState(true);
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  const [imageIndex, setImageIndex] = useState(0);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const router = useRouter();
@@ -125,6 +128,31 @@ export default function ProcedureChecklistDetailsScreen() {
 
   const canModifyChecklists = user?.role === 'manager' || user?.role === 'admin';
 
+  // Get all images from checklist items for the image viewer
+  const getImages = useCallback(() => {
+    if (!checklist) return [];
+    
+    return checklist.items
+      .filter(item => item.image)
+      .sort((a, b) => a.number - b.number)
+      .map(item => ({ uri: item.image! }));
+  }, [checklist]);
+
+  // Find the index of the selected image in the images array
+  const getImageIndex = useCallback((selectedImage: string) => {
+    const images = getImages();
+    return images.findIndex(img => img.uri === selectedImage);
+  }, [getImages]);
+
+  // Handle opening image viewer
+  const handleImagePress = useCallback((imageUri: string) => {
+    const index = getImageIndex(imageUri);
+    if (index >= 0) {
+      setImageIndex(index);
+      setImageViewerVisible(true);
+    }
+  }, [getImageIndex]);
+
   const renderChecklistItem = (item: ChecklistItem, index: number) => (
     <View key={item.id} style={styles.itemContainer}>
       <View style={styles.itemHeader}>
@@ -137,9 +165,13 @@ export default function ProcedureChecklistDetailsScreen() {
       </View>
 
       {item.image && (
-        <View style={styles.itemImageContainer}>
+        <TouchableOpacity 
+          style={styles.itemImageContainer}
+          onPress={() => handleImagePress(item.image!)}
+          activeOpacity={0.9}
+        >
           <Image source={{ uri: item.image }} style={styles.itemImage} />
-        </View>
+        </TouchableOpacity>
       )}
 
       <Text style={styles.itemContentText}>{item.content}</Text>
@@ -252,6 +284,18 @@ export default function ProcedureChecklistDetailsScreen() {
           .sort((a, b) => a.number - b.number)
           .map((item, index) => renderChecklistItem(item, index))}
       </ScrollView>
+
+      {/* Image Viewer Modal */}
+      <ImageViewing
+        images={getImages()}
+        imageIndex={imageIndex}
+        visible={imageViewerVisible}
+        onRequestClose={() => setImageViewerVisible(false)}
+        onImageIndexChange={setImageIndex}
+        swipeToCloseEnabled={true}
+        doubleTapToZoomEnabled={true}
+        backgroundColor="rgba(0, 0, 0, 0.9)"
+      />
     </SafeAreaView>
   );
 }
