@@ -37,6 +37,14 @@ export default function UserDetailsScreen() {
     }
   }, [currentUser, id, router]);
 
+  // Authentication check - redirect if not logged in
+  useEffect(() => {
+    if (!currentUser) {
+      router.replace('/');
+      return;
+    }
+  }, [currentUser, router]);
+
   useEffect(() => {
     fetchUserDetails();
   }, [fetchUserDetails]);

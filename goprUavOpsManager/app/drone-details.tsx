@@ -45,6 +45,12 @@ export default function DroneDetailsScreen() {
       }
     };
 
+    // Check authentication first - redirect to login if not authenticated
+    if (!user) {
+      router.replace('/');
+      return;
+    }
+
     fetchDrone();
   }, [id, user, router]);
 

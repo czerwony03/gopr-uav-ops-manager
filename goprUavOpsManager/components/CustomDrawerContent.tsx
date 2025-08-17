@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
+import { DrawerActions } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,7 +14,14 @@ export function CustomDrawerContent(props: any) {
 
   const handleLogout = async () => {
     try {
+      // Close the drawer first
+      props.navigation.dispatch(DrawerActions.closeDrawer());
+      
+      // Sign out from Firebase
       await signOut(auth);
+      
+      // Explicitly redirect to login page (though AuthContext should handle this)
+      router.replace('/');
     } catch (error) {
       console.error('Logout error:', error);
     }

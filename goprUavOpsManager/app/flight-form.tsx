@@ -103,6 +103,14 @@ export default function FlightFormScreen() {
     }
   }, [user, router]);
 
+  // Authentication check - redirect if not logged in
+  useEffect(() => {
+    if (!user) {
+      router.replace('/');
+      return;
+    }
+  }, [user, router]);
+
   useEffect(() => {
     fetchDrones();
     if (isEditing && id && typeof id === 'string') {

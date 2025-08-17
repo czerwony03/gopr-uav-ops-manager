@@ -86,11 +86,9 @@ export default function UserFormScreen() {
   }, [user, id, router]);
 
   useEffect(() => {
-    // Check permissions
+    // Check authentication first - redirect to login if not authenticated
     if (!user) {
-      Alert.alert('Access Denied', 'You must be logged in to access user management.', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
+      router.replace('/');
       return;
     }
 

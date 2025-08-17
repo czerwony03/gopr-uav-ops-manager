@@ -40,6 +40,14 @@ export default function DronesListScreen() {
     }
   }, [user]);
 
+  // Authentication check - redirect if not logged in
+  useEffect(() => {
+    if (!user) {
+      router.replace('/');
+      return;
+    }
+  }, [user, router]);
+
   useEffect(() => {
     fetchDrones();
   }, [fetchDrones]);
