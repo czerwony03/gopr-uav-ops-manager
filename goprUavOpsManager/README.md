@@ -193,10 +193,11 @@ The app now uses different Google authentication approaches for different platfo
 - **Direct Firebase Integration**: No additional dependencies required
 
 **Mobile Platforms (Android/iOS):**
-- **Expo Auth Session**: Uses Expo's secure OAuth implementation for mobile
-- **PKCE Security**: Implements Proof Key for Code Exchange for enhanced security
-- **Domain Validation**: Client-side domain restriction with server-side backup
-- **Deep Linking**: Uses app scheme for secure OAuth redirects
+- **React Native Google Sign-In**: Uses `@react-native-google-signin/google-signin` for native authentication
+- **Firebase Auth Integration**: Direct credential exchange with Firebase using `@react-native-firebase/auth`
+- **Built-in Security**: Leverages Google's native SDK security features
+- **Domain Restriction**: Configured via `hostedDomain` parameter and server-side validation
+- **Native UI**: Uses platform-native Google Sign-In buttons and flows
 
 #### 6.5. Benefits of Hybrid Approach
 
@@ -208,25 +209,44 @@ The app now uses different Google authentication approaches for different platfo
 
 #### 6.6. Mobile Setup Instructions
 
-For mobile platforms (Android/iOS), additional configuration is required:
+For mobile platforms (Android/iOS), the app now uses React Native Firebase with Google Sign-In:
 
-1. **Environment Variables**: Add the mobile OAuth Client ID to your `.env` file:
-   ```
-   EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=your_mobile_oauth_client_id_here
+1. **Dependencies**: The following packages are required (already included):
+   ```bash
+   npm install @react-native-google-signin/google-signin @react-native-firebase/app @react-native-firebase/auth
    ```
 
-2. **Bundle Identifier/Package Name**: Ensure your app's bundle identifier matches what you configured in Google Cloud Console:
+2. **Environment Variables**: Add the Google OAuth Web Client ID to your `.env` file:
+   ```
+   EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=your_web_oauth_client_id_here
+   ```
+   Note: Use the **Web** Client ID from Google Cloud Console, not the mobile-specific one.
+
+3. **Google Cloud Console Setup**: 
+   - Create OAuth 2.0 credentials for **Android** and **iOS** platforms (separate from web)
+   - Configure bundle identifiers and package names to match your app
+   - No need to add redirect URIs for native mobile authentication
+
+4. **Bundle Identifier/Package Name**: Ensure your app's configuration matches Google Cloud:
    - iOS: `dev.redmed.gopruavopsmanager` (configured in `app.json`)
    - Android: `dev.redmed.gopruavopsmanager` (configured in `app.json`)
 
-3. **Deep Linking**: The app uses the scheme `dev.redmed.gopruavopsmanager://auth` for OAuth redirects
+5. **Firebase Project Files**: 
+   - Download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS) from Firebase Console
+   - Place them in the root of your project directory
+   - These files are automatically handled by the React Native Firebase plugin
 
-4. **Testing**: You can test mobile authentication using:
-   - Expo Go (development)
-   - Development builds (recommended for OAuth testing)
-   - Production builds
+6. **Testing**: 
+   - Native Google Sign-In requires development builds or production builds
+   - OAuth will **not** work in Expo Go due to native dependency requirements
+   - Use `npx expo run:android` or `npx expo run:ios` for testing
 
-**Important**: Mobile OAuth requires the app to be built as a development build or production build. OAuth will not work properly in Expo Go due to bundle identifier restrictions.
+**Benefits of React Native Firebase Approach:**
+- **Simpler Implementation**: 3 lines of code vs 140+ lines
+- **Native Experience**: Uses platform-native Google Sign-In UI
+- **Better Security**: Leverages Google's native SDK security
+- **No Deep Linking**: No custom URL schemes required
+- **Automatic Configuration**: Firebase handles OAuth flow complexity
 
 ## User Roles
 
