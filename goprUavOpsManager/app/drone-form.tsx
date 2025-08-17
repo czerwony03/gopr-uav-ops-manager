@@ -268,7 +268,7 @@ export default function DroneFormScreen() {
             keyboardType="numeric"
           />
 
-          <Text style={styles.label}>Operating Time (hours)</Text>
+          <Text style={styles.label}>Operating Time (minutes)</Text>
           <TextInput
             style={styles.input}
             value={formData.operatingTime.toString()}
@@ -286,7 +286,7 @@ export default function DroneFormScreen() {
             keyboardType="numeric"
           />
 
-          <Text style={styles.label}>Range (km)</Text>
+          <Text style={styles.label}>Range (meters)</Text>
           <TextInput
             style={styles.input}
             value={formData.range.toString()}
@@ -299,25 +299,25 @@ export default function DroneFormScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Physical Specifications</Text>
           
-          <Text style={styles.label}>Weight (kg)</Text>
+          <Text style={styles.label}>Weight (grams)</Text>
           <TextInput
             style={styles.input}
             value={formData.weight.toString()}
-            onChangeText={(value) => updateFormData('weight', parseFloat(value) || 0)}
-            placeholder="0.0"
+            onChangeText={(value) => updateFormData('weight', parseInt(value) || 0)}
+            placeholder="0"
             keyboardType="numeric"
           />
 
-          <Text style={styles.label}>Max Takeoff Weight (kg)</Text>
+          <Text style={styles.label}>Max Takeoff Weight (grams)</Text>
           <TextInput
             style={styles.input}
             value={formData.maxTakeoffWeight.toString()}
-            onChangeText={(value) => updateFormData('maxTakeoffWeight', parseFloat(value) || 0)}
-            placeholder="0.0"
+            onChangeText={(value) => updateFormData('maxTakeoffWeight', parseInt(value) || 0)}
+            placeholder="0"
             keyboardType="numeric"
           />
 
-          <Text style={styles.label}>Length (cm)</Text>
+          <Text style={styles.label}>Length (mm)</Text>
           <TextInput
             style={styles.input}
             value={formData.dimensions.length.toString()}
@@ -326,7 +326,7 @@ export default function DroneFormScreen() {
             keyboardType="numeric"
           />
 
-          <Text style={styles.label}>Width (cm)</Text>
+          <Text style={styles.label}>Width (mm)</Text>
           <TextInput
             style={styles.input}
             value={formData.dimensions.width.toString()}
@@ -335,7 +335,7 @@ export default function DroneFormScreen() {
             keyboardType="numeric"
           />
 
-          <Text style={styles.label}>Height (cm)</Text>
+          <Text style={styles.label}>Height (mm)</Text>
           <TextInput
             style={styles.input}
             value={formData.dimensions.height.toString()}

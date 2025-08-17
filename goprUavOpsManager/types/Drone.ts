@@ -9,14 +9,14 @@ export interface Drone {
   yearOfManufacture: number;
   insurance: string;
   callSign: string;
-  weight: number; // in kg
-  maxTakeoffWeight: number; // in kg
-  operatingTime: number; // in hours
-  range: number; // in km
+  weight: number; // in grams
+  maxTakeoffWeight: number; // in grams
+  operatingTime: number; // in minutes
+  range: number; // in meters
   dimensions: {
-    length: number; // in cm
-    width: number; // in cm
-    height: number; // in cm
+    length: number; // in mm
+    width: number; // in mm
+    height: number; // in mm
   };
   battery: {
     type: string;

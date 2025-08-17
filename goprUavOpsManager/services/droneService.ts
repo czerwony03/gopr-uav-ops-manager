@@ -202,4 +202,47 @@ export class DroneService {
     }
     return `${hours}h ${remainingMinutes}min`;
   }
+
+  // Format operating time in minutes to a readable format
+  static formatOperatingTime(minutes: number): string {
+    if (minutes < 60) {
+      return `${minutes} minutes`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) {
+      return `${hours} hours`;
+    }
+    return `${hours} hours ${remainingMinutes} minutes`;
+  }
+
+  // Format weight in grams to a readable format
+  static formatWeight(grams: number): string {
+    if (grams < 1000) {
+      return `${grams}g`;
+    }
+    const kg = (grams / 1000).toFixed(1);
+    return `${kg}kg (${grams}g)`;
+  }
+
+  // Format range in meters to a readable format
+  static formatRange(meters: number): string {
+    if (meters < 1000) {
+      return `${meters}m`;
+    }
+    const km = (meters / 1000).toFixed(1);
+    return `${km}km (${meters}m)`;
+  }
+
+  // Format dimensions in mm to a readable format
+  static formatDimensions(length: number, width: number, height: number): string {
+    // Show in cm if over 100mm for readability
+    if (length >= 100 && width >= 100 && height >= 100) {
+      const lengthCm = (length / 10).toFixed(1);
+      const widthCm = (width / 10).toFixed(1);
+      const heightCm = (height / 10).toFixed(1);
+      return `${lengthCm} x ${widthCm} x ${heightCm} cm (${length} x ${width} x ${height} mm)`;
+    }
+    return `${length} x ${width} x ${height} mm`;
+  }
 }

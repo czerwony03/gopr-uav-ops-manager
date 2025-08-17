@@ -144,9 +144,9 @@ export default function DronesListScreen() {
       </Text>
       <Text style={styles.droneDetail}>Insurance: {item.insurance}</Text>
       <Text style={styles.droneDetail}>Max Speed: {item.maxSpeed} km/h</Text>
-      <Text style={styles.droneDetail}>Range: {item.range} km</Text>
+      <Text style={styles.droneDetail}>Range: {DroneService.formatRange(item.range)}</Text>
       <Text style={styles.droneDetail}>
-        Weight: {item.weight}kg (Max: {item.maxTakeoffWeight}kg)
+        Weight: {DroneService.formatWeight(item.weight)} (Max: {DroneService.formatWeight(item.maxTakeoffWeight)})
       </Text>
       <Text style={styles.droneDetail}>
         Manufactured: {item.yearOfManufacture} | Commissioned: {item.yearOfCommissioning}

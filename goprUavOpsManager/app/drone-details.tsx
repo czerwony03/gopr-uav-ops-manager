@@ -168,17 +168,17 @@ export default function DroneDetailsScreen() {
           <Text style={styles.detail}>
             Total Flight Time: {DroneService.formatFlightTime(drone.totalFlightTime)}
           </Text>
-          <Text style={styles.detail}>Operating Time: {drone.operatingTime}h</Text>
+          <Text style={styles.detail}>Operating Time: {DroneService.formatOperatingTime(drone.operatingTime)}</Text>
           <Text style={styles.detail}>Max Speed: {drone.maxSpeed} km/h</Text>
-          <Text style={styles.detail}>Range: {drone.range} km</Text>
+          <Text style={styles.detail}>Range: {DroneService.formatRange(drone.range)}</Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Physical Specifications</Text>
-          <Text style={styles.detail}>Weight: {drone.weight} kg</Text>
-          <Text style={styles.detail}>Max Takeoff Weight: {drone.maxTakeoffWeight} kg</Text>
+          <Text style={styles.detail}>Weight: {DroneService.formatWeight(drone.weight)}</Text>
+          <Text style={styles.detail}>Max Takeoff Weight: {DroneService.formatWeight(drone.maxTakeoffWeight)}</Text>
           <Text style={styles.detail}>
-            Dimensions: {drone.dimensions.length} x {drone.dimensions.width} x {drone.dimensions.height} cm
+            Dimensions: {DroneService.formatDimensions(drone.dimensions.length, drone.dimensions.width, drone.dimensions.height)}
           </Text>
         </View>
 
