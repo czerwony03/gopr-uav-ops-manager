@@ -40,3 +40,5 @@ app-example
 
 # Test files
 test-*.ts
+
+.env

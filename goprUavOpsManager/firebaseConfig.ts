@@ -5,13 +5,13 @@ import { getStorage } from 'firebase/storage';
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCjOcNPEYj3PSOA4VFY1wakalJmEYBdFlY",
-  authDomain: "gopr-uav-ops-manager.firebaseapp.com",
-  projectId: "gopr-uav-ops-manager",
-  storageBucket: "gopr-uav-ops-manager.firebasestorage.app",
-  messagingSenderId: "23394650584",
-  appId: "1:23394650584:web:53c833aa191391734a4aad",
-  measurementId: "G-RMHQ02Q0KX"
+    apiKey: process.env.FIREBASE_API_KEY,
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.FIREBASE_APP_ID,
+    measurementId: process.env.FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
