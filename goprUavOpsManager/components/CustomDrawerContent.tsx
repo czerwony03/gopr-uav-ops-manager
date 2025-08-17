@@ -93,18 +93,16 @@ export function CustomDrawerContent(props: any) {
           style={styles.drawerItem}
         />
         
-        {/* Procedures & Checklists menu item - only visible to managers and admins */}
-        {(user.role === 'manager' || user.role === 'admin') && (
-          <DrawerItem
-            label="Procedures & Checklists"
-            onPress={() => handleNavigation('/procedures-checklists-list')}
-            icon={({ color, size }) => (
-              <Ionicons name="clipboard-outline" size={size} color={color} />
-            )}
-            labelStyle={styles.drawerLabel}
-            style={styles.drawerItem}
-          />
-        )}
+        {/* Procedures & Checklists menu item - visible to all authenticated users */}
+        <DrawerItem
+          label="Procedures & Checklists"
+          onPress={() => handleNavigation('/procedures-checklists-list')}
+          icon={({ color, size }) => (
+            <Ionicons name="clipboard-outline" size={size} color={color} />
+          )}
+          labelStyle={styles.drawerLabel}
+          style={styles.drawerItem}
+        />
         
         {/* Users menu item - only visible to admins */}
         {user.role === 'admin' && (
