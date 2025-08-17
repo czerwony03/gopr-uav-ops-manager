@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   Image,
   Linking,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
@@ -20,6 +22,8 @@ import { ProcedureChecklistService } from '../services/procedureChecklistService
 export default function ProcedureChecklistDetailsScreen() {
   const [checklist, setChecklist] = useState<ProcedureChecklist | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isImageModalVisible, setIsImageModalVisible] = useState(false);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const router = useRouter();
@@ -123,6 +127,16 @@ export default function ProcedureChecklistDetailsScreen() {
     }
   };
 
+  const handleImagePress = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    setIsImageModalVisible(true);
+  };
+
+  const closeImageModal = () => {
+    setIsImageModalVisible(false);
+    setSelectedImage(null);
+  };
+
   const canModifyChecklists = user?.role === 'manager' || user?.role === 'admin';
 
   const renderChecklistItem = (item: ChecklistItem, index: number) => (
@@ -137,9 +151,13 @@ export default function ProcedureChecklistDetailsScreen() {
       </View>
 
       {item.image && (
-        <View style={styles.itemImageContainer}>
+        <TouchableOpacity 
+          style={styles.itemImageContainer}
+          onPress={() => handleImagePress(item.image!)}
+          activeOpacity={0.8}
+        >
           <Image source={{ uri: item.image }} style={styles.itemImage} />
-        </View>
+        </TouchableOpacity>
       )}
 
       <Text style={styles.itemContentText}>{item.content}</Text>
@@ -252,6 +270,47 @@ export default function ProcedureChecklistDetailsScreen() {
           .sort((a, b) => a.number - b.number)
           .map((item, index) => renderChecklistItem(item, index))}
       </ScrollView>
+
+      {/* Image Modal */}
+      <Modal
+        visible={isImageModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeImageModal}
+      >
+        <View style={styles.modalContainer}>
+          <TouchableOpacity 
+            style={styles.modalOverlay} 
+            onPress={closeImageModal}
+            activeOpacity={1}
+          >
+            <View style={styles.modalContent}>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={closeImageModal}
+              >
+                <Ionicons name="close" size={30} color="#fff" />
+              </TouchableOpacity>
+              
+              {selectedImage && (
+                <ScrollView
+                  contentContainerStyle={styles.imageScrollContainer}
+                  maximumZoomScale={3}
+                  minimumZoomScale={1}
+                  showsHorizontalScrollIndicator={false}
+                  showsVerticalScrollIndicator={false}
+                >
+                  <Image
+                    source={{ uri: selectedImage }}
+                    style={styles.fullScreenImage}
+                    resizeMode="contain"
+                  />
+                </ScrollView>
+              )}
+            </View>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -475,5 +534,44 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 4,
     textDecorationLine: 'underline',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    padding: 8,
+  },
+  imageScrollContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: Dimensions.get('window').height,
+    width: '100%',
+  },
+  fullScreenImage: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height * 0.8,
   },
 });
