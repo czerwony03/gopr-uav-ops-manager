@@ -38,8 +38,7 @@ export default function LoginScreen() {
       scopes: ['openid', 'profile', 'email'],
       responseType: AuthSession.ResponseType.Code,
       redirectUri: AuthSession.makeRedirectUri({
-        scheme: 'com.gopr.uavopsmanager',
-        path: 'auth'
+        scheme: 'com.gopr.uavopsmanager'
       }),
       extraParams: {
         hd: 'bieszczady.gopr.pl', // Restrict to Google Workspace domain
@@ -69,8 +68,7 @@ export default function LoginScreen() {
               code_verifier: request?.codeVerifier || '',
             },
             redirectUri: AuthSession.makeRedirectUri({
-              scheme: 'com.gopr.uavopsmanager',
-              path: 'auth'
+              scheme: 'com.gopr.uavopsmanager'
             }),
           },
           discovery
