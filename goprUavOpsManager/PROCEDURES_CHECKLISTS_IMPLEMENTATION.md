@@ -84,6 +84,16 @@ The Procedures & Checklists module allows managers and administrators to create,
 - Automatic file naming with timestamps
 - Proper cleanup on image replacement
 
+#### Required Firestore Indexes
+The following composite index is required for proper query performance:
+
+**Collection**: `procedures_checklists`
+**Fields**: 
+- `isDeleted` (Ascending)
+- `createdAt` (Descending)
+
+This index supports the query used by managers and users to list non-deleted procedures ordered by creation date. The index can be created in the Firebase Console under Firestore Database → Indexes.
+
 ## Technical Implementation
 
 ### Dependencies Added
