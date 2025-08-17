@@ -38,7 +38,7 @@ export default function LoginScreen() {
       scopes: ['openid', 'profile', 'email'],
       responseType: AuthSession.ResponseType.Code,
       redirectUri: AuthSession.makeRedirectUri({
-        scheme: 'com.gopr.uavopsmanager',
+        scheme: 'dev.redmed.gopruavopsmanager',
         path: 'auth'
       }),
       extraParams: {
@@ -69,7 +69,7 @@ export default function LoginScreen() {
               code_verifier: request?.codeVerifier || '',
             },
             redirectUri: AuthSession.makeRedirectUri({
-              scheme: 'com.gopr.uavopsmanager',
+              scheme: 'dev.redmed.gopruavopsmanager',
               path: 'auth'
             }),
           },
