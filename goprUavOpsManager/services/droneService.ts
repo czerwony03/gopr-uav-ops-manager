@@ -222,7 +222,7 @@ export class DroneService {
       return `${grams}g`;
     }
     const kg = (grams / 1000).toFixed(1);
-    return `${kg}kg (${grams}g)`;
+    return `${kg}kg`;
   }
 
   // Format range in meters to a readable format
@@ -231,7 +231,7 @@ export class DroneService {
       return `${meters}m`;
     }
     const km = (meters / 1000).toFixed(1);
-    return `${km}km (${meters}m)`;
+    return `${km}km`;
   }
 
   // Format dimensions in mm to a readable format
@@ -241,7 +241,7 @@ export class DroneService {
       const lengthCm = (length / 10).toFixed(1);
       const widthCm = (width / 10).toFixed(1);
       const heightCm = (height / 10).toFixed(1);
-      return `${lengthCm} x ${widthCm} x ${heightCm} cm (${length} x ${width} x ${height} mm)`;
+      return `${lengthCm} x ${widthCm} x ${heightCm} cm`;
     }
     return `${length} x ${width} x ${height} mm`;
   }
