@@ -30,7 +30,7 @@ export default function LoginScreen() {
 
   // Note: This client ID should be configured in Firebase Console -> Authentication -> Sign-in method -> Google
   // For production, this should be moved to environment variables
-  const GOOGLE_CLIENT_ID = '23394650584-kgfq1hfb5n7j8k2l3m4n5o6p7q8r9s0t.apps.googleusercontent.com';
+  const GOOGLE_CLIENT_ID = '23394650584-85hj21hjqu7eb1l503vns9nf6p1445o6.apps.googleusercontent.com';
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
