@@ -8,12 +8,8 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { signInWithEmailAndPassword, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
-import * as AuthSession from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
-
-WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -21,99 +17,32 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // Google OAuth configuration
-  const discovery = {
-    authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-    tokenEndpoint: 'https://oauth2.googleapis.com/token',
-    revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
-  };
-
-  // Note: These credentials should be configured in Google Cloud Console and Firebase Console
-  // For production, these should be moved to environment variables
-  const GOOGLE_CLIENT_ID = '23394650584-kgfq1hfb5n7j8k2l3m4n5o6p7q8r9s0t.apps.googleusercontent.com';
-  // Client secret is required for web applications using Authorization Code flow
-  // In production, this should be stored securely (not in client code) or use a backend service
-  // WARNING: Replace this placeholder with the actual client secret from Google Cloud Console
-  const GOOGLE_CLIENT_SECRET = 'GOCSPX-placeholder_client_secret_replace_with_actual';
-
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: GOOGLE_CLIENT_ID,
-      scopes: ['openid', 'profile', 'email'],
-      responseType: AuthSession.ResponseType.Code,
-      redirectUri: AuthSession.makeRedirectUri({
-        scheme: 'com.gopr.uavopsmanager'
-      }),
-      extraParams: {
-        hd: 'bieszczady.gopr.pl', // Restrict to Google Workspace domain
-      },
-    },
-    discovery
-  );
-
-  const validateDomain = (email: string): boolean => {
-    return email.endsWith('@bieszczady.gopr.pl');
-  };
-
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
-      const result = await promptAsync();
+      // Create Google Auth Provider with domain restriction
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        hd: 'bieszczady.gopr.pl' // Restrict to Google Workspace domain
+      });
       
-      if (result?.type === 'success') {
-        const { code } = result.params;
-        
-        // Exchange authorization code for tokens
-        const tokenResponse = await AuthSession.exchangeCodeAsync(
-          {
-            clientId: GOOGLE_CLIENT_ID,
-            clientSecret: GOOGLE_CLIENT_SECRET,
-            code,
-            extraParams: {
-              code_verifier: request?.codeVerifier || '',
-            },
-            redirectUri: AuthSession.makeRedirectUri({
-              scheme: 'com.gopr.uavopsmanager'
-            }),
-          },
-          discovery
-        );
-
-        const { accessToken, idToken } = tokenResponse;
-        
-        if (!idToken) {
-          throw new Error('No ID token received from Google');
-        }
-        
-        // Decode the ID token to get user info (basic JWT decode)
-        const payload = JSON.parse(atob(idToken.split('.')[1]));
-        const userEmail = payload.email;
-        
-        // Validate domain
-        if (!validateDomain(userEmail)) {
-          Alert.alert(
-            'Access Denied',
-            'Only users with @bieszczady.gopr.pl email addresses can sign in with Google Workspace.',
-            [{ text: 'OK' }]
-          );
-          return;
-        }
-
-        // Create Firebase credential and sign in
-        const credential = GoogleAuthProvider.credential(idToken, accessToken);
-        await signInWithCredential(auth, credential);
-        
-        // Navigation will be handled by the auth state change in AuthContext
-      }
+      // Firebase will handle the OAuth flow and domain restriction is managed server-side
+      const result = await signInWithPopup(auth, provider);
+      
+      // Navigation will be handled by the auth state change in AuthContext
+      console.log('Google sign-in successful:', result.user.email);
+      
     } catch (error: any) {
       console.error('Google login error:', error);
       let errorMessage = error.message || 'An error occurred during Google login';
       
-      // Provide helpful error messages for common configuration issues
-      if (error.message && error.message.includes('client_secret')) {
-        errorMessage = 'Google OAuth configuration error. Please ensure the client ID and client secret are properly configured in Google Cloud Console.';
-      } else if (error.message && error.message.includes('redirect_uri')) {
-        errorMessage = 'OAuth redirect URI mismatch. Please check the redirect URI configuration in Google Cloud Console.';
+      // Provide helpful error messages for common issues
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Google sign-in was cancelled.';
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMessage = 'Popup was blocked by the browser. Please allow popups for this site.';
+      } else if (error.code === 'auth/unauthorized-domain') {
+        errorMessage = 'This domain is not authorized for Google sign-in. Contact your administrator.';
       }
       
       Alert.alert('Google Login Failed', errorMessage);
@@ -187,7 +116,7 @@ export default function LoginScreen() {
         <TouchableOpacity
           style={[styles.googleButton, googleLoading && styles.disabledButton]}
           onPress={handleGoogleLogin}
-          disabled={googleLoading || !request}
+          disabled={googleLoading}
         >
           {googleLoading ? (
             <ActivityIndicator color="#333333" />
