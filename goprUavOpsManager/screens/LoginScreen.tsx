@@ -10,29 +10,16 @@ import {
   Platform,
 } from 'react-native';
 import { signInWithEmailAndPassword, signInWithPopup, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
+import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { auth } from '../firebaseConfig';
-import * as AuthSession from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
-import * as Crypto from 'expo-crypto';
 
-// Configure WebBrowser for better mobile OAuth experience
+// Configure Google Sign-In for mobile platforms
 if (Platform.OS !== 'web') {
-  WebBrowser.maybeCompleteAuthSession();
+  GoogleSignin.configure({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID!, // From Firebase Console
+    hostedDomain: 'bieszczady.gopr.pl', // Restrict to Google Workspace domain
+  });
 }
-
-// Google OAuth configuration
-const GOOGLE_OAUTH_CONFIG = {
-  clientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
-  redirectUri: AuthSession.makeRedirectUri({
-    scheme: 'dev.redmed.gopruavopsmanager',
-    path: 'auth',
-  }),
-  scopes: ['openid', 'profile', 'email'],
-  additionalParameters: {
-    hd: 'bieszczady.gopr.pl', // Restrict to Google Workspace domain
-  },
-  responseType: AuthSession.ResponseType.Code,
-};
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -47,7 +34,7 @@ export default function LoginScreen() {
         // Web platform: Use Firebase signInWithPopup
         await handleWebGoogleLogin();
       } else {
-        // Mobile platforms: Use Expo Auth Session
+        // Mobile platforms: Use React Native Google Sign-In
         await handleMobileGoogleLogin();
       }
     } catch (error: any) {
@@ -72,77 +59,29 @@ export default function LoginScreen() {
 
   const handleMobileGoogleLogin = async () => {
     try {
-      // Generate code verifier and challenge for PKCE
-      const codeVerifier = await Crypto.digestStringAsync(
-        Crypto.CryptoDigestAlgorithm.SHA256,
-        Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
-        { encoding: Crypto.CryptoEncoding.BASE64 }
-      );
-
-      // Build authorization URL
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${GOOGLE_OAUTH_CONFIG.clientId}&` +
-        `redirect_uri=${encodeURIComponent(GOOGLE_OAUTH_CONFIG.redirectUri)}&` +
-        `response_type=code&` +
-        `scope=${encodeURIComponent(GOOGLE_OAUTH_CONFIG.scopes.join(' '))}&` +
-        `hd=bieszczady.gopr.pl&` +
-        `code_challenge=${codeVerifier}&` +
-        `code_challenge_method=S256`;
-
-      // Open OAuth flow
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, GOOGLE_OAUTH_CONFIG.redirectUri);
-
-      if (result.type === 'success' && result.url) {
-        const url = new URL(result.url);
-        const code = url.searchParams.get('code');
-        
-        if (!code) {
-          throw new Error('No authorization code received');
-        }
-
-        // Exchange code for tokens
-        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({
-            client_id: GOOGLE_OAUTH_CONFIG.clientId!,
-            code,
-            grant_type: 'authorization_code',
-            redirect_uri: GOOGLE_OAUTH_CONFIG.redirectUri,
-            code_verifier: codeVerifier,
-          }).toString(),
-        });
-
-        const tokens = await tokenResponse.json();
-        
-        if (!tokens.id_token) {
-          throw new Error('No ID token received');
-        }
-
-        // Verify domain restriction
-        const userInfo = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-          headers: {
-            Authorization: `Bearer ${tokens.access_token}`,
-          },
-        });
-        
-        const userData = await userInfo.json();
-        
-        if (!userData.email || !userData.email.endsWith('@bieszczady.gopr.pl')) {
-          throw new Error('Only @bieszczady.gopr.pl users are allowed');
-        }
-
-        // Create Firebase credential and sign in
-        const credential = GoogleAuthProvider.credential(tokens.id_token);
-        const firebaseResult = await signInWithCredential(auth, credential);
-        
-        console.log('Mobile Google sign-in successful:', firebaseResult.user.email);
-      } else if (result.type === 'cancel') {
-        throw new Error('Google sign-in was cancelled');
-      } else {
-        throw new Error('Authentication failed');
+      // Check if Google Play Services are available
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      
+      // Get the user's ID token
+      const signInResult = await GoogleSignin.signIn();
+      const idToken = signInResult.data?.idToken;
+      
+      if (!idToken) {
+        throw new Error('No ID token received from Google Sign-In');
+      }
+      
+      // Create a Google credential with the token
+      const googleCredential = GoogleAuthProvider.credential(idToken);
+      
+      // Sign in the user with the credential
+      const firebaseResult = await signInWithCredential(auth, googleCredential);
+      
+      console.log('Mobile Google sign-in successful:', firebaseResult.user.email);
+      
+      // Verify domain restriction (additional check for security)
+      if (!firebaseResult.user.email?.endsWith('@bieszczady.gopr.pl')) {
+        await auth.signOut();
+        throw new Error('Only @bieszczady.gopr.pl users are allowed');
       }
     } catch (error: any) {
       console.error('Mobile Google login error:', error);
@@ -164,14 +103,14 @@ export default function LoginScreen() {
       }
     } else {
       // Mobile-specific error handling
-      if (error.message?.includes('cancelled')) {
+      if (error.code === 'SIGN_IN_CANCELLED' || error.message?.includes('cancelled')) {
         errorMessage = 'Google sign-in was cancelled.';
       } else if (error.message?.includes('@bieszczady.gopr.pl')) {
         errorMessage = 'Only @bieszczady.gopr.pl users are allowed to sign in.';
-      } else if (error.message?.includes('No authorization code')) {
-        errorMessage = 'Authentication failed. Please try again.';
-      } else if (error.message?.includes('No ID token')) {
-        errorMessage = 'Authentication failed. Please check your internet connection.';
+      } else if (error.code === 'PLAY_SERVICES_NOT_AVAILABLE') {
+        errorMessage = 'Google Play Services is not available on this device.';
+      } else if (error.code === 'SIGN_IN_REQUIRED') {
+        errorMessage = 'Google sign-in is required. Please try again.';
       }
     }
 
@@ -240,17 +179,27 @@ export default function LoginScreen() {
           <View style={styles.dividerLine} />
         </View>
 
-        <TouchableOpacity
-          style={[styles.googleButton, googleLoading && styles.disabledButton]}
-          onPress={handleGoogleLogin}
-          disabled={googleLoading}
-        >
-          {googleLoading ? (
-            <ActivityIndicator color="#333333" />
-          ) : (
-            <Text style={styles.googleButtonText}>Sign in with Google Workspace</Text>
-          )}
-        </TouchableOpacity>
+        {Platform.OS === 'web' ? (
+          <TouchableOpacity
+            style={[styles.googleButton, googleLoading && styles.disabledButton]}
+            onPress={handleGoogleLogin}
+            disabled={googleLoading}
+          >
+            {googleLoading ? (
+              <ActivityIndicator color="#333333" />
+            ) : (
+              <Text style={styles.googleButtonText}>Sign in with Google Workspace</Text>
+            )}
+          </TouchableOpacity>
+        ) : (
+          <GoogleSigninButton
+            style={styles.googleSigninButton}
+            size={GoogleSigninButton.Size.Wide}
+            color={GoogleSigninButton.Color.Light}
+            onPress={handleGoogleLogin}
+            disabled={googleLoading}
+          />
+        )}
 
         <Text style={styles.infoText}>
           Contact your administrator for account access
@@ -351,6 +300,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',
+    marginBottom: 10,
+  },
+  googleSigninButton: {
+    width: '100%',
+    height: 48,
     marginBottom: 10,
   },
   googleButtonText: {
