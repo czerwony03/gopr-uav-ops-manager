@@ -11,38 +11,40 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useAuth, UserRole } from '../contexts/AuthContext';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import { firestore } from '../firebaseConfig';
 import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
+import { UserService } from '../services/userService';
 
 interface UserData {
   id: string;
   email: string;
   role: UserRole;
+  firstname?: string;
+  surname?: string;
 }
 
 export default function UsersListScreen() {
   const { user } = useAuth();
+  const router = useRouter();
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchUsers = useCallback(async () => {
+    if (!user) return;
+    
     try {
-      const usersCollection = collection(firestore, 'users');
-      const usersSnapshot = await getDocs(usersCollection);
-      const fetchedUsers: UserData[] = [];
-      
-      usersSnapshot.forEach((doc) => {
-        const userData = doc.data();
-        fetchedUsers.push({
-          id: doc.id,
-          email: userData.email || '',
-          role: userData.role || 'user',
-        });
-      });
-
-      setUsers(fetchedUsers);
+      const fetchedUsers = await UserService.getUsers(user.role);
+      const usersData: UserData[] = fetchedUsers.map(userData => ({
+        id: userData.uid,
+        email: userData.email,
+        role: userData.role,
+        firstname: userData.firstname,
+        surname: userData.surname,
+      }));
+      setUsers(usersData);
     } catch (error) {
       console.error('Error fetching users:', error);
       Alert.alert('Error', 'Failed to fetch users');
@@ -50,7 +52,7 @@ export default function UsersListScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchUsers();
@@ -145,16 +147,35 @@ export default function UsersListScreen() {
     <View style={styles.userCard}>
       <View style={styles.userInfo}>
         <Text style={styles.userEmail}>{item.email}</Text>
+        {(item.firstname || item.surname) && (
+          <Text style={styles.userName}>
+            {[item.firstname, item.surname].filter(Boolean).join(' ')}
+          </Text>
+        )}
         <View style={[styles.roleBadge, { backgroundColor: getRoleColor(item.role) }]}>
           <Text style={styles.roleText}>{item.role.toUpperCase()}</Text>
         </View>
       </View>
-      <TouchableOpacity
-        style={styles.editButton}
-        onPress={() => showRoleUpdateDialog(item.id, item.role)}
-      >
-        <Text style={styles.editButtonText}>Change Role</Text>
-      </TouchableOpacity>
+      <View style={styles.actionButtons}>
+        <TouchableOpacity
+          style={styles.viewButton}
+          onPress={() => router.push(`/user-details?id=${item.id}`)}
+        >
+          <Text style={styles.viewButtonText}>View Details</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => router.push(`/user-form?id=${item.id}`)}
+        >
+          <Text style={styles.editButtonText}>Edit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.roleButton}
+          onPress={() => showRoleUpdateDialog(item.id, item.role)}
+        >
+          <Text style={styles.roleButtonText}>Role</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -266,6 +287,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#333',
+    marginBottom: 4,
+  },
+  userName: {
+    fontSize: 14,
+    color: '#666',
     marginBottom: 8,
   },
   roleBadge: {
@@ -279,15 +305,47 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
+  actionButtons: {
+    flexDirection: 'column',
+    gap: 6,
+  },
+  viewButton: {
+    backgroundColor: '#28a745',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 4,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  viewButtonText: {
+    color: 'white',
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
   editButton: {
     backgroundColor: '#0066CC',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 4,
+    minWidth: 80,
+    alignItems: 'center',
   },
   editButtonText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  roleButton: {
+    backgroundColor: '#ffc107',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 4,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  roleButtonText: {
+    color: 'white',
+    fontSize: 11,
     fontWeight: 'bold',
   },
 });

@@ -20,7 +20,7 @@ export function CustomDrawerContent(props: any) {
   };
 
   const handleNavigation = (route: string) => {
-    router.push(route);
+    router.push(route as any);
   };
 
   const getRoleColor = (role: string) => {

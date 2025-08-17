@@ -5,6 +5,7 @@ import { auth, firestore } from '../firebaseConfig';
 
 export type UserRole = 'user' | 'manager' | 'admin';
 
+// Legacy interface for backward compatibility
 export interface UserData {
   uid: string;
   email: string;

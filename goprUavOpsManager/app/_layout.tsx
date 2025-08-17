@@ -85,6 +85,20 @@ export default function RootLayout() {
               drawerItemStyle: { display: 'none' },
             }}
           />
+          <Drawer.Screen
+            name="user-form"
+            options={{
+              title: "User",
+              drawerItemStyle: { display: 'none' },
+            }}
+          />
+          <Drawer.Screen
+            name="user-details"
+            options={{
+              title: "User Details",
+              drawerItemStyle: { display: 'none' },
+            }}
+          />
         </Drawer>
       </AuthProvider>
     </GestureHandlerRootView>
