@@ -17,12 +17,15 @@ import ImageViewer from '../components/ImageViewer';
 import { ProcedureChecklist, ChecklistItem } from '../types/ProcedureChecklist';
 import { useAuth } from '../contexts/AuthContext';
 import { ProcedureChecklistService } from '../services/procedureChecklistService';
+import { UserService } from '../services/userService';
 
 export default function ProcedureChecklistDetailsScreen() {
   const [checklist, setChecklist] = useState<ProcedureChecklist | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
+  const [createdByEmail, setCreatedByEmail] = useState<string>('');
+  const [updatedByEmail, setUpdatedByEmail] = useState<string>('');
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const router = useRouter();
@@ -33,6 +36,16 @@ export default function ProcedureChecklistDetailsScreen() {
     try {
       const checklistData = await ProcedureChecklistService.getProcedureChecklist(id, user.role);
       setChecklist(checklistData);
+      
+      // Fetch user emails for audit trail
+      if (checklistData?.createdBy) {
+        const createdEmail = await UserService.getUserEmail(checklistData.createdBy);
+        setCreatedByEmail(createdEmail);
+      }
+      if (checklistData?.updatedBy) {
+        const updatedEmail = await UserService.getUserEmail(checklistData.updatedBy);
+        setUpdatedByEmail(updatedEmail);
+      }
     } catch (error) {
       console.error('Error fetching procedure/checklist:', error);
       Alert.alert(
@@ -85,7 +98,7 @@ export default function ProcedureChecklistDetailsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await ProcedureChecklistService.softDeleteProcedureChecklist(checklist.id, user.role);
+              await ProcedureChecklistService.softDeleteProcedureChecklist(checklist.id, user.role, user.uid);
               Alert.alert('Success', 'Procedure/checklist deleted successfully', [
                 { text: 'OK', onPress: () => router.back() }
               ]);
@@ -103,7 +116,7 @@ export default function ProcedureChecklistDetailsScreen() {
     if (!user || !checklist) return;
 
     try {
-      await ProcedureChecklistService.restoreProcedureChecklist(checklist.id, user.role);
+      await ProcedureChecklistService.restoreProcedureChecklist(checklist.id, user.role, user.uid);
       await fetchChecklist(); // Refresh the data
       Alert.alert('Success', 'Procedure/checklist restored successfully');
     } catch (error) {
@@ -238,7 +251,14 @@ export default function ProcedureChecklistDetailsScreen() {
             </Text>
             {checklist.createdAt && (
               <Text style={styles.metadataText}>
-                Created {checklist.createdAt.toLocaleDateString()}
+                Created {checklist.createdAt.toLocaleDateString()} {checklist.createdAt.toLocaleTimeString()}
+                {createdByEmail && ` by ${createdByEmail}`}
+              </Text>
+            )}
+            {checklist.updatedAt && (
+              <Text style={styles.metadataText}>
+                Updated {checklist.updatedAt.toLocaleDateString()} {checklist.updatedAt.toLocaleTimeString()}
+                {updatedByEmail && ` by ${updatedByEmail}`}
               </Text>
             )}
           </View>

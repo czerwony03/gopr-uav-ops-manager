@@ -19,6 +19,9 @@ import {
 import { db, storage } from '../firebaseConfig';
 import { ProcedureChecklist, ProcedureChecklistFormData, ChecklistItemFormData } from '../types/ProcedureChecklist';
 import { UserRole } from '../contexts/AuthContext';
+import { AuditLogService } from './auditLogService';
+import { UserService } from './userService';
+import { UserRole } from '../contexts/AuthContext';
 
 export class ProcedureChecklistService {
   private static readonly COLLECTION_NAME = 'procedures_checklists';
@@ -106,6 +109,7 @@ export class ProcedureChecklistService {
         description: formData.description,
         items: processedItems,
         createdBy: userId,
+        updatedBy: userId,
         isDeleted: false,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
@@ -113,6 +117,19 @@ export class ProcedureChecklistService {
 
       const checklistsCollection = collection(db, this.COLLECTION_NAME);
       const docRef = await addDoc(checklistsCollection, checklistData);
+
+      // Create audit log entry
+      const userEmail = await UserService.getUserEmail(userId);
+      await AuditLogService.createAuditLog({
+        entityType: 'procedureChecklist',
+        entityId: docRef.id,
+        action: 'create',
+        userId,
+        userEmail,
+        details: AuditLogService.createChangeDetails('create', 'procedure/checklist'),
+        newValues: checklistData
+      });
+
       return docRef.id;
     } catch (error) {
       console.error('Error creating procedure/checklist:', error);
@@ -124,7 +141,8 @@ export class ProcedureChecklistService {
   static async updateProcedureChecklist(
     id: string, 
     formData: ProcedureChecklistFormData, 
-    userRole: UserRole
+    userRole: UserRole,
+    userId: string
   ): Promise<void> {
     if (!this.canModifyProcedures(userRole)) {
       throw new Error('Insufficient permissions to update procedure/checklist');
@@ -138,6 +156,8 @@ export class ProcedureChecklistService {
         throw new Error('Procedure/checklist not found');
       }
 
+      const currentChecklist = checklistDoc.data() as ProcedureChecklist;
+
       // Process items and upload images
       const processedItems = await this.processChecklistItems(formData.items);
 
@@ -146,9 +166,27 @@ export class ProcedureChecklistService {
         description: formData.description,
         items: processedItems,
         updatedAt: Timestamp.now(),
+        updatedBy: userId,
       };
 
+      // Store previous values for audit log
+      const previousValues = { ...currentChecklist };
+      const newValues = { ...currentChecklist, ...updateData };
+
       await updateDoc(checklistRef, updateData);
+
+      // Create audit log entry
+      const userEmail = await UserService.getUserEmail(userId);
+      await AuditLogService.createAuditLog({
+        entityType: 'procedureChecklist',
+        entityId: id,
+        action: 'edit',
+        userId,
+        userEmail,
+        details: AuditLogService.createChangeDetails('edit', 'procedure/checklist', { previous: previousValues, new: newValues }),
+        previousValues,
+        newValues
+      });
     } catch (error) {
       console.error('Error updating procedure/checklist:', error);
       throw new Error('Failed to update procedure/checklist');
@@ -156,7 +194,7 @@ export class ProcedureChecklistService {
   }
 
   // Soft delete a procedure/checklist (manager and admin only)
-  static async softDeleteProcedureChecklist(id: string, userRole: UserRole): Promise<void> {
+  static async softDeleteProcedureChecklist(id: string, userRole: UserRole, userId: string): Promise<void> {
     if (!this.canModifyProcedures(userRole)) {
       throw new Error('Insufficient permissions to delete procedure/checklist');
     }
@@ -169,10 +207,25 @@ export class ProcedureChecklistService {
         throw new Error('Procedure/checklist not found');
       }
 
+      const currentChecklist = checklistDoc.data() as ProcedureChecklist;
+
       await updateDoc(checklistRef, {
         isDeleted: true,
         deletedAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
+        updatedBy: userId,
+      });
+
+      // Create audit log entry
+      const userEmail = await UserService.getUserEmail(userId);
+      await AuditLogService.createAuditLog({
+        entityType: 'procedureChecklist',
+        entityId: id,
+        action: 'delete',
+        userId,
+        userEmail,
+        details: AuditLogService.createChangeDetails('delete', 'procedure/checklist'),
+        previousValues: currentChecklist
       });
     } catch (error) {
       console.error('Error deleting procedure/checklist:', error);
@@ -181,7 +234,7 @@ export class ProcedureChecklistService {
   }
 
   // Restore a soft-deleted procedure/checklist (admin only)
-  static async restoreProcedureChecklist(id: string, userRole: UserRole): Promise<void> {
+  static async restoreProcedureChecklist(id: string, userRole: UserRole, userId: string): Promise<void> {
     if (userRole !== 'admin') {
       throw new Error('Insufficient permissions to restore procedure/checklist');
     }
@@ -194,10 +247,25 @@ export class ProcedureChecklistService {
         throw new Error('Procedure/checklist not found');
       }
 
+      const currentChecklist = checklistDoc.data() as ProcedureChecklist;
+
       await updateDoc(checklistRef, {
         isDeleted: false,
         deletedAt: null,
         updatedAt: Timestamp.now(),
+        updatedBy: userId,
+      });
+
+      // Create audit log entry
+      const userEmail = await UserService.getUserEmail(userId);
+      await AuditLogService.createAuditLog({
+        entityType: 'procedureChecklist',
+        entityId: id,
+        action: 'restore',
+        userId,
+        userEmail,
+        details: AuditLogService.createChangeDetails('restore', 'procedure/checklist'),
+        previousValues: currentChecklist
       });
     } catch (error) {
       console.error('Error restoring procedure/checklist:', error);

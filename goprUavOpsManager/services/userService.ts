@@ -117,4 +117,21 @@ export class UserService {
       throw new Error('Failed to update user');
     }
   }
+
+  // Get user email by UID (for audit trail display)
+  static async getUserEmail(uid: string): Promise<string> {
+    try {
+      const userDoc = await getDoc(doc(db, this.COLLECTION_NAME, uid));
+      
+      if (!userDoc.exists()) {
+        return 'Unknown User';
+      }
+
+      const userData = userDoc.data();
+      return userData.email || 'Unknown User';
+    } catch (error) {
+      console.error('Error fetching user email:', error);
+      return 'Unknown User';
+    }
+  }
 }

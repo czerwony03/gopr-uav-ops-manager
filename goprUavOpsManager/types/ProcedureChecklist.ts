@@ -14,6 +14,7 @@ export interface ProcedureChecklist {
   description?: string;
   items: ChecklistItem[];
   createdBy: string; // user ID who created it
+  updatedBy?: string; // user ID who last updated it
   isDeleted?: boolean; // soft-delete flag
   deletedAt?: Date; // timestamp when deleted
   createdAt?: Date; // timestamp when created

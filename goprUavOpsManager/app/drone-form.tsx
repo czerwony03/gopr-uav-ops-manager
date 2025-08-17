@@ -15,7 +15,7 @@ import { Drone } from '../types/Drone';
 import { useAuth } from '../contexts/AuthContext';
 import { DroneService } from '../services/droneService';
 
-type DroneFormData = Omit<Drone, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'isDeleted'>;
+type DroneFormData = Omit<Drone, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'isDeleted' | 'createdBy' | 'updatedBy'>;
 
 export default function DroneFormScreen() {
   const [loading, setLoading] = useState(false);
@@ -149,13 +149,13 @@ export default function DroneFormScreen() {
     setLoading(true);
     try {
       if (isEditing && id) {
-        await DroneService.updateDrone(id, formData, user.role);
+        await DroneService.updateDrone(id, formData, user.role, user.uid);
         // Navigate back immediately after successful update
         router.back();
         // Show success alert without blocking navigation
         Alert.alert('Success', 'Drone updated successfully');
       } else {
-        await DroneService.createDrone(formData, user.role);
+        await DroneService.createDrone(formData, user.role, user.uid);
         // Navigate back immediately after successful creation
         router.back();
         // Show success alert without blocking navigation

@@ -13,6 +13,8 @@ import {
 import { db } from '../firebaseConfig';
 import { Flight } from '../types/Flight';
 import { UserRole } from '../contexts/AuthContext';
+import { AuditLogService } from './auditLogService';
+import { UserService } from './userService';
 
 export class FlightService {
   private static readonly COLLECTION_NAME = 'flights';
@@ -87,7 +89,7 @@ export class FlightService {
 
   // Create a new flight
   static async createFlight(
-    flightData: Omit<Flight, 'id' | 'createdAt' | 'updatedAt'>, 
+    flightData: Omit<Flight, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>, 
     currentUserId: string, 
     currentUserEmail?: string
   ): Promise<string> {
@@ -99,7 +101,22 @@ export class FlightService {
         userEmail: currentUserEmail || '',
         createdAt: now,
         updatedAt: now,
+        createdBy: currentUserId,
+        updatedBy: currentUserId,
       });
+
+      // Create audit log entry
+      const userEmail = await UserService.getUserEmail(currentUserId);
+      await AuditLogService.createAuditLog({
+        entityType: 'flight',
+        entityId: docRef.id,
+        action: 'create',
+        userId: currentUserId,
+        userEmail,
+        details: AuditLogService.createChangeDetails('create', 'flight'),
+        newValues: { ...flightData, userId: currentUserId, userEmail: currentUserEmail || '' }
+      });
+
       return docRef.id;
     } catch (error) {
       console.error('Error creating flight:', error);
@@ -129,9 +146,27 @@ export class FlightService {
         throw new Error('Insufficient permissions to update this flight');
       }
 
+      // Store previous values for audit log
+      const previousValues = { ...currentFlight };
+      const newValues = { ...currentFlight, ...patch };
+
       await updateDoc(flightRef, {
         ...patch,
         updatedAt: Timestamp.now(),
+        updatedBy: currentUserId,
+      });
+
+      // Create audit log entry
+      const userEmail = await UserService.getUserEmail(currentUserId);
+      await AuditLogService.createAuditLog({
+        entityType: 'flight',
+        entityId: id,
+        action: 'edit',
+        userId: currentUserId,
+        userEmail,
+        details: AuditLogService.createChangeDetails('edit', 'flight', { previous: previousValues, new: newValues }),
+        previousValues,
+        newValues
       });
     } catch (error) {
       console.error('Error updating flight:', error);
