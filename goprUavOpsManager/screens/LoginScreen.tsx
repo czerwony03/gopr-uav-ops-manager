@@ -7,9 +7,32 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+import * as Crypto from 'expo-crypto';
+
+// Configure WebBrowser for better mobile OAuth experience
+if (Platform.OS !== 'web') {
+  WebBrowser.maybeCompleteAuthSession();
+}
+
+// Google OAuth configuration
+const GOOGLE_OAUTH_CONFIG = {
+  clientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
+  redirectUri: AuthSession.makeRedirectUri({
+    scheme: 'dev.redmed.gopruavopsmanager',
+    path: 'auth',
+  }),
+  scopes: ['openid', 'profile', 'email'],
+  additionalParameters: {
+    hd: 'bieszczady.gopr.pl', // Restrict to Google Workspace domain
+  },
+  responseType: AuthSession.ResponseType.Code,
+};
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -20,23 +43,118 @@ export default function LoginScreen() {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
-      // Create Google Auth Provider with domain restriction
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({
-        hd: 'bieszczady.gopr.pl' // Restrict to Google Workspace domain
-      });
-      
-      // Firebase will handle the OAuth flow and domain restriction is managed server-side
-      const result = await signInWithPopup(auth, provider);
-
-      // Navigation will be handled by the auth state change in AuthContext
-      console.log('Google sign-in successful:', result.user.email);
-
+      if (Platform.OS === 'web') {
+        // Web platform: Use Firebase signInWithPopup
+        await handleWebGoogleLogin();
+      } else {
+        // Mobile platforms: Use Expo Auth Session
+        await handleMobileGoogleLogin();
+      }
     } catch (error: any) {
       console.error('Google login error:', error);
-      let errorMessage = error.message || 'An error occurred during Google login';
+      handleGoogleLoginError(error);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
-      // Provide helpful error messages for common issues
+  const handleWebGoogleLogin = async () => {
+    // Create Google Auth Provider with domain restriction
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      hd: 'bieszczady.gopr.pl' // Restrict to Google Workspace domain
+    });
+    
+    // Firebase will handle the OAuth flow and domain restriction is managed server-side
+    const result = await signInWithPopup(auth, provider);
+    console.log('Google sign-in successful:', result.user.email);
+  };
+
+  const handleMobileGoogleLogin = async () => {
+    try {
+      // Generate code verifier and challenge for PKCE
+      const codeVerifier = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+        { encoding: Crypto.CryptoEncoding.BASE64 }
+      );
+
+      // Build authorization URL
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${GOOGLE_OAUTH_CONFIG.clientId}&` +
+        `redirect_uri=${encodeURIComponent(GOOGLE_OAUTH_CONFIG.redirectUri)}&` +
+        `response_type=code&` +
+        `scope=${encodeURIComponent(GOOGLE_OAUTH_CONFIG.scopes.join(' '))}&` +
+        `hd=bieszczady.gopr.pl&` +
+        `code_challenge=${codeVerifier}&` +
+        `code_challenge_method=S256`;
+
+      // Open OAuth flow
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, GOOGLE_OAUTH_CONFIG.redirectUri);
+
+      if (result.type === 'success' && result.url) {
+        const url = new URL(result.url);
+        const code = url.searchParams.get('code');
+        
+        if (!code) {
+          throw new Error('No authorization code received');
+        }
+
+        // Exchange code for tokens
+        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            client_id: GOOGLE_OAUTH_CONFIG.clientId!,
+            code,
+            grant_type: 'authorization_code',
+            redirect_uri: GOOGLE_OAUTH_CONFIG.redirectUri,
+            code_verifier: codeVerifier,
+          }).toString(),
+        });
+
+        const tokens = await tokenResponse.json();
+        
+        if (!tokens.id_token) {
+          throw new Error('No ID token received');
+        }
+
+        // Verify domain restriction
+        const userInfo = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: {
+            Authorization: `Bearer ${tokens.access_token}`,
+          },
+        });
+        
+        const userData = await userInfo.json();
+        
+        if (!userData.email || !userData.email.endsWith('@bieszczady.gopr.pl')) {
+          throw new Error('Only @bieszczady.gopr.pl users are allowed');
+        }
+
+        // Create Firebase credential and sign in
+        const credential = GoogleAuthProvider.credential(tokens.id_token);
+        const firebaseResult = await signInWithCredential(auth, credential);
+        
+        console.log('Mobile Google sign-in successful:', firebaseResult.user.email);
+      } else if (result.type === 'cancel') {
+        throw new Error('Google sign-in was cancelled');
+      } else {
+        throw new Error('Authentication failed');
+      }
+    } catch (error: any) {
+      console.error('Mobile Google login error:', error);
+      throw error;
+    }
+  };
+
+  const handleGoogleLoginError = (error: any) => {
+    let errorMessage = error.message || 'An error occurred during Google login';
+
+    // Provide helpful error messages for common issues
+    if (Platform.OS === 'web') {
       if (error.code === 'auth/popup-closed-by-user') {
         errorMessage = 'Google sign-in was cancelled.';
       } else if (error.code === 'auth/popup-blocked') {
@@ -44,11 +162,20 @@ export default function LoginScreen() {
       } else if (error.code === 'auth/unauthorized-domain') {
         errorMessage = 'This domain is not authorized for Google sign-in. Contact your administrator.';
       }
-
-      Alert.alert('Google Login Failed', errorMessage);
-    } finally {
-      setGoogleLoading(false);
+    } else {
+      // Mobile-specific error handling
+      if (error.message?.includes('cancelled')) {
+        errorMessage = 'Google sign-in was cancelled.';
+      } else if (error.message?.includes('@bieszczady.gopr.pl')) {
+        errorMessage = 'Only @bieszczady.gopr.pl users are allowed to sign in.';
+      } else if (error.message?.includes('No authorization code')) {
+        errorMessage = 'Authentication failed. Please try again.';
+      } else if (error.message?.includes('No ID token')) {
+        errorMessage = 'Authentication failed. Please check your internet connection.';
+      }
     }
+
+    Alert.alert('Google Login Failed', errorMessage);
   };
 
   const handleLogin = async () => {
