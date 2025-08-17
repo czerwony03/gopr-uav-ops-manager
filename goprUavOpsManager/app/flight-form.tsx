@@ -18,16 +18,26 @@ import { useAuth } from '../contexts/AuthContext';
 import { FlightService } from '../services/flightService';
 import { DroneService } from '../services/droneService';
 import { Drone } from '../types/Drone';
+import { 
+  FlightCategory, 
+  OperationType, 
+  ActivityType,
+  AVAILABLE_FLIGHT_CATEGORIES,
+  AVAILABLE_OPERATION_TYPES,
+  AVAILABLE_ACTIVITY_TYPES
+} from '../types/Flight';
 
 interface FlightFormData {
   date: string;
   location: string;
-  flightCategory: string;
-  operationType: string;
-  activityType: string;
+  flightCategory: FlightCategory | '';
+  operationType: OperationType | '';
+  activityType: ActivityType | '';
   droneId: string;
-  startTime: string;
-  endTime: string;
+  startDate: string; // YYYY-MM-DD
+  startTime: string; // HH:mm
+  endDate: string; // YYYY-MM-DD
+  endTime: string; // HH:mm
   conditions: string;
 }
 
@@ -42,17 +52,22 @@ export default function FlightFormScreen() {
   const [drones, setDrones] = useState<Drone[]>([]);
   
   // Default form data for creating new flights
-  const defaultFormData = useMemo((): FlightFormData => ({
-    date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
-    location: '',
-    flightCategory: '',
-    operationType: '',
-    activityType: '',
-    droneId: '',
-    startTime: '',
-    endTime: '',
-    conditions: '',
-  }), []);
+  const defaultFormData = useMemo((): FlightFormData => {
+    const today = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
+    return {
+      date: today,
+      location: '',
+      flightCategory: '',
+      operationType: '',
+      activityType: '',
+      droneId: '',
+      startDate: today,
+      startTime: '',
+      endDate: today,
+      endTime: '',
+      conditions: '',
+    };
+  }, []);
 
   const [formData, setFormData] = useState<FlightFormData>(defaultFormData);
 
@@ -79,15 +94,40 @@ export default function FlightFormScreen() {
       setLoading(true);
       const flight = await FlightService.getFlight(flightId, user.role, user.uid);
       if (flight) {
+        // Handle backward compatibility for time format
+        const parseDateTime = (timeStr: string, fallbackDate: string) => {
+          // If it's already a datetime string, parse it
+          if (timeStr.includes('T') || timeStr.includes('Z')) {
+            const dt = new Date(timeStr);
+            return {
+              date: dt.toISOString().split('T')[0],
+              time: dt.toTimeString().substring(0, 5)
+            };
+          }
+          // If it's in HH:mm format, use fallback date
+          if (timeStr.match(/^\d{2}:\d{2}$/)) {
+            return {
+              date: fallbackDate,
+              time: timeStr
+            };
+          }
+          return { date: fallbackDate, time: '' };
+        };
+
+        const startDateTime = parseDateTime(flight.startTime, flight.date);
+        const endDateTime = parseDateTime(flight.endTime, flight.date);
+
         setFormData({
           date: flight.date,
           location: flight.location,
-          flightCategory: flight.flightCategory,
-          operationType: flight.operationType,
-          activityType: flight.activityType,
+          flightCategory: flight.flightCategory as FlightCategory,
+          operationType: flight.operationType as OperationType,
+          activityType: flight.activityType as ActivityType,
           droneId: flight.droneId,
-          startTime: flight.startTime,
-          endTime: flight.endTime,
+          startDate: startDateTime.date,
+          startTime: startDateTime.time,
+          endDate: endDateTime.date,
+          endTime: endDateTime.time,
           conditions: flight.conditions || '',
         });
       } else {
@@ -126,13 +166,14 @@ export default function FlightFormScreen() {
   };
 
   const validateForm = (): boolean => {
-    const requiredFields = [
+    const requiredFields: (keyof FlightFormData)[] = [
       'date', 'location', 'flightCategory', 'operationType', 
-      'activityType', 'droneId', 'startTime', 'endTime'
+      'activityType', 'droneId', 'startDate', 'startTime', 'endDate', 'endTime'
     ];
 
     for (const field of requiredFields) {
-      if (!formData[field as keyof FlightFormData].trim()) {
+      const value = formData[field];
+      if (!value || (typeof value === 'string' && !value.trim())) {
         Alert.alert('Validation Error', `${field.charAt(0).toUpperCase() + field.slice(1)} is required`);
         return false;
       }
@@ -150,14 +191,22 @@ export default function FlightFormScreen() {
       return false;
     }
 
-    // Validate date format (YYYY-MM-DD)
+    // Validate date formats (YYYY-MM-DD)
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(formData.date)) {
       Alert.alert('Validation Error', 'Date must be in YYYY-MM-DD format');
       return false;
     }
+    if (!dateRegex.test(formData.startDate)) {
+      Alert.alert('Validation Error', 'Start date must be in YYYY-MM-DD format');
+      return false;
+    }
+    if (!dateRegex.test(formData.endDate)) {
+      Alert.alert('Validation Error', 'End date must be in YYYY-MM-DD format');
+      return false;
+    }
 
-    // Validate time format (HH:mm)
+    // Validate time formats (HH:mm)
     const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (!timeRegex.test(formData.startTime)) {
       Alert.alert('Validation Error', 'Start time must be in HH:mm format');
@@ -168,14 +217,22 @@ export default function FlightFormScreen() {
       return false;
     }
 
-    // Validate that end time is after start time
-    const [startHour, startMin] = formData.startTime.split(':').map(Number);
-    const [endHour, endMin] = formData.endTime.split(':').map(Number);
-    const startMinutes = startHour * 60 + startMin;
-    const endMinutes = endHour * 60 + endMin;
-
-    if (endMinutes <= startMinutes) {
-      Alert.alert('Validation Error', 'End time must be after start time');
+    // Validate that end datetime is after start datetime
+    try {
+      const startDateTime = new Date(`${formData.startDate}T${formData.startTime}:00`);
+      const endDateTime = new Date(`${formData.endDate}T${formData.endTime}:00`);
+      
+      if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+        Alert.alert('Validation Error', 'Invalid date/time format');
+        return false;
+      }
+      
+      if (endDateTime <= startDateTime) {
+        Alert.alert('Validation Error', 'End time must be after start time');
+        return false;
+      }
+    } catch {
+      Alert.alert('Validation Error', 'Invalid date/time format');
       return false;
     }
 
@@ -192,9 +249,21 @@ export default function FlightFormScreen() {
       const selectedDrone = drones.find(drone => drone.id === formData.droneId);
       const droneName = selectedDrone?.name || '';
 
+      // Convert separate date/time fields to datetime strings
+      const startDateTime = `${formData.startDate}T${formData.startTime}:00`;
+      const endDateTime = `${formData.endDate}T${formData.endTime}:00`;
+
       const flightData = {
-        ...formData,
+        date: formData.date,
+        location: formData.location,
+        flightCategory: formData.flightCategory,
+        operationType: formData.operationType,
+        activityType: formData.activityType,
+        droneId: formData.droneId,
         droneName,
+        startTime: startDateTime,
+        endTime: endDateTime,
+        conditions: formData.conditions,
         userId: user.uid,
         userEmail: user.email,
       };
@@ -260,28 +329,58 @@ export default function FlightFormScreen() {
             />
 
             <Text style={styles.label}>Flight Category *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.flightCategory}
-              onChangeText={(value) => updateFormData('flightCategory', value)}
-              placeholder="Enter flight category"
-            />
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={formData.flightCategory}
+                onValueChange={(value) => updateFormData('flightCategory', value)}
+                style={styles.picker}
+              >
+                <Picker.Item label="Select flight category" value="" />
+                {AVAILABLE_FLIGHT_CATEGORIES.map((category) => (
+                  <Picker.Item
+                    key={category}
+                    label={category}
+                    value={category}
+                  />
+                ))}
+              </Picker>
+            </View>
 
             <Text style={styles.label}>Operation Type *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.operationType}
-              onChangeText={(value) => updateFormData('operationType', value)}
-              placeholder="Enter operation type"
-            />
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={formData.operationType}
+                onValueChange={(value) => updateFormData('operationType', value)}
+                style={styles.picker}
+              >
+                <Picker.Item label="Select operation type" value="" />
+                {AVAILABLE_OPERATION_TYPES.map((type) => (
+                  <Picker.Item
+                    key={type}
+                    label={type}
+                    value={type}
+                  />
+                ))}
+              </Picker>
+            </View>
 
             <Text style={styles.label}>Activity Type *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.activityType}
-              onChangeText={(value) => updateFormData('activityType', value)}
-              placeholder="Enter activity type"
-            />
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={formData.activityType}
+                onValueChange={(value) => updateFormData('activityType', value)}
+                style={styles.picker}
+              >
+                <Picker.Item label="Select activity type" value="" />
+                {AVAILABLE_ACTIVITY_TYPES.map((type) => (
+                  <Picker.Item
+                    key={type}
+                    label={type}
+                    value={type}
+                  />
+                ))}
+              </Picker>
+            </View>
 
             <Text style={styles.label}>Drone *</Text>
             <View style={styles.pickerContainer}>
@@ -301,12 +400,28 @@ export default function FlightFormScreen() {
               </Picker>
             </View>
 
+            <Text style={styles.label}>Start Date *</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.startDate}
+              onChangeText={(value) => updateFormData('startDate', value)}
+              placeholder="YYYY-MM-DD"
+            />
+
             <Text style={styles.label}>Start Time *</Text>
             <TextInput
               style={styles.input}
               value={formData.startTime}
               onChangeText={(value) => updateFormData('startTime', value)}
-              placeholder="HH:mm"
+              placeholder="HH:mm (e.g. 14:30)"
+            />
+
+            <Text style={styles.label}>End Date *</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.endDate}
+              onChangeText={(value) => updateFormData('endDate', value)}
+              placeholder="YYYY-MM-DD"
             />
 
             <Text style={styles.label}>End Time *</Text>
@@ -314,7 +429,7 @@ export default function FlightFormScreen() {
               style={styles.input}
               value={formData.endTime}
               onChangeText={(value) => updateFormData('endTime', value)}
-              placeholder="HH:mm"
+              placeholder="HH:mm (e.g. 16:30)"
             />
 
             <Text style={styles.label}>Conditions</Text>
