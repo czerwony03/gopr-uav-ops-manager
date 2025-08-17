@@ -63,6 +63,16 @@ export default function RootLayout() {
               ),
             }}
           />
+          <Drawer.Screen
+            name="procedures-checklists-list"
+            options={{
+              title: "Procedures & Checklists",
+              drawerLabel: "Procedures & Checklists",
+              drawerIcon: ({ color, size }) => (
+                <Ionicons name="clipboard-outline" size={size} color={color} />
+              ),
+            }}
+          />
           {/* Detail and form screens - hidden from drawer */}
           <Drawer.Screen
             name="drone-details"
@@ -96,6 +106,21 @@ export default function RootLayout() {
             name="user-details"
             options={{
               title: "User Details",
+              drawerItemStyle: { display: 'none' },
+            }}
+          />
+          {/* Procedures & Checklists detail and form screens - hidden from drawer */}
+          <Drawer.Screen
+            name="procedures-checklist-details"
+            options={{
+              title: "Procedure/Checklist Details",
+              drawerItemStyle: { display: 'none' },
+            }}
+          />
+          <Drawer.Screen
+            name="procedures-checklist-form"
+            options={{
+              title: "Procedure/Checklist",
               drawerItemStyle: { display: 'none' },
             }}
           />
