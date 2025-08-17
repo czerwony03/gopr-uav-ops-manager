@@ -152,7 +152,14 @@ The app supports Google Workspace authentication restricted to the @bieszczady.g
    - Select "iOS" or "Android" as application type (create one for each platform you need)
    - For iOS: Enter your bundle identifier (e.g., `dev.redmed.gopruavopsmanager`)
    - For Android: Enter your package name and SHA-1 certificate fingerprint
+   - **IMPORTANT**: Add the following redirect URI to your OAuth client configuration:
+     - `dev.redmed.gopruavopsmanager://`
    - Copy the Client ID and add it to your `.env` file as `EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID`
+
+**Critical Configuration Note**: 
+- The redirect URI `dev.redmed.gopruavopsmanager://` must be exactly configured in your Google Cloud Console OAuth client
+- This URI format follows Google's requirements for mobile app deep linking
+- Without this exact configuration, you'll get "invalid_request" error 400 with "redirect_uri" details
 
 **Note**: The mobile OAuth Client ID is different from the web Client ID used in Firebase configuration.
 

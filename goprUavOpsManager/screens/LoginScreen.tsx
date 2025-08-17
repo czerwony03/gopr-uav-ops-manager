@@ -13,25 +13,18 @@ import { signInWithEmailAndPassword, signInWithPopup, signInWithCredential, Goog
 import { auth } from '../firebaseConfig';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
-import * as Crypto from 'expo-crypto';
 
 // Configure WebBrowser for better mobile OAuth experience
 if (Platform.OS !== 'web') {
   WebBrowser.maybeCompleteAuthSession();
 }
 
-// Google OAuth configuration
-const GOOGLE_OAUTH_CONFIG = {
-  clientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
-  redirectUri: AuthSession.makeRedirectUri({
-    scheme: 'dev.redmed.gopruavopsmanager',
-    path: 'auth',
-  }),
-  scopes: ['openid', 'profile', 'email'],
-  additionalParameters: {
-    hd: 'bieszczady.gopr.pl', // Restrict to Google Workspace domain
-  },
-  responseType: AuthSession.ResponseType.Code,
+// Google OAuth discovery endpoints
+const discovery = {
+  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+  tokenEndpoint: 'https://oauth2.googleapis.com/token',
+  revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
+  userInfoEndpoint: 'https://www.googleapis.com/oauth2/v2/userinfo',
 };
 
 export default function LoginScreen() {
@@ -72,74 +65,76 @@ export default function LoginScreen() {
 
   const handleMobileGoogleLogin = async () => {
     try {
-      // Generate code verifier and challenge for PKCE
-      const codeVerifier = await Crypto.digestStringAsync(
-        Crypto.CryptoDigestAlgorithm.SHA256,
-        Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
-        { encoding: Crypto.CryptoEncoding.BASE64 }
-      );
+      // Create proper redirect URI using Expo's scheme
+      const redirectUri = AuthSession.makeRedirectUri({
+        scheme: 'dev.redmed.gopruavopsmanager',
+        preferLocalhost: false,
+      });
 
-      // Build authorization URL
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${GOOGLE_OAUTH_CONFIG.clientId}&` +
-        `redirect_uri=${encodeURIComponent(GOOGLE_OAUTH_CONFIG.redirectUri)}&` +
-        `response_type=code&` +
-        `scope=${encodeURIComponent(GOOGLE_OAUTH_CONFIG.scopes.join(' '))}&` +
-        `hd=bieszczady.gopr.pl&` +
-        `code_challenge=${codeVerifier}&` +
-        `code_challenge_method=S256`;
+      console.log('Using redirect URI:', redirectUri);
 
-      // Open OAuth flow
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, GOOGLE_OAUTH_CONFIG.redirectUri);
+      // Create AuthRequest with proper configuration
+      const authRequest = new AuthSession.AuthRequest({
+        clientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID!,
+        scopes: ['openid', 'profile', 'email'],
+        responseType: AuthSession.ResponseType.Code,
+        redirectUri,
+        additionalParameters: {
+          hd: 'bieszczady.gopr.pl', // Restrict to Google Workspace domain
+        },
+        codeChallenge: undefined, // Let Expo handle PKCE automatically
+        state: undefined, // Let Expo handle state automatically
+      });
 
-      if (result.type === 'success' && result.url) {
-        const url = new URL(result.url);
-        const code = url.searchParams.get('code');
+      // Perform the authentication
+      const authResult = await authRequest.promptAsync(discovery, {
+        preferEphemeralSession: true, // Use private browsing mode
+      });
+
+      if (authResult.type === 'success') {
+        const { code } = authResult.params;
         
         if (!code) {
           throw new Error('No authorization code received');
         }
 
-        // Exchange code for tokens
-        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({
-            client_id: GOOGLE_OAUTH_CONFIG.clientId!,
-            code,
-            grant_type: 'authorization_code',
-            redirect_uri: GOOGLE_OAUTH_CONFIG.redirectUri,
-            code_verifier: codeVerifier,
-          }).toString(),
+        // Exchange authorization code for tokens
+        const tokenRequest = new AuthSession.TokenRequest({
+          clientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID!,
+          code,
+          redirectUri,
+          grantType: AuthSession.TokenRequestGrantType.AuthorizationCode,
+          codeVerifier: authRequest.codeVerifier,
         });
 
-        const tokens = await tokenResponse.json();
-        
-        if (!tokens.id_token) {
+        const tokenResult = await AuthSession.exchangeCodeAsync(
+          tokenRequest,
+          discovery
+        );
+
+        if (!tokenResult.idToken) {
           throw new Error('No ID token received');
         }
 
-        // Verify domain restriction
-        const userInfo = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        // Get user info to verify domain restriction
+        const userInfoResponse = await fetch(discovery.userInfoEndpoint, {
           headers: {
-            Authorization: `Bearer ${tokens.access_token}`,
+            Authorization: `Bearer ${tokenResult.accessToken}`,
           },
         });
+
+        const userInfo = await userInfoResponse.json();
         
-        const userData = await userInfo.json();
-        
-        if (!userData.email || !userData.email.endsWith('@bieszczady.gopr.pl')) {
+        if (!userInfo.email || !userInfo.email.endsWith('@bieszczady.gopr.pl')) {
           throw new Error('Only @bieszczady.gopr.pl users are allowed');
         }
 
         // Create Firebase credential and sign in
-        const credential = GoogleAuthProvider.credential(tokens.id_token);
+        const credential = GoogleAuthProvider.credential(tokenResult.idToken);
         const firebaseResult = await signInWithCredential(auth, credential);
         
         console.log('Mobile Google sign-in successful:', firebaseResult.user.email);
-      } else if (result.type === 'cancel') {
+      } else if (authResult.type === 'cancel') {
         throw new Error('Google sign-in was cancelled');
       } else {
         throw new Error('Authentication failed');
