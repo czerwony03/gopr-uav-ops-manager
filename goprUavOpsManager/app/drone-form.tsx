@@ -107,8 +107,14 @@ export default function DroneFormScreen() {
   }, [user, id, router]);
 
   useEffect(() => {
+    // Check authentication first - redirect to login if not authenticated
+    if (!user) {
+      router.replace('/');
+      return;
+    }
+
     // Check permissions
-    if (!user || (user.role !== 'manager' && user.role !== 'admin')) {
+    if (user.role !== 'manager' && user.role !== 'admin') {
       Alert.alert('Access Denied', 'You do not have permission to create or edit drones.', [
         { text: 'OK', onPress: () => router.back() }
       ]);

@@ -38,6 +38,14 @@ export default function FlightsListScreen() {
     }
   }, [user]);
 
+  // Authentication check - redirect if not logged in
+  useEffect(() => {
+    if (!user) {
+      router.replace('/');
+      return;
+    }
+  }, [user, router]);
+
   useEffect(() => {
     fetchFlights();
   }, [fetchFlights]);

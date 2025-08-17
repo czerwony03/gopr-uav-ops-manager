@@ -54,6 +54,14 @@ export default function UsersListScreen() {
     }
   }, [user]);
 
+  // Authentication check - redirect if not logged in
+  useEffect(() => {
+    if (!user) {
+      router.replace('/');
+      return;
+    }
+  }, [user, router]);
+
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
@@ -72,7 +80,12 @@ export default function UsersListScreen() {
   };
 
   // Only allow admin users to access this screen
-  if (!user || user.role !== 'admin') {
+  if (!user) {
+    // Redirecting to login - show nothing while redirecting
+    return null;
+  }
+
+  if (user.role !== 'admin') {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
