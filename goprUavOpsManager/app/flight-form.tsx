@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -40,7 +40,9 @@ export default function FlightFormScreen() {
   const [loading, setLoading] = useState(false);
   const [dronesLoading, setDronesLoading] = useState(true);
   const [drones, setDrones] = useState<Drone[]>([]);
-  const [formData, setFormData] = useState<FlightFormData>({
+  
+  // Default form data for creating new flights
+  const defaultFormData = useMemo((): FlightFormData => ({
     date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
     location: '',
     flightCategory: '',
@@ -50,7 +52,9 @@ export default function FlightFormScreen() {
     startTime: '',
     endTime: '',
     conditions: '',
-  });
+  }), []);
+
+  const [formData, setFormData] = useState<FlightFormData>(defaultFormData);
 
   const fetchDrones = useCallback(async () => {
     if (!user) return;
@@ -103,8 +107,11 @@ export default function FlightFormScreen() {
     fetchDrones();
     if (isEditing && id && typeof id === 'string') {
       fetchFlight(id);
+    } else {
+      // Reset form to default values when creating a new flight
+      setFormData(defaultFormData);
     }
-  }, [fetchDrones, fetchFlight, isEditing, id]);
+  }, [fetchDrones, fetchFlight, isEditing, id, defaultFormData]);
 
   const updateFormData = (field: keyof FlightFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));

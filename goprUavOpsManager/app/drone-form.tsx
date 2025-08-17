@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -26,7 +26,8 @@ export default function DroneFormScreen() {
   const router = useRouter();
   const isEditing = !!id;
 
-  const [formData, setFormData] = useState<DroneFormData>({
+  // Default form data for creating new drones
+  const defaultFormData = useMemo((): DroneFormData => ({
     name: '',
     location: '',
     registrationNumber: '',
@@ -52,7 +53,9 @@ export default function DroneFormScreen() {
     },
     maxSpeed: 0,
     userManual: '',
-  });
+  }), []);
+
+  const [formData, setFormData] = useState<DroneFormData>(defaultFormData);
 
   const loadDroneData = useCallback(async () => {
     if (!user || !id) return;
@@ -115,8 +118,11 @@ export default function DroneFormScreen() {
     // Load existing drone data for editing
     if (isEditing && id) {
       loadDroneData();
+    } else {
+      // Reset form to default values when creating a new drone
+      setFormData(defaultFormData);
     }
-  }, [id, user, isEditing, router, loadDroneData]);
+  }, [id, user, isEditing, router, loadDroneData, defaultFormData]);
 
   const handleSubmit = async () => {
     if (!user) return;
