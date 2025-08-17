@@ -152,7 +152,6 @@ export default function UserFormScreen() {
       // Prepare user data for submission
       const userData: any = {
         email: formData.email.trim(),
-        role: formData.role,
         firstname: formData.firstname.trim(),
         surname: formData.surname.trim(),
         phone: formData.phone.trim(),
@@ -162,6 +161,11 @@ export default function UserFormScreen() {
         licenseConversionNumber: formData.licenseConversionNumber.trim(),
         qualifications: formData.qualifications,
       };
+
+      // Only include role field if user is admin (only admins can change roles)
+      if (user.role === 'admin') {
+        userData.role = formData.role;
+      }
 
       // Convert date strings to Date objects
       if (formData.operatorValidityDate) {
