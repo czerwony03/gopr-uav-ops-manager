@@ -120,14 +120,12 @@ export default function ProcedureChecklistFormScreen() {
     try {
       if (isEditing && id) {
         await ProcedureChecklistService.updateProcedureChecklist(id, formData, user.role);
-        Alert.alert('Success', 'Procedure/checklist updated successfully', [
-          { text: 'OK', onPress: () => router.back() }
-        ]);
+        // Navigate back to details page for editing
+        router.push(`/procedures-checklist-details?id=${id}`);
       } else {
-        await ProcedureChecklistService.createProcedureChecklist(formData, user.role, user.uid);
-        Alert.alert('Success', 'Procedure/checklist created successfully', [
-          { text: 'OK', onPress: () => router.back() }
-        ]);
+        // Create new procedure and navigate to its details page
+        const newId = await ProcedureChecklistService.createProcedureChecklist(formData, user.role, user.uid);
+        router.push(`/procedures-checklist-details?id=${newId}`);
       }
     } catch (error) {
       console.error('Error saving checklist:', error);
