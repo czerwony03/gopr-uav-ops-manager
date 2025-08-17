@@ -237,14 +237,22 @@ export class ProcedureChecklistService {
     const processedItems = [];
 
     for (const item of items) {
-      const processedItem = {
+      const processedItem: any = {
         id: item.id,
         topic: item.topic,
         content: item.content,
         number: item.number,
-        link: item.link,
-        file: item.file,
       };
+
+      // Only include link if it has a value
+      if (item.link && item.link.trim()) {
+        processedItem.link = item.link;
+      }
+
+      // Only include file if it has a value
+      if (item.file && item.file.trim()) {
+        processedItem.file = item.file;
+      }
 
       // Handle image upload if it's a new image (base64 or local file)
       if (item.image && (item.image.startsWith('data:') || item.image.startsWith('file:'))) {
@@ -256,8 +264,8 @@ export class ProcedureChecklistService {
           console.error('Error uploading image for item:', item.id, error);
           // Continue without image if upload fails
         }
-      } else if (item.image) {
-        // Existing image URL
+      } else if (item.image && item.image.trim()) {
+        // Existing image URL - only include if it has a value
         processedItem.image = item.image;
       }
 

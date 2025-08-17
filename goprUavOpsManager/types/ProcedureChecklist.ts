@@ -33,6 +33,6 @@ export interface ChecklistItemFormData {
   image?: string; // URL or base64 for new images
   content: string;
   number: number;
-  link: string;
+  link?: string; // Optional to match ChecklistItem
   file?: string; // URL or file reference
 }

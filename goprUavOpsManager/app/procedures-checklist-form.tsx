@@ -261,7 +261,7 @@ export default function ProcedureChecklistFormScreen() {
         <Text style={styles.label}>Link</Text>
         <TextInput
           style={styles.input}
-          value={item.link}
+          value={item.link || ''}
           onChangeText={(text) => updateItem(item.id, 'link', text)}
           placeholder="Enter external link (optional)"
           autoCapitalize="none"
