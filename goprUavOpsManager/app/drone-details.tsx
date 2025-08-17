@@ -14,10 +14,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Drone } from '../types/Drone';
 import { useAuth } from '../contexts/AuthContext';
 import { DroneService } from '../services/droneService';
+import { UserService } from '../services/userService';
 
 export default function DroneDetailsScreen() {
   const [drone, setDrone] = useState<Drone | null>(null);
   const [loading, setLoading] = useState(true);
+  const [createdByEmail, setCreatedByEmail] = useState<string>('');
+  const [updatedByEmail, setUpdatedByEmail] = useState<string>('');
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const router = useRouter();
@@ -35,6 +38,16 @@ export default function DroneDetailsScreen() {
           return;
         }
         setDrone(droneData);
+        
+        // Fetch user emails for audit trail
+        if (droneData.createdBy) {
+          const createdEmail = await UserService.getUserEmail(droneData.createdBy);
+          setCreatedByEmail(createdEmail);
+        }
+        if (droneData.updatedBy) {
+          const updatedEmail = await UserService.getUserEmail(droneData.updatedBy);
+          setUpdatedByEmail(updatedEmail);
+        }
       } catch (error) {
         console.error('Error fetching drone:', error);
         Alert.alert('Error', 'Failed to fetch drone details', [
@@ -102,6 +115,13 @@ export default function DroneDetailsScreen() {
               // Refresh the drone data
               const updatedDrone = await DroneService.getDrone(drone.id, user.role);
               setDrone(updatedDrone);
+              
+              // Refresh user emails
+              if (updatedDrone?.updatedBy) {
+                const updatedEmail = await UserService.getUserEmail(updatedDrone.updatedBy);
+                setUpdatedByEmail(updatedEmail);
+              }
+              
               Alert.alert('Success', 'Drone restored successfully');
             } catch (error) {
               console.error('Error restoring drone:', error);
@@ -206,15 +226,21 @@ export default function DroneDetailsScreen() {
 
         {(drone.createdAt || drone.updatedAt || drone.deletedAt) && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Timestamps</Text>
+            <Text style={styles.sectionTitle}>Audit Trail</Text>
             {drone.createdAt && (
-              <Text style={styles.detail}>Created: {drone.createdAt.toLocaleDateString()}</Text>
+              <Text style={styles.detail}>
+                Created: {drone.createdAt.toLocaleDateString()} {drone.createdAt.toLocaleTimeString()}
+                {createdByEmail && ` by ${createdByEmail}`}
+              </Text>
             )}
             {drone.updatedAt && (
-              <Text style={styles.detail}>Last Updated: {drone.updatedAt.toLocaleDateString()}</Text>
+              <Text style={styles.detail}>
+                Last Updated: {drone.updatedAt.toLocaleDateString()} {drone.updatedAt.toLocaleTimeString()}
+                {updatedByEmail && ` by ${updatedByEmail}`}
+              </Text>
             )}
             {drone.deletedAt && (
-              <Text style={styles.detail}>Deleted: {drone.deletedAt.toLocaleDateString()}</Text>
+              <Text style={styles.detail}>Deleted: {drone.deletedAt.toLocaleDateString()} {drone.deletedAt.toLocaleTimeString()}</Text>
             )}
           </View>
         )}

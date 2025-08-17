@@ -117,6 +117,10 @@ export default function FlightsListScreen() {
     router.push(`/flight-form?id=${flightId}`);
   };
 
+  const handleViewFlight = (flightId: string) => {
+    router.push(`/flight-details?id=${flightId}`);
+  };
+
   const handleAddFlight = () => {
     router.push('/flight-form');
   };
@@ -173,14 +177,23 @@ export default function FlightsListScreen() {
         )}
       </View>
 
-      {canEditFlight(item) && (
+      <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => handleEditFlight(item.id)}
+          style={styles.viewButton}
+          onPress={() => handleViewFlight(item.id)}
         >
-          <Text style={styles.editButtonText}>Edit</Text>
+          <Text style={styles.viewButtonText}>View</Text>
         </TouchableOpacity>
-      )}
+        
+        {canEditFlight(item) && (
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => handleEditFlight(item.id)}
+          >
+            <Text style={styles.editButtonText}>Edit</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       </View>
     );
   };
@@ -331,12 +344,32 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingVertical: 8,
     paddingHorizontal: 16,
-    alignSelf: 'flex-end',
+    flex: 1,
+    marginLeft: 8,
   },
   editButtonText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 8,
+  },
+  viewButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    flex: 1,
+  },
+  viewButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   emptyContainer: {
     justifyContent: 'center',
