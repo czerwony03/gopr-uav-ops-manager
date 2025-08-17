@@ -140,12 +140,21 @@ The app supports Google Workspace authentication restricted to the @bieszczady.g
 3. Enable the Google Identity Services API:
    - Go to APIs & Services > Library
    - Search for "Google Identity Services API" and enable it
-4. Create OAuth 2.0 credentials:
+4. Create OAuth 2.0 credentials for web platform:
    - Go to APIs & Services > Credentials
    - Click "Create Credentials" > "OAuth 2.0 Client IDs"
    - Select "Web application" as application type
    - Add authorized JavaScript origins (your domain)
    - Add authorized redirect URIs (your Firebase auth domain)
+   - Copy the Client ID for Firebase configuration
+5. Create OAuth 2.0 credentials for mobile platforms:
+   - Click "Create Credentials" > "OAuth 2.0 Client IDs" again
+   - Select "iOS" or "Android" as application type (create one for each platform you need)
+   - For iOS: Enter your bundle identifier (e.g., `dev.redmed.gopruavopsmanager`)
+   - For Android: Enter your package name and SHA-1 certificate fingerprint
+   - Copy the Client ID and add it to your `.env` file as `EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID`
+
+**Note**: The mobile OAuth Client ID is different from the web Client ID used in Firebase configuration.
 
 #### 6.3. Domain Restriction via Firebase Functions
 
@@ -167,13 +176,50 @@ exports.beforeCreate = functions.auth.user().beforeCreate((user, context) => {
 });
 ```
 
-#### 6.4. Benefits of Firebase Native Approach
+#### 6.4. Platform-Specific Implementation
 
-- **Simplified Implementation**: No need for custom OAuth flows or token management
+The app now uses different Google authentication approaches for different platforms:
+
+**Web Platform:**
+- **Firebase signInWithPopup**: Uses Firebase's built-in popup-based OAuth flow
+- **Automatic Domain Handling**: Firebase SDK handles OAuth popup flow seamlessly
+- **Direct Firebase Integration**: No additional dependencies required
+
+**Mobile Platforms (Android/iOS):**
+- **Expo Auth Session**: Uses Expo's secure OAuth implementation for mobile
+- **PKCE Security**: Implements Proof Key for Code Exchange for enhanced security
+- **Domain Validation**: Client-side domain restriction with server-side backup
+- **Deep Linking**: Uses app scheme for secure OAuth redirects
+
+#### 6.5. Benefits of Hybrid Approach
+
+- **Platform Optimization**: Each platform uses the most appropriate OAuth method
 - **Better Security**: Server-side domain validation via Firebase Functions
-- **Automatic Popup Handling**: Firebase SDK handles OAuth popup flow seamlessly
-- **Reduced Dependencies**: No need for expo-auth-session or expo-web-browser
-- **Firebase Integration**: Direct integration with Firebase Authentication system
+- **Mobile Native Experience**: Proper mobile OAuth flow without popup limitations
+- **Consistent UX**: Same user experience across all platforms
+- **Firebase Integration**: All platforms ultimately authenticate through Firebase
+
+#### 6.6. Mobile Setup Instructions
+
+For mobile platforms (Android/iOS), additional configuration is required:
+
+1. **Environment Variables**: Add the mobile OAuth Client ID to your `.env` file:
+   ```
+   EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=your_mobile_oauth_client_id_here
+   ```
+
+2. **Bundle Identifier/Package Name**: Ensure your app's bundle identifier matches what you configured in Google Cloud Console:
+   - iOS: `dev.redmed.gopruavopsmanager` (configured in `app.json`)
+   - Android: `dev.redmed.gopruavopsmanager` (configured in `app.json`)
+
+3. **Deep Linking**: The app uses the scheme `dev.redmed.gopruavopsmanager://auth` for OAuth redirects
+
+4. **Testing**: You can test mobile authentication using:
+   - Expo Go (development)
+   - Development builds (recommended for OAuth testing)
+   - Production builds
+
+**Important**: Mobile OAuth requires the app to be built as a development build or production build. OAuth will not work properly in Expo Go due to bundle identifier restrictions.
 
 ## User Roles
 
