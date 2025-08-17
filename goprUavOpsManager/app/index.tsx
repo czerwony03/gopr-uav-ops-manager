@@ -1,10 +1,12 @@
 import React from "react";
-import { Text, View, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import { Text, View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
+import { useRouter } from "expo-router";
 import LoginScreen from "../screens/LoginScreen";
 
 export default function Index() {
   const { user, loading } = useAuth();
+  const router = useRouter();
 
   if (loading) {
     return (
@@ -65,6 +67,16 @@ export default function Index() {
             • {capability}
           </Text>
         ))}
+      </View>
+
+      <View style={styles.profileContainer}>
+        <Text style={styles.profileTitle}>Profile Management</Text>
+        <TouchableOpacity
+          style={styles.editProfileButton}
+          onPress={() => router.push(`/user-form?id=${user.uid}`)}
+        >
+          <Text style={styles.editProfileButtonText}>Edit My Data</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.infoContainer}>
@@ -149,6 +161,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 8,
     color: '#555',
+  },
+  profileContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 20,
+    marginBottom: 30,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  profileTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#333',
+  },
+  editProfileButton: {
+    backgroundColor: '#0066CC',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  editProfileButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   infoContainer: {
     backgroundColor: '#FFFFFF',
