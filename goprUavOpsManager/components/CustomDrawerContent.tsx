@@ -104,6 +104,17 @@ export function CustomDrawerContent(props: any) {
           style={styles.drawerItem}
         />
         
+        {/* Info & Contact menu item - visible to all authenticated users */}
+        <DrawerItem
+          label="Info & Contact"
+          onPress={() => handleNavigation('/info-contact')}
+          icon={({ color, size }) => (
+            <Ionicons name="information-circle-outline" size={size} color={color} />
+          )}
+          labelStyle={styles.drawerLabel}
+          style={styles.drawerItem}
+        />
+        
         {/* Users menu item - only visible to admins */}
         {user.role === 'admin' && (
           <DrawerItem
@@ -120,6 +131,13 @@ export function CustomDrawerContent(props: any) {
 
       {/* Footer Section */}
       <View style={styles.footer}>
+        {/* Author Info */}
+        <View style={styles.authorInfo}>
+          <Text style={styles.authorCompany}>RedMed Software</Text>
+          <Text style={styles.authorContact}>admin@redmed.dev</Text>
+          <Text style={styles.authorContact}>m.wronski@bieszczady.gopr.pl</Text>
+        </View>
+        
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color="#fff" />
           <Text style={styles.logoutText}>Sign Out</Text>
@@ -182,6 +200,24 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
     padding: 20,
+  },
+  authorInfo: {
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  authorCompany: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 2,
+  },
+  authorContact: {
+    fontSize: 10,
+    color: '#666',
+    marginBottom: 1,
   },
   logoutButton: {
     flexDirection: 'row',

@@ -73,6 +73,16 @@ export default function RootLayout() {
               ),
             }}
           />
+          <Drawer.Screen
+            name="info-contact"
+            options={{
+              title: "Info & Contact",
+              drawerLabel: "Info & Contact",
+              drawerIcon: ({ color, size }) => (
+                <Ionicons name="information-circle-outline" size={size} color={color} />
+              ),
+            }}
+          />
           {/* Detail and form screens - hidden from drawer */}
           <Drawer.Screen
             name="drone-details"

@@ -3,6 +3,7 @@ import { Text, View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity
 import { useAuth } from "../contexts/AuthContext";
 import { useRouter } from "expo-router";
 import LoginScreen from "../screens/LoginScreen";
+import { Footer } from "../components/Footer";
 
 export default function Index() {
   const { user, loading, refreshUser } = useAuth();
@@ -193,6 +194,8 @@ export default function Index() {
           Additional role-based functionality is available based on your {user.role} permissions.
         </Text>
       </View>
+      
+      <Footer />
     </ScrollView>
   );
 }

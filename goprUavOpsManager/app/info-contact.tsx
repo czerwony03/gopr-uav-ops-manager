@@ -1,0 +1,155 @@
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, Linking, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+export default function InfoContact() {
+  const handleEmailPress = (email: string) => {
+    Linking.openURL(`mailto:${email}`);
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Info & Contact</Text>
+      </View>
+
+      <View style={styles.logoContainer}>
+        <View style={styles.logoPlaceholder}>
+          <Text style={styles.logoText}>RedMed Software</Text>
+        </View>
+      </View>
+
+      <View style={styles.infoCard}>
+        <Text style={styles.sectionTitle}>About</Text>
+        <Text style={styles.description}>
+          This GOPR UAV Operations Manager application was developed by RedMed Software to help manage UAV operations efficiently and safely.
+        </Text>
+      </View>
+
+      <View style={styles.infoCard}>
+        <Text style={styles.sectionTitle}>Contact Information</Text>
+        
+        <View style={styles.contactItem}>
+          <Ionicons name="business-outline" size={20} color="#0066CC" />
+          <Text style={styles.contactLabel}>Company</Text>
+          <Text style={styles.contactValue}>RedMed Software</Text>
+        </View>
+
+        <TouchableOpacity 
+          style={styles.contactItem}
+          onPress={() => handleEmailPress('admin@redmed.dev')}
+        >
+          <Ionicons name="mail-outline" size={20} color="#0066CC" />
+          <Text style={styles.contactLabel}>General Contact</Text>
+          <Text style={[styles.contactValue, styles.linkText]}>admin@redmed.dev</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.contactItem}
+          onPress={() => handleEmailPress('m.wronski@bieszczady.gopr.pl')}
+        >
+          <Ionicons name="person-outline" size={20} color="#0066CC" />
+          <Text style={styles.contactLabel}>Technical Contact</Text>
+          <Text style={[styles.contactValue, styles.linkText]}>m.wronski@bieszczady.gopr.pl</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.infoCard}>
+        <Text style={styles.sectionTitle}>Application Info</Text>
+        <Text style={styles.description}>
+          GOPR UAV Ops Manager v1.0.0{'\n'}
+          Developed for GOPR (Volunteer Mountain Rescue Service)
+        </Text>
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    padding: 20,
+  },
+  header: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 30,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  logoPlaceholder: {
+    backgroundColor: '#FF6B6B',
+    borderRadius: 8,
+    paddingHorizontal: 40,
+    paddingVertical: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  logoText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  infoCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
+  },
+  description: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 24,
+  },
+  contactItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingVertical: 5,
+  },
+  contactLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666',
+    marginLeft: 10,
+    flex: 1,
+  },
+  contactValue: {
+    fontSize: 14,
+    color: '#333',
+    flex: 2,
+  },
+  linkText: {
+    color: '#0066CC',
+    textDecorationLine: 'underline',
+  },
+});
