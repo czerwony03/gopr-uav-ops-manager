@@ -256,9 +256,9 @@ export default function FlightFormScreen() {
       const flightData = {
         date: formData.date,
         location: formData.location,
-        ...(formData.flightCategory !== '' && { flightCategory: formData.flightCategory }),
-        ...(formData.operationType !== '' && { operationType: formData.operationType }),
-        ...(formData.activityType !== '' && { activityType: formData.activityType }),
+        flightCategory: formData.flightCategory as FlightCategory,
+        operationType: formData.operationType as OperationType,
+        activityType: formData.activityType as ActivityType,
         droneId: formData.droneId,
         droneName,
         startTime: startDateTime,
