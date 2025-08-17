@@ -135,10 +135,15 @@ The app supports Google Workspace authentication restricted to the @bieszczady.g
 4. Create OAuth 2.0 credentials:
    - Go to APIs & Services > Credentials
    - Click "Create Credentials" > "OAuth 2.0 Client IDs"
-   - Select "Mobile app" as application type
-   - Add your app's bundle identifier (e.g., `dev.redmed.gopruavopsmanager`)
-   - For iOS: Add your iOS bundle ID
-   - For Android: Add your package name and SHA-1 certificate fingerprint
+   - **For Web Application** (required for Expo web builds):
+     - Select "Web application" as application type
+     - Set authorized redirect URIs to include your app's redirect URI
+     - Note the Client ID and **Client Secret** (both are required)
+   - **For Mobile Application** (optional, for native mobile builds):
+     - Select "Mobile app" as application type  
+     - Add your app's bundle identifier (e.g., `dev.redmed.gopruavopsmanager`)
+     - For iOS: Add your iOS bundle ID
+     - For Android: Add your package name and SHA-1 certificate fingerprint
 
 #### 6.2. Firebase Console Configuration
 
@@ -149,13 +154,20 @@ The app supports Google Workspace authentication restricted to the @bieszczady.g
 5. Configure the authorized domains if needed
 6. Save the configuration
 
-#### 6.3. Client ID Configuration
+#### 6.3. Client ID and Secret Configuration
 
-Update the `GOOGLE_CLIENT_ID` constant in `screens/LoginScreen.tsx` with your actual OAuth client ID:
+Update both the `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` constants in `screens/LoginScreen.tsx`:
 
 ```typescript
 const GOOGLE_CLIENT_ID = 'your-actual-client-id.apps.googleusercontent.com';
+const GOOGLE_CLIENT_SECRET = 'GOCSPX-your-actual-client-secret';
 ```
+
+**Important Security Notes:**
+- For production apps, client secrets should never be stored in client-side code
+- Consider using a backend service to handle the OAuth token exchange
+- The current implementation is suitable for development and testing only
+- For production deployment, implement server-side OAuth handling or use Firebase Auth's built-in Google provider with proper security configuration
 
 #### 6.4. Domain Restriction
 

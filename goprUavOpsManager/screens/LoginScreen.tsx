@@ -28,9 +28,13 @@ export default function LoginScreen() {
     revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
   };
 
-  // Note: This client ID should be configured in Firebase Console -> Authentication -> Sign-in method -> Google
-  // For production, this should be moved to environment variables
+  // Note: These credentials should be configured in Google Cloud Console and Firebase Console
+  // For production, these should be moved to environment variables
   const GOOGLE_CLIENT_ID = '23394650584-kgfq1hfb5n7j8k2l3m4n5o6p7q8r9s0t.apps.googleusercontent.com';
+  // Client secret is required for web applications using Authorization Code flow
+  // In production, this should be stored securely (not in client code) or use a backend service
+  // WARNING: Replace this placeholder with the actual client secret from Google Cloud Console
+  const GOOGLE_CLIENT_SECRET = 'GOCSPX-placeholder_client_secret_replace_with_actual';
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
@@ -63,6 +67,7 @@ export default function LoginScreen() {
         const tokenResponse = await AuthSession.exchangeCodeAsync(
           {
             clientId: GOOGLE_CLIENT_ID,
+            clientSecret: GOOGLE_CLIENT_SECRET,
             code,
             extraParams: {
               code_verifier: request?.codeVerifier || '',
@@ -102,7 +107,16 @@ export default function LoginScreen() {
       }
     } catch (error: any) {
       console.error('Google login error:', error);
-      Alert.alert('Google Login Failed', error.message || 'An error occurred during Google login');
+      let errorMessage = error.message || 'An error occurred during Google login';
+      
+      // Provide helpful error messages for common configuration issues
+      if (error.message && error.message.includes('client_secret')) {
+        errorMessage = 'Google OAuth configuration error. Please ensure the client ID and client secret are properly configured in Google Cloud Console.';
+      } else if (error.message && error.message.includes('redirect_uri')) {
+        errorMessage = 'OAuth redirect URI mismatch. Please check the redirect URI configuration in Google Cloud Console.';
+      }
+      
+      Alert.alert('Google Login Failed', errorMessage);
     } finally {
       setGoogleLoading(false);
     }
