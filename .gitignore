@@ -3,6 +3,5 @@
 .expo
 
 # Screenshots and build artifacts
-*.png
 dist/
 node_modules/
