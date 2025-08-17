@@ -8,6 +8,10 @@ This is an [Expo](https://expo.dev) project for managing UAV operations with Fir
 - **Role-based Access Control**: Three user roles (user, manager, admin) with different capabilities
 - **Firestore Integration**: User roles stored and retrieved from Firestore
 - **React Native/Expo**: Cross-platform mobile application
+- **Flight Management**: Track and manage UAV flights with comprehensive data
+- **Drone Registry**: Manage drone inventory with detailed specifications
+- **User Management**: Admin tools for managing system users (admin only)
+- **Procedures & Checklists**: Create and manage operational procedures with image support (manager/admin only)
 
 ## Get started
 
