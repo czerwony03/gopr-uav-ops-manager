@@ -18,6 +18,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
+      "googleServicesFile": "./google-services.json",
       "package": "dev.redmed.gopruavopsmanager",
       "intentFilters": [
         {
