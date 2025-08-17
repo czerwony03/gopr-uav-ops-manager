@@ -8,13 +8,107 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Google OAuth configuration
+  const discovery = {
+    authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+    tokenEndpoint: 'https://oauth2.googleapis.com/token',
+    revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
+  };
+
+  // Note: This client ID should be configured in Firebase Console -> Authentication -> Sign-in method -> Google
+  // For production, this should be moved to environment variables
+  const GOOGLE_CLIENT_ID = '23394650584-kgfq1hfb5n7j8k2l3m4n5o6p7q8r9s0t.apps.googleusercontent.com';
+
+  const [request, response, promptAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: GOOGLE_CLIENT_ID,
+      scopes: ['openid', 'profile', 'email'],
+      responseType: AuthSession.ResponseType.Code,
+      redirectUri: AuthSession.makeRedirectUri({
+        scheme: 'com.gopr.uavopsmanager',
+        path: 'auth'
+      }),
+      extraParams: {
+        hd: 'bieszczady.gopr.pl', // Restrict to Google Workspace domain
+      },
+    },
+    discovery
+  );
+
+  const validateDomain = (email: string): boolean => {
+    return email.endsWith('@bieszczady.gopr.pl');
+  };
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    try {
+      const result = await promptAsync();
+      
+      if (result?.type === 'success') {
+        const { code } = result.params;
+        
+        // Exchange authorization code for tokens
+        const tokenResponse = await AuthSession.exchangeCodeAsync(
+          {
+            clientId: GOOGLE_CLIENT_ID,
+            code,
+            extraParams: {
+              code_verifier: request?.codeVerifier || '',
+            },
+            redirectUri: AuthSession.makeRedirectUri({
+              scheme: 'com.gopr.uavopsmanager',
+              path: 'auth'
+            }),
+          },
+          discovery
+        );
+
+        const { accessToken, idToken } = tokenResponse;
+        
+        if (!idToken) {
+          throw new Error('No ID token received from Google');
+        }
+        
+        // Decode the ID token to get user info (basic JWT decode)
+        const payload = JSON.parse(atob(idToken.split('.')[1]));
+        const userEmail = payload.email;
+        
+        // Validate domain
+        if (!validateDomain(userEmail)) {
+          Alert.alert(
+            'Access Denied',
+            'Only users with @bieszczady.gopr.pl email addresses can sign in with Google Workspace.',
+            [{ text: 'OK' }]
+          );
+          return;
+        }
+
+        // Create Firebase credential and sign in
+        const credential = GoogleAuthProvider.credential(idToken, accessToken);
+        await signInWithCredential(auth, credential);
+        
+        // Navigation will be handled by the auth state change in AuthContext
+      }
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      Alert.alert('Google Login Failed', error.message || 'An error occurred during Google login');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -72,8 +166,29 @@ export default function LoginScreen() {
           )}
         </TouchableOpacity>
 
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>OR</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.googleButton, googleLoading && styles.disabledButton]}
+          onPress={handleGoogleLogin}
+          disabled={googleLoading || !request}
+        >
+          {googleLoading ? (
+            <ActivityIndicator color="#333333" />
+          ) : (
+            <Text style={styles.googleButtonText}>Sign in with Google Workspace</Text>
+          )}
+        </TouchableOpacity>
+
         <Text style={styles.infoText}>
           Contact your administrator for account access
+        </Text>
+        <Text style={styles.googleInfoText}>
+          Google Workspace sign-in is restricted to @bieszczady.gopr.pl domain
         </Text>
       </View>
     </View>
@@ -145,5 +260,41 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: '#666',
     fontSize: 14,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#ddd',
+  },
+  dividerText: {
+    marginHorizontal: 15,
+    color: '#666',
+    fontSize: 14,
+  },
+  googleButton: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  googleButtonText: {
+    color: '#333333',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  googleInfoText: {
+    textAlign: 'center',
+    marginTop: 10,
+    color: '#666',
+    fontSize: 12,
+    fontStyle: 'italic',
   },
 });
