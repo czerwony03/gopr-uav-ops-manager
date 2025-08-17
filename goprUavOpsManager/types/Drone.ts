@@ -7,7 +7,7 @@ export interface Drone {
   equipmentRegistrationNumber: string;
   yearOfCommissioning: number;
   yearOfManufacture: number;
-  insurance: 'Aerocasco' | 'Care';
+  insurance: string;
   callSign: string;
   weight: number; // in kg
   maxTakeoffWeight: number; // in kg

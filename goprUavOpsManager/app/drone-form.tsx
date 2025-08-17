@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Picker } from '@react-native-picker/picker';
 import { Drone } from '../types/Drone';
 import { useAuth } from '../contexts/AuthContext';
 import { DroneService } from '../services/droneService';
@@ -35,7 +34,7 @@ export default function DroneFormScreen() {
     equipmentRegistrationNumber: '',
     yearOfCommissioning: new Date().getFullYear(),
     yearOfManufacture: new Date().getFullYear(),
-    insurance: 'Aerocasco',
+    insurance: '',
     callSign: '',
     weight: 0,
     maxTakeoffWeight: 0,
@@ -243,16 +242,12 @@ export default function DroneFormScreen() {
           />
 
           <Text style={styles.label}>Insurance</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={formData.insurance}
-              onValueChange={(value) => updateFormData('insurance', value)}
-              style={styles.picker}
-            >
-              <Picker.Item label="Aerocasco" value="Aerocasco" />
-              <Picker.Item label="Care" value="Care" />
-            </Picker>
-          </View>
+          <TextInput
+            style={styles.input}
+            value={formData.insurance}
+            onChangeText={(value) => updateFormData('insurance', value)}
+            placeholder="Enter insurance information"
+          />
         </View>
 
         <View style={styles.section}>
