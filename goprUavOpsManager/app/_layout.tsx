@@ -83,6 +83,17 @@ export default function RootLayout() {
               ),
             }}
           />
+          <Drawer.Screen
+            name="audit-logs"
+            options={{
+              title: "Audit Logs",
+              drawerLabel: "Audit Logs",
+              drawerIcon: ({ color, size }) => (
+                <Ionicons name="document-text-outline" size={size} color={color} />
+              ),
+              drawerItemStyle: { display: 'none' }, // Hidden by default, visibility controlled in CustomDrawerContent
+            }}
+          />
           {/* Detail and form screens - hidden from drawer */}
           <Drawer.Screen
             name="drone-details"

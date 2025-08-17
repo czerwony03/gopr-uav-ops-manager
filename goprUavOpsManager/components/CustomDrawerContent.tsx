@@ -127,6 +127,19 @@ export function CustomDrawerContent(props: any) {
             style={styles.drawerItem}
           />
         )}
+        
+        {/* Audit Logs menu item - only visible to admins */}
+        {user.role === 'admin' && (
+          <DrawerItem
+            label="Audit Logs"
+            onPress={() => handleNavigation('/audit-logs')}
+            icon={({ color, size }) => (
+              <Ionicons name="document-text-outline" size={size} color={color} />
+            )}
+            labelStyle={styles.drawerLabel}
+            style={styles.drawerItem}
+          />
+        )}
       </View>
 
       {/* Footer Section */}

@@ -107,8 +107,8 @@ export default function AuditLogsScreen() {
     }
   };
 
-  // Only show to admins and managers
-  if (user?.role !== 'admin' && user?.role !== 'manager') {
+  // Only show to admins
+  if (user?.role !== 'admin') {
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ title: 'Audit Logs' }} />
