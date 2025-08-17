@@ -1,0 +1,42 @@
+// Entity types that can be audited
+export type AuditEntityType = 'drone' | 'flight' | 'procedureChecklist';
+
+// Actions that can be performed on entities
+export type AuditAction = 'create' | 'edit' | 'delete' | 'restore' | 'view';
+
+// Main audit log interface
+export interface AuditLog {
+  id: string;
+  entityType: AuditEntityType;
+  entityId: string;
+  action: AuditAction;
+  userId: string; // Firebase Auth UID
+  userEmail?: string; // User email for easier identification
+  timestamp: Date;
+  details?: string; // Human-readable description of what changed
+  previousValues?: Record<string, any>; // Previous values for edit operations
+  newValues?: Record<string, any>; // New values for edit operations
+}
+
+// Form data for creating audit logs
+export interface AuditLogData {
+  entityType: AuditEntityType;
+  entityId: string;
+  action: AuditAction;
+  userId: string;
+  userEmail?: string;
+  details?: string;
+  previousValues?: Record<string, any>;
+  newValues?: Record<string, any>;
+}
+
+// Query parameters for fetching audit logs
+export interface AuditLogQuery {
+  entityType?: AuditEntityType;
+  entityId?: string;
+  userId?: string;
+  action?: AuditAction;
+  startDate?: Date;
+  endDate?: Date;
+  limit?: number;
+}

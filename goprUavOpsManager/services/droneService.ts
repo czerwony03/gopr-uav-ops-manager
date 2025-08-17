@@ -13,6 +13,8 @@ import {
 import { db } from '../firebaseConfig';
 import { Drone } from '../types/Drone';
 import { UserRole } from '../contexts/AuthContext';
+import { AuditLogService } from './auditLogService';
+import { UserService } from './userService';
 
 export class DroneService {
   private static readonly COLLECTION_NAME = 'drones';
@@ -95,6 +97,19 @@ export class DroneService {
         createdBy: userId,
         updatedBy: userId,
       });
+
+      // Create audit log entry
+      const userEmail = await UserService.getUserEmail(userId);
+      await AuditLogService.createAuditLog({
+        entityType: 'drone',
+        entityId: docRef.id,
+        action: 'create',
+        userId,
+        userEmail,
+        details: AuditLogService.createChangeDetails('create', 'drone'),
+        newValues: { ...droneData, isDeleted: false }
+      });
+
       return docRef.id;
     } catch (error) {
       console.error('Error creating drone:', error);
@@ -122,10 +137,27 @@ export class DroneService {
         throw new Error('Cannot update deleted drone');
       }
 
+      // Store previous values for audit log
+      const previousValues = { ...currentDrone };
+      const newValues = { ...currentDrone, ...droneData };
+
       await updateDoc(droneRef, {
         ...droneData,
         updatedAt: Timestamp.now(),
         updatedBy: userId,
+      });
+
+      // Create audit log entry
+      const userEmail = await UserService.getUserEmail(userId);
+      await AuditLogService.createAuditLog({
+        entityType: 'drone',
+        entityId: id,
+        action: 'edit',
+        userId,
+        userEmail,
+        details: AuditLogService.createChangeDetails('edit', 'drone', { previous: previousValues, new: newValues }),
+        previousValues,
+        newValues
       });
     } catch (error) {
       console.error('Error updating drone:', error);
@@ -147,11 +179,25 @@ export class DroneService {
         throw new Error('Drone not found');
       }
 
+      const currentDrone = droneDoc.data() as Drone;
+
       await updateDoc(droneRef, {
         isDeleted: true,
         deletedAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
         updatedBy: userId,
+      });
+
+      // Create audit log entry
+      const userEmail = await UserService.getUserEmail(userId);
+      await AuditLogService.createAuditLog({
+        entityType: 'drone',
+        entityId: id,
+        action: 'delete',
+        userId,
+        userEmail,
+        details: AuditLogService.createChangeDetails('delete', 'drone'),
+        previousValues: currentDrone
       });
     } catch (error) {
       console.error('Error deleting drone:', error);
@@ -173,11 +219,25 @@ export class DroneService {
         throw new Error('Drone not found');
       }
 
+      const currentDrone = droneDoc.data() as Drone;
+
       await updateDoc(droneRef, {
         isDeleted: false,
         deletedAt: null,
         updatedAt: Timestamp.now(),
         updatedBy: userId,
+      });
+
+      // Create audit log entry
+      const userEmail = await UserService.getUserEmail(userId);
+      await AuditLogService.createAuditLog({
+        entityType: 'drone',
+        entityId: id,
+        action: 'restore',
+        userId,
+        userEmail,
+        details: AuditLogService.createChangeDetails('restore', 'drone'),
+        previousValues: currentDrone
       });
     } catch (error) {
       console.error('Error restoring drone:', error);
