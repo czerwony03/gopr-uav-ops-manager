@@ -21,7 +21,7 @@ export default function UserFormScreen() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(false);
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const router = useRouter();
   const isEditing = !!id;
 
@@ -177,6 +177,11 @@ export default function UserFormScreen() {
       }
 
       await UserService.updateUser(targetUserId, userData, user.role, user.uid);
+
+      // Refresh user data if the current user updated their own profile
+      if (targetUserId === user.uid && refreshUser) {
+        await refreshUser();
+      }
 
       Alert.alert(
         'Success',

@@ -1,12 +1,24 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Text, View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
 import { useRouter } from "expo-router";
 import LoginScreen from "../screens/LoginScreen";
 
 export default function Index() {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
   const router = useRouter();
+
+  // Refresh user data when component mounts to ensure we have the latest data
+  useEffect(() => {
+    if (user && refreshUser) {
+      refreshUser();
+    }
+  }, [user, refreshUser]);
+
+  const formatDate = (date: Date | undefined) => {
+    if (!date) return 'Not set';
+    return date.toLocaleDateString();
+  };
 
   if (loading) {
     return (
@@ -67,6 +79,98 @@ export default function Index() {
             • {capability}
           </Text>
         ))}
+      </View>
+
+      <View style={styles.profileDataContainer}>
+        <Text style={styles.profileDataTitle}>My Profile Data</Text>
+        
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Basic Information</Text>
+          
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Email</Text>
+            <Text style={styles.fieldValue}>{user.email}</Text>
+          </View>
+          
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>First Name</Text>
+            <Text style={styles.fieldValue}>{user.firstname || 'Not set'}</Text>
+          </View>
+          
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Surname</Text>
+            <Text style={styles.fieldValue}>{user.surname || 'Not set'}</Text>
+          </View>
+          
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Phone</Text>
+            <Text style={styles.fieldValue}>{user.phone || 'Not set'}</Text>
+          </View>
+          
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Residential Address</Text>
+            <Text style={styles.fieldValue}>{user.residentialAddress || 'Not set'}</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Operator Information</Text>
+          
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Operator Number</Text>
+            <Text style={styles.fieldValue}>{user.operatorNumber || 'Not set'}</Text>
+          </View>
+          
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Operator Validity Date</Text>
+            <Text style={styles.fieldValue}>{formatDate(user.operatorValidityDate)}</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Pilot Information</Text>
+          
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Pilot Number</Text>
+            <Text style={styles.fieldValue}>{user.pilotNumber || 'Not set'}</Text>
+          </View>
+          
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Pilot Validity Date</Text>
+            <Text style={styles.fieldValue}>{formatDate(user.pilotValidityDate)}</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Additional Information</Text>
+          
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>License Conversion Number</Text>
+            <Text style={styles.fieldValue}>{user.licenseConversionNumber || 'Not set'}</Text>
+          </View>
+          
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Insurance Date</Text>
+            <Text style={styles.fieldValue}>{formatDate(user.insurance)}</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Qualifications / Authorizations</Text>
+          
+          {user.qualifications && user.qualifications.length > 0 ? (
+            <View style={styles.qualificationsContainer}>
+              {user.qualifications.map((qualification) => (
+                <View key={qualification} style={styles.qualificationBadge}>
+                  <Text style={styles.qualificationText}>{qualification}</Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.fieldValue}>No qualifications set</Text>
+          )}
+        </View>
+
       </View>
 
       <View style={styles.profileContainer}>
@@ -161,6 +265,68 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 8,
     color: '#555',
+  },
+  profileDataContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 20,
+    marginBottom: 30,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  profileDataTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+    textAlign: 'center',
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+    paddingBottom: 5,
+  },
+  field: {
+    marginBottom: 10,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666',
+    marginBottom: 2,
+  },
+  fieldValue: {
+    fontSize: 16,
+    color: '#333',
+  },
+  qualificationsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  qualificationBadge: {
+    backgroundColor: '#0066CC',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  qualificationText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   profileContainer: {
     backgroundColor: '#FFFFFF',
