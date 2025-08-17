@@ -4,7 +4,8 @@ This is an [Expo](https://expo.dev) project for managing UAV operations with Fir
 
 ## Features
 
-- **Firebase Authentication**: Secure email/password authentication
+- **Firebase Authentication**: Secure email/password authentication and Google Workspace SSO
+- **Google Workspace Integration**: Domain-restricted authentication for @bieszczady.gopr.pl users
 - **Role-based Access Control**: Three user roles (user, manager, admin) with different capabilities
 - **Firestore Integration**: User roles stored and retrieved from Firestore
 - **React Native/Expo**: Cross-platform mobile application
@@ -64,7 +65,12 @@ In the output, you'll find options to open the app in a
 
 1. In Firebase Console, go to Authentication > Sign-in method
 2. Enable "Email/Password" provider
-3. Optionally enable "Email link (passwordless sign-in)" for additional security
+3. Enable "Google" provider for Google Workspace authentication:
+   - Click on "Google" in the sign-in providers list
+   - Enable the provider
+   - Add your OAuth client ID (see Google Workspace configuration below)
+   - Save the configuration
+4. Optionally enable "Email link (passwordless sign-in)" for additional security
 
 ### 3. Firestore Setup
 
@@ -114,6 +120,56 @@ service cloud.firestore {
   }
 }
 ```
+
+### 6. Google Workspace Authentication Setup
+
+The app supports Google Workspace authentication restricted to the @bieszczady.gopr.pl domain.
+
+#### 6.1. Google Cloud Console Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select your existing project
+3. Enable the Google+ API:
+   - Go to APIs & Services > Library
+   - Search for "Google+ API" and enable it
+4. Create OAuth 2.0 credentials:
+   - Go to APIs & Services > Credentials
+   - Click "Create Credentials" > "OAuth 2.0 Client IDs"
+   - Select "Mobile app" as application type
+   - Add your app's bundle identifier (e.g., `dev.redmed.gopruavopsmanager`)
+   - For iOS: Add your iOS bundle ID
+   - For Android: Add your package name and SHA-1 certificate fingerprint
+
+#### 6.2. Firebase Console Configuration
+
+1. In Firebase Console, go to Authentication > Sign-in method
+2. Click on "Google" provider
+3. Enable the provider
+4. Add the OAuth client ID from Google Cloud Console
+5. Configure the authorized domains if needed
+6. Save the configuration
+
+#### 6.3. Client ID Configuration
+
+Update the `GOOGLE_CLIENT_ID` constant in `screens/LoginScreen.tsx` with your actual OAuth client ID:
+
+```typescript
+const GOOGLE_CLIENT_ID = 'your-actual-client-id.apps.googleusercontent.com';
+```
+
+#### 6.4. Domain Restriction
+
+The app automatically restricts Google sign-in to users with @bieszczady.gopr.pl email addresses:
+- The OAuth request includes `hd: 'bieszczady.gopr.pl'` parameter
+- Client-side validation ensures only the correct domain can authenticate
+- Users from other domains will see an access denied message
+
+#### 6.5. Testing
+
+For testing purposes, you can:
+- Create test Google Workspace accounts in the bieszczady.gopr.pl domain
+- Test with existing @bieszczady.gopr.pl accounts
+- Verify domain validation by attempting login with non-domain accounts
 
 ## User Roles
 
