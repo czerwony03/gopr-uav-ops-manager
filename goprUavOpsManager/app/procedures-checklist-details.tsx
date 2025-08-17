@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import ImageViewing from 'react-native-image-viewing';
+import ImageViewer from '../components/ImageViewer';
 import { ProcedureChecklist, ChecklistItem } from '../types/ProcedureChecklist';
 import { useAuth } from '../contexts/AuthContext';
 import { ProcedureChecklistService } from '../services/procedureChecklistService';
@@ -286,15 +286,12 @@ export default function ProcedureChecklistDetailsScreen() {
       </ScrollView>
 
       {/* Image Viewer Modal */}
-      <ImageViewing
+      <ImageViewer
         images={getImages()}
         imageIndex={imageIndex}
         visible={imageViewerVisible}
         onRequestClose={() => setImageViewerVisible(false)}
         onImageIndexChange={setImageIndex}
-        swipeToCloseEnabled={true}
-        doubleTapToZoomEnabled={true}
-        backgroundColor="rgba(0, 0, 0, 0.9)"
       />
     </SafeAreaView>
   );
