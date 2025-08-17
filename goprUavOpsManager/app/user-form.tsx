@@ -135,6 +135,16 @@ export default function UserFormScreen() {
       Alert.alert('Validation Error', 'Surname is required');
       return;
     }
+    
+    // Validate operator/pilot numbers and qualifications
+    if (!formData.operatorNumber.trim() && !formData.pilotNumber.trim()) {
+      Alert.alert('Validation Error', 'Either Operator Number or Pilot Number is required');
+      return;
+    }
+    if (formData.qualifications.length === 0) {
+      Alert.alert('Validation Error', 'At least one qualification/authorization must be selected');
+      return;
+    }
 
     setLoading(true);
 
@@ -299,7 +309,7 @@ export default function UserFormScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Operator Information</Text>
             
-            <Text style={styles.label}>Operator Number</Text>
+            <Text style={styles.label}>Operator Number *</Text>
             <TextInput
               style={styles.input}
               value={formData.operatorNumber}
@@ -319,7 +329,7 @@ export default function UserFormScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Pilot Information</Text>
             
-            <Text style={styles.label}>Pilot Number</Text>
+            <Text style={styles.label}>Pilot Number *</Text>
             <TextInput
               style={styles.input}
               value={formData.pilotNumber}
@@ -357,8 +367,8 @@ export default function UserFormScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Qualifications / Authorizations</Text>
-            <Text style={styles.subtitle}>Select applicable qualifications:</Text>
+            <Text style={styles.sectionTitle}>Qualifications / Authorizations *</Text>
+            <Text style={styles.subtitle}>Select applicable qualifications (at least one required):</Text>
             
             <FlatList
               data={AVAILABLE_QUALIFICATIONS}
