@@ -56,6 +56,50 @@ export default function FlightsListScreen() {
     fetchFlights();
   };
 
+  const formatTime = (timeStr: string): string => {
+    try {
+      // Handle both old format (HH:mm) and new format (datetime string)
+      if (timeStr.includes('T') || timeStr.includes('Z')) {
+        // New datetime format
+        const date = new Date(timeStr);
+        return date.toLocaleTimeString('en-GB', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        });
+      } else if (timeStr.match(/^\d{2}:\d{2}$/)) {
+        // Old HH:mm format
+        return timeStr;
+      }
+      return timeStr;
+    } catch {
+      return timeStr;
+    }
+  };
+
+  const formatDateTime = (timeStr: string): string => {
+    try {
+      // Handle both old format (HH:mm) and new format (datetime string)
+      if (timeStr.includes('T') || timeStr.includes('Z')) {
+        // New datetime format
+        const date = new Date(timeStr);
+        const datePart = date.toLocaleDateString('en-GB');
+        const timePart = date.toLocaleTimeString('en-GB', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        });
+        return `${datePart} ${timePart}`;
+      } else if (timeStr.match(/^\d{2}:\d{2}$/)) {
+        // Old HH:mm format - just return time
+        return timeStr;
+      }
+      return timeStr;
+    } catch {
+      return timeStr;
+    }
+  };
+
   const canEditFlight = (flight: Flight): boolean => {
     if (!user) return false;
     return user.role === 'admin' || user.role === 'manager' || flight.userId === user.uid;
@@ -69,14 +113,25 @@ export default function FlightsListScreen() {
     router.push('/flight-form');
   };
 
-  const renderFlightItem = ({ item }: { item: Flight }) => (
-    <View style={styles.flightCard}>
-      <View style={styles.flightHeader}>
-        <Text style={styles.flightDate}>{item.date}</Text>
-        <Text style={styles.flightTime}>
-          {item.startTime} - {item.endTime}
-        </Text>
-      </View>
+  const renderFlightItem = ({ item }: { item: Flight }) => {
+    // Check if flight crosses midnight (end date different from start date)
+    const startDateTime = item.startTime.includes('T') ? new Date(item.startTime) : null;
+    const endDateTime = item.endTime.includes('T') ? new Date(item.endTime) : null;
+    const crossesMidnight = startDateTime && endDateTime && 
+      startDateTime.toDateString() !== endDateTime.toDateString();
+
+    return (
+      <View style={styles.flightCard}>
+        <View style={styles.flightHeader}>
+          <Text style={styles.flightDate}>{item.date}</Text>
+          <Text style={styles.flightTime}>
+            {crossesMidnight ? (
+              `${formatDateTime(item.startTime)} - ${formatDateTime(item.endTime)}`
+            ) : (
+              `${formatTime(item.startTime)} - ${formatTime(item.endTime)}`
+            )}
+          </Text>
+        </View>
       
       <View style={styles.flightInfo}>
         <Text style={styles.flightLocation}>{item.location}</Text>
@@ -118,8 +173,9 @@ export default function FlightsListScreen() {
           <Text style={styles.editButtonText}>Edit</Text>
         </TouchableOpacity>
       )}
-    </View>
-  );
+      </View>
+    );
+  };
 
   if (loading) {
     return (
