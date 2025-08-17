@@ -39,7 +39,32 @@ This document summarizes the audit logging implementation for the GOPR UAV Ops M
 **UserService.ts**
 - Added `getUserEmail(uid: string)` - Helper method to fetch user email for audit trail display
 
-### 3. Form Updates ✅
+**AuditLogService.ts** ✅
+- `createAuditLog()` - Automatically captures application metadata (platform, version, commit hash)
+- `getAuditLogs()` - Supports filtering and querying of centralized audit logs
+- `createChangeDetails()` - Generates human-readable change descriptions
+
+### 3. Application Metadata Tracking ✅
+
+**ApplicationMetadata Utility** 
+- Automatically detects platform (web/iOS/Android) using React Native Platform API
+- Retrieves application version from Expo Constants and app.json
+- Captures Git commit hash from environment variables when available
+- All audit log entries now include:
+  - `applicationPlatform`: 'web' | 'ios' | 'android'
+  - `applicationVersion`: Version from app.json (e.g., "1.0.0")
+  - `commitHash`: Git commit hash if available (optional)
+
+### 4. Centralized Audit Log System ✅
+
+**Complete Audit Trail**
+- All CRUD operations automatically create centralized audit log entries
+- Tracks entity type, entity ID, action, user, timestamp, and change details
+- Enhanced with application platform and version information
+- Console logging includes platform and version for debugging: 
+  `"[web v1.0.0 @fd93fd9]"`
+
+### 4. Form Updates ✅
 
 **drone-form.tsx**
 - Updated to pass user ID to `DroneService.createDrone()` and `DroneService.updateDrone()`
@@ -107,12 +132,17 @@ For all entities, users will now see:
 - `types/Drone.ts`
 - `types/Flight.ts`  
 - `types/ProcedureChecklist.ts`
+- `types/AuditLog.ts` ✅ (enhanced with application metadata)
 
 ### Services
 - `services/droneService.ts`
 - `services/flightService.ts`
 - `services/procedureChecklistService.ts`
 - `services/userService.ts`
+- `services/auditLogService.ts` ✅ (enhanced with automatic metadata capture)
+
+### Utilities
+- `utils/applicationMetadata.ts` ✅ (new - platform and version detection)
 
 ### Forms
 - `app/drone-form.tsx`
@@ -128,6 +158,9 @@ For all entities, users will now see:
 - `app/drone-details.tsx`
 - `app/procedures-checklist-details.tsx`  
 - `app/flight-details.tsx` (new)
+
+### Audit System
+- `app/audit-logs.tsx` ✅ (enhanced with platform and version display)
 
 ## Implementation Approach
 

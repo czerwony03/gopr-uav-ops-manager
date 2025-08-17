@@ -4,6 +4,9 @@ export type AuditEntityType = 'drone' | 'flight' | 'procedureChecklist';
 // Actions that can be performed on entities
 export type AuditAction = 'create' | 'edit' | 'delete' | 'restore' | 'view';
 
+// Application platforms
+export type ApplicationPlatform = 'web' | 'ios' | 'android';
+
 // Main audit log interface
 export interface AuditLog {
   id: string;
@@ -16,6 +19,9 @@ export interface AuditLog {
   details?: string; // Human-readable description of what changed
   previousValues?: Record<string, any>; // Previous values for edit operations
   newValues?: Record<string, any>; // New values for edit operations
+  applicationPlatform: ApplicationPlatform; // Platform where the action was performed
+  applicationVersion: string; // Application version from app.json
+  commitHash?: string; // Git commit hash if available
 }
 
 // Form data for creating audit logs
@@ -28,6 +34,9 @@ export interface AuditLogData {
   details?: string;
   previousValues?: Record<string, any>;
   newValues?: Record<string, any>;
+  applicationPlatform: ApplicationPlatform;
+  applicationVersion: string;
+  commitHash?: string;
 }
 
 // Query parameters for fetching audit logs

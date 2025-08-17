@@ -180,6 +180,10 @@ export default function AuditLogsScreen() {
                   <Text style={styles.user}>
                     by {log.userEmail || 'Unknown User'}
                   </Text>
+                  <Text style={styles.metadata}>
+                    {log.applicationPlatform} • v{log.applicationVersion}
+                    {log.commitHash && ` • ${log.commitHash.substring(0, 7)}`}
+                  </Text>
                 </View>
 
                 {log.entityId && (
@@ -297,6 +301,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     fontStyle: 'italic',
+  },
+  metadata: {
+    fontSize: 11,
+    color: '#888',
+    marginTop: 2,
+    fontFamily: 'monospace',
   },
   entityId: {
     fontSize: 10,

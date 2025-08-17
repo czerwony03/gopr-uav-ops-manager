@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { AuditLog, AuditLogData, AuditLogQuery } from '../types/AuditLog';
+import { ApplicationMetadata } from '../utils/applicationMetadata';
 
 export class AuditLogService {
   private static readonly COLLECTION_NAME = 'auditLogs';
@@ -19,15 +20,20 @@ export class AuditLogService {
   /**
    * Create a new audit log entry
    */
-  static async createAuditLog(auditData: AuditLogData): Promise<string> {
+  static async createAuditLog(auditData: Omit<AuditLogData, 'applicationPlatform' | 'applicationVersion' | 'commitHash'>): Promise<string> {
     try {
       const now = Timestamp.now();
-      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), {
-        ...auditData,
-        timestamp: now,
-      });
+      const metadata = ApplicationMetadata.getMetadata();
       
-      console.log(`Audit log created: ${auditData.action} on ${auditData.entityType}:${auditData.entityId} by ${auditData.userEmail || auditData.userId}`);
+      const completeAuditData = {
+        ...auditData,
+        ...metadata,
+        timestamp: now,
+      };
+
+      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), completeAuditData);
+      
+      console.log(`Audit log created: ${auditData.action} on ${auditData.entityType}:${auditData.entityId} by ${auditData.userEmail || auditData.userId} [${metadata.applicationPlatform} v${metadata.applicationVersion}${metadata.commitHash ? ` @${metadata.commitHash.substring(0, 7)}` : ''}]`);
       return docRef.id;
     } catch (error) {
       console.error('Error creating audit log:', error);
