@@ -80,7 +80,7 @@ export class DroneService {
   }
 
   // Create a new drone (manager and admin only)
-  static async createDrone(droneData: Omit<Drone, 'id' | 'createdAt' | 'updatedAt'>, userRole: UserRole): Promise<string> {
+  static async createDrone(droneData: Omit<Drone, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>, userRole: UserRole, userId: string): Promise<string> {
     if (!this.canModifyDrones(userRole)) {
       throw new Error('Insufficient permissions to create drone');
     }
@@ -92,6 +92,8 @@ export class DroneService {
         isDeleted: false,
         createdAt: now,
         updatedAt: now,
+        createdBy: userId,
+        updatedBy: userId,
       });
       return docRef.id;
     } catch (error) {
@@ -101,7 +103,7 @@ export class DroneService {
   }
 
   // Update an existing drone (manager and admin only)
-  static async updateDrone(id: string, droneData: Partial<Drone>, userRole: UserRole): Promise<void> {
+  static async updateDrone(id: string, droneData: Partial<Drone>, userRole: UserRole, userId: string): Promise<void> {
     if (!this.canModifyDrones(userRole)) {
       throw new Error('Insufficient permissions to update drone');
     }
@@ -123,6 +125,7 @@ export class DroneService {
       await updateDoc(droneRef, {
         ...droneData,
         updatedAt: Timestamp.now(),
+        updatedBy: userId,
       });
     } catch (error) {
       console.error('Error updating drone:', error);
@@ -131,7 +134,7 @@ export class DroneService {
   }
 
   // Soft delete a drone (manager and admin only)
-  static async softDeleteDrone(id: string, userRole: UserRole): Promise<void> {
+  static async softDeleteDrone(id: string, userRole: UserRole, userId: string): Promise<void> {
     if (!this.canModifyDrones(userRole)) {
       throw new Error('Insufficient permissions to delete drone');
     }
@@ -148,6 +151,7 @@ export class DroneService {
         isDeleted: true,
         deletedAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
+        updatedBy: userId,
       });
     } catch (error) {
       console.error('Error deleting drone:', error);
@@ -156,7 +160,7 @@ export class DroneService {
   }
 
   // Restore a soft-deleted drone (admin only)
-  static async restoreDrone(id: string, userRole: UserRole): Promise<void> {
+  static async restoreDrone(id: string, userRole: UserRole, userId: string): Promise<void> {
     if (userRole !== 'admin') {
       throw new Error('Insufficient permissions to restore drone');
     }
@@ -173,6 +177,7 @@ export class DroneService {
         isDeleted: false,
         deletedAt: null,
         updatedAt: Timestamp.now(),
+        updatedBy: userId,
       });
     } catch (error) {
       console.error('Error restoring drone:', error);

@@ -87,7 +87,7 @@ export class FlightService {
 
   // Create a new flight
   static async createFlight(
-    flightData: Omit<Flight, 'id' | 'createdAt' | 'updatedAt'>, 
+    flightData: Omit<Flight, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>, 
     currentUserId: string, 
     currentUserEmail?: string
   ): Promise<string> {
@@ -99,6 +99,8 @@ export class FlightService {
         userEmail: currentUserEmail || '',
         createdAt: now,
         updatedAt: now,
+        createdBy: currentUserId,
+        updatedBy: currentUserId,
       });
       return docRef.id;
     } catch (error) {
@@ -132,6 +134,7 @@ export class FlightService {
       await updateDoc(flightRef, {
         ...patch,
         updatedAt: Timestamp.now(),
+        updatedBy: currentUserId,
       });
     } catch (error) {
       console.error('Error updating flight:', error);

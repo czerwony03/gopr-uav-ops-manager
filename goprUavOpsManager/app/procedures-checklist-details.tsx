@@ -85,7 +85,7 @@ export default function ProcedureChecklistDetailsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await ProcedureChecklistService.softDeleteProcedureChecklist(checklist.id, user.role);
+              await ProcedureChecklistService.softDeleteProcedureChecklist(checklist.id, user.role, user.uid);
               Alert.alert('Success', 'Procedure/checklist deleted successfully', [
                 { text: 'OK', onPress: () => router.back() }
               ]);
@@ -103,7 +103,7 @@ export default function ProcedureChecklistDetailsScreen() {
     if (!user || !checklist) return;
 
     try {
-      await ProcedureChecklistService.restoreProcedureChecklist(checklist.id, user.role);
+      await ProcedureChecklistService.restoreProcedureChecklist(checklist.id, user.role, user.uid);
       await fetchChecklist(); // Refresh the data
       Alert.alert('Success', 'Procedure/checklist restored successfully');
     } catch (error) {

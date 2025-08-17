@@ -29,4 +29,6 @@ export interface Drone {
   deletedAt?: Date; // timestamp when deleted
   createdAt?: Date; // timestamp when created
   updatedAt?: Date; // timestamp when last updated
+  createdBy?: string; // user ID who created it
+  updatedBy?: string; // user ID who last updated it
 }

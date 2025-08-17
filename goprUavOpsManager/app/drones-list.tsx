@@ -87,7 +87,7 @@ export default function DronesListScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await DroneService.softDeleteDrone(drone.id, user.role);
+              await DroneService.softDeleteDrone(drone.id, user.role, user.uid);
               await fetchDrones(); // Refresh the list
               Alert.alert('Success', 'Drone deleted successfully');
             } catch (error) {
@@ -112,7 +112,7 @@ export default function DronesListScreen() {
           text: 'Restore',
           onPress: async () => {
             try {
-              await DroneService.restoreDrone(drone.id, user.role);
+              await DroneService.restoreDrone(drone.id, user.role, user.uid);
               await fetchDrones(); // Refresh the list
               Alert.alert('Success', 'Drone restored successfully');
             } catch (error) {

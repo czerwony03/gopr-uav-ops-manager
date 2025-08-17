@@ -72,7 +72,7 @@ export default function DroneDetailsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await DroneService.softDeleteDrone(drone.id, user.role);
+              await DroneService.softDeleteDrone(drone.id, user.role, user.uid);
               Alert.alert('Success', 'Drone deleted successfully', [
                 { text: 'OK', onPress: () => router.back() }
               ]);
@@ -98,7 +98,7 @@ export default function DroneDetailsScreen() {
           text: 'Restore',
           onPress: async () => {
             try {
-              await DroneService.restoreDrone(drone.id, user.role);
+              await DroneService.restoreDrone(drone.id, user.role, user.uid);
               // Refresh the drone data
               const updatedDrone = await DroneService.getDrone(drone.id, user.role);
               setDrone(updatedDrone);

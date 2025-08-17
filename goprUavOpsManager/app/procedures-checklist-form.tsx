@@ -119,7 +119,7 @@ export default function ProcedureChecklistFormScreen() {
     setLoading(true);
     try {
       if (isEditing && id) {
-        await ProcedureChecklistService.updateProcedureChecklist(id, formData, user.role);
+        await ProcedureChecklistService.updateProcedureChecklist(id, formData, user.role, user.uid);
         // Navigate back to details page for editing
         router.push(`/procedures-checklist-details?id=${id}`);
       } else {

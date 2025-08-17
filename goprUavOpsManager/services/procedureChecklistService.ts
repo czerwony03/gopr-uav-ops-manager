@@ -106,6 +106,7 @@ export class ProcedureChecklistService {
         description: formData.description,
         items: processedItems,
         createdBy: userId,
+        updatedBy: userId,
         isDeleted: false,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
@@ -124,7 +125,8 @@ export class ProcedureChecklistService {
   static async updateProcedureChecklist(
     id: string, 
     formData: ProcedureChecklistFormData, 
-    userRole: UserRole
+    userRole: UserRole,
+    userId: string
   ): Promise<void> {
     if (!this.canModifyProcedures(userRole)) {
       throw new Error('Insufficient permissions to update procedure/checklist');
@@ -146,6 +148,7 @@ export class ProcedureChecklistService {
         description: formData.description,
         items: processedItems,
         updatedAt: Timestamp.now(),
+        updatedBy: userId,
       };
 
       await updateDoc(checklistRef, updateData);
@@ -156,7 +159,7 @@ export class ProcedureChecklistService {
   }
 
   // Soft delete a procedure/checklist (manager and admin only)
-  static async softDeleteProcedureChecklist(id: string, userRole: UserRole): Promise<void> {
+  static async softDeleteProcedureChecklist(id: string, userRole: UserRole, userId: string): Promise<void> {
     if (!this.canModifyProcedures(userRole)) {
       throw new Error('Insufficient permissions to delete procedure/checklist');
     }
@@ -173,6 +176,7 @@ export class ProcedureChecklistService {
         isDeleted: true,
         deletedAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
+        updatedBy: userId,
       });
     } catch (error) {
       console.error('Error deleting procedure/checklist:', error);
@@ -181,7 +185,7 @@ export class ProcedureChecklistService {
   }
 
   // Restore a soft-deleted procedure/checklist (admin only)
-  static async restoreProcedureChecklist(id: string, userRole: UserRole): Promise<void> {
+  static async restoreProcedureChecklist(id: string, userRole: UserRole, userId: string): Promise<void> {
     if (userRole !== 'admin') {
       throw new Error('Insufficient permissions to restore procedure/checklist');
     }
@@ -198,6 +202,7 @@ export class ProcedureChecklistService {
         isDeleted: false,
         deletedAt: null,
         updatedAt: Timestamp.now(),
+        updatedBy: userId,
       });
     } catch (error) {
       console.error('Error restoring procedure/checklist:', error);
