@@ -21,7 +21,6 @@ import { ProcedureChecklist, ProcedureChecklistFormData, ChecklistItemFormData }
 import { UserRole } from '../contexts/AuthContext';
 import { AuditLogService } from './auditLogService';
 import { UserService } from './userService';
-import { UserRole } from '../contexts/AuthContext';
 
 export class ProcedureChecklistService {
   private static readonly COLLECTION_NAME = 'procedures_checklists';
