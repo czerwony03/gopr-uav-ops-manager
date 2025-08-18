@@ -13,6 +13,7 @@ import {
 import { db } from '../firebaseConfig';
 import { AuditLog, AuditLogData, AuditLogQuery } from '../types/AuditLog';
 import { ApplicationMetadata } from '../utils/applicationMetadata';
+import { deepDiff, formatChanges } from '../utils/deepDiff';
 
 export class AuditLogService {
   private static readonly COLLECTION_NAME = 'auditLogs';
@@ -141,28 +142,11 @@ export class AuditLogService {
     }
 
     if (action === 'edit' && changes.previous && changes.new) {
-      const changedFields = [];
+      // Use deep comparison to detect all changes, including nested objects
+      const detectedChanges = deepDiff(changes.previous, changes.new);
       
-      // Compare fields to identify what changed
-      for (const key in changes.new) {
-        if (changes.previous[key] !== changes.new[key]) {
-          // Format specific fields for better readability
-          if (key === 'weight') {
-            changedFields.push(`weight from ${changes.previous[key]}g to ${changes.new[key]}g`);
-          } else if (key === 'maxTakeoffWeight') {
-            changedFields.push(`max takeoff weight from ${changes.previous[key]}g to ${changes.new[key]}g`);
-          } else if (key === 'name') {
-            changedFields.push(`name from "${changes.previous[key]}" to "${changes.new[key]}"`);
-          } else if (key === 'location') {
-            changedFields.push(`location from "${changes.previous[key]}" to "${changes.new[key]}"`);
-          } else {
-            changedFields.push(`${key} from "${changes.previous[key]}" to "${changes.new[key]}"`);
-          }
-        }
-      }
-
-      if (changedFields.length > 0) {
-        return `Changed ${changedFields.join(', ')}`;
+      if (detectedChanges.length > 0) {
+        return formatChanges(detectedChanges);
       }
     }
 
