@@ -27,8 +27,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install EAS CLI
-        run: npm install -g eas-cli
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EAS_TOKEN }}
 
       - name: Export Expo Web App
         run: npx expo export --platform web
@@ -37,5 +40,3 @@ jobs:
 
       - name: Deploy to EAS Hosting
         run: npx eas deploy --alias test
-        env:
-          EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
