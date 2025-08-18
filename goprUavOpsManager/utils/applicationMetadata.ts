@@ -38,10 +38,10 @@ export class ApplicationMetadata {
    * Get the git commit hash if available
    * This will be available if the app is built with the commit hash in environment variables
    */
-  static getCommitHash(): string | undefined {
+  static getCommitHash(): string {
     // Check if commit hash is available in environment variables
-    if (process.env.EXPO_PUBLIC_COMMIT_HASH) {
-      return process.env.EXPO_PUBLIC_COMMIT_HASH;
+    if (process.env.EXPO_PUBLIC_GIT_COMMIT_HASH) {
+      return process.env.EXPO_PUBLIC_GIT_COMMIT_HASH;
     }
 
     // Check if it's available in Expo Constants (for EAS builds)
@@ -49,7 +49,7 @@ export class ApplicationMetadata {
       return Constants.expoConfig.extra.commitHash;
     }
 
-    return undefined;
+    return 'unknown';
   }
 
   /**
