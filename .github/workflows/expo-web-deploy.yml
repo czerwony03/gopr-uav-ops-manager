@@ -30,11 +30,10 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
-      - name: Authenticate with EAS
-        run: npx eas login --token ${{ secrets.EAS_TOKEN }}
-
       - name: Export Expo Web App
         run: npx expo export --platform web
 
       - name: Deploy to EAS Hosting
         run: npx eas deploy --alias test
+        env:
+          EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
