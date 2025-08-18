@@ -640,6 +640,28 @@ Document ID: [basic_user_firebase_uid]
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+### Automatic Version Bumping
+
+This project includes an automatic version bump workflow that triggers after every pull request merge to the main branch.
+
+**How it works:**
+- When changes are pushed to the `main` branch, the GitHub Actions workflow automatically increments the patch version
+- Updates both `package.json` and `app.json` with the new version
+- Commits the version changes back to the repository with a `[version bump]` commit message
+- Uses semantic patch versioning (e.g., 1.0.0 → 1.0.1 → 1.0.2)
+
+**Loop prevention:**
+The workflow automatically skips execution if the commit message contains `[version bump]` to prevent infinite loops.
+
+**Workflow file:** `.github/workflows/version-bump.yml`
+
+**Example version progression:**
+```
+1.0.0 → 1.0.1 → 1.0.2 → 1.0.3 ...
+```
+
+The version is automatically available throughout the application via the `ApplicationMetadata.getVersion()` utility, which reads from Expo Constants and falls back to the app.json version.
+
 ## Learn more
 
 To learn more about developing your project with Expo, look at the following resources:
