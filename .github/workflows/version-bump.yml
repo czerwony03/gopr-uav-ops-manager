@@ -92,3 +92,14 @@ jobs:
       - name: Push changes
         run: |
           git push origin main
+
+      - name: Create version branch and push
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.version }}"
+          BRANCH_NAME="version-$NEW_VERSION"
+      
+          # Create new branch from main
+          git checkout -b $BRANCH_NAME
+      
+          # Push branch
+          git push origin $BRANCH_NAME
