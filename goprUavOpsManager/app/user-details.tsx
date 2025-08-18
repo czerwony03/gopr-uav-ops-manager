@@ -54,6 +54,18 @@ export default function UserDetailsScreen() {
     return date.toLocaleDateString();
   };
 
+  const formatLastLogin = (date: Date | undefined) => {
+    if (!date) return 'Never';
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'admin':
@@ -187,6 +199,15 @@ export default function UserDetailsScreen() {
             ) : (
               <Text style={styles.fieldValue}>No qualifications set</Text>
             )}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Account Activity</Text>
+            
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Last Login</Text>
+              <Text style={styles.fieldValue}>{formatLastLogin(user.lastLoginAt)}</Text>
+            </View>
           </View>
 
           <View style={styles.actionButtons}>

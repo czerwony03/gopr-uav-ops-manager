@@ -35,6 +35,7 @@ export class UserService {
         insurance: doc.data().insurance?.toDate(),
         createdAt: doc.data().createdAt?.toDate(),
         updatedAt: doc.data().updatedAt?.toDate(),
+        lastLoginAt: doc.data().lastLoginAt?.toDate(),
       } as User));
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -67,6 +68,7 @@ export class UserService {
         insurance: userData.insurance?.toDate(),
         createdAt: userData.createdAt?.toDate(),
         updatedAt: userData.updatedAt?.toDate(),
+        lastLoginAt: userData.lastLoginAt?.toDate(),
       } as User;
     } catch (error) {
       console.error('Error fetching user:', error);
@@ -132,6 +134,19 @@ export class UserService {
     } catch (error) {
       console.error('Error fetching user email:', error);
       return 'Unknown User';
+    }
+  }
+
+  // Update last login timestamp
+  static async updateLastLogin(uid: string): Promise<void> {
+    try {
+      const userDoc = doc(db, this.COLLECTION_NAME, uid);
+      await updateDoc(userDoc, {
+        lastLoginAt: Timestamp.now(),
+      });
+    } catch (error) {
+      console.error('Error updating last login timestamp:', error);
+      // Don't throw error to avoid breaking login flow
     }
   }
 }

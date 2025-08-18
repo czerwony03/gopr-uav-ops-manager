@@ -4,6 +4,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, firestore } from '../firebaseConfig';
 import { User as FullUser } from '../types/User';
 import { UserService } from '../services/userService';
+import { AuditLogService } from '../services/auditLogService';
 
 export type UserRole = 'user' | 'manager' | 'admin';
 
@@ -54,6 +55,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: firebaseUser.email || '',
           role: role,
         });
+      }
+
+      // Update last login timestamp
+      try {
+        await UserService.updateLastLogin(firebaseUser.uid);
+      } catch (error) {
+        console.warn('Could not update last login timestamp:', error);
+      }
+
+      // Create audit log for successful login
+      try {
+        await AuditLogService.createAuditLog({
+          entityType: 'user',
+          entityId: firebaseUser.uid,
+          action: 'login',
+          userId: firebaseUser.uid,
+          userEmail: firebaseUser.email || undefined,
+          details: 'Successful login',
+        });
+      } catch (error) {
+        console.warn('Could not create login audit log:', error);
       }
 
       // Now fetch the full user data using UserService

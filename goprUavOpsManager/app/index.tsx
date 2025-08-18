@@ -23,6 +23,18 @@ export default function Index() {
     return date.toLocaleDateString();
   };
 
+  const formatLastLogin = (date: Date | undefined) => {
+    if (!date) return 'Never';
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -82,6 +94,14 @@ export default function Index() {
             • {capability}
           </Text>
         ))}
+      </View>
+
+      <View style={styles.lastLoginContainer}>
+        <Text style={styles.lastLoginTitle}>Account Activity</Text>
+        <View style={styles.field}>
+          <Text style={styles.fieldLabel}>Last Login</Text>
+          <Text style={styles.fieldValue}>{formatLastLogin(user.lastLoginAt)}</Text>
+        </View>
       </View>
 
       <View style={styles.profileDataContainer}>
@@ -270,6 +290,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 8,
     color: '#555',
+  },
+  lastLoginContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 20,
+    marginBottom: 30,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  lastLoginTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#333',
   },
   profileDataContainer: {
     backgroundColor: '#FFFFFF',
