@@ -64,20 +64,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.warn('Could not update last login timestamp:', error);
       }
 
-      // Create audit log for successful login
-      try {
-        await AuditLogService.createAuditLog({
-          entityType: 'user',
-          entityId: firebaseUser.uid,
-          action: 'login',
-          userId: firebaseUser.uid,
-          userEmail: firebaseUser.email || undefined,
-          details: 'Successful login',
-        });
-      } catch (error) {
-        console.warn('Could not create login audit log:', error);
-      }
-
       // Now fetch the full user data using UserService
       try {
         const fullUserData = await UserService.getUser(firebaseUser.uid, role, firebaseUser.uid);

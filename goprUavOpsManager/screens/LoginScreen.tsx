@@ -12,6 +12,8 @@ import {
 import { signInWithEmailAndPassword, signInWithPopup, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { auth } from '../firebaseConfig';
+import {AuditLogService} from "@/services/auditLogService";
+import {User} from "@/types/User";
 
 // Configure Google Sign-In for mobile platforms
 if (Platform.OS !== 'web') {
@@ -54,6 +56,7 @@ export default function LoginScreen() {
     
     // Firebase will handle the OAuth flow and domain restriction is managed server-side
     const result = await signInWithPopup(auth, provider);
+    await addLoginAuditLog();
     console.log('Google sign-in successful:', result.user.email);
   };
 
@@ -77,6 +80,7 @@ export default function LoginScreen() {
       const firebaseResult = await signInWithCredential(auth, googleCredential);
       
       console.log('Mobile Google sign-in successful:', firebaseResult.user.email);
+      await addLoginAuditLog();
       
       // Verify domain restriction (additional check for security)
       if (!firebaseResult.user.email?.endsWith('@bieszczady.gopr.pl')) {
@@ -126,6 +130,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      await addLoginAuditLog();
       // Navigation will be handled by the auth state change in AuthContext
     } catch (error: any) {
       console.error('Login error:', error);
@@ -134,6 +139,24 @@ export default function LoginScreen() {
       setLoading(false);
     }
   };
+
+  const addLoginAuditLog = async () => {
+      // Create audit log for successful login
+      try {
+          if (auth.currentUser) {
+              await AuditLogService.createAuditLog({
+                  entityType: 'user',
+                  entityId: auth.currentUser.uid,
+                  action: 'login',
+                  userId: auth.currentUser.uid,
+                  userEmail: auth.currentUser.email as string,
+                  details: 'Successful login',
+              });
+          }
+      } catch (error) {
+          console.warn('Could not create login audit log:', error);
+      }
+  }
 
   return (
     <View style={styles.container}>
