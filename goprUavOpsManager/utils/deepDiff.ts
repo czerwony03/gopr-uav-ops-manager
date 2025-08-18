@@ -85,7 +85,7 @@ export function deepDiff(previous: any, current: any, basePath: string = ''): Ch
   
   // Add keys from current that aren't in previous
   for (const key of currKeys) {
-    if (!allKeys.includes(key)) {
+    if (allKeys.indexOf(key) === -1) {
       allKeys.push(key);
     }
   }
