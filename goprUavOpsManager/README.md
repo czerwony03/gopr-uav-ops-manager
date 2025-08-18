@@ -645,13 +645,13 @@ You can start developing by editing the files inside the **app** directory. This
 This project includes an automatic version bump workflow that triggers after every pull request merge to the main branch.
 
 **How it works:**
-- When changes are pushed to the `main` branch, the GitHub Actions workflow automatically increments the patch version
+- When a pull request is merged to the `main` branch, the GitHub Actions workflow automatically increments the patch version
 - Updates both `package.json` and `app.json` with the new version
 - Commits the version changes back to the repository with a `[version bump]` commit message
 - Uses semantic patch versioning (e.g., 1.0.0 → 1.0.1 → 1.0.2)
 
 **Loop prevention:**
-The workflow automatically skips execution if the commit message contains `[version bump]` to prevent infinite loops.
+The workflow automatically skips execution if the PR title contains `[version bump]` to prevent infinite loops.
 
 **Workflow file:** `.github/workflows/version-bump.yml`
 
