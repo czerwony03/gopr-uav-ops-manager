@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useRouter } from "expo-router";
 import LoginScreen from "../screens/LoginScreen";
 import { Footer } from "../components/Footer";
+import { formatDate, formatLastLogin } from "../utils/dateUtils";
 
 export default function Index() {
   const { user, loading, refreshUser } = useAuth();
@@ -17,23 +18,6 @@ export default function Index() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // <-- Only on initial mount
-
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return 'Not set';
-    return date.toLocaleDateString();
-  };
-
-  const formatLastLogin = (date: Date | undefined) => {
-    if (!date) return 'Never';
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
 
   if (loading) {
     return (

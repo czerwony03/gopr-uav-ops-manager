@@ -13,6 +13,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 import { User } from '../types/User';
 import { UserService } from '../services/userService';
+import { formatDate, formatLastLogin } from '../utils/dateUtils';
 
 export default function UserDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -48,23 +49,6 @@ export default function UserDetailsScreen() {
   useEffect(() => {
     fetchUserDetails();
   }, [fetchUserDetails]);
-
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return 'Not set';
-    return date.toLocaleDateString();
-  };
-
-  const formatLastLogin = (date: Date | undefined) => {
-    if (!date) return 'Never';
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
 
   const getRoleColor = (role: string) => {
     switch (role) {
