@@ -1,6 +1,10 @@
 # Drone Registry Implementation
 
-This document outlines the drone registry functionality implemented in the GOPR UAV Ops Manager.
+This document outlines the drone registry functionality implemented in the GOPR UAV Ops Manager, including audit log integration and cross-entity relationships.
+
+## Overview
+
+The drone registry is a comprehensive module for managing UAV inventory with role-based access control, audit logging, and integration with flights and other system entities. All drone operations are tracked through the centralized audit log system for compliance and operational oversight.
 
 ## Changes Made
 
@@ -20,6 +24,7 @@ This document outlines the drone registry functionality implemented in the GOPR 
 ### 2. Created Drone Service (`services/droneService.ts`)
 - Centralized CRUD operations with role-based access control
 - Implements soft-delete functionality
+- **Full audit log integration**: All drone operations (create, update, delete, restore) automatically generate audit log entries with user tracking and change details
 - Provides role-based filtering:
   - Users and managers: Only see non-deleted drones
   - Admins: See all drones including deleted ones with status indicators
@@ -29,6 +34,7 @@ This document outlines the drone registry functionality implemented in the GOPR 
   - `formatWeight()`: formats weight in grams with kg/g display for readability
   - `formatRange()`: formats range in meters with km/m display for readability
   - `formatDimensions()`: formats dimensions in mm with cm/mm display for readability
+- **Cross-entity integration**: Drone names are cached in flight records for efficient list display
 
 ### 3. Updated Drone List Screen (`app/drones-list.tsx`)
 - Role-based UI with conditional buttons
@@ -40,12 +46,15 @@ This document outlines the drone registry functionality implemented in the GOPR 
 - Displays comprehensive drone information
 - Role-based action buttons (edit, delete, restore)
 - Supports opening user manual links
+- **Enhanced audit trail display**: Shows "Created by [user email] on [date]" and "Last updated by [user email] on [date]" with user email resolution
 - Shows timestamps and deletion status
+- **Admin capabilities**: Admins can view and restore deleted drones with clear status indicators
 
 ### 5. Created Drone Form Screen (`app/drone-form.tsx`)
 - Unified form for creating and editing drones
 - Role-based access control (manager and admin only)
 - Comprehensive validation
+- **Full audit integration**: Passes user ID for audit trail tracking on all create/update operations
 - **Updated for new unit specifications:**
   - Operating Time input in minutes
   - Range input in meters
@@ -53,6 +62,68 @@ This document outlines the drone registry functionality implemented in the GOPR 
   - Dimension inputs in mm
   - Updated labels and placeholders to reflect new units
 - Supports all drone fields including nested objects
+
+## Audit Log Integration
+
+The drone registry is fully integrated with the centralized audit logging system:
+
+### Automatic Audit Trail
+- **Create operations**: Records drone creation with user details and full drone data
+- **Update operations**: Tracks all field changes with before/after values and change descriptions
+- **Delete operations**: Logs soft-delete actions with user identification
+- **Restore operations**: Records restoration activities with admin user details
+
+### Audit Log Details
+All drone audit entries include:
+- Entity type: `'drone'`
+- Entity ID: Drone document ID
+- Action: `'create'`, `'edit'`, `'delete'`, or `'restore'`
+- User ID and email for accountability
+- Timestamp with platform detection (web/iOS/Android)
+- Application version and commit hash
+- Detailed change descriptions for human readability
+- Previous and new values for audit compliance
+
+### Viewing Audit Logs
+Administrators can view drone-specific audit trails:
+- Access via "Audit Logs" menu (admin only)
+- Filter by entity type `'drone'` or specific drone ID
+- View complete history of all drone operations
+- Track user accountability for compliance
+
+## Cross-Entity Relationships
+
+The drone registry integrates with other system entities:
+
+### Flight Integration
+- **Drone Selection**: Flights reference specific drones via `droneId` field
+- **Drone Name Caching**: Flight records cache `droneName` for efficient list display
+- **Cross-referencing**: Flights can be filtered or searched by associated drone
+- **Data Consistency**: Drone soft-deletion doesn't affect historical flight records
+
+### User Integration
+- **Ownership Tracking**: All drone operations track creating and updating users
+- **Role-based Access**: Drone visibility and actions respect user roles (user/manager/admin)
+- **User Profile Display**: Audit trails resolve user IDs to email addresses for readability
+
+### Procedures Integration
+- **Equipment Procedures**: Procedures and checklists can reference specific drone models
+- **Safety Checklists**: Pre-flight procedures can be drone-specific
+- **Maintenance Records**: Future enhancement for drone-specific maintenance procedures
+
+## Entity Data Flow
+```
+Users ──→ Create/Update Drones ──→ Generate Audit Logs
+  │              │                       ↓
+  │              ↓                  Compliance Tracking
+  │         Flight Assignment              ↓
+  │              │                    Admin Review
+  ↓              ↓                       ↓
+Role-based    Flight Records ──→ Operational Reports
+Access Control     │
+                   ↓
+            Historical Data
+```
 
 ## Role-Based Access Control
 
@@ -78,6 +149,9 @@ This document outlines the drone registry functionality implemented in the GOPR 
 - ✅ Soft-delete drones
 - ✅ View deleted drones with status indicators
 - ✅ Restore soft-deleted drones
+- ✅ **Access complete audit trail for all drone operations**
+- ✅ **View user accountability and change history**
+- ✅ **Enhanced UI with deletion status badges and restore capabilities**
 
 ## Soft-Delete Implementation
 
@@ -141,9 +215,13 @@ This document outlines the drone registry functionality implemented in the GOPR 
 3. **Comprehensive drone management** with all required fields in updated units
 4. **Enhanced unit formatting** for better user experience and readability
 5. **Real-time data** with refresh functionality
-5. **Professional UI** with clear visual indicators for deleted items
-6. **Form validation** and error handling
-7. **Responsive design** optimized for mobile devices
+6. **Professional UI** with clear visual indicators for deleted items
+7. **Form validation** and error handling
+8. **Responsive design** optimized for mobile devices
+9. **Complete audit trail integration** with user tracking and change history
+10. **Cross-entity relationships** with flights and user management
+11. **Admin-enhanced capabilities** including deletion status and restoration tools
+12. **Platform detection** for comprehensive operational tracking
 
 ## Technical Implementation
 
@@ -153,3 +231,7 @@ This document outlines the drone registry functionality implemented in the GOPR 
 - Uses Expo Router for navigation
 - Includes proper error handling and user feedback
 - Follows the existing codebase patterns and styling
+- **Full audit log integration** with AuditLogService and UserService
+- **Platform detection** and application metadata tracking
+- **Cross-entity data relationships** with flights and users
+- **Enhanced admin UI features** with status indicators and action controls
