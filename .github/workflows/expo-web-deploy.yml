@@ -13,6 +13,9 @@ jobs:
       run:
         working-directory: goprUavOpsManager
 
+    env:
+      VARS_CONTEXT: ${{ toJson(vars) }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,6 +26,17 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: goprUavOpsManager/package-lock.json
+
+      - name: Set env vars from vars context JSON
+        run: |
+            # Pipe the JSON string into jq
+            echo "$VARS_CONTEXT" | 
+            # Convert JSON object into an array of key-value pairs
+            jq -r 'to_entries | 
+            # Map over each key-value pair
+            .[] | 
+            # Format each pair as "KEY=VALUE" and append it all to the environment file
+            "\(.key)=\(.value)"' >> $GITHUB_ENV
 
       - name: Install dependencies
         run: npm install
