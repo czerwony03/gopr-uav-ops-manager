@@ -30,13 +30,8 @@ export class ApplicationMetadata {
       return Constants.expoConfig.version;
     }
 
-    // Fallback to manifest version
-    if (Constants.manifest?.version) {
-      return Constants.manifest.version;
-    }
-
     // Final fallback to hardcoded version (should match app.json)
-    return '1.0.0';
+    return 'unknown';
   }
 
   /**
