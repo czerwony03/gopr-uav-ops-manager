@@ -6,7 +6,6 @@ import {
   View, 
   ActivityIndicator,
   Alert,
-  Pressable,
   RefreshControl 
 } from 'react-native';
 import { Stack } from 'expo-router';
@@ -115,7 +114,7 @@ export default function AuditLogsScreen() {
         <View style={styles.unauthorized}>
           <Ionicons name="lock-closed-outline" size={48} color="#9E9E9E" />
           <Text style={styles.unauthorizedText}>
-            You don't have permission to view audit logs.
+            You don&apos;t have permission to view audit logs.
           </Text>
         </View>
       </View>
