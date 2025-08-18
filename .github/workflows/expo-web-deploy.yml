@@ -57,7 +57,7 @@ jobs:
           token: ${{ secrets.EAS_TOKEN }}
 
       - name: Export Expo Web App
-        run: npx expo export --platform web
+        run: npm run export:web
         env:
           EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
 

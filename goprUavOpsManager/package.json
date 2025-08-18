@@ -8,6 +8,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
+    "export:web": "expo export --platform web",
+    "preexport:web": "npm run eas-build-post-install",
     "eas-build-post-install": "bash ./scripts/expo/post-install"
   },
   "dependencies": {
