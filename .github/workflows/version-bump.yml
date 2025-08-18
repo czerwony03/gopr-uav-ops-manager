@@ -10,7 +10,7 @@ name: Automatic Version Bump
 jobs:
   version-bump:
     # Only run if the PR was merged (not just closed) and skip if this is already a version bump commit
-    if: "github.event.pull_request.merged == true && !contains(github.event.pull_request.title, '[version bump]')"
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && !contains(github.event.pull_request.title, '[version bump]'))
     runs-on: ubuntu-latest
     
     defaults:
