@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, Linking, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { ApplicationMetadata } from "@/utils/applicationMetadata";
 
 export default function InfoContact() {
   const handleEmailPress = (email: string) => {
@@ -39,27 +40,27 @@ export default function InfoContact() {
 
         <TouchableOpacity 
           style={styles.contactItem}
-          onPress={() => handleEmailPress('admin@redmed.dev')}
+          onPress={() => handleEmailPress('m.wronski@bieszczady.gopr.pl')}
         >
           <Ionicons name="mail-outline" size={20} color="#0066CC" />
           <Text style={styles.contactLabel}>General Contact</Text>
-          <Text style={[styles.contactValue, styles.linkText]}>admin@redmed.dev</Text>
+          <Text style={[styles.contactValue, styles.linkText]}>m.wronski@bieszczady.gopr.pl</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
           style={styles.contactItem}
-          onPress={() => handleEmailPress('m.wronski@bieszczady.gopr.pl')}
+          onPress={() => handleEmailPress('admin@redmed.dev')}
         >
           <Ionicons name="person-outline" size={20} color="#0066CC" />
           <Text style={styles.contactLabel}>Technical Contact</Text>
-          <Text style={[styles.contactValue, styles.linkText]}>m.wronski@bieszczady.gopr.pl</Text>
+          <Text style={[styles.contactValue, styles.linkText]}>admin@redmed.dev</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.infoCard}>
         <Text style={styles.sectionTitle}>Application Info</Text>
         <Text style={styles.description}>
-          GOPR UAV Ops Manager v1.0.0{'\n'}
+          GOPR UAV Ops Manager v{ApplicationMetadata.getMetadata().applicationVersion}{'\n'}
           Developed for GOPR (Volunteer Mountain Rescue Service)
         </Text>
       </View>
