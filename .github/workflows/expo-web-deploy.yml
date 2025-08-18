@@ -44,6 +44,9 @@ jobs:
             # Format each pair as "KEY=VALUE" and append it all to the environment file
             "\(.key)=\(.value)"' >> $GITHUB_ENV
 
+      - name: Set Git commit hash
+        run: echo "EXPO_PUBLIC_GIT_COMMIT_HASH=${GITHUB_SHA}" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: npm install
 
