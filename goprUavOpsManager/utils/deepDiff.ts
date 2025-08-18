@@ -157,10 +157,6 @@ export function formatChange(change: Change): string {
     return `${path === 'maxTakeoffWeight' ? 'max takeoff weight' : 'weight'} from ${previousValue}g to ${newValue}g`;
   }
   
-  if (path === 'name' || path === 'location') {
-    return `${path} from ${formatValue(previousValue)} to ${formatValue(newValue)}`;
-  }
-  
   return `${path} from ${formatValue(previousValue)} to ${formatValue(newValue)}`;
 }
 
