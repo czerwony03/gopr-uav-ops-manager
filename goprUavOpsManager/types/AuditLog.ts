@@ -1,8 +1,8 @@
 // Entity types that can be audited
-export type AuditEntityType = 'drone' | 'flight' | 'procedureChecklist';
+export type AuditEntityType = 'drone' | 'flight' | 'procedureChecklist' | 'user';
 
 // Actions that can be performed on entities
-export type AuditAction = 'create' | 'edit' | 'delete' | 'restore' | 'view';
+export type AuditAction = 'create' | 'edit' | 'delete' | 'restore' | 'view' | 'login';
 
 // Application platforms
 export type ApplicationPlatform = 'web' | 'ios' | 'android';

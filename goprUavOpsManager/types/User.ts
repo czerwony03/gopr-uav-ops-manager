@@ -36,6 +36,7 @@ export interface User {
   // Metadata
   createdAt?: Date;
   updatedAt?: Date;
+  lastLoginAt?: Date;
 }
 
 // Form data interface for user forms (uses string dates for easier form handling)

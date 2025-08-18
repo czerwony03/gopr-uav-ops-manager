@@ -71,6 +71,8 @@ export default function AuditLogsScreen() {
         return <Ionicons name="refresh-outline" size={16} color="#2196F3" />;
       case 'view':
         return <Ionicons name="eye-outline" size={16} color="#9E9E9E" />;
+      case 'login':
+        return <Ionicons name="log-in-outline" size={16} color="#4CAF50" />;
       default:
         return <Ionicons name="ellipse-outline" size={16} color="#9E9E9E" />;
     }
@@ -88,6 +90,8 @@ export default function AuditLogsScreen() {
         return '#2196F3';
       case 'view':
         return '#9E9E9E';
+      case 'login':
+        return '#4CAF50';
       default:
         return '#9E9E9E';
     }
@@ -101,6 +105,8 @@ export default function AuditLogsScreen() {
         return 'Flight';
       case 'procedureChecklist':
         return 'Procedure/Checklist';
+      case 'user':
+        return 'User';
       default:
         return entityType;
     }

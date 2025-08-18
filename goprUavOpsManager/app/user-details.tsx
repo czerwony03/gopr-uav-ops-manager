@@ -13,6 +13,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 import { User } from '../types/User';
 import { UserService } from '../services/userService';
+import { formatDate, formatLastLogin } from '../utils/dateUtils';
 
 export default function UserDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -48,11 +49,6 @@ export default function UserDetailsScreen() {
   useEffect(() => {
     fetchUserDetails();
   }, [fetchUserDetails]);
-
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return 'Not set';
-    return date.toLocaleDateString();
-  };
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -187,6 +183,15 @@ export default function UserDetailsScreen() {
             ) : (
               <Text style={styles.fieldValue}>No qualifications set</Text>
             )}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Account Activity</Text>
+            
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Last Login</Text>
+              <Text style={styles.fieldValue}>{formatLastLogin(user.lastLoginAt)}</Text>
+            </View>
           </View>
 
           <View style={styles.actionButtons}>
