@@ -27,6 +27,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
       - name: Authenticate with EAS
         run: npx eas login --token ${{ secrets.EAS_TOKEN }}
 
