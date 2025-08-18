@@ -1,6 +1,7 @@
 name: Automatic Version Bump
 
 "on":
+  workflow_dispatch:
   pull_request:
     types: [closed]
     branches:
