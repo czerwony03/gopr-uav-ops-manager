@@ -93,8 +93,8 @@ export default function UserFormScreen() {
       return;
     }
 
-    // Users can edit their own profile, admins can edit any profile
-    if (isEditing && id && user.role !== 'admin' && user.uid !== id) {
+    // Users can edit their own profile, managers and admins can edit any profile
+    if (isEditing && id && user.role !== 'admin' && user.role !== 'manager' && user.uid !== id) {
       Alert.alert('Access Denied', 'You can only edit your own profile.', [
         { text: 'OK', onPress: () => router.back() }
       ]);
