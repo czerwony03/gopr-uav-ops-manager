@@ -85,6 +85,8 @@ jobs:
                       keyAlias project.findProperty("MYAPP_UPLOAD_KEY_ALIAS")\n\
                       keyPassword project.findProperty("MYAPP_UPLOAD_KEY_PASSWORD")\n\
                   }' $FILE
+          
+          sed -i 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.release/' $FILE
 
           echo "✅ $FILE patched successfully."
 
