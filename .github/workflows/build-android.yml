@@ -80,10 +80,10 @@ jobs:
           # Insert release signing config inside signingConfigs { }
           sed -i '/signingConfigs {/a \
                   release {\n\
-                      storeFile file(System.getenv("MYAPP_UPLOAD_STORE_FILE"))\n\
-                      storePassword System.getenv("MYAPP_UPLOAD_STORE_PASSWORD")\n\
-                      keyAlias System.getenv("MYAPP_UPLOAD_KEY_ALIAS")\n\
-                      keyPassword System.getenv("MYAPP_UPLOAD_KEY_PASSWORD")\n\
+                      storeFile file(project.findProperty("MYAPP_UPLOAD_STORE_FILE"))\n\
+                      storePassword project.findProperty("MYAPP_UPLOAD_STORE_PASSWORD")\n\
+                      keyAlias project.findProperty("MYAPP_UPLOAD_KEY_ALIAS")\n\
+                      keyPassword project.findProperty("MYAPP_UPLOAD_KEY_PASSWORD")\n\
                   }' $FILE
 
           echo "✅ $FILE patched successfully."
