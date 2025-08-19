@@ -15,10 +15,10 @@ import { UserRole } from '../contexts/AuthContext';
 export class UserService {
   private static readonly COLLECTION_NAME = 'users';
 
-  // Get all users (admin only)
+  // Get all users (admin and manager)
   static async getUsers(userRole: UserRole): Promise<User[]> {
-    if (userRole !== 'admin') {
-      throw new Error('Access denied. Only administrators can view all users.');
+    if (userRole !== 'admin' && userRole !== 'manager') {
+      throw new Error('Access denied. Only administrators and managers can view all users.');
     }
 
     try {
@@ -45,8 +45,8 @@ export class UserService {
 
   // Get a single user by ID
   static async getUser(uid: string, requestorRole: UserRole, requestorUid: string): Promise<User | null> {
-    // Users can view their own profile, admins can view any profile
-    if (requestorRole !== 'admin' && requestorUid !== uid) {
+    // Users can view their own profile, managers and admins can view any profile
+    if (requestorRole !== 'admin' && requestorRole !== 'manager' && requestorUid !== uid) {
       throw new Error('Access denied. You can only view your own profile.');
     }
 
@@ -83,8 +83,8 @@ export class UserService {
     requestorRole: UserRole, 
     requestorUid: string
   ): Promise<void> {
-    // Users can update their own profile (except role), admins can update any profile
-    if (requestorRole !== 'admin' && requestorUid !== uid) {
+    // Users can update their own profile (except role), managers and admins can update any profile
+    if (requestorRole !== 'admin' && requestorRole !== 'manager' && requestorUid !== uid) {
       throw new Error('Access denied. You can only update your own profile.');
     }
 

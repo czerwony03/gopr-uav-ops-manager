@@ -291,10 +291,14 @@ service cloud.firestore {
     
     // Users collection
     match /users/{userId} {
-      // Users can read their own document, admins can read all
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
-      // Only admins can write user documents
-      allow write: if isAdmin();
+      // Users can read their own document, managers and admins can read all
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isManagerOrAdmin());
+      // Managers and admins can update user documents, but only admins can change roles
+      allow create: if isAdmin();
+      allow update: if isManagerOrAdmin() && 
+        (isAdmin() || !request.resource.data.keys().hasAny(['role']));
+      // Only admins can delete user documents
+      allow delete: if isAdmin();
     }
     
     // Drones collection

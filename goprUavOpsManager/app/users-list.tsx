@@ -68,7 +68,7 @@ export default function UsersListScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (user?.role === 'admin') {
+      if (user?.role === 'admin' || user?.role === 'manager') {
         fetchUsers();
       }
     }, [fetchUsers, user])
@@ -79,19 +79,19 @@ export default function UsersListScreen() {
     fetchUsers();
   };
 
-  // Only allow admin users to access this screen
+  // Only allow admin and manager users to access this screen
   if (!user) {
     // Redirecting to login - show nothing while redirecting
     return null;
   }
 
-  if (user.role !== 'admin') {
+  if (user.role !== 'admin' && user.role !== 'manager') {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Access Denied</Text>
           <Text style={styles.errorSubtext}>
-            Only administrators can access user management.
+            Only administrators and managers can access user management.
           </Text>
         </View>
       </SafeAreaView>
@@ -182,12 +182,14 @@ export default function UsersListScreen() {
         >
           <Text style={styles.editButtonText}>Edit</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.roleButton}
-          onPress={() => showRoleUpdateDialog(item.id, item.role)}
-        >
-          <Text style={styles.roleButtonText}>Role</Text>
-        </TouchableOpacity>
+        {user?.role === 'admin' && (
+          <TouchableOpacity
+            style={styles.roleButton}
+            onPress={() => showRoleUpdateDialog(item.id, item.role)}
+          >
+            <Text style={styles.roleButtonText}>Role</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
