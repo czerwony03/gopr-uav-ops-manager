@@ -71,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Update last login timestamp
       try {
         await UserService.updateLastLogin(firebaseUser.uid);
+        console.log('[AuthContext] Successfully updated last login timestamp');
       } catch (error) {
         console.warn('Could not update last login timestamp:', error);
       }
@@ -128,15 +129,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     console.log('[AuthContext] Setting up auth state listener');
+    
+    // Check if Firebase is properly configured
+    if (!auth) {
+      console.error('[AuthContext] Firebase auth is not initialized properly');
+      setLoading(false);
+      return;
+    }
+    
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
       console.log('[AuthContext] Auth state changed, firebaseUser:', firebaseUser?.uid, firebaseUser?.email);
       
       if (firebaseUser) {
         console.log('[AuthContext] User is authenticated, loading user data');
-        const userData = await loadFullUserData(firebaseUser);
-        if (userData) {
-          console.log('[AuthContext] Setting user data:', userData?.uid);
-          setUser(userData);
+        try {
+          const userData = await loadFullUserData(firebaseUser);
+          if (userData) {
+            console.log('[AuthContext] Setting user data:', userData?.uid);
+            setUser(userData);
+          }
+        } catch (error) {
+          console.error('[AuthContext] Error loading user data in auth state change:', error);
+          // Set basic user data if full loading fails
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            role: 'user',
+          } as UserData);
         }
       } else {
         console.log('[AuthContext] User is not authenticated, clearing user data');
