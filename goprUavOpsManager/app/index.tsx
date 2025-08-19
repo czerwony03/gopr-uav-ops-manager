@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Text, View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
 import { useRouter } from "expo-router";
@@ -7,19 +7,16 @@ import { Footer } from "../components/Footer";
 import { formatDate, formatLastLogin } from "../utils/dateUtils";
 
 export default function Index() {
-  const { user, loading, refreshUser } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
-  // Refresh user data when component mounts to ensure we have the latest data
-    useEffect(() => {
-        // Only refresh once on mount if user exists
-        if (user && refreshUser) {
-            refreshUser();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // <-- Only on initial mount
+  console.log('[Index] Component render - user:', user?.uid, 'loading:', loading);
+
+  // The AuthContext already handles loading user data on auth state changes
+  // No need to manually refresh here, which can cause infinite loops
 
   if (loading) {
+    console.log('[Index] Showing loading screen');
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
@@ -29,8 +26,11 @@ export default function Index() {
   }
 
   if (!user) {
+    console.log('[Index] No user found, showing login screen');
     return <LoginScreen />;
   }
+
+  console.log('[Index] User authenticated, showing dashboard for:', user.uid);
 
   const getRoleColor = (role: string) => {
     switch (role) {

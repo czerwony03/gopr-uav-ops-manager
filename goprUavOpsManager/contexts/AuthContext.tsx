@@ -38,18 +38,29 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoadingUserData, setIsLoadingUserData] = useState(false);
 
   const loadFullUserData = async (firebaseUser: User): Promise<UserData | null> => {
+    if (isLoadingUserData) {
+      console.log('[AuthContext] Already loading user data, skipping duplicate request');
+      return null;
+    }
+    
+    setIsLoadingUserData(true);
+    console.log('[AuthContext] Loading full user data for:', firebaseUser.uid, firebaseUser.email);
     try {
       // First, get or create the basic user document
       const userDocRef = doc(firestore, 'users', firebaseUser.uid);
       const userDoc = await getDoc(userDocRef);
+      console.log('[AuthContext] User document exists:', userDoc.exists());
       
       let role: UserRole = 'user';
       if (userDoc.exists()) {
         const userData = userDoc.data();
         role = userData.role as UserRole || 'user';
+        console.log('[AuthContext] Found existing user with role:', role);
       } else {
+        console.log('[AuthContext] Creating new user document with default role');
         // Create user document if it doesn't exist
         await setDoc(userDocRef, {
           email: firebaseUser.email || '',
@@ -66,15 +77,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Now fetch the full user data using UserService
       try {
+        console.log('[AuthContext] Fetching full user data from UserService');
         const fullUserData = await UserService.getUser(firebaseUser.uid, role, firebaseUser.uid);
         if (fullUserData) {
+          console.log('[AuthContext] Successfully loaded full user data');
           return fullUserData as UserData;
         }
+        console.log('[AuthContext] No full user data returned from UserService');
       } catch (error) {
         console.warn('Could not fetch full user data, using basic data:', error);
       }
 
       // Fallback to basic user data if full data is not available
+      console.log('[AuthContext] Using fallback basic user data');
       return {
         uid: firebaseUser.uid,
         email: firebaseUser.email || '',
@@ -83,20 +98,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Error loading user data:', error);
       // Set user with default role if Firestore fails
+      console.log('[AuthContext] Using error fallback user data');
       return {
         uid: firebaseUser.uid,
         email: firebaseUser.email || '',
         role: 'user',
       } as UserData;
+    } finally {
+      setIsLoadingUserData(false);
     }
   };
 
   const refreshUser = async () => {
     const currentUser = auth.currentUser;
+    console.log('[AuthContext] refreshUser called, currentUser:', currentUser?.uid, 'existing user:', user?.uid);
     if (currentUser && user) {
       setLoading(true);
       try {
         const updatedUserData = await loadFullUserData(currentUser);
+        console.log('[AuthContext] refreshUser: setting updated user data');
         setUser(updatedUserData);
       } catch (error) {
         console.error('Error refreshing user data:', error);
@@ -107,13 +127,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    console.log('[AuthContext] Setting up auth state listener');
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
+      console.log('[AuthContext] Auth state changed, firebaseUser:', firebaseUser?.uid, firebaseUser?.email);
+      
       if (firebaseUser) {
+        console.log('[AuthContext] User is authenticated, loading user data');
         const userData = await loadFullUserData(firebaseUser);
-        setUser(userData);
+        if (userData) {
+          console.log('[AuthContext] Setting user data:', userData?.uid);
+          setUser(userData);
+        }
       } else {
+        console.log('[AuthContext] User is not authenticated, clearing user data');
         setUser(null);
       }
+      console.log('[AuthContext] Setting loading to false');
       setLoading(false);
     });
 
