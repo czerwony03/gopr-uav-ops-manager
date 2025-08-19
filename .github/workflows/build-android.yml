@@ -49,6 +49,14 @@ jobs:
       - name: Install Expo CLI
         run: npm install -g expo-cli
 
+      - name: Set BUILD_TYPE
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "BUILD_TYPE=${{ github.event.inputs.buildType }}" >> $GITHUB_ENV
+          else
+            echo "BUILD_TYPE=both" >> $GITHUB_ENV
+          fi
+
       - name: Set env vars from vars context JSON
         run: |
           echo "$VARS_CONTEXT" | jq -r 'to_entries | .[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
@@ -67,9 +75,24 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Setup Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Decode Keystore
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/my-release-key.keystore
+
+      - name: Verify keystore
+        run: |
+          ls -lh android/app/*.keystore
+          keytool -list -v -keystore android/app/my-release-key.keystore -storepass ${{ secrets.ANDROID_KEYSTORE_PASSWORD }} || true
 
       - name: Build Release APK
         if: github.event.inputs.buildType == 'apk' || github.event.inputs.buildType == 'both' || github.event_name != 'workflow_dispatch'
@@ -102,3 +125,4 @@ jobs:
           path: |
             goprUavOpsManager/android/app/build/outputs/apk/release/*.apk
             goprUavOpsManager/android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: ignore
