@@ -34,8 +34,24 @@ jobs:
       - name: Install Expo CLI
         run: npm install -g expo-cli
 
+      - name: Set env vars from vars context JSON
+        run: |
+          # Pipe the JSON string into jq
+          echo "$VARS_CONTEXT" | 
+          # Convert JSON object into an array of key-value pairs
+          jq -r 'to_entries | 
+          # Map over each key-value pair
+          .[] | 
+          # Format each pair as "KEY=VALUE" and append it all to the environment file
+          "\(.key)=\(.value)"' >> $GITHUB_ENV
+
+      - name: Set Git commit hash
+        run: echo "EXPO_PUBLIC_GIT_COMMIT_HASH=${GITHUB_SHA}" >> $GITHUB_ENV
+
       - name: Prebuild
         run: npx expo prebuild --platform android
+        env:
+          EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -55,6 +71,8 @@ jobs:
             -PMYAPP_UPLOAD_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }} \
             -PMYAPP_UPLOAD_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
             -PMYAPP_UPLOAD_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
+        env:
+          EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
