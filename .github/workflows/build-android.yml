@@ -1,7 +1,17 @@
-name: Build Android Signed APK
+name: Build Android Signed APK & AAB
 
 on:
   workflow_dispatch:
+    inputs:
+      buildType:
+        description: "Choose build type"
+        required: true
+        default: "apk"
+        type: choice
+        options:
+          - apk
+          - aab
+          - both
   push:
     branches:
       - main
@@ -12,7 +22,9 @@ on:
 
 jobs:
   deploy:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, 'version bump')) || github.event_name == 'workflow_run'
+    if: github.event_name == 'workflow_dispatch' || 
+        (github.event_name == 'push' && contains(github.event.head_commit.message, 'version bump')) || 
+        github.event_name == 'workflow_run'
     runs-on: ubuntu-latest
 
     defaults:
@@ -36,14 +48,7 @@ jobs:
 
       - name: Set env vars from vars context JSON
         run: |
-          # Pipe the JSON string into jq
-          echo "$VARS_CONTEXT" | 
-          # Convert JSON object into an array of key-value pairs
-          jq -r 'to_entries | 
-          # Map over each key-value pair
-          .[] | 
-          # Format each pair as "KEY=VALUE" and append it all to the environment file
-          "\(.key)=\(.value)"' >> $GITHUB_ENV
+          echo "$VARS_CONTEXT" | jq -r 'to_entries | .[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
 
       - name: Set Git commit hash
         run: echo "EXPO_PUBLIC_GIT_COMMIT_HASH=${GITHUB_SHA}" >> $GITHUB_ENV
@@ -64,6 +69,7 @@ jobs:
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/my-release-key.keystore
 
       - name: Build Release APK
+        if: github.event.inputs.buildType == 'apk' || github.event.inputs.buildType == 'both' || github.event_name != 'workflow_dispatch'
         run: |
           cd android
           ./gradlew assembleRelease \
@@ -74,8 +80,22 @@ jobs:
         env:
           EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
 
-      - name: Upload APK
+      - name: Build Release AAB
+        if: github.event.inputs.buildType == 'aab' || github.event.inputs.buildType == 'both' || github.event_name != 'workflow_dispatch'
+        run: |
+          cd android
+          ./gradlew bundleRelease \
+            -PMYAPP_UPLOAD_STORE_FILE=my-release-key.keystore \
+            -PMYAPP_UPLOAD_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }} \
+            -PMYAPP_UPLOAD_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
+            -PMYAPP_UPLOAD_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
+        env:
+          EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
+
+      - name: Upload APK/AAB
         uses: actions/upload-artifact@v4
         with:
-          name: app-release.apk
-          path: android/app/build/outputs/apk/release/app-release.apk
+          name: android-builds
+          path: |
+            goprUavOpsManager/android/app/build/outputs/apk/release/*.apk
+            goprUavOpsManager/android/app/build/outputs/bundle/release/*.aab
