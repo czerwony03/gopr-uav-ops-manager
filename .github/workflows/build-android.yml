@@ -100,7 +100,8 @@ jobs:
         if: github.event.inputs.buildType == 'apk' || github.event.inputs.buildType == 'both' || github.event_name != 'workflow_dispatch'
         run: |
           cd android
-          ./gradlew assembleRelease --debug \
+          cat app/build.gradle
+          ./gradlew assembleRelease --info \
             -PMYAPP_UPLOAD_STORE_FILE=my-release-key.keystore \
             -PMYAPP_UPLOAD_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }} \
             -PMYAPP_UPLOAD_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
