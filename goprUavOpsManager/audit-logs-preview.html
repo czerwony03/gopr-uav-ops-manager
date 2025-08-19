@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Logs - UI Preview</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .title { font-size: 24px; font-weight: bold; color: #333; margin-bottom: 4px; }
+        .subtitle { font-size: 14px; color: #666; }
+        .filters { background: white; padding: 16px; border-radius: 8px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .toggle-btn { display: flex; align-items: center; gap: 8px; color: #007AFF; font-weight: 600; cursor: pointer; }
+        .filter-row { margin: 16px 0; }
+        .filter-label { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+        .filter-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; }
+        .filter-buttons { display: flex; gap: 12px; margin-top: 16px; }
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: #007AFF; color: white; }
+        .btn-secondary { background: #f0f0f0; color: #666; }
+        .pagination { background: white; padding: 16px; border-radius: 8px; margin: 16px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
+        .page-info { color: #666; margin-bottom: 12px; }
+        .page-controls { display: flex; justify-content: space-between; align-items: center; }
+        .page-btn { padding: 8px 16px; background: #f0f0f0; border: none; border-radius: 8px; cursor: pointer; }
+        .page-numbers { display: flex; gap: 8px; }
+        .page-num { padding: 8px 12px; background: #f0f0f0; border: none; border-radius: 8px; cursor: pointer; min-width: 40px; }
+        .page-num.active { background: #007AFF; color: white; }
+        .log-item { background: white; padding: 16px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .action-badge { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: #f0f0f0; border-radius: 12px; }
+        .action-create { color: #4CAF50; }
+        .action-edit { color: #FF9800; }
+        .timestamp { font-size: 12px; color: #666; }
+        .entity-type { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 4px; }
+        .description { font-size: 14px; color: #555; margin-bottom: 4px; }
+        .user { font-size: 12px; color: #666; font-style: italic; }
+        .metadata { font-size: 11px; color: #888; font-family: monospace; margin-top: 2px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">System Audit Trail</div>
+            <div class="subtitle">247 total entries</div>
+        </div>
+
+        <div class="filters">
+            <div class="toggle-btn">⌄ Show Filters</div>
+            <div style="margin-top: 16px;">
+                <div class="filter-row">
+                    <div class="filter-label">Entity Type:</div>
+                    <select class="filter-input">
+                        <option>All</option>
+                        <option>Drone</option>
+                        <option selected>Flight</option>
+                        <option>Procedure/Checklist</option>
+                        <option>User</option>
+                    </select>
+                </div>
+                <div class="filter-row">
+                    <div class="filter-label">Action:</div>
+                    <select class="filter-input">
+                        <option>All</option>
+                        <option>Create</option>
+                        <option selected>Edit</option>
+                        <option>Delete</option>
+                        <option>Restore</option>
+                        <option>View</option>
+                    </select>
+                </div>
+                <div class="filter-row">
+                    <div class="filter-label">User Email:</div>
+                    <input type="text" class="filter-input" placeholder="Enter user email..." value="pilot@example.com">
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <div style="flex: 1;">
+                        <div class="filter-label">Start Date:</div>
+                        <input type="text" class="filter-input" placeholder="YYYY-MM-DD" value="2024-01-01">
+                    </div>
+                    <div style="flex: 1;">
+                        <div class="filter-label">End Date:</div>
+                        <input type="text" class="filter-input" placeholder="YYYY-MM-DD" value="2024-12-31">
+                    </div>
+                </div>
+                <div class="filter-buttons">
+                    <button class="btn btn-primary">Apply Filters</button>
+                    <button class="btn btn-secondary">Clear All</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="pagination">
+            <div class="page-info">Page 2 of 25 (247 total)</div>
+            <div class="page-controls">
+                <button class="page-btn">← Previous</button>
+                <div class="page-numbers">
+                    <button class="page-num">1</button>
+                    <button class="page-num active">2</button>
+                    <button class="page-num">3</button>
+                    <button class="page-num">4</button>
+                    <span>...</span>
+                    <button class="page-num">25</button>
+                </div>
+                <button class="page-btn">Next →</button>
+            </div>
+        </div>
+
+        <div class="log-item">
+            <div class="log-header">
+                <div class="action-badge">
+                    <span>✏️</span>
+                    <span class="action-edit">EDIT</span>
+                </div>
+                <div class="timestamp">Dec 15, 2024, 2:30 PM</div>
+            </div>
+            <div class="entity-type">Flight</div>
+            <div class="description">Updated flight duration from 45 minutes to 50 minutes</div>
+            <div class="user">by pilot@example.com</div>
+            <div class="metadata">web • v1.0.8 • abc123d</div>
+        </div>
+
+        <div class="log-item">
+            <div class="log-header">
+                <div class="action-badge">
+                    <span>✅</span>
+                    <span class="action-create">CREATE</span>
+                </div>
+                <div class="timestamp">Dec 15, 2024, 1:15 PM</div>
+            </div>
+            <div class="entity-type">Flight</div>
+            <div class="description">Created flight</div>
+            <div class="user">by pilot@example.com</div>
+            <div class="metadata">web • v1.0.8 • abc123d</div>
+        </div>
+
+        <div class="log-item">
+            <div class="log-header">
+                <div class="action-badge">
+                    <span>✏️</span>
+                    <span class="action-edit">EDIT</span>
+                </div>
+                <div class="timestamp">Dec 15, 2024, 11:45 AM</div>
+            </div>
+            <div class="entity-type">Flight</div>
+            <div class="description">Updated flight location from "Training Area Alpha" to "Training Area Beta"</div>
+            <div class="user">by pilot@example.com</div>
+            <div class="metadata">web • v1.0.8 • abc123d</div>
+        </div>
+
+        <div class="pagination">
+            <div class="page-info">Page 2 of 25 (247 total)</div>
+            <div class="page-controls">
+                <button class="page-btn">← Previous</button>
+                <div class="page-numbers">
+                    <button class="page-num">1</button>
+                    <button class="page-num active">2</button>
+                    <button class="page-num">3</button>
+                    <button class="page-num">4</button>
+                    <span>...</span>
+                    <button class="page-num">25</button>
+                </div>
+                <button class="page-btn">Next →</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
