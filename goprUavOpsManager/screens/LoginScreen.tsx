@@ -8,6 +8,8 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  KeyboardAvoidingView,
+  ScrollView,
 } from 'react-native';
 import { signInWithEmailAndPassword, signInWithPopup, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
@@ -159,79 +161,87 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.formContainer}>
-        <Text style={styles.title}>GOPR UAV Ops Manager</Text>
-        <Text style={styles.subtitle}>Sign in to continue</Text>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.formContainer}>
+          <Text style={styles.title}>GOPR UAV Ops Manager</Text>
+          <Text style={styles.subtitle}>Sign in to continue</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoComplete="email"
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+          />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoComplete="password"
-          onSubmitEditing={handleLogin}
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            autoComplete="password"
+            onSubmitEditing={handleLogin}
+          />
 
-        <TouchableOpacity
-          style={[styles.loginButton, loading && styles.disabledButton]}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <Text style={styles.loginButtonText}>Sign In</Text>
-          )}
-        </TouchableOpacity>
-
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>OR</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        {Platform.OS === 'web' ? (
           <TouchableOpacity
-            style={[styles.googleButton, googleLoading && styles.disabledButton]}
-            onPress={handleGoogleLogin}
-            disabled={googleLoading}
+            style={[styles.loginButton, loading && styles.disabledButton]}
+            onPress={handleLogin}
+            disabled={loading}
           >
-            {googleLoading ? (
-              <ActivityIndicator color="#333333" />
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.googleButtonText}>Sign in with Google Workspace</Text>
+              <Text style={styles.loginButtonText}>Sign In</Text>
             )}
           </TouchableOpacity>
-        ) : (
-          <GoogleSigninButton
-            style={styles.googleSigninButton}
-            size={GoogleSigninButton.Size.Wide}
-            color={GoogleSigninButton.Color.Light}
-            onPress={handleGoogleLogin}
-            disabled={googleLoading}
-          />
-        )}
 
-        <Text style={styles.infoText}>
-          Contact your administrator for account access
-        </Text>
-        <Text style={styles.googleInfoText}>
-          Google Workspace sign-in is restricted to @bieszczady.gopr.pl domain
-        </Text>
-      </View>
-    </View>
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {Platform.OS === 'web' ? (
+            <TouchableOpacity
+              style={[styles.googleButton, googleLoading && styles.disabledButton]}
+              onPress={handleGoogleLogin}
+              disabled={googleLoading}
+            >
+              {googleLoading ? (
+                <ActivityIndicator color="#333333" />
+              ) : (
+                <Text style={styles.googleButtonText}>Sign in with Google Workspace</Text>
+              )}
+            </TouchableOpacity>
+          ) : (
+            <GoogleSigninButton
+              style={styles.googleSigninButton}
+              size={GoogleSigninButton.Size.Wide}
+              color={GoogleSigninButton.Color.Light}
+              onPress={handleGoogleLogin}
+              disabled={googleLoading}
+            />
+          )}
+
+          <Text style={styles.infoText}>
+            Contact your administrator for account access
+          </Text>
+          <Text style={styles.googleInfoText}>
+            Google Workspace sign-in is restricted to @bieszczady.gopr.pl domain
+          </Text>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -239,6 +249,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -279,6 +292,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     fontSize: 16,
     backgroundColor: '#f9f9f9',
+    color: '#000000',
   },
   loginButton: {
     backgroundColor: '#007AFF',
