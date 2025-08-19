@@ -6,28 +6,57 @@ import {
   View, 
   ActivityIndicator,
   Alert,
-  RefreshControl 
+  RefreshControl,
+  TouchableOpacity,
+  TextInput
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { AuditLogService } from '../services/auditLogService';
-import { AuditLog } from '../types/AuditLog';
+import { AuditLog, AuditLogQuery, PaginatedAuditLogResponse, AuditEntityType, AuditAction } from '../types/AuditLog';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function AuditLogsScreen() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [paginationData, setPaginationData] = useState<PaginatedAuditLogResponse | null>(null);
+  
+  // Filter states
+  const [filters, setFilters] = useState<AuditLogQuery>({
+    pageSize: 10,
+    pageNumber: 1,
+    entityType: undefined,
+    action: undefined,
+    userEmail: '',
+    startDate: undefined,
+    endDate: undefined,
+  });
+
+  // UI states
+  const [showFilters, setShowFilters] = useState(false);
+  const [startDateInput, setStartDateInput] = useState('');
+  const [endDateInput, setEndDateInput] = useState('');
+  
   const { user } = useAuth();
 
-  const loadAuditLogs = async (showLoadingIndicator = true) => {
+  const loadAuditLogs = async (showLoadingIndicator = true, newFilters?: AuditLogQuery) => {
     if (showLoadingIndicator) {
       setLoading(true);
     }
     
     try {
-      const logs = await AuditLogService.getRecentAuditLogs(100);
-      setAuditLogs(logs);
+      const queryParams = newFilters || filters;
+      // Clean up empty string filters
+      const cleanedParams = {
+        ...queryParams,
+        userEmail: queryParams.userEmail?.trim() || undefined,
+      };
+      
+      const response = await AuditLogService.getPaginatedAuditLogs(cleanedParams);
+      setAuditLogs(response.logs);
+      setPaginationData(response);
     } catch (error) {
       console.error('Error loading audit logs:', error);
       Alert.alert('Error', 'Failed to load audit logs');
@@ -44,9 +73,248 @@ export default function AuditLogsScreen() {
     await loadAuditLogs(false);
   };
 
+  const applyFilters = () => {
+    const newFilters = {
+      ...filters,
+      pageNumber: 1, // Reset to first page when applying filters
+      startDate: startDateInput ? new Date(startDateInput) : undefined,
+      endDate: endDateInput ? new Date(endDateInput) : undefined,
+    };
+    setFilters(newFilters);
+    loadAuditLogs(true, newFilters);
+  };
+
+  const clearFilters = () => {
+    const clearedFilters = {
+      pageSize: 10,
+      pageNumber: 1,
+      entityType: undefined,
+      action: undefined,
+      userEmail: '',
+      startDate: undefined,
+      endDate: undefined,
+    };
+    setFilters(clearedFilters);
+    setStartDateInput('');
+    setEndDateInput('');
+    loadAuditLogs(true, clearedFilters);
+  };
+
+  const goToPage = (pageNumber: number) => {
+    const newFilters = { ...filters, pageNumber };
+    setFilters(newFilters);
+    loadAuditLogs(true, newFilters);
+  };
+
+  const nextPage = () => {
+    if (paginationData?.hasNextPage) {
+      goToPage(filters.pageNumber! + 1);
+    }
+  };
+
+  const previousPage = () => {
+    if (paginationData?.hasPreviousPage) {
+      goToPage(filters.pageNumber! - 1);
+    }
+  };
+
   useEffect(() => {
     loadAuditLogs();
   }, []);
+
+  const renderPaginationControls = () => {
+    if (!paginationData) return null;
+
+    const { currentPage, totalPages, hasNextPage, hasPreviousPage } = paginationData;
+    
+    // Generate page numbers to show (show current page and 2 pages on each side)
+    const pageNumbers = [];
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i);
+    }
+
+    return (
+      <View style={styles.paginationContainer}>
+        <View style={styles.paginationInfo}>
+          <Text style={styles.paginationText}>
+            Page {currentPage} of {totalPages} ({paginationData.totalCount} total)
+          </Text>
+        </View>
+        
+        <View style={styles.paginationControls}>
+          <TouchableOpacity
+            style={[styles.paginationButton, !hasPreviousPage && styles.paginationButtonDisabled]}
+            onPress={previousPage}
+            disabled={!hasPreviousPage}
+          >
+            <Ionicons name="chevron-back" size={16} color={!hasPreviousPage ? '#ccc' : '#007AFF'} />
+            <Text style={[styles.paginationButtonText, !hasPreviousPage && styles.paginationButtonTextDisabled]}>
+              Previous
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.pageNumbers}>
+            {startPage > 1 && (
+              <>
+                <TouchableOpacity
+                  style={styles.pageNumberButton}
+                  onPress={() => goToPage(1)}
+                >
+                  <Text style={styles.pageNumberText}>1</Text>
+                </TouchableOpacity>
+                {startPage > 2 && <Text style={styles.pageEllipsis}>...</Text>}
+              </>
+            )}
+            
+            {pageNumbers.map(pageNum => (
+              <TouchableOpacity
+                key={pageNum}
+                style={[
+                  styles.pageNumberButton,
+                  pageNum === currentPage && styles.pageNumberButtonActive
+                ]}
+                onPress={() => goToPage(pageNum)}
+              >
+                <Text style={[
+                  styles.pageNumberText,
+                  pageNum === currentPage && styles.pageNumberTextActive
+                ]}>
+                  {pageNum}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            
+            {endPage < totalPages && (
+              <>
+                {endPage < totalPages - 1 && <Text style={styles.pageEllipsis}>...</Text>}
+                <TouchableOpacity
+                  style={styles.pageNumberButton}
+                  onPress={() => goToPage(totalPages)}
+                >
+                  <Text style={styles.pageNumberText}>{totalPages}</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+
+          <TouchableOpacity
+            style={[styles.paginationButton, !hasNextPage && styles.paginationButtonDisabled]}
+            onPress={nextPage}
+            disabled={!hasNextPage}
+          >
+            <Text style={[styles.paginationButtonText, !hasNextPage && styles.paginationButtonTextDisabled]}>
+              Next
+            </Text>
+            <Ionicons name="chevron-forward" size={16} color={!hasNextPage ? '#ccc' : '#007AFF'} />
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  const renderFilterControls = () => {
+    return (
+      <View style={styles.filtersContainer}>
+        <TouchableOpacity
+          style={styles.toggleFiltersButton}
+          onPress={() => setShowFilters(!showFilters)}
+        >
+          <Ionicons name={showFilters ? "chevron-up" : "chevron-down"} size={20} color="#007AFF" />
+          <Text style={styles.toggleFiltersText}>
+            {showFilters ? 'Hide Filters' : 'Show Filters'}
+          </Text>
+        </TouchableOpacity>
+
+        {showFilters && (
+          <View style={styles.filtersContent}>
+            <View style={styles.filterRow}>
+              <Text style={styles.filterLabel}>Entity Type:</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={filters.entityType || ''}
+                  style={styles.picker}
+                  onValueChange={(value) => setFilters({...filters, entityType: value as AuditEntityType || undefined})}
+                >
+                  <Picker.Item label="All" value="" />
+                  <Picker.Item label="Drone" value="drone" />
+                  <Picker.Item label="Flight" value="flight" />
+                  <Picker.Item label="Procedure/Checklist" value="procedureChecklist" />
+                  <Picker.Item label="User" value="user" />
+                </Picker>
+              </View>
+            </View>
+
+            <View style={styles.filterRow}>
+              <Text style={styles.filterLabel}>Action:</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={filters.action || ''}
+                  style={styles.picker}
+                  onValueChange={(value) => setFilters({...filters, action: value as AuditAction || undefined})}
+                >
+                  <Picker.Item label="All" value="" />
+                  <Picker.Item label="Create" value="create" />
+                  <Picker.Item label="Edit" value="edit" />
+                  <Picker.Item label="Delete" value="delete" />
+                  <Picker.Item label="Restore" value="restore" />
+                  <Picker.Item label="View" value="view" />
+                  <Picker.Item label="Login" value="login" />
+                </Picker>
+              </View>
+            </View>
+
+            <View style={styles.filterRow}>
+              <Text style={styles.filterLabel}>User Email:</Text>
+              <TextInput
+                style={styles.textInput}
+                value={filters.userEmail || ''}
+                onChangeText={(value) => setFilters({...filters, userEmail: value})}
+                placeholder="Enter user email..."
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            <View style={styles.filterRow}>
+              <Text style={styles.filterLabel}>Start Date:</Text>
+              <TextInput
+                style={styles.textInput}
+                value={startDateInput}
+                onChangeText={setStartDateInput}
+                placeholder="YYYY-MM-DD"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            <View style={styles.filterRow}>
+              <Text style={styles.filterLabel}>End Date:</Text>
+              <TextInput
+                style={styles.textInput}
+                value={endDateInput}
+                onChangeText={setEndDateInput}
+                placeholder="YYYY-MM-DD"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            <View style={styles.filterButtons}>
+              <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
+                <Text style={styles.applyButtonText}>Apply Filters</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.clearButton} onPress={clearFilters}>
+                <Text style={styles.clearButtonText}>Clear All</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  };
 
   const formatTimestamp = (timestamp: Date) => {
     return timestamp.toLocaleString('en-US', {
@@ -150,9 +418,14 @@ export default function AuditLogsScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>System Audit Trail</Text>
           <Text style={styles.subtitle}>
-            Complete history of all changes ({auditLogs.length} entries)
+            {paginationData ? `${paginationData.totalCount} total entries` : 'Loading...'}
           </Text>
         </View>
+
+        {renderFilterControls()}
+        
+        {/* Top Pagination Controls */}
+        {renderPaginationControls()}
 
         {auditLogs.length === 0 ? (
           <View style={styles.emptyState}>
@@ -200,6 +473,9 @@ export default function AuditLogsScreen() {
             ))}
           </View>
         )}
+
+        {/* Bottom Pagination Controls */}
+        {renderPaginationControls()}
       </ScrollView>
     </View>
   );
@@ -328,5 +604,167 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     color: '#666',
+  },
+  // Filter styles
+  filtersContainer: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  toggleFiltersButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+  },
+  toggleFiltersText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#007AFF',
+  },
+  filtersContent: {
+    marginTop: 16,
+  },
+  filterRow: {
+    marginBottom: 16,
+  },
+  filterLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
+  },
+  picker: {
+    height: 50,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    backgroundColor: '#f9f9f9',
+  },
+  filterButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  applyButton: {
+    flex: 1,
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  applyButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  clearButton: {
+    flex: 1,
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  clearButtonText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Pagination styles
+  paginationContainer: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 16,
+    marginVertical: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  paginationInfo: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  paginationText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  paginationControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  paginationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+  },
+  paginationButtonDisabled: {
+    backgroundColor: '#f5f5f5',
+  },
+  paginationButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#007AFF',
+  },
+  paginationButtonTextDisabled: {
+    color: '#ccc',
+  },
+  pageNumbers: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pageNumberButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+    minWidth: 40,
+    alignItems: 'center',
+  },
+  pageNumberButtonActive: {
+    backgroundColor: '#007AFF',
+  },
+  pageNumberText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+  },
+  pageNumberTextActive: {
+    color: 'white',
+  },
+  pageEllipsis: {
+    fontSize: 14,
+    color: '#666',
+    paddingHorizontal: 4,
   },
 });

@@ -44,8 +44,23 @@ export interface AuditLogQuery {
   entityType?: AuditEntityType;
   entityId?: string;
   userId?: string;
+  userEmail?: string;
   action?: AuditAction;
   startDate?: Date;
   endDate?: Date;
   limit?: number;
+  pageSize?: number;
+  pageNumber?: number;
+  lastDocumentSnapshot?: any; // Firestore DocumentSnapshot for pagination
+}
+
+// Paginated audit log response
+export interface PaginatedAuditLogResponse {
+  logs: AuditLog[];
+  totalCount: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  currentPage: number;
+  totalPages: number;
+  lastDocumentSnapshot?: any;
 }
