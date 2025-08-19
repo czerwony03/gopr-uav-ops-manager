@@ -120,7 +120,7 @@ export default function AuditLogsScreen() {
 
   useEffect(() => {
     loadAuditLogs();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const renderPaginationControls = () => {
     if (!paginationData) return null;
