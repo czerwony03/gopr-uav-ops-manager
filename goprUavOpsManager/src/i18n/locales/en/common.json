@@ -102,7 +102,8 @@
     "lastLogin": "Last Login",
     "accountActivity": "Account Activity",
     "capabilities": "Your Capabilities",
-    "contactAdmin": "Contact your administrator for account access"
+    "contactAdmin": "Contact your administrator for account access",
+    "time": "Time"
   },
   "procedures": {
     "title": "Procedures & Checklists",
@@ -193,6 +194,7 @@
     "noPhone": "Not provided",
     "noAddress": "Not provided",
     "noData": "No data",
+    "notFound": "User not found",
     "loadError": "Failed to load user details"
   },
   "flightDetails": {
@@ -219,7 +221,8 @@
     "deleteConfirmMessage": "Are you sure you want to delete this flight? This action cannot be undone.",
     "deleteSuccess": "Flight deleted successfully",
     "deleteError": "Failed to delete flight",
-    "notFound": "Flight not found or you do not have permission to view it"
+    "notFound": "Flight not found or you do not have permission to view it",
+    "loadError": "Failed to fetch flight details"
   },
   "flightForm": {
     "editTitle": "Edit Flight",
@@ -233,22 +236,30 @@
     "activity": "Activity",
     "activityPlaceholder": "Select activity",
     "conditions": "Conditions",
-    "conditionsPlaceholder": "Select conditions",
+    "conditionsPlaceholder": "Weather and flight conditions (optional)",
     "drone": "Drone",
-    "dronePlaceholder": "Select drone",
+    "dronePlaceholder": "Select a drone",
     "operator": "Operator",
     "operatorPlaceholder": "Select operator",
     "duration": "Duration (minutes)",
     "durationPlaceholder": "Enter duration",
     "location": "Location",
-    "locationPlaceholder": "Enter location",
+    "locationPlaceholder": "Enter flight location",
     "date": "Date",
     "datePlaceholder": "YYYY-MM-DD",
+    "startDate": "Start Date",
+    "startTime": "Start Time",
+    "startTimePlaceholder": "HH:mm (e.g. 14:30)",
+    "endDate": "End Date",
+    "endTime": "End Time",
+    "endTimePlaceholder": "HH:mm (e.g. 16:30)",
     "updateButton": "Update Flight",
     "createButton": "Create Flight",
     "updateSuccess": "Flight updated successfully",
     "createSuccess": "Flight created successfully",
     "saveError": "Failed to save flight",
+    "notFound": "Flight not found",
+    "loadError": "Failed to fetch flight data",
     "validation": {
       "title": "Validation Error",
       "message": "Please fill in all required fields.",
@@ -260,7 +271,24 @@
       "operatorRequired": "Operator is required",
       "durationRequired": "Duration is required",
       "locationRequired": "Location is required",
-      "dateRequired": "Date is required"
+      "dateRequired": "Date is required",
+      "droneIdRequired": "Drone is required",
+      "startDateRequired": "Start date is required",
+      "startTimeRequired": "Start time is required",
+      "endDateRequired": "End date is required",
+      "endTimeRequired": "End time is required",
+      "flightCategoryRequired": "Flight category is required",
+      "operationTypeRequired": "Operation type is required",
+      "activityTypeRequired": "Activity type is required",
+      "noDronesAvailable": "No drones available. Please add drones first.",
+      "selectValidDrone": "Please select a valid drone",
+      "dateFormat": "Date must be in YYYY-MM-DD format",
+      "startDateFormat": "Start date must be in YYYY-MM-DD format",
+      "endDateFormat": "End date must be in YYYY-MM-DD format",
+      "startTimeFormat": "Start time must be in HH:mm format",
+      "endTimeFormat": "End time must be in HH:mm format",
+      "invalidDateTime": "Invalid date/time format",
+      "endAfterStart": "End time must be after start time"
     }
   },
   "droneDetails": {

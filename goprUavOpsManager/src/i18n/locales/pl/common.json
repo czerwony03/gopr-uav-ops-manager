@@ -102,7 +102,8 @@
     "lastLogin": "Ostatnie logowanie",
     "accountActivity": "Aktywność konta",
     "capabilities": "Twoje uprawnienia",
-    "contactAdmin": "Skontaktuj się z administratorem w celu uzyskania dostępu do konta"
+    "contactAdmin": "Skontaktuj się z administratorem w celu uzyskania dostępu do konta",
+    "time": "Czas"
   },
   "procedures": {
     "title": "Procedury i listy kontrolne",
@@ -193,6 +194,7 @@
     "noPhone": "Nie podano",
     "noAddress": "Nie podano",
     "noData": "Brak danych",
+    "notFound": "Użytkownik nie został znaleziony",
     "loadError": "Nie udało się załadować szczegółów użytkownika"
   },
   "flightDetails": {
@@ -219,7 +221,8 @@
     "deleteConfirmMessage": "Czy na pewno chcesz usunąć ten lot? Ta akcja nie może być cofnięta.",
     "deleteSuccess": "Lot został pomyślnie usunięty",
     "deleteError": "Nie udało się usunąć lotu",
-    "notFound": "Lot nie został znaleziony lub nie masz uprawnień do jego wyświetlenia"
+    "notFound": "Lot nie został znaleziony lub nie masz uprawnień do jego wyświetlenia",
+    "loadError": "Nie udało się pobrać szczegółów lotu"
   },
   "flightForm": {
     "editTitle": "Edytuj lot",
@@ -233,7 +236,7 @@
     "activity": "Aktywność",
     "activityPlaceholder": "Wybierz aktywność",
     "conditions": "Warunki",
-    "conditionsPlaceholder": "Wybierz warunki",
+    "conditionsPlaceholder": "Warunki pogodowe i lotu (opcjonalne)",
     "drone": "Dron",
     "dronePlaceholder": "Wybierz drona",
     "operator": "Operator",
@@ -241,14 +244,22 @@
     "duration": "Czas trwania (minuty)",
     "durationPlaceholder": "Wprowadź czas trwania",
     "location": "Lokalizacja",
-    "locationPlaceholder": "Wprowadź lokalizację",
+    "locationPlaceholder": "Wprowadź lokalizację lotu",
     "date": "Data",
     "datePlaceholder": "YYYY-MM-DD",
+    "startDate": "Data rozpoczęcia",
+    "startTime": "Czas rozpoczęcia",
+    "startTimePlaceholder": "HH:mm (np. 14:30)",
+    "endDate": "Data zakończenia",
+    "endTime": "Czas zakończenia",
+    "endTimePlaceholder": "HH:mm (np. 16:30)",
     "updateButton": "Zaktualizuj lot",
     "createButton": "Utwórz lot",
     "updateSuccess": "Lot został pomyślnie zaktualizowany",
     "createSuccess": "Lot został pomyślnie utworzony",
     "saveError": "Nie udało się zapisać lotu",
+    "notFound": "Lot nie został znaleziony",
+    "loadError": "Nie udało się pobrać danych lotu",
     "validation": {
       "title": "Błąd walidacji",
       "message": "Proszę wypełnić wszystkie wymagane pola.",
@@ -260,7 +271,24 @@
       "operatorRequired": "Operator jest wymagany",
       "durationRequired": "Czas trwania jest wymagany",
       "locationRequired": "Lokalizacja jest wymagana",
-      "dateRequired": "Data jest wymagana"
+      "dateRequired": "Data jest wymagana",
+      "droneIdRequired": "Dron jest wymagany",
+      "startDateRequired": "Data rozpoczęcia jest wymagana",
+      "startTimeRequired": "Czas rozpoczęcia jest wymagany",
+      "endDateRequired": "Data zakończenia jest wymagana",
+      "endTimeRequired": "Czas zakończenia jest wymagany",
+      "flightCategoryRequired": "Kategoria lotu jest wymagana",
+      "operationTypeRequired": "Typ operacji jest wymagany",
+      "activityTypeRequired": "Typ aktywności jest wymagany",
+      "noDronesAvailable": "Brak dostępnych dronów. Proszę najpierw dodać drony.",
+      "selectValidDrone": "Proszę wybrać prawidłowy dron",
+      "dateFormat": "Data musi być w formacie YYYY-MM-DD",
+      "startDateFormat": "Data rozpoczęcia musi być w formacie YYYY-MM-DD",
+      "endDateFormat": "Data zakończenia musi być w formacie YYYY-MM-DD",
+      "startTimeFormat": "Czas rozpoczęcia musi być w formacie HH:mm",
+      "endTimeFormat": "Czas zakończenia musi być w formacie HH:mm",
+      "invalidDateTime": "Nieprawidłowy format daty/czasu",
+      "endAfterStart": "Czas zakończenia musi być późniejszy niż czas rozpoczęcia"
     }
   },
   "droneDetails": {
