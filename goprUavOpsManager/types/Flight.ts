@@ -46,3 +46,27 @@ export interface Flight {
   createdBy?: string; // user ID who created it
   updatedBy?: string; // user ID who last updated it
 }
+
+// Query parameters for fetching flights with filtering and pagination
+export interface FlightQuery {
+  pageSize?: number;
+  pageNumber?: number;
+  startDate?: Date;
+  endDate?: Date;
+  flightCategory?: FlightCategory;
+  activityType?: ActivityType;
+  userEmail?: string; // For admin/manager to filter by operator
+  droneId?: string;
+  lastDocumentSnapshot?: any; // Firestore DocumentSnapshot for pagination
+}
+
+// Paginated flight response
+export interface PaginatedFlightResponse {
+  flights: Flight[];
+  totalCount: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  currentPage: number;
+  totalPages: number;
+  lastDocumentSnapshot?: any;
+}
