@@ -10,12 +10,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Flight } from '../types/Flight';
 import { useAuth } from '../contexts/AuthContext';
 import { FlightService } from '../services/flightService';
 import { UserService } from '../services/userService';
 
 export default function FlightDetailsScreen() {
+  const { t } = useTranslation('common');
   const [flight, setFlight] = useState<Flight | null>(null);
   const [loading, setLoading] = useState(true);
   const [createdByEmail, setCreatedByEmail] = useState<string>('');
@@ -31,8 +33,8 @@ export default function FlightDetailsScreen() {
       try {
         const flightData = await FlightService.getFlight(id, user.role, user.uid);
         if (!flightData) {
-          Alert.alert('Error', 'Flight not found or you do not have permission to view it', [
-            { text: 'OK', onPress: () => router.back() }
+          Alert.alert(t('common.error'), 'Flight not found or you do not have permission to view it', [
+            { text: t('common.ok'), onPress: () => router.back() }
           ]);
           return;
         }
@@ -49,8 +51,8 @@ export default function FlightDetailsScreen() {
         }
       } catch (error) {
         console.error('Error fetching flight:', error);
-        Alert.alert('Error', 'Failed to fetch flight details', [
-          { text: 'OK', onPress: () => router.back() }
+        Alert.alert(t('common.error'), 'Failed to fetch flight details', [
+          { text: t('common.ok'), onPress: () => router.back() }
         ]);
       } finally {
         setLoading(false);
@@ -58,7 +60,8 @@ export default function FlightDetailsScreen() {
     };
 
     fetchFlight();
-  }, [id, user, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, user, router]); // t is stable from react-i18next and doesn't need to be in deps
 
   // Authentication check - redirect if not logged in
   useEffect(() => {
@@ -94,7 +97,7 @@ export default function FlightDetailsScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Loading flight details...</Text>
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
         </View>
       </SafeAreaView>
     );

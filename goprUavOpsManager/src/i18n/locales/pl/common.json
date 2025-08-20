@@ -1,0 +1,77 @@
+{
+  "nav": {
+    "home": "Strona główna",
+    "flights": "Loty",
+    "drones": "Drony",
+    "users": "Użytkownicy",
+    "procedures": "Procedury i listy kontrolne",
+    "info": "Informacje i kontakt",
+    "auditLogs": "Dziennik audytu"
+  },
+  "flights": {
+    "title": "Loty",
+    "newFlight": "Nowy lot",
+    "logbook": "Dziennik lotów",
+    "flightDetails": "Szczegóły lotu",
+    "add": "Dodaj lot",
+    "edit": "Edytuj lot",
+    "delete": "Usuń lot"
+  },
+  "drones": {
+    "title": "Drony",
+    "registry": "Rejestr dronów",
+    "add": "Dodaj drona",
+    "edit": "Edytuj drona",
+    "details": "Szczegóły drona"
+  },
+  "missions": {
+    "title": "Misje",
+    "newMission": "Nowa misja",
+    "details": "Szczegóły misji"
+  },
+  "auth": {
+    "signIn": "Zaloguj się",
+    "signOut": "Wyloguj się",
+    "email": "E-mail",
+    "password": "Hasło",
+    "login": "Logowanie",
+    "loginWithGoogle": "Zaloguj się przez Google"
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "language": "Język",
+    "theme": "Motyw",
+    "profile": "Profil"
+  },
+  "common": {
+    "ok": "OK",
+    "yes": "Tak",
+    "no": "Nie",
+    "cancel": "Anuluj",
+    "save": "Zapisz",
+    "edit": "Edytuj",
+    "delete": "Usuń",
+    "back": "Powrót",
+    "loading": "Ładowanie...",
+    "error": "Błąd",
+    "success": "Sukces",
+    "warning": "Ostrzeżenie",
+    "info": "Informacja",
+    "welcome": "Witaj",
+    "profile": "Profil",
+    "lastLogin": "Ostatnie logowanie",
+    "accountActivity": "Aktywność konta",
+    "capabilities": "Twoje uprawnienia",
+    "contactAdmin": "Skontaktuj się z administratorem w celu uzyskania dostępu do konta"
+  },
+  "user": {
+    "details": "Szczegóły użytkownika",
+    "role": "Rola",
+    "admin": "Administrator",
+    "manager": "Menedżer",
+    "user": "Użytkownik",
+    "email": "E-mail",
+    "firstName": "Imię",
+    "lastName": "Nazwisko"
+  }
+}

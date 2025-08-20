@@ -1,9 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, Linking, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { ApplicationMetadata } from "@/utils/applicationMetadata";
+import { LanguageSelector } from '../src/components/LanguageSelector';
 
 export default function InfoContact() {
+  const { t } = useTranslation('common');
+  
   const handleEmailPress = (email: string) => {
     Linking.openURL(`mailto:${email}`);
   };
@@ -11,8 +15,11 @@ export default function InfoContact() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Info & Contact</Text>
+        <Text style={styles.title}>{t('nav.info')}</Text>
       </View>
+
+      {/* Language Selector */}
+      <LanguageSelector />
 
       <View style={styles.logoContainer}>
         <Image 

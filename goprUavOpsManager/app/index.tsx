@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
+import { useTranslation } from 'react-i18next';
 import { useAuth } from "../contexts/AuthContext";
 import { useRouter } from "expo-router";
 import LoginScreen from "../screens/LoginScreen";
@@ -8,6 +9,7 @@ import { formatDate, formatLastLogin } from "../utils/dateUtils";
 
 export default function Index() {
   const { user, loading } = useAuth();
+  const { t } = useTranslation('common');
   const router = useRouter();
 
   console.log('[Index] Component render - user:', user?.uid, 'loading:', loading);
@@ -20,7 +22,7 @@ export default function Index() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={styles.loadingText}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -62,7 +64,7 @@ export default function Index() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>GOPR UAV Ops Manager</Text>
-        <Text style={styles.welcomeText}>Welcome, {user.email}</Text>
+        <Text style={styles.welcomeText}>{t('common.welcome')}, {user.email}</Text>
       </View>
 
       <View style={styles.roleContainer}>
@@ -72,7 +74,7 @@ export default function Index() {
       </View>
 
       <View style={styles.capabilitiesContainer}>
-        <Text style={styles.capabilitiesTitle}>Your Capabilities:</Text>
+        <Text style={styles.capabilitiesTitle}>{t('common.capabilities')}:</Text>
         {getRoleCapabilities(user.role).map((capability, index) => (
           <Text key={index} style={styles.capabilityItem}>
             • {capability}

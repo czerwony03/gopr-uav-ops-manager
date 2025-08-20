@@ -1,0 +1,77 @@
+{
+  "nav": {
+    "home": "Home",
+    "flights": "Flights",
+    "drones": "Drones",
+    "users": "Users",
+    "procedures": "Procedures & Checklists",
+    "info": "Info & Contact",
+    "auditLogs": "Audit Logs"
+  },
+  "flights": {
+    "title": "Flights",
+    "newFlight": "New Flight",
+    "logbook": "Logbook",
+    "flightDetails": "Flight Details",
+    "add": "Add Flight",
+    "edit": "Edit Flight",
+    "delete": "Delete Flight"
+  },
+  "drones": {
+    "title": "Drones",
+    "registry": "Drone Registry",
+    "add": "Add Drone",
+    "edit": "Edit Drone",
+    "details": "Drone Details"
+  },
+  "missions": {
+    "title": "Missions",
+    "newMission": "New Mission",
+    "details": "Mission Details"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "login": "Login",
+    "loginWithGoogle": "Sign in with Google"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "profile": "Profile"
+  },
+  "common": {
+    "ok": "OK",
+    "yes": "Yes",
+    "no": "No",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "back": "Back",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information",
+    "welcome": "Welcome",
+    "profile": "Profile",
+    "lastLogin": "Last Login",
+    "accountActivity": "Account Activity",
+    "capabilities": "Your Capabilities",
+    "contactAdmin": "Contact your administrator for account access"
+  },
+  "user": {
+    "details": "User Details",
+    "role": "Role",
+    "admin": "Admin",
+    "manager": "Manager",
+    "user": "User",
+    "email": "Email",
+    "firstName": "First Name",
+    "lastName": "Last Name"
+  }
+}
