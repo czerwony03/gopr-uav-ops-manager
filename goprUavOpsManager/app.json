@@ -2,7 +2,7 @@
   "expo": {
     "name": "GOPR UAV Ops Manager",
     "slug": "gopr-uav-ops-manager",
-    "version": "1.0.17",
+    "version": "1.0.18",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "dev.redmed.gopruavopsmanager",
@@ -20,7 +20,7 @@
       "edgeToEdgeEnabled": true,
       "googleServicesFile": "./google-services.json",
       "package": "dev.redmed.gopruavopsmanager",
-      "versionCode": 13,
+      "versionCode": 14,
       "intentFilters": [
         {
           "action": "VIEW",
