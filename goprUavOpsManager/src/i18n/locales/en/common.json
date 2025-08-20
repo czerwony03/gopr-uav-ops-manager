@@ -5,6 +5,7 @@
     "save": "Save",
     "delete": "Delete",
     "edit": "Edit",
+    "view": "View",
     "back": "Back",
     "yes": "Yes",
     "no": "No",
@@ -602,6 +603,43 @@
     "failedToOpenLink": "Failed to open link"
   },
   "drawer": {
-    "editProfile": "Profile"
+    "appTitle": "GOPR UAV Ops Manager",
+    "editProfile": "Edit Profile",
+    "signOut": "Sign Out"
+  },
+  "procedures": {
+    "title": "Procedures & Checklists",
+    "loading": "Loading procedures & checklists...",
+    "addNew": "Add New",
+    "itemSingle": "item",
+    "itemPlural": "items",
+    "createdOn": "Created {{date}}",
+    "deleted": "DELETED",
+    "empty": {
+      "title": "No Procedures or Checklists",
+      "descriptionCanCreate": "Create your first procedure or checklist to get started.",
+      "descriptionCannotCreate": "No procedures or checklists have been created yet."
+    },
+    "delete": {
+      "title": "Delete Procedure/Checklist",
+      "confirmMessage": "Are you sure you want to delete \"{{title}}\"? This action can be undone by an admin.",
+      "successMessage": "Procedure/checklist deleted successfully",
+      "errorMessage": "Failed to delete procedure/checklist"
+    },
+    "restore": {
+      "button": "Restore",
+      "successMessage": "Procedure/checklist restored successfully",
+      "errorMessage": "Failed to restore procedure/checklist"
+    },
+    "errors": {
+      "fetchFailed": "Failed to fetch procedures/checklists"
+    }
+  },
+  "user": {
+    "roles": {
+      "admin": "ADMINISTRATOR",
+      "manager": "MANAGER",
+      "user": "USER"
+    }
   }
 }

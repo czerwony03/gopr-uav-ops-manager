@@ -5,6 +5,7 @@
     "save": "Zapisz",
     "delete": "Usuń",
     "edit": "Edytuj",
+    "view": "Zobacz",
     "back": "Wróć",
     "yes": "Tak",
     "no": "Nie",
@@ -602,6 +603,43 @@
     "failedToOpenLink": "Nie udało się otworzyć linku"
   },
   "drawer": {
-    "editProfile": "Profil"
+    "appTitle": "GOPR UAV Ops Manager",
+    "editProfile": "Edytuj profil",
+    "signOut": "Wyloguj się"
+  },
+  "procedures": {
+    "title": "Procedury i listy kontrolne",
+    "loading": "Ładowanie procedur i list kontrolnych...",
+    "addNew": "Dodaj nową",
+    "itemSingle": "element",
+    "itemPlural": "elementów",
+    "createdOn": "Utworzono {{date}}",
+    "deleted": "USUNIĘTY",
+    "empty": {
+      "title": "Brak procedur lub list kontrolnych",
+      "descriptionCanCreate": "Utwórz swoją pierwszą procedurę lub listę kontrolną, aby rozpocząć.",
+      "descriptionCannotCreate": "Nie utworzono jeszcze żadnych procedur ani list kontrolnych."
+    },
+    "delete": {
+      "title": "Usuń procedurę/listę kontrolną",
+      "confirmMessage": "Czy na pewno chcesz usunąć \"{{title}}\"? Ta akcja może być cofnięta przez administratora.",
+      "successMessage": "Procedura/lista kontrolna została pomyślnie usunięta",
+      "errorMessage": "Nie udało się usunąć procedury/listy kontrolnej"
+    },
+    "restore": {
+      "button": "Przywróć",
+      "successMessage": "Procedura/lista kontrolna została pomyślnie przywrócona",
+      "errorMessage": "Nie udało się przywrócić procedury/listy kontrolnej"
+    },
+    "errors": {
+      "fetchFailed": "Nie udało się pobrać procedur/list kontrolnych"
+    }
+  },
+  "user": {
+    "roles": {
+      "admin": "ADMINISTRATOR",
+      "manager": "MENEDŻER",
+      "user": "UŻYTKOWNIK"
+    }
   }
 }
