@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   RefreshControl,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useAuth, UserRole } from '../contexts/AuthContext';
 import { doc, updateDoc } from 'firebase/firestore';
 import { firestore } from '../firebaseConfig';
@@ -28,6 +29,7 @@ interface UserData {
 export default function UsersListScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation('common');
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -47,7 +49,7 @@ export default function UsersListScreen() {
       setUsers(usersData);
     } catch (error) {
       console.error('Error fetching users:', error);
-      Alert.alert('Error', 'Failed to fetch users');
+      Alert.alert(t('common.error'), t('users.errors.fetchFailed'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -89,9 +91,9 @@ export default function UsersListScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Access Denied</Text>
+          <Text style={styles.errorText}>{t('users.accessDenied')}</Text>
           <Text style={styles.errorSubtext}>
-            Only administrators and managers can access user management.
+            {t('users.accessDeniedMessage')}
           </Text>
         </View>
       </SafeAreaView>
@@ -110,32 +112,32 @@ export default function UsersListScreen() {
         )
       );
       
-      Alert.alert('Success', `User role updated to ${newRole}`);
+      Alert.alert(t('common.success'), t('users.roleUpdated', { role: newRole }));
     } catch (error) {
       console.error('Error updating user role:', error);
-      Alert.alert('Error', 'Failed to update user role');
+      Alert.alert(t('common.error'), t('users.errors.roleUpdateFailed'));
     }
   };
 
   const showRoleUpdateDialog = (userId: string, currentRole: UserRole) => {
     Alert.alert(
-      'Update User Role',
-      'Select new role:',
+      t('users.updateRole'),
+      t('users.selectNewRole'),
       [
         {
-          text: 'User',
+          text: t('user.user'),
           onPress: () => updateUserRole(userId, 'user'),
         },
         {
-          text: 'Manager',
+          text: t('user.manager'),
           onPress: () => updateUserRole(userId, 'manager'),
         },
         {
-          text: 'Admin',
+          text: t('user.admin'),
           onPress: () => updateUserRole(userId, 'admin'),
         },
         {
-          text: 'Cancel',
+          text: t('common.cancel'),
           style: 'cancel',
         },
       ],
@@ -174,20 +176,20 @@ export default function UsersListScreen() {
           style={styles.viewButton}
           onPress={() => router.push(`/user-details?id=${item.id}`)}
         >
-          <Text style={styles.viewButtonText}>View Details</Text>
+          <Text style={styles.viewButtonText}>{t('users.viewDetails')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.editButton}
           onPress={() => router.push(`/user-form?id=${item.id}`)}
         >
-          <Text style={styles.editButtonText}>Edit</Text>
+          <Text style={styles.editButtonText}>{t('common.edit')}</Text>
         </TouchableOpacity>
         {user?.role === 'admin' && (
           <TouchableOpacity
             style={styles.roleButton}
             onPress={() => showRoleUpdateDialog(item.id, item.role)}
           >
-            <Text style={styles.roleButtonText}>Role</Text>
+            <Text style={styles.roleButtonText}>{t('users.role')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -199,7 +201,7 @@ export default function UsersListScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0066CC" />
-          <Text style={styles.loadingText}>Loading users...</Text>
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -208,8 +210,8 @@ export default function UsersListScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>User Management</Text>
-        <Text style={styles.subtitle}>Manage user roles and permissions</Text>
+        <Text style={styles.title}>{t('users.management')}</Text>
+        <Text style={styles.subtitle}>{t('users.manageRolesPermissions')}</Text>
       </View>
 
       <FlatList

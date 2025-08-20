@@ -15,14 +15,52 @@
     "flightDetails": "Flight Details",
     "add": "Add Flight",
     "edit": "Edit Flight",
-    "delete": "Delete Flight"
+    "delete": "Delete Flight",
+    "category": "Category",
+    "operation": "Operation",
+    "activity": "Activity",
+    "conditions": "Conditions",
+    "operator": "Operator",
+    "noFlightsFound": "No flights found",
+    "tapAddFlightToStart": "Tap \"Add Flight\" to create your first flight log",
+    "errors": {
+      "fetchFailed": "Failed to fetch flights"
+    }
   },
   "drones": {
     "title": "Drones",
     "registry": "Drone Registry",
     "add": "Add Drone",
     "edit": "Edit Drone",
-    "details": "Drone Details"
+    "details": "Drone Details",
+    "viewDetails": "View Details",
+    "deleted": "DELETED",
+    "restore": "Restore",
+    "deleteTitle": "Delete Drone",
+    "deleteConfirmation": "Are you sure you want to delete \"{{name}}\"? This action can be undone by an admin.",
+    "deleteSuccess": "Drone deleted successfully",
+    "restoreTitle": "Restore Drone",
+    "restoreConfirmation": "Are you sure you want to restore \"{{name}}\"?",
+    "restoreSuccess": "Drone restored successfully",
+    "callSign": "Call Sign",
+    "registration": "Registration",
+    "location": "Location",
+    "flightTime": "Flight Time",
+    "insurance": "Insurance",
+    "maxSpeed": "Max Speed",
+    "range": "Range",
+    "weight": "Weight",
+    "maxWeight": "Max",
+    "manufactured": "Manufactured",
+    "commissioned": "Commissioned",
+    "noDronesFound": "No drones found",
+    "addFirstDrone": "Add your first drone using the 'Add Drone' button above",
+    "noDronesAvailable": "No drones are available at the moment",
+    "errors": {
+      "fetchFailed": "Failed to fetch drones. Please check your Firebase configuration and try again.",
+      "deleteFailed": "Failed to delete drone",
+      "restoreFailed": "Failed to restore drone"
+    }
   },
   "missions": {
     "title": "Missions",
@@ -51,6 +89,7 @@
     "save": "Save",
     "edit": "Edit",
     "delete": "Delete",
+    "view": "View",
     "back": "Back",
     "loading": "Loading...",
     "error": "Error",
@@ -63,6 +102,28 @@
     "accountActivity": "Account Activity",
     "capabilities": "Your Capabilities",
     "contactAdmin": "Contact your administrator for account access"
+  },
+  "procedures": {
+    "title": "Procedures & Checklists",
+    "errors": {
+      "fetchFailed": "Failed to fetch procedures/checklists. Please check your connection and try again."
+    }
+  },
+  "users": {
+    "title": "Users",
+    "management": "User Management",
+    "manageRolesPermissions": "Manage user roles and permissions",
+    "accessDenied": "Access Denied",
+    "accessDeniedMessage": "Only administrators and managers can access user management.",
+    "updateRole": "Update User Role",
+    "selectNewRole": "Select new role:",
+    "roleUpdated": "User role updated to {{role}}",
+    "viewDetails": "View Details",
+    "role": "Role",
+    "errors": {
+      "fetchFailed": "Failed to fetch users",
+      "roleUpdateFailed": "Failed to update user role"
+    }
   },
   "user": {
     "details": "User Details",

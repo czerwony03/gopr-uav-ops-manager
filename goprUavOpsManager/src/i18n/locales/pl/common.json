@@ -15,14 +15,52 @@
     "flightDetails": "Szczegóły lotu",
     "add": "Dodaj lot",
     "edit": "Edytuj lot",
-    "delete": "Usuń lot"
+    "delete": "Usuń lot",
+    "category": "Kategoria",
+    "operation": "Operacja",
+    "activity": "Aktywność",
+    "conditions": "Warunki",
+    "operator": "Operator",
+    "noFlightsFound": "Nie znaleziono lotów",
+    "tapAddFlightToStart": "Naciśnij \"Dodaj lot\", aby utworzyć pierwszy wpis w dzienniku",
+    "errors": {
+      "fetchFailed": "Nie udało się pobrać lotów"
+    }
   },
   "drones": {
     "title": "Drony",
     "registry": "Rejestr dronów",
     "add": "Dodaj drona",
     "edit": "Edytuj drona",
-    "details": "Szczegóły drona"
+    "details": "Szczegóły drona",
+    "viewDetails": "Zobacz szczegóły",
+    "deleted": "USUNIĘTY",
+    "restore": "Przywróć",
+    "deleteTitle": "Usuń drona",
+    "deleteConfirmation": "Czy na pewno chcesz usunąć \"{{name}}\"? Ta akcja może być cofnięta przez administratora.",
+    "deleteSuccess": "Dron został pomyślnie usunięty",
+    "restoreTitle": "Przywróć drona",
+    "restoreConfirmation": "Czy na pewno chcesz przywrócić \"{{name}}\"?",
+    "restoreSuccess": "Dron został pomyślnie przywrócony",
+    "callSign": "Znak wywoławczy",
+    "registration": "Rejestracja",
+    "location": "Lokalizacja",
+    "flightTime": "Czas lotu",
+    "insurance": "Ubezpieczenie",
+    "maxSpeed": "Maks. prędkość",
+    "range": "Zasięg",
+    "weight": "Waga",
+    "maxWeight": "Maks. waga",
+    "manufactured": "Wyprodukowany",
+    "commissioned": "Wprowadzony do służby",
+    "noDronesFound": "Nie znaleziono dronów",
+    "addFirstDrone": "Dodaj swojego pierwszego drona używając przycisku 'Dodaj drona' powyżej",
+    "noDronesAvailable": "Obecnie nie ma dostępnych dronów",
+    "errors": {
+      "fetchFailed": "Nie udało się pobrać dronów. Sprawdź konfigurację Firebase i spróbuj ponownie.",
+      "deleteFailed": "Nie udało się usunąć drona",
+      "restoreFailed": "Nie udało się przywrócić drona"
+    }
   },
   "missions": {
     "title": "Misje",
@@ -51,6 +89,7 @@
     "save": "Zapisz",
     "edit": "Edytuj",
     "delete": "Usuń",
+    "view": "Zobacz",
     "back": "Powrót",
     "loading": "Ładowanie...",
     "error": "Błąd",
@@ -63,6 +102,28 @@
     "accountActivity": "Aktywność konta",
     "capabilities": "Twoje uprawnienia",
     "contactAdmin": "Skontaktuj się z administratorem w celu uzyskania dostępu do konta"
+  },
+  "procedures": {
+    "title": "Procedury i listy kontrolne",
+    "errors": {
+      "fetchFailed": "Nie udało się pobrać procedur/list kontrolnych. Sprawdź połączenie i spróbuj ponownie."
+    }
+  },
+  "users": {
+    "title": "Użytkownicy",
+    "management": "Zarządzanie użytkownikami",
+    "manageRolesPermissions": "Zarządzaj rolami i uprawnieniami użytkowników",
+    "accessDenied": "Dostęp zabroniony",
+    "accessDeniedMessage": "Tylko administratorzy i menedżerowie mogą zarządzać użytkownikami.",
+    "updateRole": "Zaktualizuj rolę użytkownika",
+    "selectNewRole": "Wybierz nową rolę:",
+    "roleUpdated": "Rola użytkownika została zaktualizowana na {{role}}",
+    "viewDetails": "Zobacz szczegóły",
+    "role": "Rola",
+    "errors": {
+      "fetchFailed": "Nie udało się pobrać użytkowników",
+      "roleUpdateFailed": "Nie udało się zaktualizować roli użytkownika"
+    }
   },
   "user": {
     "details": "Szczegóły użytkownika",

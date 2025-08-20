@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { ProcedureChecklist } from '../types/ProcedureChecklist';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,6 +23,7 @@ export default function ProceduresChecklistsListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation('common');
 
   const fetchChecklists = useCallback(async () => {
     if (!user) return;
@@ -32,8 +34,8 @@ export default function ProceduresChecklistsListScreen() {
     } catch (error) {
       console.error('Error fetching procedures/checklists:', error);
       Alert.alert(
-        'Error', 
-        'Failed to fetch procedures/checklists. Please check your connection and try again.'
+        t('common.error'), 
+        t('procedures.errors.fetchFailed')
       );
     } finally {
       setLoading(false);
