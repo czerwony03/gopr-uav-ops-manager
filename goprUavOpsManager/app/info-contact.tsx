@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, ScrollView, Image, Linking, TouchableOpacity } 
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ApplicationMetadata } from "@/utils/applicationMetadata";
-import { LanguageSelector } from '../src/components/LanguageSelector';
 
 export default function InfoContact() {
   const { t } = useTranslation('common');
@@ -17,9 +16,6 @@ export default function InfoContact() {
       <View style={styles.header}>
         <Text style={styles.title}>{t('nav.info')}</Text>
       </View>
-
-      {/* Language Selector */}
-      <LanguageSelector />
 
       <View style={styles.logoContainer}>
         <Image 

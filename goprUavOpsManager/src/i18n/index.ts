@@ -32,9 +32,14 @@ const getDeviceLanguage = (): string => {
   return 'pl'; // Default and fallback to Polish
 };
 
-// Get stored language preference
+// Get stored language preference safely
 const getStoredLanguage = async (): Promise<string> => {
   try {
+    // Check if we're in a React Native environment (not SSR or Node.js)
+    if (typeof window === 'undefined' && typeof global.window === 'undefined') {
+      return getDeviceLanguage();
+    }
+    
     const storedLanguage = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
     if (storedLanguage && (storedLanguage === 'pl' || storedLanguage === 'en')) {
       return storedLanguage;
@@ -45,18 +50,31 @@ const getStoredLanguage = async (): Promise<string> => {
   return getDeviceLanguage();
 };
 
-// Store language preference
+// Store language preference safely
 export const setStoredLanguage = async (language: string): Promise<void> => {
   try {
+    // Check if we're in a React Native environment
+    if (typeof window === 'undefined' && typeof global.window === 'undefined') {
+      console.warn('AsyncStorage not available in this environment');
+      return;
+    }
+    
     await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, language);
   } catch (error) {
     console.warn('Failed to store language:', error);
   }
 };
 
-// Initialize i18next
+// Initialize i18next safely
 const initI18n = async (): Promise<void> => {
-  const storedLanguage = await getStoredLanguage();
+  let storedLanguage: string;
+  
+  try {
+    storedLanguage = await getStoredLanguage();
+  } catch (error) {
+    console.warn('Error getting stored language, falling back to device language:', error);
+    storedLanguage = getDeviceLanguage();
+  }
   
   // eslint-disable-next-line import/no-named-as-default-member
   await i18n
