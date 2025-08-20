@@ -62,15 +62,28 @@ jobs:
           NEW_VERSION="${{ steps.new_version.outputs.version }}"
           npm version $NEW_VERSION --no-git-tag-version
 
-      - name: Update app.json version
+      - name: Update app.json version and android.versionCode
         run: |
           NEW_VERSION="${{ steps.new_version.outputs.version }}"
           node -e "
             const fs = require('fs');
             const appJson = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+
+            // Update version
             appJson.expo.version = '$NEW_VERSION';
+
+            // Ensure android object exists
+            if (!appJson.expo.android) appJson.expo.android = {};
+
+            // Bump or initialize versionCode
+            if (!appJson.expo.android.versionCode) {
+              appJson.expo.android.versionCode = 1;
+            } else {
+              appJson.expo.android.versionCode += 1;
+            }
+
             fs.writeFileSync('app.json', JSON.stringify(appJson, null, 2) + '\n');
-            console.log('Updated app.json version to: $NEW_VERSION');
+            console.log('Updated app.json: version=' + appJson.expo.version + ', android.versionCode=' + appJson.expo.android.versionCode);
           "
 
       - name: Configure Git
