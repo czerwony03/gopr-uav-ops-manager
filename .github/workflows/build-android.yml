@@ -12,19 +12,15 @@ on:
           - apk
           - aab
           - both
-  #push:
-  #  branches:
-  #    - main
   workflow_run:
     workflows: [ "Automatic Version Bump" ]
     types:
       - completed
 
 jobs:
-  deploy:
-    if: github.event_name == 'workflow_dispatch' || 
-        (github.event_name == 'push' && contains(github.event.head_commit.message, 'version bump')) || 
-        github.event_name == 'workflow_run'
+  build-android:
+    if: github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
 
     defaults:
@@ -41,15 +37,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
+          cache: npm
           cache-dependency-path: goprUavOpsManager/package-lock.json
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Install Expo CLI
-        run: npm install -g expo-cli
 
       - name: Set BUILD_TYPE
         run: |
@@ -74,21 +67,20 @@ jobs:
       - name: Patch Gradle for release signing
         run: |
           FILE=android/app/build.gradle
-
-          echo "🔧 Patching $FILE with release signing config..."
-
-          # Insert release signing config inside signingConfigs { }
-          sed -i '/signingConfigs {/a \
-                  release {\n\
-                      storeFile file(project.findProperty("MYAPP_UPLOAD_STORE_FILE"))\n\
-                      storePassword project.findProperty("MYAPP_UPLOAD_STORE_PASSWORD")\n\
-                      keyAlias project.findProperty("MYAPP_UPLOAD_KEY_ALIAS")\n\
-                      keyPassword project.findProperty("MYAPP_UPLOAD_KEY_PASSWORD")\n\
-                  }' $FILE
-          
-          sed -i 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.release/' $FILE
-
-          echo "✅ $FILE patched successfully."
+          echo "🔧 Checking $FILE for release signing config..."
+          if ! grep -q "signingConfigs.release" "$FILE"; then
+            echo "Adding release signing config..."
+            sed -i '/signingConfigs {/a \
+                    release {\n\
+                        storeFile file(project.findProperty("MYAPP_UPLOAD_STORE_FILE"))\n\
+                        storePassword project.findProperty("MYAPP_UPLOAD_STORE_PASSWORD")\n\
+                        keyAlias project.findProperty("MYAPP_UPLOAD_KEY_ALIAS")\n\
+                        keyPassword project.findProperty("MYAPP_UPLOAD_KEY_PASSWORD")\n\
+                    }' $FILE
+            sed -i 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.release/' $FILE
+          else
+            echo "✅ Release signing config already present."
+          fi
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -116,7 +108,7 @@ jobs:
           keytool -list -v -keystore android/app/my-release-key.keystore -storepass ${{ secrets.ANDROID_KEYSTORE_PASSWORD }} || true
 
       - name: Build Release APK
-        if: github.event.inputs.buildType == 'apk' || github.event.inputs.buildType == 'both' || github.event_name != 'workflow_dispatch'
+        if: env.BUILD_TYPE == 'apk' || env.BUILD_TYPE == 'both'
         run: |
           cd android
           ./gradlew assembleRelease \
@@ -128,7 +120,7 @@ jobs:
           EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
 
       - name: Build Release AAB
-        if: github.event.inputs.buildType == 'aab' || github.event.inputs.buildType == 'both' || github.event_name != 'workflow_dispatch'
+        if: env.BUILD_TYPE == 'aab' || env.BUILD_TYPE == 'both'
         run: |
           cd android
           ./gradlew bundleRelease \

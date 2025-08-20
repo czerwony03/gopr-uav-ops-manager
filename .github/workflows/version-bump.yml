@@ -1,18 +1,18 @@
 name: Automatic Version Bump
 
-"on":
+on:
   workflow_dispatch:
   pull_request:
     types: [closed]
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   version-bump:
-    # Only run if the PR was merged (not just closed) and skip if this is already a version bump commit
-    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && !contains(github.event.pull_request.title, '[version bump]'))
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true && !contains(github.event.pull_request.title, '[version bump]'))
     runs-on: ubuntu-latest
-    
+
     defaults:
       run:
         working-directory: goprUavOpsManager
@@ -21,9 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Use a token that can push to protected branches
           token: ${{ secrets.GITHUB_TOKEN }}
-          # Checkout the main branch since we're in a PR context
           ref: main
           fetch-depth: 0
 
@@ -41,26 +39,15 @@ jobs:
         id: current_version
         run: |
           CURRENT_VERSION=$(node -p "require('./package.json').version")
-          echo "Current version: $CURRENT_VERSION"
           echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
 
-      - name: Bump patch version
+      - name: Bump patch version in package.json
         id: new_version
         run: |
-          CURRENT_VERSION="${{ steps.current_version.outputs.version }}"
-          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
-          MAJOR=${VERSION_PARTS[0]}
-          MINOR=${VERSION_PARTS[1]}
-          PATCH=${VERSION_PARTS[2]}
-          NEW_PATCH=$((PATCH + 1))
-          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-          echo "New version: $NEW_VERSION"
+          NEW_VERSION=$(npm version patch --no-git-tag-version | sed 's/^v//')
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Update package.json version
-        run: |
-          NEW_VERSION="${{ steps.new_version.outputs.version }}"
-          npm version $NEW_VERSION --no-git-tag-version
+          echo "Bumped package.json to $NEW_VERSION"
 
       - name: Update app.json version and android.versionCode
         run: |
@@ -93,26 +80,30 @@ jobs:
 
       - name: Commit version bump
         run: |
+          CURRENT_VERSION="${{ steps.current_version.outputs.version }}"
           NEW_VERSION="${{ steps.new_version.outputs.version }}"
+
           git add package.json package-lock.json app.json
-          git commit -m "[version bump] v$NEW_VERSION
+          git commit \
+            -m "[version bump] v$NEW_VERSION" \
+            -m "Automatically bumped patch version." \
+            -m "- package.json: $CURRENT_VERSION → $NEW_VERSION" \
+            -m "- app.json: $CURRENT_VERSION → $NEW_VERSION" || echo "No changes to commit"
 
-          Automatically bumped patch version after PR merge.
-          
-          - package.json: ${{ steps.current_version.outputs.version }} → $NEW_VERSION
-          - app.json: ${{ steps.current_version.outputs.version }} → $NEW_VERSION"
-
-      - name: Push changes
+      - name: Push changes to main
         run: |
+          git pull --rebase origin main
           git push origin main
 
-      - name: Create version branch and push
+      - name: Create version branch and tag
         run: |
           NEW_VERSION="${{ steps.new_version.outputs.version }}"
           BRANCH_NAME="version-$NEW_VERSION"
-      
-          # Create new branch from main
+          
+          # Create version branch
           git checkout -b $BRANCH_NAME
-      
-          # Push branch
           git push origin $BRANCH_NAME
+
+          # Create and push tag
+          git tag "v$NEW_VERSION"
+          git push origin "v$NEW_VERSION"
