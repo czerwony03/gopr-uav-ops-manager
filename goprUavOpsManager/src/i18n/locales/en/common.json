@@ -59,7 +59,8 @@
     "errors": {
       "fetchFailed": "Failed to fetch drones. Please check your Firebase configuration and try again.",
       "deleteFailed": "Failed to delete drone",
-      "restoreFailed": "Failed to restore drone"
+      "restoreFailed": "Failed to restore drone",
+      "notFoundOrNoPermission": "Drone not found or you do not have permission to view it"
     }
   },
   "missions": {

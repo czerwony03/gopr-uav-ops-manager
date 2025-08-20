@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
+import { useTranslation } from 'react-i18next';
 import { UserFormData, AVAILABLE_QUALIFICATIONS, Qualification } from '../types/User';
 import { useAuth, UserRole } from '../contexts/AuthContext';
 import { UserService } from '../services/userService';
@@ -25,6 +26,7 @@ export default function UserFormScreen() {
   const { user, refreshUser } = useAuth();
   const router = useRouter();
   const isEditing = !!id;
+  const { t } = useTranslation('common');
 
   // Default form data for creating new users
   const defaultFormData = useMemo((): UserFormData => ({

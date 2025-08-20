@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Drone } from '../types/Drone';
 import { useAuth } from '../contexts/AuthContext';
 import { DroneService } from '../services/droneService';
@@ -24,6 +25,7 @@ export default function DroneFormScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const isEditing = !!id;
+  const { t } = useTranslation('common');
 
   // Default form data for creating new drones
   const defaultFormData = useMemo((): DroneFormData => ({

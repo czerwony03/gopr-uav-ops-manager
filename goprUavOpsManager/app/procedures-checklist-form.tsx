@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { ProcedureChecklistFormData, ChecklistItemFormData } from '../types/ProcedureChecklist';
@@ -27,6 +28,7 @@ export default function ProcedureChecklistFormScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const isEditing = !!id;
+  const { t } = useTranslation('common');
 
   // Default form data
   const defaultFormData = useMemo((): ProcedureChecklistFormData => ({

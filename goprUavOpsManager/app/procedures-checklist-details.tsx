@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import ImageViewer from '../components/ImageViewer';
 import { ProcedureChecklist, ChecklistItem } from '../types/ProcedureChecklist';
@@ -28,6 +29,7 @@ export default function ProcedureChecklistDetailsScreen() {
   const [updatedByEmail, setUpdatedByEmail] = useState<string>('');
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+  const { t } = useTranslation('common');
   const router = useRouter();
 
   const fetchChecklist = useCallback(async () => {

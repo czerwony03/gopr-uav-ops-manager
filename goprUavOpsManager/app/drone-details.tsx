@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Drone } from '../types/Drone';
 import { useAuth } from '../contexts/AuthContext';
 import { DroneService } from '../services/droneService';
@@ -24,6 +25,7 @@ export default function DroneDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation('common');
 
   useEffect(() => {
     const fetchDrone = async () => {
@@ -32,8 +34,8 @@ export default function DroneDetailsScreen() {
       try {
         const droneData = await DroneService.getDrone(id, user.role);
         if (!droneData) {
-          Alert.alert('Error', 'Drone not found or you do not have permission to view it', [
-            { text: 'OK', onPress: () => router.back() }
+          Alert.alert(t('common.error'), t('drones.errors.notFoundOrNoPermission'), [
+            { text: t('common.ok'), onPress: () => router.back() }
           ]);
           return;
         }

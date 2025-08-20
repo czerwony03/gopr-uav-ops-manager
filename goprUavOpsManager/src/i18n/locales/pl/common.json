@@ -59,7 +59,8 @@
     "errors": {
       "fetchFailed": "Nie udało się pobrać dronów. Sprawdź konfigurację Firebase i spróbuj ponownie.",
       "deleteFailed": "Nie udało się usunąć drona",
-      "restoreFailed": "Nie udało się przywrócić drona"
+      "restoreFailed": "Nie udało się przywrócić drona",
+      "notFoundOrNoPermission": "Dron nie został znaleziony lub nie masz uprawnień do jego wyświetlenia"
     }
   },
   "missions": {

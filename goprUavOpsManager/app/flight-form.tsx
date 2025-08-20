@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { FlightService } from '../services/flightService';
 import { DroneService } from '../services/droneService';
@@ -46,6 +47,7 @@ export default function FlightFormScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const isEditing = !!id;
+  const { t } = useTranslation('common');
 
   const [loading, setLoading] = useState(false);
   const [dronesLoading, setDronesLoading] = useState(true);

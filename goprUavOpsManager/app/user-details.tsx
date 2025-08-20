@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { User } from '../types/User';
 import { UserService } from '../services/userService';
@@ -19,6 +20,7 @@ export default function UserDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user: currentUser } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation('common');
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
