@@ -2,11 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { DrawerActions } from '@react-navigation/native';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { signOut } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
+import { auth } from '@/firebaseConfig';
 
 export function CustomDrawerContent(props: any) {
   const { user } = useAuth();
@@ -14,13 +14,8 @@ export function CustomDrawerContent(props: any) {
 
   const handleLogout = async () => {
     try {
-      // Close the drawer first
       props.navigation.dispatch(DrawerActions.closeDrawer());
-      
-      // Sign out from Firebase
       await signOut(auth);
-      
-      // Explicitly redirect to login page (though AuthContext should handle this)
       router.replace('/');
     } catch (error) {
       console.error('Logout error:', error);
@@ -48,119 +43,120 @@ export function CustomDrawerContent(props: any) {
     return null;
   }
 
+  const displayName = [user.firstname, user.surname].filter(Boolean).join(' ').trim();
+
   return (
-    <DrawerContentScrollView {...props} style={styles.container}>
-      {/* Header Section */}
-      <View style={styles.header}>
-        <Text style={styles.appTitle}>GOPR UAV Ops</Text>
-        <View style={styles.userInfo}>
-          <Text style={styles.userEmail}>{user.email}</Text>
-          <View style={[styles.roleBadge, { backgroundColor: getRoleColor(user.role) }]}>
-            <Text style={styles.roleText}>{user.role.toUpperCase()}</Text>
+    <View style={styles.root}>
+      <DrawerContentScrollView {...props} style={styles.container}>
+        {/* Header Section */}
+        <View style={styles.header}>
+          <Text style={styles.appTitle}>GOPR UAV Ops Manager</Text>
+
+          <View style={styles.userInfo}>
+            {!!displayName && <Text style={styles.userName}>{displayName}</Text>}
+            <Text style={styles.userEmail}>{user.email}</Text>
+            <View style={[styles.roleBadge, {backgroundColor: getRoleColor(user.role)}]}>
+              <Text style={styles.roleText}>{user.role.toUpperCase()}</Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* Navigation Items */}
-      <View style={styles.navigationSection}>
-        <DrawerItem
-          label="Home"
-          onPress={() => handleNavigation('/')}
-          icon={({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+        {/* Navigation Items */}
+        <View style={styles.navigationSection}>
+          <DrawerItem
+            label="Home"
+            onPress={() => handleNavigation('/')}
+            icon={({color, size}) => (
+              <Ionicons name="home-outline" size={size} color={color}/>
+            )}
+            labelStyle={styles.drawerLabel}
+            style={styles.drawerItem}
+          />
+
+          <DrawerItem
+            label="Flights"
+            onPress={() => handleNavigation('/flights-list')}
+            icon={({color, size}) => (
+              <Ionicons name="airplane-outline" size={size} color={color}/>
+            )}
+            labelStyle={styles.drawerLabel}
+            style={styles.drawerItem}
+          />
+
+          <DrawerItem
+            label="Drones"
+            onPress={() => handleNavigation('/drones-list')}
+            icon={({color, size}) => (
+              <Ionicons name="hardware-chip-outline" size={size} color={color}/>
+            )}
+            labelStyle={styles.drawerLabel}
+            style={styles.drawerItem}
+          />
+
+          <DrawerItem
+            label="Procedures & Checklists"
+            onPress={() => handleNavigation('/procedures-checklists-list')}
+            icon={({color, size}) => (
+              <Ionicons name="clipboard-outline" size={size} color={color}/>
+            )}
+            labelStyle={styles.drawerLabel}
+            style={styles.drawerItem}
+          />
+
+          {/* Users menu item - only visible to admins */}
+          {user.role === 'admin' && (
+            <DrawerItem
+              label="Users"
+              onPress={() => handleNavigation('/users-list')}
+              icon={({color, size}) => (
+                <Ionicons name="people-outline" size={size} color={color}/>
+              )}
+              labelStyle={styles.drawerLabel}
+              style={styles.drawerItem}
+            />
           )}
-          labelStyle={styles.drawerLabel}
-          style={styles.drawerItem}
-        />
-        
-        <DrawerItem
-          label="Flights"
-          onPress={() => handleNavigation('/flights-list')}
-          icon={({ color, size }) => (
-            <Ionicons name="airplane-outline" size={size} color={color} />
+
+          {/* Audit Logs menu item - only visible to admins */}
+          {user.role === 'admin' && (
+            <DrawerItem
+              label="Audit Logs"
+              onPress={() => handleNavigation('/audit-logs')}
+              icon={({color, size}) => (
+                <Ionicons name="document-text-outline" size={size} color={color}/>
+              )}
+              labelStyle={styles.drawerLabel}
+              style={styles.drawerItem}
+            />
           )}
-          labelStyle={styles.drawerLabel}
-          style={styles.drawerItem}
-        />
-        
-        <DrawerItem
-          label="Drones"
-          onPress={() => handleNavigation('/drones-list')}
-          icon={({ color, size }) => (
-            <Ionicons name="hardware-chip-outline" size={size} color={color} />
-          )}
-          labelStyle={styles.drawerLabel}
-          style={styles.drawerItem}
-        />
-        
-        {/* Procedures & Checklists menu item - visible to all authenticated users */}
-        <DrawerItem
-          label="Procedures & Checklists"
-          onPress={() => handleNavigation('/procedures-checklists-list')}
-          icon={({ color, size }) => (
-            <Ionicons name="clipboard-outline" size={size} color={color} />
-          )}
-          labelStyle={styles.drawerLabel}
-          style={styles.drawerItem}
-        />
-        
-        {/* Info & Contact menu item - visible to all authenticated users */}
+        </View>
+      </DrawerContentScrollView>
+
+      {/* Bottom section: Info & Contact + Sign Out */}
+      <View style={styles.bottomSection}>
         <DrawerItem
           label="Info & Contact"
           onPress={() => handleNavigation('/info-contact')}
-          icon={({ color, size }) => (
-            <Ionicons name="information-circle-outline" size={size} color={color} />
+          icon={({color, size}) => (
+            <Ionicons name="information-circle-outline" size={size} color={color}/>
           )}
           labelStyle={styles.drawerLabel}
           style={styles.drawerItem}
         />
-        
-        {/* Users menu item - only visible to admins */}
-        {user.role === 'admin' && (
-          <DrawerItem
-            label="Users"
-            onPress={() => handleNavigation('/users-list')}
-            icon={({ color, size }) => (
-              <Ionicons name="people-outline" size={size} color={color} />
-            )}
-            labelStyle={styles.drawerLabel}
-            style={styles.drawerItem}
-          />
-        )}
-        
-        {/* Audit Logs menu item - only visible to admins */}
-        {user.role === 'admin' && (
-          <DrawerItem
-            label="Audit Logs"
-            onPress={() => handleNavigation('/audit-logs')}
-            icon={({ color, size }) => (
-              <Ionicons name="document-text-outline" size={size} color={color} />
-            )}
-            labelStyle={styles.drawerLabel}
-            style={styles.drawerItem}
-          />
-        )}
-      </View>
 
-      {/* Footer Section */}
-      <View style={styles.footer}>
-        {/* Author Info */}
-        <View style={styles.authorInfo}>
-          <Text style={styles.authorCompany}>RedMed Software</Text>
-          <Text style={styles.authorContact}>admin@redmed.dev</Text>
-          <Text style={styles.authorContact}>m.wronski@bieszczady.gopr.pl</Text>
-        </View>
-        
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={20} color="#fff" />
+          <Ionicons name="log-out-outline" size={20} color="#fff"/>
           <Text style={styles.logoutText}>Sign Out</Text>
         </TouchableOpacity>
       </View>
-    </DrawerContentScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
@@ -179,6 +175,12 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     marginTop: 10,
+  },
+  userName: {
+    fontSize: 16,
+    color: '#ffffff',
+    fontWeight: '600',
+    marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
@@ -209,28 +211,11 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
   },
-  footer: {
+  bottomSection: {
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
-    padding: 20,
-  },
-  authorInfo: {
-    alignItems: 'center',
-    marginBottom: 15,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  authorCompany: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 2,
-  },
-  authorContact: {
-    fontSize: 10,
-    color: '#666',
-    marginBottom: 1,
+    padding: 16,
+    backgroundColor: '#f8f9fa',
   },
   logoutButton: {
     flexDirection: 'row',
@@ -239,6 +224,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     justifyContent: 'center',
+    marginTop: 8,
   },
   logoutText: {
     color: '#fff',
