@@ -546,7 +546,6 @@ export default function FlightsListScreen() {
               }
               contentContainerStyle={styles.listContainer}
               nestedScrollEnabled={true}
-              scrollEnabled={false}
             />
             {renderPaginationControls()}
           </>
