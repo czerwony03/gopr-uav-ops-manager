@@ -50,7 +50,15 @@ export function CustomDrawerContent(props: any) {
       <DrawerContentScrollView {...props} style={styles.container}>
         {/* Header Section */}
         <View style={styles.header}>
-          <Text style={styles.appTitle}>GOPR UAV Ops Manager</Text>
+          <View style={styles.headerTop}>
+            <Text style={styles.appTitle}>GOPR UAV Ops Manager</Text>
+            <TouchableOpacity 
+              style={styles.profileButton}
+              onPress={() => handleNavigation(`/user-form?id=${user.uid}`)}
+            >
+              <Ionicons name="person-outline" size={16} color="#fff" />
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.userInfo}>
             {!!displayName && <Text style={styles.userName}>{displayName}</Text>}
@@ -167,11 +175,25 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     marginTop: -5,
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  profileButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 16,
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   appTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 10,
+    flex: 1,
   },
   userInfo: {
     marginTop: 10,

@@ -51,8 +51,8 @@ export default function ProcedureChecklistDetailsScreen() {
     } catch (error) {
       console.error('Error fetching procedure/checklist:', error);
       Alert.alert(
-        'Error', 
-        'Failed to fetch procedure/checklist details. Please try again.',
+        t('procedures.error'), 
+        t('procedures.failedToLoad'),
         [{ text: 'OK', onPress: () => router.back() }]
       );
     } finally {
@@ -91,22 +91,22 @@ export default function ProcedureChecklistDetailsScreen() {
     if (!user || !checklist) return;
 
     Alert.alert(
-      'Delete Procedure/Checklist',
-      `Are you sure you want to delete "${checklist.title}"? This action can be undone by an admin.`,
+      t('procedures.deleteTitle'),
+      t('procedures.deleteConfirmation', { title: checklist.title }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('procedures.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await ProcedureChecklistService.softDeleteProcedureChecklist(checklist.id, user.role, user.uid);
-              Alert.alert('Success', 'Procedure/checklist deleted successfully', [
+              Alert.alert(t('common.success'), t('procedures.deleteSuccess'), [
                 { text: 'OK', onPress: () => router.back() }
               ]);
             } catch (error) {
               console.error('Error deleting procedure/checklist:', error);
-              Alert.alert('Error', 'Failed to delete procedure/checklist');
+              Alert.alert(t('common.error'), t('procedures.deleteError'));
             }
           },
         },
@@ -120,10 +120,10 @@ export default function ProcedureChecklistDetailsScreen() {
     try {
       await ProcedureChecklistService.restoreProcedureChecklist(checklist.id, user.role, user.uid);
       await fetchChecklist(); // Refresh the data
-      Alert.alert('Success', 'Procedure/checklist restored successfully');
+      Alert.alert(t('common.success'), t('procedures.restoreSuccess'));
     } catch (error) {
       console.error('Error restoring procedure/checklist:', error);
-      Alert.alert('Error', 'Failed to restore procedure/checklist');
+      Alert.alert(t('common.error'), t('procedures.restoreError'));
     }
   };
 
@@ -133,11 +133,11 @@ export default function ProcedureChecklistDetailsScreen() {
       if (supported) {
         await Linking.openURL(url);
       } else {
-        Alert.alert('Error', 'Cannot open this link');
+        Alert.alert(t('common.error'), t('contact.cannotOpenLink'));
       }
     } catch (error) {
       console.error('Error opening link:', error);
-      Alert.alert('Error', 'Failed to open link');
+      Alert.alert(t('common.error'), t('contact.failedToOpenLink'));
     }
   };
 
@@ -197,7 +197,7 @@ export default function ProcedureChecklistDetailsScreen() {
           onPress={() => handleOpenLink(item.link!)}
         >
           <Ionicons name="link-outline" size={16} color="#0066CC" />
-          <Text style={styles.linkButtonText}>Open Link</Text>
+          <Text style={styles.linkButtonText}>{t('procedures.openLink')}</Text>
         </TouchableOpacity>
       )}
 
@@ -207,7 +207,7 @@ export default function ProcedureChecklistDetailsScreen() {
           onPress={() => handleOpenLink(item.file!)}
         >
           <Ionicons name="document-outline" size={16} color="#4CAF50" />
-          <Text style={styles.fileButtonText}>Open File</Text>
+          <Text style={styles.fileButtonText}>{t('procedures.openFile')}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -217,7 +217,7 @@ export default function ProcedureChecklistDetailsScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0066CC" />
-        <Text style={styles.loadingText}>Loading procedure/checklist...</Text>
+        <Text style={styles.loadingText}>{t('procedures.loading')}</Text>
       </View>
     );
   }
@@ -226,12 +226,12 @@ export default function ProcedureChecklistDetailsScreen() {
     return (
       <View style={styles.errorContainer}>
         <Ionicons name="alert-circle-outline" size={64} color="#F44336" />
-        <Text style={styles.errorTitle}>Procedure/Checklist Not Found</Text>
+        <Text style={styles.errorTitle}>{t('procedures.notFound')}</Text>
         <Text style={styles.errorDescription}>
-          The requested procedure or checklist could not be found.
+          {t('procedures.notFoundDescription')}
         </Text>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backButtonText}>Go Back</Text>
+          <Text style={styles.backButtonText}>{t('procedures.goBack')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -249,18 +249,18 @@ export default function ProcedureChecklistDetailsScreen() {
           
           <View style={styles.metadata}>
             <Text style={styles.metadataText}>
-              {checklist.items.length} item{checklist.items.length !== 1 ? 's' : ''}
+              {checklist.items.length} {checklist.items.length === 1 ? t('procedures.items') : t('procedures.itemsPlural')}
             </Text>
             {checklist.createdAt && (
               <Text style={styles.metadataText}>
-                Created {checklist.createdAt.toLocaleDateString()} {checklist.createdAt.toLocaleTimeString()}
-                {createdByEmail && ` by ${createdByEmail}`}
+                {t('procedures.created')} {checklist.createdAt.toLocaleDateString()} {checklist.createdAt.toLocaleTimeString()}
+                {createdByEmail && ` ${t('procedures.by')} ${createdByEmail}`}
               </Text>
             )}
             {checklist.updatedAt && (
               <Text style={styles.metadataText}>
-                Updated {checklist.updatedAt.toLocaleDateString()} {checklist.updatedAt.toLocaleTimeString()}
-                {updatedByEmail && ` by ${updatedByEmail}`}
+                {t('procedures.updated')} {checklist.updatedAt.toLocaleDateString()} {checklist.updatedAt.toLocaleTimeString()}
+                {updatedByEmail && ` ${t('procedures.by')} ${updatedByEmail}`}
               </Text>
             )}
           </View>
@@ -269,7 +269,7 @@ export default function ProcedureChecklistDetailsScreen() {
         {/* Status badge for deleted items (admin only) */}
         {checklist.isDeleted && user?.role === 'admin' && (
           <View style={styles.deletedBadge}>
-            <Text style={styles.deletedBadgeText}>DELETED</Text>
+            <Text style={styles.deletedBadgeText}>{t('procedures.deleted')}</Text>
           </View>
         )}
       </View>
@@ -281,12 +281,12 @@ export default function ProcedureChecklistDetailsScreen() {
             <>
               <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
                 <Ionicons name="create-outline" size={20} color="#fff" />
-                <Text style={styles.editButtonText}>Edit</Text>
+                <Text style={styles.editButtonText}>{t('procedures.edit')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
                 <Ionicons name="trash-outline" size={20} color="#fff" />
-                <Text style={styles.deleteButtonText}>Delete</Text>
+                <Text style={styles.deleteButtonText}>{t('procedures.delete')}</Text>
               </TouchableOpacity>
             </>
           )}
@@ -294,7 +294,7 @@ export default function ProcedureChecklistDetailsScreen() {
           {user?.role === 'admin' && checklist.isDeleted && (
             <TouchableOpacity style={styles.restoreButton} onPress={handleRestore}>
               <Ionicons name="refresh-outline" size={20} color="#fff" />
-              <Text style={styles.restoreButtonText}>Restore</Text>
+              <Text style={styles.restoreButtonText}>{t('procedures.restore')}</Text>
             </TouchableOpacity>
           )}
         </View>

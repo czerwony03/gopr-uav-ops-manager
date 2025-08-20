@@ -14,7 +14,7 @@ export default function InfoContact() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t('nav.info')}</Text>
+        <Text style={styles.title}>{t('contact.title')}</Text>
       </View>
 
       <View style={styles.logoContainer}>
@@ -26,19 +26,19 @@ export default function InfoContact() {
       </View>
 
       <View style={styles.infoCard}>
-        <Text style={styles.sectionTitle}>About</Text>
+        <Text style={styles.sectionTitle}>{t('contact.about')}</Text>
         <Text style={styles.description}>
-          This GOPR UAV Operations Manager application was developed by RedMed Software to help manage UAV operations efficiently and safely.
+          {t('contact.aboutDescription')}
         </Text>
       </View>
 
       <View style={styles.infoCard}>
-        <Text style={styles.sectionTitle}>Contact Information</Text>
+        <Text style={styles.sectionTitle}>{t('contact.contactInfo')}</Text>
         
         <View style={styles.contactItem}>
           <Ionicons name="business-outline" size={20} color="#0066CC" />
-          <Text style={styles.contactLabel}>Company</Text>
-          <Text style={styles.contactValue}>RedMed Software</Text>
+          <Text style={styles.contactLabel}>{t('contact.company')}</Text>
+          <Text style={styles.contactValue}>{t('contact.companyName')}</Text>
         </View>
 
         <TouchableOpacity 
@@ -46,7 +46,7 @@ export default function InfoContact() {
           onPress={() => handleEmailPress('m.wronski@bieszczady.gopr.pl')}
         >
           <Ionicons name="mail-outline" size={20} color="#0066CC" />
-          <Text style={styles.contactLabel}>General Contact</Text>
+          <Text style={styles.contactLabel}>{t('contact.generalContact')}</Text>
           <Text style={[styles.contactValue, styles.linkText]}>m.wronski@bieszczady.gopr.pl</Text>
         </TouchableOpacity>
 
@@ -55,16 +55,15 @@ export default function InfoContact() {
           onPress={() => handleEmailPress('admin@redmed.dev')}
         >
           <Ionicons name="person-outline" size={20} color="#0066CC" />
-          <Text style={styles.contactLabel}>Technical Contact</Text>
+          <Text style={styles.contactLabel}>{t('contact.technicalContact')}</Text>
           <Text style={[styles.contactValue, styles.linkText]}>admin@redmed.dev</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.infoCard}>
-        <Text style={styles.sectionTitle}>Application Info</Text>
+        <Text style={styles.sectionTitle}>{t('contact.applicationInfo')}</Text>
         <Text style={styles.description}>
-          GOPR UAV Ops Manager v{ApplicationMetadata.getMetadata().applicationVersion}{'\n'}
-          Developed for GOPR (Volunteer Mountain Rescue Service)
+          {t('contact.versionInfo', { version: ApplicationMetadata.getMetadata().applicationVersion })}
         </Text>
       </View>
     </ScrollView>
