@@ -8,10 +8,13 @@ import {
   query, 
   where,
   orderBy,
+  limit as limitQuery,
+  startAfter,
+  getCountFromServer,
   Timestamp 
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Flight } from '../types/Flight';
+import { Flight, FlightQuery, PaginatedFlightResponse } from '../types/Flight';
 import { UserRole } from '../contexts/AuthContext';
 import { AuditLogService } from './auditLogService';
 import { UserService } from './userService';
@@ -171,6 +174,139 @@ export class FlightService {
     } catch (error) {
       console.error('Error updating flight:', error);
       throw new Error('Failed to update flight');
+    }
+  }
+
+  // Get paginated flights with filtering
+  static async getPaginatedFlights(
+    userRole: UserRole, 
+    currentUserId: string, 
+    queryParams?: FlightQuery
+  ): Promise<PaginatedFlightResponse> {
+    try {
+      const flightsCollection = collection(db, this.COLLECTION_NAME);
+      const pageSize = queryParams?.pageSize || 10;
+      const pageNumber = queryParams?.pageNumber || 1;
+
+      // Build query constraints
+      const constraints = [];
+
+      // Role-based access control
+      if (userRole !== 'admin' && userRole !== 'manager') {
+        // Users only see their own flights
+        constraints.push(where('userId', '==', currentUserId));
+      }
+
+      // Apply filters
+      if (queryParams?.startDate) {
+        constraints.push(where('date', '>=', queryParams.startDate.toISOString().split('T')[0]));
+      }
+
+      if (queryParams?.endDate) {
+        constraints.push(where('date', '<=', queryParams.endDate.toISOString().split('T')[0]));
+      }
+
+      if (queryParams?.flightCategory) {
+        constraints.push(where('flightCategory', '==', queryParams.flightCategory));
+      }
+
+      if (queryParams?.activityType) {
+        constraints.push(where('activityType', '==', queryParams.activityType));
+      }
+
+      if (queryParams?.userEmail && (userRole === 'admin' || userRole === 'manager')) {
+        constraints.push(where('userEmail', '==', queryParams.userEmail));
+      }
+
+      if (queryParams?.droneId) {
+        constraints.push(where('droneId', '==', queryParams.droneId));
+      }
+
+      // Build base query for counting
+      let countQuery;
+      if (constraints.length > 0) {
+        countQuery = query(flightsCollection, ...constraints);
+      } else {
+        countQuery = query(flightsCollection);
+      }
+
+      // Get total count
+      const countSnapshot = await getCountFromServer(countQuery);
+      const totalCount = countSnapshot.data().count;
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      // Build paginated query with ordering
+      let paginatedQuery;
+      if (constraints.length > 0) {
+        paginatedQuery = query(
+          flightsCollection, 
+          ...constraints, 
+          orderBy('date', 'desc'),
+          orderBy('startTime', 'desc'),
+          limitQuery(pageSize)
+        );
+      } else {
+        paginatedQuery = query(
+          flightsCollection, 
+          orderBy('date', 'desc'),
+          orderBy('startTime', 'desc'),
+          limitQuery(pageSize)
+        );
+      }
+
+      // Apply pagination with startAfter
+      if (queryParams?.lastDocumentSnapshot) {
+        paginatedQuery = query(paginatedQuery, startAfter(queryParams.lastDocumentSnapshot));
+      } else if (pageNumber > 1) {
+        // For page-based navigation, we need to skip to the right position
+        const skipCount = (pageNumber - 1) * pageSize;
+        if (skipCount > 0) {
+          let skipQuery;
+          if (constraints.length > 0) {
+            skipQuery = query(
+              flightsCollection, 
+              ...constraints, 
+              orderBy('date', 'desc'),
+              orderBy('startTime', 'desc'),
+              limitQuery(skipCount)
+            );
+          } else {
+            skipQuery = query(
+              flightsCollection, 
+              orderBy('date', 'desc'),
+              orderBy('startTime', 'desc'),
+              limitQuery(skipCount)
+            );
+          }
+          const skipSnapshot = await getDocs(skipQuery);
+          if (skipSnapshot.docs.length > 0) {
+            const lastVisibleDoc = skipSnapshot.docs[skipSnapshot.docs.length - 1];
+            paginatedQuery = query(paginatedQuery, startAfter(lastVisibleDoc));
+          }
+        }
+      }
+
+      const snapshot = await getDocs(paginatedQuery);
+      const flights = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        // Convert Firestore Timestamps to Dates
+        createdAt: doc.data().createdAt?.toDate(),
+        updatedAt: doc.data().updatedAt?.toDate(),
+      } as Flight));
+
+      return {
+        flights,
+        totalCount,
+        hasNextPage: pageNumber < totalPages,
+        hasPreviousPage: pageNumber > 1,
+        currentPage: pageNumber,
+        totalPages,
+        lastDocumentSnapshot: snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : undefined,
+      };
+    } catch (error) {
+      console.error('Error fetching paginated flights:', error);
+      throw new Error('Failed to fetch flights');
     }
   }
 }
