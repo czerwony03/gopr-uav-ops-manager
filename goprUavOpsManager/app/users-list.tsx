@@ -219,6 +219,7 @@ export default function UsersListScreen() {
         renderItem={renderUserItem}
         keyExtractor={(item) => item.id}
         style={styles.list}
+        contentContainerStyle={{ paddingBottom: 24 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -232,6 +233,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    paddingBottom: 24,
   },
   loadingContainer: {
     flex: 1,
