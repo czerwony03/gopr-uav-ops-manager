@@ -1,4 +1,6 @@
 name: Deploy Expo Web to EAS Hosting
+permissions:
+  contents: read
 
 on:
   workflow_dispatch:

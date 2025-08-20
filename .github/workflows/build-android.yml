@@ -1,4 +1,6 @@
 name: Build Android Signed APK & AAB
+permissions:
+  contents: read
 
 on:
   workflow_dispatch:
