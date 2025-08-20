@@ -12,13 +12,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useAuth } from '../contexts/AuthContext';
-import { FlightService } from '../services/flightService';
-import { Flight } from '../types/Flight';
+import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/contexts/AuthContext';
+import { FlightService } from '@/services/flightService';
+import { Flight } from '@/types/Flight';
 
 export default function FlightsListScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation('common');
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -31,7 +33,7 @@ export default function FlightsListScreen() {
       setFlights(fetchedFlights);
     } catch (error) {
       console.error('Error fetching flights:', error);
-      Alert.alert('Error', 'Failed to fetch flights');
+      Alert.alert(t('common.error'), t('flights.errors.fetchFailed'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -152,26 +154,26 @@ export default function FlightsListScreen() {
 
       <View style={styles.flightDetails}>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Category:</Text>
+          <Text style={styles.detailLabel}>{t('flights.category')}:</Text>
           <Text style={styles.detailValue}>{item.flightCategory}</Text>
         </View>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Operation:</Text>
+          <Text style={styles.detailLabel}>{t('flights.operation')}:</Text>
           <Text style={styles.detailValue}>{item.operationType}</Text>
         </View>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Activity:</Text>
+          <Text style={styles.detailLabel}>{t('flights.activity')}:</Text>
           <Text style={styles.detailValue}>{item.activityType}</Text>
         </View>
         {item.conditions && (
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Conditions:</Text>
+            <Text style={styles.detailLabel}>{t('flights.conditions')}:</Text>
             <Text style={styles.detailValue}>{item.conditions}</Text>
           </View>
         )}
         {(user?.role === 'admin' || user?.role === 'manager') && item.userEmail && (
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Operator:</Text>
+            <Text style={styles.detailLabel}>{t('flights.operator')}:</Text>
             <Text style={styles.detailValue}>{item.userEmail}</Text>
           </View>
         )}
@@ -182,7 +184,7 @@ export default function FlightsListScreen() {
           style={styles.viewButton}
           onPress={() => handleViewFlight(item.id)}
         >
-          <Text style={styles.viewButtonText}>View</Text>
+          <Text style={styles.viewButtonText}>{t('common.view')}</Text>
         </TouchableOpacity>
         
         {canEditFlight(item) && (
@@ -190,7 +192,7 @@ export default function FlightsListScreen() {
             style={styles.editButton}
             onPress={() => handleEditFlight(item.id)}
           >
-            <Text style={styles.editButtonText}>Edit</Text>
+            <Text style={styles.editButtonText}>{t('common.edit')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -202,7 +204,7 @@ export default function FlightsListScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0066CC" />
-        <Text style={styles.loadingText}>Loading flights...</Text>
+        <Text style={styles.loadingText}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -212,15 +214,15 @@ export default function FlightsListScreen() {
       <ScrollView>
         <View style={styles.header}>
           <TouchableOpacity style={styles.addButton} onPress={handleAddFlight}>
-            <Text style={styles.addButtonText}>+ Add Flight</Text>
+            <Text style={styles.addButtonText}>+ {t('flights.add')}</Text>
           </TouchableOpacity>
         </View>
 
         {flights.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No flights found</Text>
+            <Text style={styles.emptyText}>{t('flights.noFlightsFound')}</Text>
             <Text style={styles.emptySubtext}>
-              Tap &quot;Add Flight&quot; to create your first flight log
+              {t('flights.tapAddFlightToStart')}
             </Text>
           </View>
         ) : (

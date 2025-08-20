@@ -11,10 +11,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Drone } from '../types/Drone';
-import { useAuth } from '../contexts/AuthContext';
-import { DroneService } from '../services/droneService';
-import { UserService } from '../services/userService';
+import { useTranslation } from 'react-i18next';
+import { Drone } from '@/types/Drone';
+import { useAuth } from '@/contexts/AuthContext';
+import { DroneService } from '@/services/droneService';
+import { UserService } from '@/services/userService';
 
 export default function DroneDetailsScreen() {
   const [drone, setDrone] = useState<Drone | null>(null);
@@ -24,6 +25,7 @@ export default function DroneDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation('common');
 
   useEffect(() => {
     const fetchDrone = async () => {
@@ -32,8 +34,8 @@ export default function DroneDetailsScreen() {
       try {
         const droneData = await DroneService.getDrone(id, user.role);
         if (!droneData) {
-          Alert.alert('Error', 'Drone not found or you do not have permission to view it', [
-            { text: 'OK', onPress: () => router.back() }
+          Alert.alert(t('common.error'), t('drones.errors.notFoundOrNoPermission'), [
+            { text: t('common.ok'), onPress: () => router.back() }
           ]);
           return;
         }
@@ -50,8 +52,8 @@ export default function DroneDetailsScreen() {
         }
       } catch (error) {
         console.error('Error fetching drone:', error);
-        Alert.alert('Error', 'Failed to fetch drone details', [
-          { text: 'OK', onPress: () => router.back() }
+        Alert.alert(t('common.error'), t('droneDetails.loadError'), [
+          { text: t('common.ok'), onPress: () => router.back() }
         ]);
       } finally {
         setLoading(false);
@@ -76,22 +78,22 @@ export default function DroneDetailsScreen() {
     if (!drone || !user) return;
 
     Alert.alert(
-      'Delete Drone',
-      `Are you sure you want to delete "${drone.name}"? This action can be undone by an admin.`,
+      t('droneDetails.deleteConfirmTitle'),
+      t('droneDetails.deleteConfirmMessage', { name: drone.name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await DroneService.softDeleteDrone(drone.id, user.role, user.uid);
-              Alert.alert('Success', 'Drone deleted successfully', [
-                { text: 'OK', onPress: () => router.back() }
+              Alert.alert(t('common.success'), t('droneDetails.deleteSuccess'), [
+                { text: t('common.ok'), onPress: () => router.back() }
               ]);
             } catch (error) {
               console.error('Error deleting drone:', error);
-              Alert.alert('Error', 'Failed to delete drone');
+              Alert.alert(t('common.error'), t('droneDetails.deleteError'));
             }
           },
         },
@@ -103,12 +105,12 @@ export default function DroneDetailsScreen() {
     if (!drone || !user) return;
 
     Alert.alert(
-      'Restore Drone',
-      `Are you sure you want to restore "${drone.name}"?`,
+      t('droneDetails.restoreConfirmTitle'),
+      t('droneDetails.restoreConfirmMessage', { name: drone.name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Restore',
+          text: t('droneDetails.restoreButton'),
           onPress: async () => {
             try {
               await DroneService.restoreDrone(drone.id, user.role, user.uid);
@@ -122,10 +124,10 @@ export default function DroneDetailsScreen() {
                 setUpdatedByEmail(updatedEmail);
               }
               
-              Alert.alert('Success', 'Drone restored successfully');
+              Alert.alert(t('common.success'), t('droneDetails.restoreSuccess'));
             } catch (error) {
               console.error('Error restoring drone:', error);
-              Alert.alert('Error', 'Failed to restore drone');
+              Alert.alert(t('common.error'), t('droneDetails.restoreError'));
             }
           },
         },
@@ -136,7 +138,7 @@ export default function DroneDetailsScreen() {
   const handleOpenUserManual = () => {
     if (drone?.userManual) {
       Linking.openURL(drone.userManual).catch(() => {
-        Alert.alert('Error', 'Failed to open user manual');
+        Alert.alert(t('common.error'), t('droneDetails.manualError'));
       });
     }
   };
@@ -145,7 +147,7 @@ export default function DroneDetailsScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0066CC" />
-        <Text style={styles.loadingText}>Loading drone details...</Text>
+        <Text style={styles.loadingText}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -153,7 +155,7 @@ export default function DroneDetailsScreen() {
   if (!drone) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Drone not found</Text>
+        <Text style={styles.errorText}>{t('droneDetails.notFound')}</Text>
       </View>
     );
   }
@@ -169,78 +171,78 @@ export default function DroneDetailsScreen() {
           <Text style={styles.title}>{drone.name}</Text>
           {drone.isDeleted && user?.role === 'admin' && (
             <View style={styles.deletedBadge}>
-              <Text style={styles.deletedBadgeText}>DELETED</Text>
+              <Text style={styles.deletedBadgeText}>{t('droneDetails.deleted')}</Text>
             </View>
           )}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Basic Information</Text>
-          <Text style={styles.detail}>Call Sign: {drone.callSign}</Text>
-          <Text style={styles.detail}>Registration Number: {drone.registrationNumber}</Text>
-          <Text style={styles.detail}>Equipment Registration: {drone.equipmentRegistrationNumber}</Text>
-          <Text style={styles.detail}>Location: {drone.location}</Text>
-          <Text style={styles.detail}>Insurance: {drone.insurance}</Text>
+          <Text style={styles.sectionTitle}>{t('droneDetails.basicInfo')}</Text>
+          <Text style={styles.detail}>{t('droneDetails.callSign')}: {drone.callSign}</Text>
+          <Text style={styles.detail}>{t('droneDetails.registration')}: {drone.registrationNumber}</Text>
+          <Text style={styles.detail}>{t('droneDetails.equipmentRegistration')}: {drone.equipmentRegistrationNumber}</Text>
+          <Text style={styles.detail}>{t('droneDetails.location')}: {drone.location}</Text>
+          <Text style={styles.detail}>{t('droneDetails.insurance')}: {drone.insurance}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Flight Information</Text>
+          <Text style={styles.sectionTitle}>{t('droneDetails.operationalInfo')}</Text>
           <Text style={styles.detail}>
-            Total Flight Time: {DroneService.formatFlightTime(drone.totalFlightTime)}
+            {t('droneDetails.flightTime')}: {DroneService.formatFlightTime(drone.totalFlightTime)}
           </Text>
-          <Text style={styles.detail}>Operating Time: {DroneService.formatOperatingTime(drone.operatingTime)}</Text>
-          <Text style={styles.detail}>Max Speed: {drone.maxSpeed} km/h</Text>
-          <Text style={styles.detail}>Range: {DroneService.formatRange(drone.range)}</Text>
+          <Text style={styles.detail}>{t('droneDetails.operatingTime')}: {DroneService.formatOperatingTime(drone.operatingTime)}</Text>
+          <Text style={styles.detail}>{t('droneDetails.maxSpeed')}: {drone.maxSpeed} km/h</Text>
+          <Text style={styles.detail}>{t('droneDetails.range')}: {DroneService.formatRange(drone.range)}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Physical Specifications</Text>
-          <Text style={styles.detail}>Weight: {DroneService.formatWeight(drone.weight)}</Text>
-          <Text style={styles.detail}>Max Takeoff Weight: {DroneService.formatWeight(drone.maxTakeoffWeight)}</Text>
+          <Text style={styles.sectionTitle}>{t('droneDetails.technicalInfo')}</Text>
+          <Text style={styles.detail}>{t('droneDetails.weight')}: {DroneService.formatWeight(drone.weight)}</Text>
+          <Text style={styles.detail}>{t('droneDetails.maxWeight')}: {DroneService.formatWeight(drone.maxTakeoffWeight)}</Text>
           <Text style={styles.detail}>
-            Dimensions: {DroneService.formatDimensions(drone.dimensions.length, drone.dimensions.width, drone.dimensions.height)}
+            {t('droneDetails.dimensions')}: {DroneService.formatDimensions(drone.dimensions.length, drone.dimensions.width, drone.dimensions.height)}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Battery Information</Text>
-          <Text style={styles.detail}>Type: {drone.battery.type}</Text>
-          <Text style={styles.detail}>Capacity: {drone.battery.capacity} mAh</Text>
-          <Text style={styles.detail}>Voltage: {drone.battery.voltage} V</Text>
+          <Text style={styles.sectionTitle}>{t('droneDetails.batteryInfo')}</Text>
+          <Text style={styles.detail}>{t('droneDetails.batteryType')}: {drone.battery.type}</Text>
+          <Text style={styles.detail}>{t('droneDetails.batteryCapacity')}: {drone.battery.capacity} mAh</Text>
+          <Text style={styles.detail}>{t('droneDetails.batteryVoltage')}: {drone.battery.voltage} V</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Manufacturing Information</Text>
-          <Text style={styles.detail}>Year of Manufacture: {drone.yearOfManufacture}</Text>
-          <Text style={styles.detail}>Year of Commissioning: {drone.yearOfCommissioning}</Text>
+          <Text style={styles.sectionTitle}>{t('droneDetails.manufacturingInfo')}</Text>
+          <Text style={styles.detail}>{t('droneDetails.manufactured')}: {drone.yearOfManufacture}</Text>
+          <Text style={styles.detail}>{t('droneDetails.commissioned')}: {drone.yearOfCommissioning}</Text>
         </View>
 
         {drone.userManual && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Documentation</Text>
+            <Text style={styles.sectionTitle}>{t('droneDetails.documentation')}</Text>
             <TouchableOpacity style={styles.manualButton} onPress={handleOpenUserManual}>
-              <Text style={styles.manualButtonText}>Open User Manual</Text>
+              <Text style={styles.manualButtonText}>{t('droneDetails.openManual')}</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {(drone.createdAt || drone.updatedAt || drone.deletedAt) && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Audit Trail</Text>
+            <Text style={styles.sectionTitle}>{t('droneDetails.auditInfo')}</Text>
             {drone.createdAt && (
               <Text style={styles.detail}>
-                Created: {drone.createdAt.toLocaleDateString()} {drone.createdAt.toLocaleTimeString()}
-                {createdByEmail && ` by ${createdByEmail}`}
+                {t('flightDetails.createdAt')}: {drone.createdAt.toLocaleDateString()} {drone.createdAt.toLocaleTimeString()}
+                {createdByEmail && ` ${t('flightDetails.createdBy')} ${createdByEmail}`}
               </Text>
             )}
             {drone.updatedAt && (
               <Text style={styles.detail}>
-                Last Updated: {drone.updatedAt.toLocaleDateString()} {drone.updatedAt.toLocaleTimeString()}
-                {updatedByEmail && ` by ${updatedByEmail}`}
+                {t('flightDetails.updatedAt')}: {drone.updatedAt.toLocaleDateString()} {drone.updatedAt.toLocaleTimeString()}
+                {updatedByEmail && ` ${t('flightDetails.updatedBy')} ${updatedByEmail}`}
               </Text>
             )}
             {drone.deletedAt && (
-              <Text style={styles.detail}>Deleted: {drone.deletedAt.toLocaleDateString()} {drone.deletedAt.toLocaleTimeString()}</Text>
+              <Text style={styles.detail}>{t('droneDetails.deletedAt')}: {drone.deletedAt.toLocaleDateString()} {drone.deletedAt.toLocaleTimeString()}</Text>
             )}
           </View>
         )}
@@ -249,17 +251,17 @@ export default function DroneDetailsScreen() {
           {canModify && (
             <>
               <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-                <Text style={styles.editButtonText}>Edit Drone</Text>
+                <Text style={styles.editButtonText}>{t('droneDetails.editButton')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-                <Text style={styles.deleteButtonText}>Delete Drone</Text>
+                <Text style={styles.deleteButtonText}>{t('droneDetails.deleteButton')}</Text>
               </TouchableOpacity>
             </>
           )}
 
           {canRestore && (
             <TouchableOpacity style={styles.restoreButton} onPress={handleRestore}>
-              <Text style={styles.restoreButtonText}>Restore Drone</Text>
+              <Text style={styles.restoreButtonText}>{t('droneDetails.restoreButton')}</Text>
             </TouchableOpacity>
           )}
         </View>

@@ -11,9 +11,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useRouter, useFocusEffect } from 'expo-router';
-import { Drone } from '../types/Drone';
-import { useAuth } from '../contexts/AuthContext';
-import { DroneService } from '../services/droneService';
+import { useTranslation } from 'react-i18next';
+import { Drone } from '@/types/Drone';
+import { useAuth } from '@/contexts/AuthContext';
+import { DroneService } from '@/services/droneService';
 
 export default function DronesListScreen() {
   const [drones, setDrones] = useState<Drone[]>([]);
@@ -21,6 +22,7 @@ export default function DronesListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation('common');
 
   const fetchDrones = useCallback(async () => {
     if (!user) return;
@@ -31,8 +33,8 @@ export default function DronesListScreen() {
     } catch (error) {
       console.error('Error fetching drones:', error);
       Alert.alert(
-        'Error', 
-        'Failed to fetch drones. Please check your Firebase configuration and try again.'
+        t('common.error'), 
+        t('drones.errors.fetchFailed')
       );
     } finally {
       setLoading(false);
@@ -78,21 +80,21 @@ export default function DronesListScreen() {
     if (!user) return;
 
     Alert.alert(
-      'Delete Drone',
-      `Are you sure you want to delete "${drone.name}"? This action can be undone by an admin.`,
+      t('drones.deleteTitle'),
+      t('drones.deleteConfirmation', { name: drone.name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await DroneService.softDeleteDrone(drone.id, user.role, user.uid);
               await fetchDrones(); // Refresh the list
-              Alert.alert('Success', 'Drone deleted successfully');
+              Alert.alert(t('common.success'), t('drones.deleteSuccess'));
             } catch (error) {
               console.error('Error deleting drone:', error);
-              Alert.alert('Error', 'Failed to delete drone');
+              Alert.alert(t('common.error'), t('drones.errors.deleteFailed'));
             }
           },
         },
@@ -104,20 +106,20 @@ export default function DronesListScreen() {
     if (!user) return;
 
     Alert.alert(
-      'Restore Drone',
-      `Are you sure you want to restore "${drone.name}"?`,
+      t('drones.restoreTitle'),
+      t('drones.restoreConfirmation', { name: drone.name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Restore',
+          text: t('drones.restore'),
           onPress: async () => {
             try {
               await DroneService.restoreDrone(drone.id, user.role, user.uid);
               await fetchDrones(); // Refresh the list
-              Alert.alert('Success', 'Drone restored successfully');
+              Alert.alert(t('common.success'), t('drones.restoreSuccess'));
             } catch (error) {
               console.error('Error restoring drone:', error);
-              Alert.alert('Error', 'Failed to restore drone');
+              Alert.alert(t('common.error'), t('drones.errors.restoreFailed'));
             }
           },
         },
@@ -131,48 +133,48 @@ export default function DronesListScreen() {
         <Text style={styles.droneName}>{item.name}</Text>
         {item.isDeleted && user?.role === 'admin' && (
           <View style={styles.deletedBadge}>
-            <Text style={styles.deletedBadgeText}>DELETED</Text>
+            <Text style={styles.deletedBadgeText}>{t('drones.deleted')}</Text>
           </View>
         )}
       </View>
       
-      <Text style={styles.droneDetail}>Call Sign: {item.callSign}</Text>
-      <Text style={styles.droneDetail}>Registration: {item.registrationNumber}</Text>
-      <Text style={styles.droneDetail}>Location: {item.location}</Text>
+      <Text style={styles.droneDetail}>{t('drones.callSign')}: {item.callSign}</Text>
+      <Text style={styles.droneDetail}>{t('drones.registration')}: {item.registrationNumber}</Text>
+      <Text style={styles.droneDetail}>{t('drones.location')}: {item.location}</Text>
       <Text style={styles.droneDetail}>
-        Flight Time: {DroneService.formatFlightTime(item.totalFlightTime)}
+        {t('drones.flightTime')}: {DroneService.formatFlightTime(item.totalFlightTime)}
       </Text>
-      <Text style={styles.droneDetail}>Insurance: {item.insurance}</Text>
-      <Text style={styles.droneDetail}>Max Speed: {item.maxSpeed} km/h</Text>
-      <Text style={styles.droneDetail}>Range: {DroneService.formatRange(item.range)}</Text>
+      <Text style={styles.droneDetail}>{t('drones.insurance')}: {item.insurance}</Text>
+      <Text style={styles.droneDetail}>{t('drones.maxSpeed')}: {item.maxSpeed} km/h</Text>
+      <Text style={styles.droneDetail}>{t('drones.range')}: {DroneService.formatRange(item.range)}</Text>
       <Text style={styles.droneDetail}>
-        Weight: {DroneService.formatWeight(item.weight)} (Max: {DroneService.formatWeight(item.maxTakeoffWeight)})
+        {t('drones.weight')}: {DroneService.formatWeight(item.weight)} ({t('drones.maxWeight')}: {DroneService.formatWeight(item.maxTakeoffWeight)})
       </Text>
       <Text style={styles.droneDetail}>
-        Manufactured: {item.yearOfManufacture} | Commissioned: {item.yearOfCommissioning}
+        {t('drones.manufactured')}: {item.yearOfManufacture} | {t('drones.commissioned')}: {item.yearOfCommissioning}
       </Text>
 
       <View style={styles.actionButtons}>
         <Link href={`/drone-details?id=${item.id}`} asChild>
           <TouchableOpacity style={styles.viewButton}>
-            <Text style={styles.viewButtonText}>View Details</Text>
+            <Text style={styles.viewButtonText}>{t('drones.viewDetails')}</Text>
           </TouchableOpacity>
         </Link>
 
         {user && (user.role === 'manager' || user.role === 'admin') && !item.isDeleted && (
           <>
             <TouchableOpacity style={styles.editButton} onPress={() => handleEditDrone(item)}>
-              <Text style={styles.editButtonText}>Edit</Text>
+              <Text style={styles.editButtonText}>{t('common.edit')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteDrone(item)}>
-              <Text style={styles.deleteButtonText}>Delete</Text>
+              <Text style={styles.deleteButtonText}>{t('common.delete')}</Text>
             </TouchableOpacity>
           </>
         )}
 
         {user?.role === 'admin' && item.isDeleted && (
           <TouchableOpacity style={styles.restoreButton} onPress={() => handleRestoreDrone(item)}>
-            <Text style={styles.restoreButtonText}>Restore</Text>
+            <Text style={styles.restoreButtonText}>{t('drones.restore')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -183,7 +185,7 @@ export default function DronesListScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0066CC" />
-        <Text style={styles.loadingText}>Loading drones...</Text>
+        <Text style={styles.loadingText}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -193,21 +195,21 @@ export default function DronesListScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Drones List</Text>
+        <Text style={styles.title}>{t('drones.title')}</Text>
         {canCreateDrones && (
           <TouchableOpacity style={styles.createButton} onPress={handleCreateDrone}>
-            <Text style={styles.createButtonText}>+ Add Drone</Text>
+            <Text style={styles.createButtonText}>+ {t('drones.add')}</Text>
           </TouchableOpacity>
         )}
       </View>
 
       {drones.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No drones found</Text>
+          <Text style={styles.emptyText}>{t('drones.noDronesFound')}</Text>
           <Text style={styles.emptySubtext}>
             {canCreateDrones 
-              ? "Add your first drone using the 'Add Drone' button above"
-              : "No drones are available at the moment"
+              ? t('drones.addFirstDrone')
+              : t('drones.noDronesAvailable')
             }
           </Text>
         </View>

@@ -11,9 +11,10 @@ import {
   KeyboardAvoidingView,
   ScrollView,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { signInWithEmailAndPassword, signInWithPopup, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
-import { auth } from '../firebaseConfig';
+import { auth } from '@/firebaseConfig';
 import {AuditLogService} from "@/services/auditLogService";
 import {User} from "@/types/User";
 
@@ -26,6 +27,7 @@ if (Platform.OS !== 'web') {
 }
 
 export default function LoginScreen() {
+  const { t } = useTranslation('common');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -171,11 +173,11 @@ export default function LoginScreen() {
       >
         <View style={styles.formContainer}>
           <Text style={styles.title}>GOPR UAV Ops Manager</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
+          <Text style={styles.subtitle}>{t('auth.signIn')}</Text>
 
           <TextInput
             style={styles.input}
-            placeholder="Email"
+            placeholder={t('auth.email')}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -185,7 +187,7 @@ export default function LoginScreen() {
 
           <TextInput
             style={styles.input}
-            placeholder="Password"
+            placeholder={t('auth.password')}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -201,7 +203,7 @@ export default function LoginScreen() {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.loginButtonText}>Sign In</Text>
+              <Text style={styles.loginButtonText}>{t('auth.signIn')}</Text>
             )}
           </TouchableOpacity>
 
@@ -234,7 +236,7 @@ export default function LoginScreen() {
           )}
 
           <Text style={styles.infoText}>
-            Contact your administrator for account access
+            {t('common.contactAdmin')}
           </Text>
           <Text style={styles.googleInfoText}>
             Google Workspace sign-in is restricted to @bieszczady.gopr.pl domain

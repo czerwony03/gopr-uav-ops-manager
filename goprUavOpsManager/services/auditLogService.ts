@@ -10,10 +10,10 @@ import {
   getCountFromServer,
   Timestamp
 } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
-import { AuditLog, AuditLogData, AuditLogQuery, PaginatedAuditLogResponse } from '../types/AuditLog';
-import { ApplicationMetadata } from '../utils/applicationMetadata';
-import { deepDiff, formatChanges } from '../utils/deepDiff';
+import { db } from '@/firebaseConfig';
+import { AuditLog, AuditLogData, AuditLogQuery, PaginatedAuditLogResponse } from '@/types/AuditLog';
+import { ApplicationMetadata } from '@/utils/applicationMetadata';
+import { deepDiff, formatChanges } from '@/utils/deepDiff';
 
 export class AuditLogService {
   private static readonly COLLECTION_NAME = 'auditLogs';

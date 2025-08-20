@@ -14,11 +14,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { ProcedureChecklistFormData, ChecklistItemFormData } from '../types/ProcedureChecklist';
-import { useAuth } from '../contexts/AuthContext';
-import { ProcedureChecklistService } from '../services/procedureChecklistService';
+import { ProcedureChecklistFormData, ChecklistItemFormData } from '@/types/ProcedureChecklist';
+import { useAuth } from '@/contexts/AuthContext';
+import { ProcedureChecklistService } from '@/services/procedureChecklistService';
 
 export default function ProcedureChecklistFormScreen() {
   const [loading, setLoading] = useState(false);
@@ -27,6 +28,7 @@ export default function ProcedureChecklistFormScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const isEditing = !!id;
+  const { t } = useTranslation('common');
 
   // Default form data
   const defaultFormData = useMemo((): ProcedureChecklistFormData => ({
@@ -60,7 +62,7 @@ export default function ProcedureChecklistFormScreen() {
       }
     } catch (error) {
       console.error('Error loading checklist data:', error);
-      Alert.alert('Error', 'Failed to load checklist data');
+      Alert.alert(t('common.error'), t('procedureForm.failedToLoad'));
     } finally {
       setInitialLoading(false);
     }
@@ -75,7 +77,7 @@ export default function ProcedureChecklistFormScreen() {
 
     // Only managers and admins can create/edit procedures
     if (user.role !== 'manager' && user.role !== 'admin') {
-      Alert.alert('Access Denied', 'Only managers and administrators can create or edit procedures/checklists.', [
+      Alert.alert(t('procedureForm.permissionRequired'), t('procedureForm.permissionDenied'), [
         { text: 'OK', onPress: () => router.back() }
       ]);
       return;
@@ -95,23 +97,23 @@ export default function ProcedureChecklistFormScreen() {
 
     // Basic validation
     if (!formData.title.trim()) {
-      Alert.alert('Validation Error', 'Title is required');
+      Alert.alert(t('procedureForm.validationError'), t('procedureForm.titleRequired'));
       return;
     }
 
     if (formData.items.length === 0) {
-      Alert.alert('Validation Error', 'At least one checklist item is required');
+      Alert.alert(t('procedureForm.validationError'), t('procedureForm.atLeastOneItem'));
       return;
     }
 
     // Validate items
     for (const item of formData.items) {
       if (!item.topic.trim()) {
-        Alert.alert('Validation Error', 'All items must have a topic');
+        Alert.alert(t('procedureForm.validationError'), t('procedureForm.allItemsMustHaveTopic'));
         return;
       }
       if (!item.content.trim()) {
-        Alert.alert('Validation Error', 'All items must have content');
+        Alert.alert(t('procedureForm.validationError'), t('procedureForm.allItemsMustHaveContent'));
         return;
       }
     }
@@ -129,7 +131,7 @@ export default function ProcedureChecklistFormScreen() {
       }
     } catch (error) {
       console.error('Error saving checklist:', error);
-      Alert.alert('Error', `Failed to ${isEditing ? 'update' : 'create'} procedure/checklist`);
+      Alert.alert(t('procedureForm.error'), `${t(isEditing ? 'procedureForm.failedToUpdate' : 'procedureForm.failedToCreate')}`);
     } finally {
       setLoading(false);
     }
@@ -171,7 +173,7 @@ export default function ProcedureChecklistFormScreen() {
       // Request permission
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Please grant permission to access photos');
+        Alert.alert(t('procedureForm.permissionRequired'), t('procedureForm.permissionDenied'));
         return;
       }
 
@@ -188,14 +190,14 @@ export default function ProcedureChecklistFormScreen() {
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image');
+      Alert.alert(t('procedureForm.error'), t('procedureForm.failedToPickImage'));
     }
   };
 
-  const renderItem = (item: ChecklistItemFormData, index: number) => (
+  const renderItem = (item: ChecklistItemFormData, _index: number) => (
     <View key={item.id} style={styles.itemContainer}>
       <View style={styles.itemHeader}>
-        <Text style={styles.itemTitle}>Item {item.number}</Text>
+        <Text style={styles.itemTitle}>{t('procedureForm.item')} {item.number}</Text>
         <TouchableOpacity
           style={styles.removeItemButton}
           onPress={() => removeItem(item.id)}
@@ -205,29 +207,29 @@ export default function ProcedureChecklistFormScreen() {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Topic *</Text>
+        <Text style={styles.label}>{t('procedureForm.topic')} *</Text>
         <TextInput
           style={styles.input}
           value={item.topic}
           onChangeText={(text) => updateItem(item.id, 'topic', text)}
-          placeholder="Enter topic/title for this item"
+          placeholder={t('procedureForm.topicPlaceholder')}
         />
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Content *</Text>
+        <Text style={styles.label}>{t('procedureForm.content')} *</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
           value={item.content}
           onChangeText={(text) => updateItem(item.id, 'content', text)}
-          placeholder="Enter detailed content/instructions"
+          placeholder={t('procedureForm.contentPlaceholder')}
           multiline
           numberOfLines={4}
         />
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Image</Text>
+        <Text style={styles.label}>{t('procedureForm.image')}</Text>
         {item.image ? (
           <View style={styles.imageContainer}>
             <Image source={{ uri: item.image }} style={styles.previewImage} />
@@ -235,13 +237,13 @@ export default function ProcedureChecklistFormScreen() {
               style={styles.changeImageButton}
               onPress={() => pickImage(item.id)}
             >
-              <Text style={styles.changeImageText}>Change Image</Text>
+              <Text style={styles.changeImageText}>{t('procedureForm.changeImage')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.removeImageButton}
               onPress={() => updateItem(item.id, 'image', undefined)}
             >
-              <Text style={styles.removeImageText}>Remove</Text>
+              <Text style={styles.removeImageText}>{t('procedureForm.removeImage')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -250,18 +252,18 @@ export default function ProcedureChecklistFormScreen() {
             onPress={() => pickImage(item.id)}
           >
             <Ionicons name="image-outline" size={24} color="#0066CC" />
-            <Text style={styles.addImageText}>Add Image</Text>
+            <Text style={styles.addImageText}>{t('procedureForm.addImage')}</Text>
           </TouchableOpacity>
         )}
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Link</Text>
+        <Text style={styles.label}>{t('procedureForm.link')}</Text>
         <TextInput
           style={styles.input}
           value={item.link || ''}
           onChangeText={(text) => updateItem(item.id, 'link', text)}
-          placeholder="Enter external link (optional)"
+          placeholder={t('procedureForm.linkPlaceholder')}
           autoCapitalize="none"
           keyboardType="url"
         />
@@ -273,7 +275,7 @@ export default function ProcedureChecklistFormScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0066CC" />
-        <Text style={styles.loadingText}>Loading checklist data...</Text>
+        <Text style={styles.loadingText}>{t('procedureForm.loading')}</Text>
       </View>
     );
   }
@@ -288,26 +290,26 @@ export default function ProcedureChecklistFormScreen() {
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
             <Text style={styles.title}>
-              {isEditing ? 'Edit Procedure/Checklist' : 'Create New Procedure/Checklist'}
+              {isEditing ? t('procedureForm.editTitle') : t('procedureForm.createTitle')}
             </Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Title *</Text>
+              <Text style={styles.label}>{t('procedureForm.title')} *</Text>
               <TextInput
                 style={styles.input}
                 value={formData.title}
                 onChangeText={(text) => setFormData(prev => ({ ...prev, title: text }))}
-                placeholder="Enter procedure/checklist title"
+                placeholder={t('procedureForm.titlePlaceholder')}
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Description</Text>
+              <Text style={styles.label}>{t('procedureForm.description')}</Text>
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={formData.description}
                 onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
-                placeholder="Enter description (optional)"
+                placeholder={t('procedureForm.descriptionPlaceholder')}
                 multiline
                 numberOfLines={3}
               />
@@ -315,10 +317,10 @@ export default function ProcedureChecklistFormScreen() {
 
             <View style={styles.itemsSection}>
               <View style={styles.itemsHeader}>
-                <Text style={styles.itemsTitle}>Checklist Items</Text>
+                <Text style={styles.itemsTitle}>{t('procedureForm.checklistItems')}</Text>
                 <TouchableOpacity style={styles.addItemButton} onPress={addNewItem}>
                   <Ionicons name="add" size={20} color="#fff" />
-                  <Text style={styles.addItemText}>Add Item</Text>
+                  <Text style={styles.addItemText}>{t('procedureForm.addItem')}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -326,9 +328,9 @@ export default function ProcedureChecklistFormScreen() {
 
               {formData.items.length === 0 && (
                 <View style={styles.emptyItemsContainer}>
-                  <Text style={styles.emptyItemsText}>No items added yet</Text>
+                  <Text style={styles.emptyItemsText}>{t('procedureForm.noItemsYet')}</Text>
                   <Text style={styles.emptyItemsSubtext}>
-                    Click &quot;Add Item&quot; to create your first checklist item
+                    {t('procedureForm.clickAddItem')}
                   </Text>
                 </View>
               )}
@@ -348,7 +350,7 @@ export default function ProcedureChecklistFormScreen() {
               <>
                 <Ionicons name="checkmark" size={20} color="#fff" />
                 <Text style={styles.submitButtonText}>
-                  {isEditing ? 'Update' : 'Create'}
+                  {isEditing ? t('procedureForm.update') : t('procedureForm.create')}
                 </Text>
               </>
             )}

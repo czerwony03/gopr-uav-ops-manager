@@ -14,10 +14,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAuth } from '../contexts/AuthContext';
-import { FlightService } from '../services/flightService';
-import { DroneService } from '../services/droneService';
-import { Drone } from '../types/Drone';
+import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/contexts/AuthContext';
+import { FlightService } from '@/services/flightService';
+import { DroneService } from '@/services/droneService';
+import { Drone } from '@/types/Drone';
 import { 
   FlightCategory, 
   OperationType, 
@@ -46,6 +47,7 @@ export default function FlightFormScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const isEditing = !!id;
+  const { t } = useTranslation('common');
 
   const [loading, setLoading] = useState(false);
   const [dronesLoading, setDronesLoading] = useState(true);
@@ -131,12 +133,12 @@ export default function FlightFormScreen() {
           conditions: flight.conditions || '',
         });
       } else {
-        Alert.alert('Error', 'Flight not found');
+        Alert.alert(t('common.error'), t('flightForm.notFound'));
         router.back();
       }
     } catch (error) {
       console.error('Error fetching flight:', error);
-      Alert.alert('Error', 'Failed to fetch flight data');
+      Alert.alert(t('common.error'), t('flightForm.loadError'));
       router.back();
     } finally {
       setLoading(false);
@@ -174,46 +176,46 @@ export default function FlightFormScreen() {
     for (const field of requiredFields) {
       const value = formData[field];
       if (!value || (typeof value === 'string' && !value.trim())) {
-        Alert.alert('Validation Error', `${field.charAt(0).toUpperCase() + field.slice(1)} is required`);
+        Alert.alert(t('flightForm.validation.title'), t(`flightForm.validation.${field}Required`));
         return false;
       }
     }
 
     // Check if drones are available
     if (drones.length === 0) {
-      Alert.alert('Validation Error', 'No drones available. Please add drones first.');
+      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.noDronesAvailable'));
       return false;
     }
 
     // Validate selected drone exists
     if (!drones.find(drone => drone.id === formData.droneId)) {
-      Alert.alert('Validation Error', 'Please select a valid drone');
+      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.selectValidDrone'));
       return false;
     }
 
     // Validate date formats (YYYY-MM-DD)
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(formData.date)) {
-      Alert.alert('Validation Error', 'Date must be in YYYY-MM-DD format');
+      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.dateFormat'));
       return false;
     }
     if (!dateRegex.test(formData.startDate)) {
-      Alert.alert('Validation Error', 'Start date must be in YYYY-MM-DD format');
+      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.startDateFormat'));
       return false;
     }
     if (!dateRegex.test(formData.endDate)) {
-      Alert.alert('Validation Error', 'End date must be in YYYY-MM-DD format');
+      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.endDateFormat'));
       return false;
     }
 
     // Validate time formats (HH:mm)
     const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (!timeRegex.test(formData.startTime)) {
-      Alert.alert('Validation Error', 'Start time must be in HH:mm format');
+      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.startTimeFormat'));
       return false;
     }
     if (!timeRegex.test(formData.endTime)) {
-      Alert.alert('Validation Error', 'End time must be in HH:mm format');
+      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.endTimeFormat'));
       return false;
     }
 
@@ -223,16 +225,16 @@ export default function FlightFormScreen() {
       const endDateTime = new Date(`${formData.endDate}T${formData.endTime}:00`);
       
       if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
-        Alert.alert('Validation Error', 'Invalid date/time format');
+        Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.invalidDateTime'));
         return false;
       }
       
       if (endDateTime <= startDateTime) {
-        Alert.alert('Validation Error', 'End time must be after start time');
+        Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.endAfterStart'));
         return false;
       }
     } catch {
-      Alert.alert('Validation Error', 'Invalid date/time format');
+      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.invalidDateTime'));
       return false;
     }
 
@@ -273,17 +275,17 @@ export default function FlightFormScreen() {
         // Navigate back immediately after successful update
         router.back();
         // Show success alert without blocking navigation
-        Alert.alert('Success', 'Flight updated successfully');
+        Alert.alert(t('common.success'), t('flightForm.updateSuccess'));
       } else {
         await FlightService.createFlight(flightData, user.uid, user.email);
         // Navigate back immediately after successful creation
         router.back();
         // Show success alert without blocking navigation
-        Alert.alert('Success', 'Flight created successfully');
+        Alert.alert(t('common.success'), t('flightForm.createSuccess'));
       }
     } catch (error) {
       console.error('Error saving flight:', error);
-      Alert.alert('Error', 'Failed to save flight');
+      Alert.alert(t('common.error'), t('flightForm.saveError'));
     } finally {
       setLoading(false);
     }
@@ -297,7 +299,7 @@ export default function FlightFormScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0066CC" />
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={styles.loadingText}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -310,32 +312,32 @@ export default function FlightFormScreen() {
       >
         <ScrollView contentContainerStyle={styles.contentContainer}>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Flight Information</Text>
+            <Text style={styles.sectionTitle}>{t('flightForm.basicInfo')}</Text>
             
-            <Text style={styles.label}>Date *</Text>
+            <Text style={styles.label}>{t('flightForm.date')} *</Text>
             <TextInput
               style={styles.input}
               value={formData.date}
               onChangeText={(value) => updateFormData('date', value)}
-              placeholder="YYYY-MM-DD"
+              placeholder={t('flightForm.datePlaceholder')}
             />
 
-            <Text style={styles.label}>Location *</Text>
+            <Text style={styles.label}>{t('flightForm.location')} *</Text>
             <TextInput
               style={styles.input}
               value={formData.location}
               onChangeText={(value) => updateFormData('location', value)}
-              placeholder="Enter flight location"
+              placeholder={t('flightForm.locationPlaceholder')}
             />
 
-            <Text style={styles.label}>Flight Category *</Text>
+            <Text style={styles.label}>{t('flightForm.category')} *</Text>
             <View style={styles.pickerContainer}>
               <Picker
                 selectedValue={formData.flightCategory}
                 onValueChange={(value) => updateFormData('flightCategory', value)}
                 style={styles.picker}
               >
-                <Picker.Item label="Select flight category" value="" />
+                <Picker.Item label={t('flightForm.categoryPlaceholder')} value="" />
                 {AVAILABLE_FLIGHT_CATEGORIES.map((category) => (
                   <Picker.Item
                     key={category}
@@ -346,14 +348,14 @@ export default function FlightFormScreen() {
               </Picker>
             </View>
 
-            <Text style={styles.label}>Operation Type *</Text>
+            <Text style={styles.label}>{t('flightForm.operation')} *</Text>
             <View style={styles.pickerContainer}>
               <Picker
                 selectedValue={formData.operationType}
                 onValueChange={(value) => updateFormData('operationType', value)}
                 style={styles.picker}
               >
-                <Picker.Item label="Select operation type" value="" />
+                <Picker.Item label={t('flightForm.operationPlaceholder')} value="" />
                 {AVAILABLE_OPERATION_TYPES.map((type) => (
                   <Picker.Item
                     key={type}
@@ -364,14 +366,14 @@ export default function FlightFormScreen() {
               </Picker>
             </View>
 
-            <Text style={styles.label}>Activity Type *</Text>
+            <Text style={styles.label}>{t('flightForm.activity')} *</Text>
             <View style={styles.pickerContainer}>
               <Picker
                 selectedValue={formData.activityType}
                 onValueChange={(value) => updateFormData('activityType', value)}
                 style={styles.picker}
               >
-                <Picker.Item label="Select activity type" value="" />
+                <Picker.Item label={t('flightForm.activityPlaceholder')} value="" />
                 {AVAILABLE_ACTIVITY_TYPES.map((type) => (
                   <Picker.Item
                     key={type}
@@ -382,14 +384,14 @@ export default function FlightFormScreen() {
               </Picker>
             </View>
 
-            <Text style={styles.label}>Drone *</Text>
+            <Text style={styles.label}>{t('flightForm.drone')} *</Text>
             <View style={styles.pickerContainer}>
               <Picker
                 selectedValue={formData.droneId}
                 onValueChange={(value) => updateFormData('droneId', value)}
                 style={styles.picker}
               >
-                <Picker.Item label="Select a drone" value="" />
+                <Picker.Item label={t('flightForm.dronePlaceholder')} value="" />
                 {drones.map((drone) => (
                   <Picker.Item
                     key={drone.id}
@@ -400,44 +402,44 @@ export default function FlightFormScreen() {
               </Picker>
             </View>
 
-            <Text style={styles.label}>Start Date *</Text>
+            <Text style={styles.label}>{t('flightForm.startDate')} *</Text>
             <TextInput
               style={styles.input}
               value={formData.startDate}
               onChangeText={(value) => updateFormData('startDate', value)}
-              placeholder="YYYY-MM-DD"
+              placeholder={t('flightForm.datePlaceholder')}
             />
 
-            <Text style={styles.label}>Start Time *</Text>
+            <Text style={styles.label}>{t('flightForm.startTime')} *</Text>
             <TextInput
               style={styles.input}
               value={formData.startTime}
               onChangeText={(value) => updateFormData('startTime', value)}
-              placeholder="HH:mm (e.g. 14:30)"
+              placeholder={t('flightForm.startTimePlaceholder')}
             />
 
-            <Text style={styles.label}>End Date *</Text>
+            <Text style={styles.label}>{t('flightForm.endDate')} *</Text>
             <TextInput
               style={styles.input}
               value={formData.endDate}
               onChangeText={(value) => updateFormData('endDate', value)}
-              placeholder="YYYY-MM-DD"
+              placeholder={t('flightForm.datePlaceholder')}
             />
 
-            <Text style={styles.label}>End Time *</Text>
+            <Text style={styles.label}>{t('flightForm.endTime')} *</Text>
             <TextInput
               style={styles.input}
               value={formData.endTime}
               onChangeText={(value) => updateFormData('endTime', value)}
-              placeholder="HH:mm (e.g. 16:30)"
+              placeholder={t('flightForm.endTimePlaceholder')}
             />
 
-            <Text style={styles.label}>Conditions</Text>
+            <Text style={styles.label}>{t('flightForm.conditions')}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.conditions}
               onChangeText={(value) => updateFormData('conditions', value)}
-              placeholder="Weather and flight conditions (optional)"
+              placeholder={t('flightForm.conditionsPlaceholder')}
               multiline
               numberOfLines={3}
             />
@@ -449,7 +451,7 @@ export default function FlightFormScreen() {
               onPress={handleCancel}
               disabled={loading}
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
@@ -461,7 +463,7 @@ export default function FlightFormScreen() {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.submitButtonText}>
-                  {isEditing ? 'Update Flight' : 'Create Flight'}
+                  {isEditing ? t('flightForm.updateButton') : t('flightForm.createButton')}
                 </Text>
               )}
             </TouchableOpacity>

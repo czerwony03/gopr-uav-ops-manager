@@ -11,10 +11,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { ProcedureChecklist } from '../types/ProcedureChecklist';
-import { useAuth } from '../contexts/AuthContext';
-import { ProcedureChecklistService } from '../services/procedureChecklistService';
+import { ProcedureChecklist } from '@/types/ProcedureChecklist';
+import { useAuth } from '@/contexts/AuthContext';
+import { ProcedureChecklistService } from '@/services/procedureChecklistService';
 
 export default function ProceduresChecklistsListScreen() {
   const [checklists, setChecklists] = useState<ProcedureChecklist[]>([]);
@@ -22,6 +23,7 @@ export default function ProceduresChecklistsListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation('common');
 
   const fetchChecklists = useCallback(async () => {
     if (!user) return;
@@ -32,8 +34,8 @@ export default function ProceduresChecklistsListScreen() {
     } catch (error) {
       console.error('Error fetching procedures/checklists:', error);
       Alert.alert(
-        'Error', 
-        'Failed to fetch procedures/checklists. Please check your connection and try again.'
+        t('common.error'), 
+        t('procedures.errors.fetchFailed')
       );
     } finally {
       setLoading(false);
@@ -83,21 +85,21 @@ export default function ProceduresChecklistsListScreen() {
     if (!user) return;
 
     Alert.alert(
-      'Delete Procedure/Checklist',
-      `Are you sure you want to delete "${checklist.title}"? This action can be undone by an admin.`,
+      t('procedures.delete.title'),
+      t('procedures.delete.confirmMessage', { title: checklist.title }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await ProcedureChecklistService.softDeleteProcedureChecklist(checklist.id, user.role, user.uid);
               await fetchChecklists(); // Refresh the list
-              Alert.alert('Success', 'Procedure/checklist deleted successfully');
+              Alert.alert(t('common.success'), t('procedures.delete.successMessage'));
             } catch (error) {
               console.error('Error deleting procedure/checklist:', error);
-              Alert.alert('Error', 'Failed to delete procedure/checklist');
+              Alert.alert(t('common.error'), t('procedures.delete.errorMessage'));
             }
           },
         },
@@ -111,10 +113,10 @@ export default function ProceduresChecklistsListScreen() {
     try {
       await ProcedureChecklistService.restoreProcedureChecklist(checklist.id, user.role, user.uid);
       await fetchChecklists(); // Refresh the list
-      Alert.alert('Success', 'Procedure/checklist restored successfully');
+      Alert.alert(t('common.success'), t('procedures.restore.successMessage'));
     } catch (error) {
       console.error('Error restoring procedure/checklist:', error);
-      Alert.alert('Error', 'Failed to restore procedure/checklist');
+      Alert.alert(t('common.error'), t('procedures.restore.errorMessage'));
     }
   };
 
@@ -131,15 +133,15 @@ export default function ProceduresChecklistsListScreen() {
             </Text>
           )}
           <Text style={styles.checklistMeta}>
-            {item.items.length} item{item.items.length !== 1 ? 's' : ''}
-            {item.createdAt && ` • Created ${item.createdAt.toLocaleDateString()}`}
+            {item.items.length} {item.items.length === 1 ? t('procedures.itemSingle') : t('procedures.itemPlural')}
+            {item.createdAt && ` • ${t('procedures.createdOn', { date: item.createdAt.toLocaleDateString() })}`}
           </Text>
         </View>
         
         {/* Status badge for deleted items (admin only) */}
         {item.isDeleted && user?.role === 'admin' && (
           <View style={styles.deletedBadge}>
-            <Text style={styles.deletedBadgeText}>DELETED</Text>
+            <Text style={styles.deletedBadgeText}>{t('procedures.deleted')}</Text>
           </View>
         )}
       </View>
@@ -150,7 +152,7 @@ export default function ProceduresChecklistsListScreen() {
           onPress={() => handleViewDetails(item)}
         >
           <Ionicons name="eye-outline" size={20} color="#0066CC" />
-          <Text style={styles.actionButtonText}>View</Text>
+          <Text style={styles.actionButtonText}>{t('common.view')}</Text>
         </TouchableOpacity>
 
         {canModifyChecklists && !item.isDeleted && (
@@ -160,7 +162,7 @@ export default function ProceduresChecklistsListScreen() {
               onPress={() => handleEditChecklist(item)}
             >
               <Ionicons name="create-outline" size={20} color="#4CAF50" />
-              <Text style={styles.actionButtonText}>Edit</Text>
+              <Text style={styles.actionButtonText}>{t('common.edit')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
@@ -168,7 +170,7 @@ export default function ProceduresChecklistsListScreen() {
               onPress={() => handleDeleteChecklist(item)}
             >
               <Ionicons name="trash-outline" size={20} color="#F44336" />
-              <Text style={styles.actionButtonText}>Delete</Text>
+              <Text style={styles.actionButtonText}>{t('common.delete')}</Text>
             </TouchableOpacity>
           </>
         )}
@@ -179,7 +181,7 @@ export default function ProceduresChecklistsListScreen() {
             onPress={() => handleRestoreChecklist(item)}
           >
             <Ionicons name="refresh-outline" size={20} color="#FF9800" />
-            <Text style={styles.actionButtonText}>Restore</Text>
+            <Text style={styles.actionButtonText}>{t('procedures.restore.button')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -190,7 +192,7 @@ export default function ProceduresChecklistsListScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0066CC" />
-        <Text style={styles.loadingText}>Loading procedures & checklists...</Text>
+        <Text style={styles.loadingText}>{t('procedures.loading')}</Text>
       </View>
     );
   }
@@ -198,12 +200,12 @@ export default function ProceduresChecklistsListScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Procedures & Checklists</Text>
+        <Text style={styles.title}>{t('procedures.title')}</Text>
         
         {canModifyChecklists && (
           <TouchableOpacity style={styles.addButton} onPress={handleCreateChecklist}>
             <Ionicons name="add" size={24} color="#fff" />
-            <Text style={styles.addButtonText}>Add New</Text>
+            <Text style={styles.addButtonText}>{t('procedures.addNew')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -211,11 +213,11 @@ export default function ProceduresChecklistsListScreen() {
       {checklists.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="clipboard-outline" size={64} color="#ccc" />
-          <Text style={styles.emptyTitle}>No Procedures or Checklists</Text>
+          <Text style={styles.emptyTitle}>{t('procedures.empty.title')}</Text>
           <Text style={styles.emptyDescription}>
             {canModifyChecklists 
-              ? 'Create your first procedure or checklist to get started.'
-              : 'No procedures or checklists have been created yet.'
+              ? t('procedures.empty.descriptionCanCreate')
+              : t('procedures.empty.descriptionCannotCreate')
             }
           </Text>
         </View>

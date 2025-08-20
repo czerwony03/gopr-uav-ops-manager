@@ -13,9 +13,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
-import { UserFormData, AVAILABLE_QUALIFICATIONS, Qualification } from '../types/User';
-import { useAuth, UserRole } from '../contexts/AuthContext';
-import { UserService } from '../services/userService';
+import { useTranslation } from 'react-i18next';
+import { UserFormData, AVAILABLE_QUALIFICATIONS, Qualification } from '@/types/User';
+import { useAuth, UserRole } from '@/contexts/AuthContext';
+import { UserService } from '@/services/userService';
+import { LanguagePickerField } from '@/src/components/LanguagePickerField';
 
 export default function UserFormScreen() {
   const [loading, setLoading] = useState(false);
@@ -25,6 +27,7 @@ export default function UserFormScreen() {
   const { user, refreshUser } = useAuth();
   const router = useRouter();
   const isEditing = !!id;
+  const { t } = useTranslation('common');
 
   // Default form data for creating new users
   const defaultFormData = useMemo((): UserFormData => ({
@@ -128,28 +131,28 @@ export default function UserFormScreen() {
     const newErrors: Record<string, string> = {};
     
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('userForm.validation.emailRequired');
     }
     if (!formData.firstname.trim()) {
-      newErrors.firstname = 'First name is required';
+      newErrors.firstname = t('userForm.validation.firstNameRequired');
     }
     if (!formData.surname.trim()) {
-      newErrors.surname = 'Surname is required';
+      newErrors.surname = t('userForm.validation.surnameRequired');
     }
     
     // Validate operator/pilot numbers and qualifications
     if (!formData.operatorNumber.trim() && !formData.pilotNumber.trim()) {
-      newErrors.operatorNumber = 'Either Operator Number or Pilot Number is required';
-      newErrors.pilotNumber = 'Either Operator Number or Pilot Number is required';
+      newErrors.operatorNumber = t('userForm.validation.operatorOrPilotRequired');
+      newErrors.pilotNumber = t('userForm.validation.operatorOrPilotRequired');
     }
     if (formData.qualifications.length === 0) {
-      newErrors.qualifications = 'At least one qualification/authorization must be selected';
+      newErrors.qualifications = t('userForm.validation.qualificationsRequired');
     }
 
     // If there are validation errors, show them and stop
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      Alert.alert('Validation Error', 'Please correct the highlighted fields and try again.');
+      Alert.alert(t('userForm.validation.title'), t('userForm.validation.message'));
       return;
     }
 
@@ -198,12 +201,12 @@ export default function UserFormScreen() {
       router.back();
       // Show success alert without blocking navigation
       Alert.alert(
-        'Success',
-        isEditing ? 'User updated successfully' : 'User created successfully'
+        t('common.success'),
+        isEditing ? t('userForm.updateSuccess') : t('userForm.createSuccess')
       );
     } catch (error) {
       console.error('Error saving user:', error);
-      Alert.alert('Error', 'Failed to save user data');
+      Alert.alert(t('common.error'), t('userForm.saveError'));
     } finally {
       setLoading(false);
     }
@@ -260,7 +263,7 @@ export default function UserFormScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0066CC" />
-          <Text style={styles.loadingText}>Loading user data...</Text>
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -271,13 +274,13 @@ export default function UserFormScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <Text style={styles.title}>
-            {isEditing ? 'Edit User' : 'Create User'}
+            {isEditing ? t('userForm.editTitle') : t('userForm.createTitle')}
           </Text>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Basic Information</Text>
+            <Text style={styles.sectionTitle}>{t('userForm.basicInfo')}</Text>
             
-            <Text style={styles.label}>Email *</Text>
+            <Text style={styles.label}>{t('userForm.email')} *</Text>
             <TextInput
               style={[
                 styles.input, 
@@ -286,80 +289,85 @@ export default function UserFormScreen() {
               ]}
               value={formData.email}
               onChangeText={(value) => updateFormData('email', value)}
-              placeholder="Enter email address"
+              placeholder={t('userForm.emailPlaceholder')}
               keyboardType="email-address"
               editable={!isEditing} // Email shouldn't be changed after creation
             />
             {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
-            <Text style={styles.label}>First Name *</Text>
+            <Text style={styles.label}>{t('userForm.firstName')} *</Text>
             <TextInput
               style={[styles.input, errors.firstname && styles.inputError]}
               value={formData.firstname}
               onChangeText={(value) => updateFormData('firstname', value)}
-              placeholder="Enter first name"
+              placeholder={t('userForm.firstNamePlaceholder')}
             />
             {errors.firstname && <Text style={styles.errorText}>{errors.firstname}</Text>}
 
-            <Text style={styles.label}>Surname *</Text>
+            <Text style={styles.label}>{t('userForm.surname')} *</Text>
             <TextInput
               style={[styles.input, errors.surname && styles.inputError]}
               value={formData.surname}
               onChangeText={(value) => updateFormData('surname', value)}
-              placeholder="Enter surname"
+              placeholder={t('userForm.surnameePlaceholder')}
             />
             {errors.surname && <Text style={styles.errorText}>{errors.surname}</Text>}
 
-            <Text style={styles.label}>Phone</Text>
+            <Text style={styles.label}>{t('userForm.phone')}</Text>
             <TextInput
               style={styles.input}
               value={formData.phone}
               onChangeText={(value) => updateFormData('phone', value)}
-              placeholder="Enter phone number"
+              placeholder={t('userForm.phonePlaceholder')}
               keyboardType="phone-pad"
             />
 
-            <Text style={styles.label}>Residential Address</Text>
+            <Text style={styles.label}>{t('userForm.address')}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.residentialAddress}
               onChangeText={(value) => updateFormData('residentialAddress', value)}
-              placeholder="Enter residential address"
+              placeholder={t('userForm.addressPlaceholder')}
               multiline
               numberOfLines={3}
             />
 
             {user?.role === 'admin' && (
               <>
-                <Text style={styles.label}>Role</Text>
+                <Text style={styles.label}>{t('userForm.role')}</Text>
                 <View style={styles.pickerContainer}>
                   <Picker
                     selectedValue={formData.role}
                     onValueChange={(value: UserRole) => updateFormData('role', value)}
                     style={styles.picker}
                   >
-                    <Picker.Item label="User" value="user" />
-                    <Picker.Item label="Manager" value="manager" />
-                    <Picker.Item label="Admin" value="admin" />
+                    <Picker.Item label={t('user.user')} value="user" />
+                    <Picker.Item label={t('user.manager')} value="manager" />
+                    <Picker.Item label={t('user.admin')} value="admin" />
                   </Picker>
                 </View>
               </>
             )}
+
+            {/* Language Selector - only show for editing own profile */}
+            {isEditing && id === user?.uid && (
+              <LanguagePickerField />
+            )}
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Operator Information</Text>
+            <Text style={styles.sectionTitle}>{t('userForm.operatorInfo')}</Text>
             
-            <Text style={styles.label}>Operator Number *</Text>
+            <Text style={styles.label}>{t('userForm.operatorNumber')} *</Text>
             <TextInput
               style={[styles.input, errors.operatorNumber && styles.inputError]}
               value={formData.operatorNumber}
               onChangeText={(value) => updateFormData('operatorNumber', value)}
-              placeholder="Enter operator number"
+              placeholder={t('userForm.operatorNumberPlaceholder')}
             />
             {errors.operatorNumber && <Text style={styles.errorText}>{errors.operatorNumber}</Text>}
 
-            <Text style={styles.label}>Operator Validity Date</Text>
+            <Text style={styles.label}>{t('userForm.operatorValidityDate')}</Text>
             <TextInput
               style={styles.input}
               value={formData.operatorValidityDate}
@@ -369,18 +377,18 @@ export default function UserFormScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Pilot Information</Text>
+            <Text style={styles.sectionTitle}>{t('userForm.pilotInfo')}</Text>
             
-            <Text style={styles.label}>Pilot Number *</Text>
+            <Text style={styles.label}>{t('userForm.pilotNumber')} *</Text>
             <TextInput
               style={[styles.input, errors.pilotNumber && styles.inputError]}
               value={formData.pilotNumber}
               onChangeText={(value) => updateFormData('pilotNumber', value)}
-              placeholder="Enter pilot number"
+              placeholder={t('userForm.pilotNumberPlaceholder')}
             />
             {errors.pilotNumber && <Text style={styles.errorText}>{errors.pilotNumber}</Text>}
 
-            <Text style={styles.label}>Pilot Validity Date</Text>
+            <Text style={styles.label}>{t('userForm.pilotValidityDate')}</Text>
             <TextInput
               style={styles.input}
               value={formData.pilotValidityDate}
@@ -390,17 +398,17 @@ export default function UserFormScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>License Information</Text>
+            <Text style={styles.sectionTitle}>{t('userForm.licenseInfo')}</Text>
             
-            <Text style={styles.label}>License Conversion Number or Administrative Decision Number</Text>
+            <Text style={styles.label}>{t('userForm.licenseConversionNumber')}</Text>
             <TextInput
               style={styles.input}
               value={formData.licenseConversionNumber}
               onChangeText={(value) => updateFormData('licenseConversionNumber', value)}
-              placeholder="Enter license conversion number"
+              placeholder={t('userForm.licenseConversionPlaceholder')}
             />
 
-            <Text style={styles.label}>Insurance Date</Text>
+            <Text style={styles.label}>{t('userForm.insuranceDate')}</Text>
             <TextInput
               style={styles.input}
               value={formData.insurance}
@@ -410,8 +418,8 @@ export default function UserFormScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Qualifications / Authorizations *</Text>
-            <Text style={styles.subtitle}>Select applicable qualifications (at least one required):</Text>
+            <Text style={styles.sectionTitle}>{t('userForm.qualifications')} *</Text>
+            <Text style={styles.subtitle}>{t('userForm.qualificationsSubtitle')}</Text>
             
             <FlatList
               data={AVAILABLE_QUALIFICATIONS}
@@ -430,7 +438,7 @@ export default function UserFormScreen() {
               onPress={() => router.back()}
               disabled={loading}
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
@@ -442,7 +450,7 @@ export default function UserFormScreen() {
                 <ActivityIndicator size="small" color="white" />
               ) : (
                 <Text style={styles.submitButtonText}>
-                  {isEditing ? 'Update User' : 'Create User'}
+                  {isEditing ? t('userForm.updateButton') : t('userForm.createButton')}
                 </Text>
               )}
             </TouchableOpacity>

@@ -7,10 +7,12 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/firebaseConfig';
+import { useTranslation } from 'react-i18next';
 
 export function CustomDrawerContent(props: any) {
   const { user } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation('common');
 
   const handleLogout = async () => {
     try {
@@ -50,13 +52,22 @@ export function CustomDrawerContent(props: any) {
       <DrawerContentScrollView {...props} style={styles.container}>
         {/* Header Section */}
         <View style={styles.header}>
-          <Text style={styles.appTitle}>GOPR UAV Ops Manager</Text>
+          <View style={styles.headerTop}>
+            <Text style={styles.appTitle}>{t('drawer.appTitle')}</Text>
+            <TouchableOpacity 
+              style={styles.profileButton}
+              onPress={() => handleNavigation(`/user-form?id=${user.uid}`)}
+            >
+              <Ionicons name="person-outline" size={14} color="#0066CC" />
+              <Text style={styles.profileButtonText}>{t('drawer.editProfile')}</Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.userInfo}>
             {!!displayName && <Text style={styles.userName}>{displayName}</Text>}
             <Text style={styles.userEmail}>{user.email}</Text>
             <View style={[styles.roleBadge, {backgroundColor: getRoleColor(user.role)}]}>
-              <Text style={styles.roleText}>{user.role.toUpperCase()}</Text>
+              <Text style={styles.roleText}>{t(`user.roles.${user.role}`)}</Text>
             </View>
           </View>
         </View>
@@ -64,7 +75,7 @@ export function CustomDrawerContent(props: any) {
         {/* Navigation Items */}
         <View style={styles.navigationSection}>
           <DrawerItem
-            label="Home"
+            label={t('nav.home')}
             onPress={() => handleNavigation('/')}
             icon={({color, size}) => (
               <Ionicons name="home-outline" size={size} color={color}/>
@@ -74,7 +85,7 @@ export function CustomDrawerContent(props: any) {
           />
 
           <DrawerItem
-            label="Flights"
+            label={t('nav.flights')}
             onPress={() => handleNavigation('/flights-list')}
             icon={({color, size}) => (
               <Ionicons name="airplane-outline" size={size} color={color}/>
@@ -84,7 +95,7 @@ export function CustomDrawerContent(props: any) {
           />
 
           <DrawerItem
-            label="Drones"
+            label={t('nav.drones')}
             onPress={() => handleNavigation('/drones-list')}
             icon={({color, size}) => (
               <Ionicons name="hardware-chip-outline" size={size} color={color}/>
@@ -94,7 +105,7 @@ export function CustomDrawerContent(props: any) {
           />
 
           <DrawerItem
-            label="Procedures & Checklists"
+            label={t('nav.procedures')}
             onPress={() => handleNavigation('/procedures-checklists-list')}
             icon={({color, size}) => (
               <Ionicons name="clipboard-outline" size={size} color={color}/>
@@ -106,7 +117,7 @@ export function CustomDrawerContent(props: any) {
           {/* Users menu item - only visible to admins */}
           {user.role === 'admin' && (
             <DrawerItem
-              label="Users"
+              label={t('nav.users')}
               onPress={() => handleNavigation('/users-list')}
               icon={({color, size}) => (
                 <Ionicons name="people-outline" size={size} color={color}/>
@@ -119,7 +130,7 @@ export function CustomDrawerContent(props: any) {
           {/* Audit Logs menu item - only visible to admins */}
           {user.role === 'admin' && (
             <DrawerItem
-              label="Audit Logs"
+              label={t('nav.auditLogs')}
               onPress={() => handleNavigation('/audit-logs')}
               icon={({color, size}) => (
                 <Ionicons name="document-text-outline" size={size} color={color}/>
@@ -134,7 +145,7 @@ export function CustomDrawerContent(props: any) {
       {/* Bottom section: Info & Contact + Sign Out */}
       <View style={styles.bottomSection}>
         <DrawerItem
-          label="Info & Contact"
+          label={t('nav.info')}
           onPress={() => handleNavigation('/info-contact')}
           icon={({color, size}) => (
             <Ionicons name="information-circle-outline" size={size} color={color}/>
@@ -145,7 +156,7 @@ export function CustomDrawerContent(props: any) {
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color="#fff"/>
-          <Text style={styles.logoutText}>Sign Out</Text>
+          <Text style={styles.logoutText}>{t('drawer.signOut')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -167,11 +178,39 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     marginTop: -5,
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  profileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  profileButtonText: {
+    color: '#0066CC',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
   appTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 10,
+    flex: 1,
   },
   userInfo: {
     marginTop: 10,

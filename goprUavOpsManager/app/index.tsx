@@ -1,13 +1,15 @@
 import React from "react";
-import { Text, View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
-import { useAuth } from "../contexts/AuthContext";
+import { Text, View, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import { useTranslation } from 'react-i18next';
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "expo-router";
 import LoginScreen from "../screens/LoginScreen";
-import { Footer } from "../components/Footer";
-import { formatDate, formatLastLogin } from "../utils/dateUtils";
+import { Footer } from "@/components/Footer";
+import { formatDate, formatLastLogin } from "@/utils/dateUtils";
 
 export default function Index() {
   const { user, loading } = useAuth();
+  const { t } = useTranslation('common');
   const router = useRouter();
 
   console.log('[Index] Component render - user:', user?.uid, 'loading:', loading);
@@ -20,7 +22,7 @@ export default function Index() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={styles.loadingText}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -48,21 +50,21 @@ export default function Index() {
   const getRoleCapabilities = (role: string) => {
     switch (role) {
       case 'admin':
-        return ['Full system access', 'User management', 'All operations', 'System configuration'];
+        return t('dashboard.capabilities.admin', { returnObjects: true }) as string[];
       case 'manager':
-        return ['Operation management', 'Team oversight', 'Reports viewing', 'Limited user management'];
+        return t('dashboard.capabilities.manager', { returnObjects: true }) as string[];
       case 'user':
-        return ['Basic operations', 'View assigned tasks', 'Update status'];
+        return t('dashboard.capabilities.user', { returnObjects: true }) as string[];
       default:
-        return ['Limited access'];
+        return t('dashboard.capabilities.default', { returnObjects: true }) as string[];
     }
   };
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>GOPR UAV Ops Manager</Text>
-        <Text style={styles.welcomeText}>Welcome, {user.email}</Text>
+        <Text style={styles.title}>{t('dashboard.title')}</Text>
+        <Text style={styles.welcomeText}>{t('dashboard.welcome')}, {user.email}</Text>
       </View>
 
       <View style={styles.roleContainer}>
@@ -72,7 +74,7 @@ export default function Index() {
       </View>
 
       <View style={styles.capabilitiesContainer}>
-        <Text style={styles.capabilitiesTitle}>Your Capabilities:</Text>
+        <Text style={styles.capabilitiesTitle}>{t('dashboard.capabilitiesTitle')}:</Text>
         {getRoleCapabilities(user.role).map((capability, index) => (
           <Text key={index} style={styles.capabilityItem}>
             • {capability}
@@ -81,89 +83,89 @@ export default function Index() {
       </View>
 
       <View style={styles.lastLoginContainer}>
-        <Text style={styles.lastLoginTitle}>Account Activity</Text>
+        <Text style={styles.lastLoginTitle}>{t('dashboard.accountActivity')}</Text>
         <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Last Login</Text>
+          <Text style={styles.fieldLabel}>{t('dashboard.lastLogin')}</Text>
           <Text style={styles.fieldValue}>{formatLastLogin(user.lastLoginAt)}</Text>
         </View>
       </View>
 
       <View style={styles.profileDataContainer}>
-        <Text style={styles.profileDataTitle}>My Profile Data</Text>
+        <Text style={styles.profileDataTitle}>{t('dashboard.profileData')}</Text>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Basic Information</Text>
+          <Text style={styles.sectionTitle}>{t('dashboard.basicInformation')}</Text>
           
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Email</Text>
+            <Text style={styles.fieldLabel}>{t('dashboard.email')}</Text>
             <Text style={styles.fieldValue}>{user.email}</Text>
           </View>
           
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>First Name</Text>
-            <Text style={styles.fieldValue}>{user.firstname || 'Not set'}</Text>
+            <Text style={styles.fieldLabel}>{t('dashboard.firstName')}</Text>
+            <Text style={styles.fieldValue}>{user.firstname || t('dashboard.notSet')}</Text>
           </View>
           
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Surname</Text>
-            <Text style={styles.fieldValue}>{user.surname || 'Not set'}</Text>
+            <Text style={styles.fieldLabel}>{t('dashboard.surname')}</Text>
+            <Text style={styles.fieldValue}>{user.surname || t('dashboard.notSet')}</Text>
           </View>
           
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Phone</Text>
-            <Text style={styles.fieldValue}>{user.phone || 'Not set'}</Text>
+            <Text style={styles.fieldLabel}>{t('dashboard.phone')}</Text>
+            <Text style={styles.fieldValue}>{user.phone || t('dashboard.notSet')}</Text>
           </View>
           
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Residential Address</Text>
-            <Text style={styles.fieldValue}>{user.residentialAddress || 'Not set'}</Text>
+            <Text style={styles.fieldLabel}>{t('dashboard.residentialAddress')}</Text>
+            <Text style={styles.fieldValue}>{user.residentialAddress || t('dashboard.notSet')}</Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Operator Information</Text>
+          <Text style={styles.sectionTitle}>{t('dashboard.operatorInfo')}</Text>
           
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Operator Number</Text>
-            <Text style={styles.fieldValue}>{user.operatorNumber || 'Not set'}</Text>
+            <Text style={styles.fieldLabel}>{t('dashboard.operatorNumber')}</Text>
+            <Text style={styles.fieldValue}>{user.operatorNumber || t('dashboard.notSet')}</Text>
           </View>
           
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Operator Validity Date</Text>
+            <Text style={styles.fieldLabel}>{t('dashboard.operatorValidityDate')}</Text>
             <Text style={styles.fieldValue}>{formatDate(user.operatorValidityDate)}</Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Pilot Information</Text>
+          <Text style={styles.sectionTitle}>{t('dashboard.pilotInfo')}</Text>
           
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Pilot Number</Text>
-            <Text style={styles.fieldValue}>{user.pilotNumber || 'Not set'}</Text>
+            <Text style={styles.fieldLabel}>{t('dashboard.pilotNumber')}</Text>
+            <Text style={styles.fieldValue}>{user.pilotNumber || t('dashboard.notSet')}</Text>
           </View>
           
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Pilot Validity Date</Text>
+            <Text style={styles.fieldLabel}>{t('dashboard.pilotValidityDate')}</Text>
             <Text style={styles.fieldValue}>{formatDate(user.pilotValidityDate)}</Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Additional Information</Text>
+          <Text style={styles.sectionTitle}>{t('dashboard.additionalInfo')}</Text>
           
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>License Conversion Number</Text>
-            <Text style={styles.fieldValue}>{user.licenseConversionNumber || 'Not set'}</Text>
+            <Text style={styles.fieldLabel}>{t('dashboard.licenseConversion')}</Text>
+            <Text style={styles.fieldValue}>{user.licenseConversionNumber || t('dashboard.notSet')}</Text>
           </View>
           
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Insurance Date</Text>
+            <Text style={styles.fieldLabel}>{t('dashboard.insuranceDate')}</Text>
             <Text style={styles.fieldValue}>{formatDate(user.insurance)}</Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Qualifications / Authorizations</Text>
+          <Text style={styles.sectionTitle}>{t('dashboard.qualifications')}</Text>
           
           {user.qualifications && user.qualifications.length > 0 ? (
             <View style={styles.qualificationsContainer}>
@@ -174,28 +176,18 @@ export default function Index() {
               ))}
             </View>
           ) : (
-            <Text style={styles.fieldValue}>No qualifications set</Text>
+            <Text style={styles.fieldValue}>{t('dashboard.noQualifications')}</Text>
           )}
         </View>
 
       </View>
 
-      <View style={styles.profileContainer}>
-        <Text style={styles.profileTitle}>Profile Management</Text>
-        <TouchableOpacity
-          style={styles.editProfileButton}
-          onPress={() => router.push(`/user-form?id=${user.uid}`)}
-        >
-          <Text style={styles.editProfileButtonText}>Edit My Data</Text>
-        </TouchableOpacity>
-      </View>
-
       <View style={styles.infoContainer}>
         <Text style={styles.infoText}>
-          Use the menu (☰) to navigate between different sections of the app.
+          {t('dashboard.menuInfo')}
         </Text>
         <Text style={styles.infoSubtext}>
-          Additional role-based functionality is available based on your {user.role} permissions.
+          {t('dashboard.roleInfo', { role: user.role })}
         </Text>
       </View>
       
@@ -355,38 +347,6 @@ const styles = StyleSheet.create({
   qualificationText: {
     color: 'white',
     fontSize: 12,
-    fontWeight: 'bold',
-  },
-  profileContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 20,
-    marginBottom: 30,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  profileTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#333',
-  },
-  editProfileButton: {
-    backgroundColor: '#0066CC',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  editProfileButtonText: {
-    color: 'white',
-    fontSize: 16,
     fontWeight: 'bold',
   },
   infoContainer: {

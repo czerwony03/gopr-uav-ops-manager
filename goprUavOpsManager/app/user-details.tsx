@@ -10,15 +10,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAuth } from '../contexts/AuthContext';
-import { User } from '../types/User';
-import { UserService } from '../services/userService';
-import { formatDate, formatLastLogin } from '../utils/dateUtils';
+import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/contexts/AuthContext';
+import { User } from '@/types/User';
+import { UserService } from '@/services/userService';
+import { formatDate, formatLastLogin } from '@/utils/dateUtils';
 
 export default function UserDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user: currentUser } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation('common');
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,8 +32,8 @@ export default function UserDetailsScreen() {
       setUser(userData);
     } catch (error) {
       console.error('Error fetching user details:', error);
-      Alert.alert('Error', 'Failed to load user details', [
-        { text: 'OK', onPress: () => router.back() }
+      Alert.alert(t('common.error'), t('userDetails.loadError'), [
+        { text: t('common.ok'), onPress: () => router.back() }
       ]);
     } finally {
       setLoading(false);
@@ -68,7 +70,7 @@ export default function UserDetailsScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0066CC" />
-          <Text style={styles.loadingText}>Loading user details...</Text>
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -78,9 +80,9 @@ export default function UserDetailsScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>User not found</Text>
+          <Text style={styles.errorText}>{t('userDetails.notFound')}</Text>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Go Back</Text>
+            <Text style={styles.backButtonText}>{t('common.back')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -92,85 +94,85 @@ export default function UserDetailsScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.title}>User Details</Text>
+            <Text style={styles.title}>{t('userDetails.title')}</Text>
             <View style={[styles.roleBadge, { backgroundColor: getRoleColor(user.role) }]}>
-              <Text style={styles.roleText}>{user.role.toUpperCase()}</Text>
+              <Text style={styles.roleText}>{t(`user.${user.role}`)}</Text>
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Basic Information</Text>
+            <Text style={styles.sectionTitle}>{t('userDetails.basicInfo')}</Text>
             
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Email</Text>
+              <Text style={styles.fieldLabel}>{t('user.email')}</Text>
               <Text style={styles.fieldValue}>{user.email}</Text>
             </View>
             
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>First Name</Text>
-              <Text style={styles.fieldValue}>{user.firstname || 'Not set'}</Text>
+              <Text style={styles.fieldLabel}>{t('user.firstName')}</Text>
+              <Text style={styles.fieldValue}>{user.firstname || t('userDetails.noData')}</Text>
             </View>
             
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Surname</Text>
-              <Text style={styles.fieldValue}>{user.surname || 'Not set'}</Text>
+              <Text style={styles.fieldLabel}>{t('user.lastName')}</Text>
+              <Text style={styles.fieldValue}>{user.surname || t('userDetails.noData')}</Text>
             </View>
             
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Phone</Text>
-              <Text style={styles.fieldValue}>{user.phone || 'Not set'}</Text>
+              <Text style={styles.fieldLabel}>{t('userForm.phone')}</Text>
+              <Text style={styles.fieldValue}>{user.phone || t('userDetails.noPhone')}</Text>
             </View>
             
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Residential Address</Text>
-              <Text style={styles.fieldValue}>{user.residentialAddress || 'Not set'}</Text>
+              <Text style={styles.fieldLabel}>{t('userForm.address')}</Text>
+              <Text style={styles.fieldValue}>{user.residentialAddress || t('userDetails.noAddress')}</Text>
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Operator Information</Text>
+            <Text style={styles.sectionTitle}>{t('userDetails.operatorInfo')}</Text>
             
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Operator Number</Text>
-              <Text style={styles.fieldValue}>{user.operatorNumber || 'Not set'}</Text>
+              <Text style={styles.fieldLabel}>{t('userForm.operatorNumber')}</Text>
+              <Text style={styles.fieldValue}>{user.operatorNumber || t('userDetails.noData')}</Text>
             </View>
             
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Operator Validity Date</Text>
+              <Text style={styles.fieldLabel}>{t('userForm.operatorValidityDate')}</Text>
               <Text style={styles.fieldValue}>{formatDate(user.operatorValidityDate)}</Text>
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Pilot Information</Text>
+            <Text style={styles.sectionTitle}>{t('userDetails.pilotInfo')}</Text>
             
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Pilot Number</Text>
-              <Text style={styles.fieldValue}>{user.pilotNumber || 'Not set'}</Text>
+              <Text style={styles.fieldLabel}>{t('userForm.pilotNumber')}</Text>
+              <Text style={styles.fieldValue}>{user.pilotNumber || t('userDetails.noData')}</Text>
             </View>
             
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Pilot Validity Date</Text>
+              <Text style={styles.fieldLabel}>{t('userForm.pilotValidityDate')}</Text>
               <Text style={styles.fieldValue}>{formatDate(user.pilotValidityDate)}</Text>
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>License Information</Text>
+            <Text style={styles.sectionTitle}>{t('userDetails.licenseInfo')}</Text>
             
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>License Conversion Number</Text>
-              <Text style={styles.fieldValue}>{user.licenseConversionNumber || 'Not set'}</Text>
+              <Text style={styles.fieldLabel}>{t('userForm.licenseConversionNumber')}</Text>
+              <Text style={styles.fieldValue}>{user.licenseConversionNumber || t('userDetails.noData')}</Text>
             </View>
             
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Insurance Date</Text>
+              <Text style={styles.fieldLabel}>{t('userForm.insuranceDate')}</Text>
               <Text style={styles.fieldValue}>{formatDate(user.insurance)}</Text>
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Qualifications / Authorizations</Text>
+            <Text style={styles.sectionTitle}>{t('userDetails.qualifications')}</Text>
             
             {user.qualifications && user.qualifications.length > 0 ? (
               <View style={styles.qualificationsContainer}>
@@ -181,15 +183,15 @@ export default function UserDetailsScreen() {
                 ))}
               </View>
             ) : (
-              <Text style={styles.fieldValue}>No qualifications set</Text>
+              <Text style={styles.fieldValue}>{t('userDetails.noData')}</Text>
             )}
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Account Activity</Text>
+            <Text style={styles.sectionTitle}>{t('userDetails.accountInfo')}</Text>
             
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Last Login</Text>
+              <Text style={styles.fieldLabel}>{t('common.lastLogin')}</Text>
               <Text style={styles.fieldValue}>{formatLastLogin(user.lastLoginAt)}</Text>
             </View>
           </View>
@@ -199,14 +201,14 @@ export default function UserDetailsScreen() {
               style={styles.editButton}
               onPress={() => router.push(`/user-form?id=${user.uid}`)}
             >
-              <Text style={styles.editButtonText}>Edit User</Text>
+              <Text style={styles.editButtonText}>{t('userDetails.editButton')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
               style={styles.backButton}
               onPress={() => router.back()}
             >
-              <Text style={styles.backButtonText}>Back</Text>
+              <Text style={styles.backButtonText}>{t('common.back')}</Text>
             </TouchableOpacity>
           </View>
         </View>

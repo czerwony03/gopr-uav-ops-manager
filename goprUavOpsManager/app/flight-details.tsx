@@ -10,12 +10,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Flight } from '../types/Flight';
-import { useAuth } from '../contexts/AuthContext';
-import { FlightService } from '../services/flightService';
-import { UserService } from '../services/userService';
+import { useTranslation } from 'react-i18next';
+import { Flight } from '@/types/Flight';
+import { useAuth } from '@/contexts/AuthContext';
+import { FlightService } from '@/services/flightService';
+import { UserService } from '@/services/userService';
 
 export default function FlightDetailsScreen() {
+  const { t } = useTranslation('common');
   const [flight, setFlight] = useState<Flight | null>(null);
   const [loading, setLoading] = useState(true);
   const [createdByEmail, setCreatedByEmail] = useState<string>('');
@@ -31,8 +33,8 @@ export default function FlightDetailsScreen() {
       try {
         const flightData = await FlightService.getFlight(id, user.role, user.uid);
         if (!flightData) {
-          Alert.alert('Error', 'Flight not found or you do not have permission to view it', [
-            { text: 'OK', onPress: () => router.back() }
+          Alert.alert(t('common.error'), t('flightDetails.notFound'), [
+            { text: t('common.ok'), onPress: () => router.back() }
           ]);
           return;
         }
@@ -49,8 +51,8 @@ export default function FlightDetailsScreen() {
         }
       } catch (error) {
         console.error('Error fetching flight:', error);
-        Alert.alert('Error', 'Failed to fetch flight details', [
-          { text: 'OK', onPress: () => router.back() }
+        Alert.alert(t('common.error'), t('flightDetails.loadError'), [
+          { text: t('common.ok'), onPress: () => router.back() }
         ]);
       } finally {
         setLoading(false);
@@ -58,7 +60,8 @@ export default function FlightDetailsScreen() {
     };
 
     fetchFlight();
-  }, [id, user, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, user, router]); // t is stable from react-i18next and doesn't need to be in deps
 
   // Authentication check - redirect if not logged in
   useEffect(() => {
@@ -94,7 +97,7 @@ export default function FlightDetailsScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Loading flight details...</Text>
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -104,7 +107,7 @@ export default function FlightDetailsScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Flight not found</Text>
+          <Text style={styles.errorText}>{t('flightDetails.notFound')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -118,53 +121,53 @@ export default function FlightDetailsScreen() {
       <ScrollView>
         <View style={styles.card}>
           <View style={styles.header}>
-            <Text style={styles.title}>Flight Details</Text>
+            <Text style={styles.title}>{t('flightDetails.title')}</Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Basic Information</Text>
-            <Text style={styles.detail}>Date: {flight.date}</Text>
-            <Text style={styles.detail}>Location: {flight.location}</Text>
+            <Text style={styles.sectionTitle}>{t('flightDetails.basicInfo')}</Text>
+            <Text style={styles.detail}>{t('flightDetails.date')}: {flight.date}</Text>
+            <Text style={styles.detail}>{t('flightDetails.location')}: {flight.location}</Text>
             <Text style={styles.detail}>
-              Time: {crossesMidnight ? (
+              {t('common.time')}: {crossesMidnight ? (
                 `${formatDateTime(flight.startTime)} - ${formatDateTime(flight.endTime)}`
               ) : (
                 `${formatTime(flight.startTime)} - ${formatTime(flight.endTime)}`
               )}
             </Text>
-            <Text style={styles.detail}>Conditions: {flight.conditions}</Text>
+            <Text style={styles.detail}>{t('flightDetails.conditions')}: {flight.conditions}</Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Flight Categories</Text>
-            <Text style={styles.detail}>Flight Category: {flight.flightCategory}</Text>
-            <Text style={styles.detail}>Operation Type: {flight.operationType}</Text>
-            <Text style={styles.detail}>Activity Type: {flight.activityType}</Text>
+            <Text style={styles.sectionTitle}>{t('flightDetails.operationalInfo')}</Text>
+            <Text style={styles.detail}>{t('flightDetails.category')}: {flight.flightCategory}</Text>
+            <Text style={styles.detail}>{t('flightDetails.operation')}: {flight.operationType}</Text>
+            <Text style={styles.detail}>{t('flightDetails.activity')}: {flight.activityType}</Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Drone Information</Text>
-            <Text style={styles.detail}>Drone: {flight.droneName || flight.droneId}</Text>
+            <Text style={styles.sectionTitle}>{t('drones.title')}</Text>
+            <Text style={styles.detail}>{t('flightDetails.drone')}: {flight.droneName || flight.droneId}</Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>User Information</Text>
-            <Text style={styles.detail}>Pilot: {flight.userEmail || 'Unknown'}</Text>
+            <Text style={styles.sectionTitle}>{t('users.title')}</Text>
+            <Text style={styles.detail}>{t('flightDetails.operator')}: {flight.userEmail || t('userDetails.noData')}</Text>
           </View>
 
           {(flight.createdAt || flight.updatedAt) && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Audit Trail</Text>
+              <Text style={styles.sectionTitle}>{t('flightDetails.auditInfo')}</Text>
               {flight.createdAt && (
                 <Text style={styles.detail}>
-                  Created: {flight.createdAt.toLocaleDateString()} {flight.createdAt.toLocaleTimeString()}
-                  {createdByEmail && ` by ${createdByEmail}`}
+                  {t('flightDetails.createdAt')}: {flight.createdAt.toLocaleDateString()} {flight.createdAt.toLocaleTimeString()}
+                  {createdByEmail && ` ${t('flightDetails.createdBy')} ${createdByEmail}`}
                 </Text>
               )}
               {flight.updatedAt && (
                 <Text style={styles.detail}>
-                  Last Updated: {flight.updatedAt.toLocaleDateString()} {flight.updatedAt.toLocaleTimeString()}
-                  {updatedByEmail && ` by ${updatedByEmail}`}
+                  {t('flightDetails.updatedAt')}: {flight.updatedAt.toLocaleDateString()} {flight.updatedAt.toLocaleTimeString()}
+                  {updatedByEmail && ` ${t('flightDetails.updatedBy')} ${updatedByEmail}`}
                 </Text>
               )}
             </View>
@@ -173,12 +176,12 @@ export default function FlightDetailsScreen() {
           <View style={styles.actionButtons}>
             {canEdit && (
               <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-                <Text style={styles.editButtonText}>Edit Flight</Text>
+                <Text style={styles.editButtonText}>{t('flightDetails.editButton')}</Text>
               </TouchableOpacity>
             )}
             
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <Text style={styles.backButtonText}>Back</Text>
+              <Text style={styles.backButtonText}>{t('common.back')}</Text>
             </TouchableOpacity>
           </View>
         </View>
