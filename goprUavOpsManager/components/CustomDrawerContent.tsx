@@ -115,7 +115,7 @@ export function CustomDrawerContent(props: any) {
           />
 
           {/* Users menu item - only visible to admins */}
-          {user.role === 'admin' && (
+          {(user.role === 'admin' || user.role === 'manager') && (
             <DrawerItem
               label={t('nav.users')}
               onPress={() => handleNavigation('/users-list')}
