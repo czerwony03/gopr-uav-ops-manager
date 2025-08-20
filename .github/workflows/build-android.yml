@@ -12,9 +12,9 @@ on:
           - apk
           - aab
           - both
-  push:
-    branches:
-      - main
+  #push:
+  #  branches:
+  #    - main
   workflow_run:
     workflows: [ "Automatic Version Bump" ]
     types:

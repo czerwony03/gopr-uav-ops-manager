@@ -2,9 +2,9 @@ name: Deploy Expo Web to EAS Hosting
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
+  #push:
+  #  branches:
+  #    - main
   workflow_run:
     workflows: [ "Automatic Version Bump" ]
     types:
