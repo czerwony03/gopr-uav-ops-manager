@@ -17,7 +17,12 @@
     "welcome": "Welcome",
     "capabilities": "Capabilities",
     "accessDenied": "Access Denied",
-    "permissionDenied": "You do not have permission to create or edit drones."
+    "permissionDenied": "You do not have permission to create or edit drones.",
+    "profile": "Profile",
+    "lastLogin": "Last Login",
+    "accountActivity": "Account Activity",
+    "contactAdmin": "Contact your administrator for account access",
+    "time": "Time"
   },
   "nav": {
     "home": "Home",
@@ -102,35 +107,6 @@
     "theme": "Theme",
     "profile": "Profile"
   },
-  "common": {
-    "ok": "OK",
-    "yes": "Yes",
-    "no": "No",
-    "cancel": "Cancel",
-    "save": "Save",
-    "edit": "Edit",
-    "delete": "Delete",
-    "view": "View",
-    "back": "Back",
-    "loading": "Loading...",
-    "error": "Error",
-    "success": "Success",
-    "warning": "Warning",
-    "info": "Information",
-    "welcome": "Welcome",
-    "profile": "Profile",
-    "lastLogin": "Last Login",
-    "accountActivity": "Account Activity",
-    "capabilities": "Your Capabilities",
-    "contactAdmin": "Contact your administrator for account access",
-    "time": "Time"
-  },
-  "procedures": {
-    "title": "Procedures & Checklists",
-    "errors": {
-      "fetchFailed": "Failed to fetch procedures/checklists. Please check your connection and try again."
-    }
-  },
   "users": {
     "title": "Users",
     "management": "User Management",
@@ -155,7 +131,12 @@
     "user": "User",
     "email": "Email",
     "firstName": "First Name",
-    "lastName": "Last Name"
+    "lastName": "Last Name",
+    "roles": {
+      "admin": "ADMINISTRATOR",
+      "manager": "MANAGER",
+      "user": "USER"
+    }
   },
   "userForm": {
     "editTitle": "Edit User",
@@ -367,7 +348,6 @@
     "basicInfo": "Basic Information",
     "technicalInfo": "Technical Information",
     "operationalInfo": "Operational Information",
-    "name": "Name",
     "namePlaceholder": "Enter drone name",
     "model": "Model",
     "modelPlaceholder": "Enter drone model",
@@ -411,14 +391,10 @@
       "callSignRequired": "Call sign is required",
       "registrationRequired": "Registration is required",
       "manufacturerRequired": "Manufacturer is required"
-    }
-  },
-  "droneForm": {
+    },
     "title": "Drones",
     "addTitle": "Add New Drone",
-    "editTitle": "Edit Drone",
     "loading": "Loading drone data...",
-    "basicInfo": "Basic Information",
     "flightInfo": "Flight Information",
     "physicalSpecs": "Physical Specifications",
     "batteryInfo": "Battery Information",
@@ -426,24 +402,13 @@
     "documentation": "Documentation",
     "name": "Drone Name",
     "nameRequired": "Drone name is required",
-    "namePlaceholder": "Enter drone name",
-    "callSign": "Call Sign",
     "callSignRequired": "Call sign is required",
-    "callSignPlaceholder": "Enter call sign",
     "registrationNumber": "Registration Number",
     "registrationRequired": "Registration number is required",
-    "registrationPlaceholder": "Enter registration number",
     "equipmentRegistration": "Equipment Registration Number",
     "equipmentRegistrationPlaceholder": "Enter equipment registration number",
-    "location": "Location",
-    "locationPlaceholder": "Enter current location",
-    "insurance": "Insurance",
-    "insurancePlaceholder": "Enter insurance information",
     "totalFlightTime": "Total Flight Time (minutes)",
     "operatingTime": "Operating Time (minutes)",
-    "maxSpeed": "Max Speed (km/h)",
-    "range": "Range (meters)",
-    "weight": "Weight (grams)",
     "maxTakeoffWeight": "Max Takeoff Weight (grams)",
     "length": "Length (mm)",
     "width": "Width (mm)",
@@ -473,7 +438,7 @@
   "dashboard": {
     "title": "GOPR UAV Ops Manager",
     "welcome": "Welcome",
-    "capabilities": "Capabilities",
+    "capabilitiesTitle": "Capabilities",
     "accountActivity": "Account Activity",
     "lastLogin": "Last Login",
     "profileData": "My Profile Data",
@@ -529,8 +494,6 @@
     "notFoundDescription": "The requested procedure or checklist could not be found.",
     "goBack": "Go Back",
     "edit": "Edit",
-    "delete": "Delete",
-    "restore": "Restore",
     "deleted": "DELETED",
     "created": "Created",
     "updated": "Updated",
@@ -546,7 +509,31 @@
     "restoreTitle": "Restore Procedure/Checklist",
     "restoreConfirmation": "Are you sure you want to restore \"{{title}}\"?",
     "restoreSuccess": "Procedure/checklist restored successfully",
-    "restoreError": "Failed to restore procedure/checklist"
+    "restoreError": "Failed to restore procedure/checklist",
+    "addNew": "Add New",
+    "itemSingle": "item",
+    "itemPlural": "items",
+    "createdOn": "Created {{date}}",
+    "empty": {
+      "title": "No Procedures or Checklists",
+      "descriptionCanCreate": "Create your first procedure or checklist to get started.",
+      "descriptionCannotCreate": "No procedures or checklists have been created yet."
+    },
+    "delete": {
+      "button": "Delete",
+      "title": "Delete Procedure/Checklist",
+      "confirmMessage": "Are you sure you want to delete \"{{title}}\"? This action can be undone by an admin.",
+      "successMessage": "Procedure/checklist deleted successfully",
+      "errorMessage": "Failed to delete procedure/checklist"
+    },
+    "restore": {
+      "button": "Restore",
+      "successMessage": "Procedure/checklist restored successfully",
+      "errorMessage": "Failed to restore procedure/checklist"
+    },
+    "errors": {
+      "fetchFailed": "Failed to fetch procedures/checklists"
+    }
   },
   "procedureForm": {
     "createTitle": "Create New Procedure/Checklist",
@@ -606,40 +593,5 @@
     "appTitle": "GOPR UAV Ops Manager",
     "editProfile": "Edit Profile",
     "signOut": "Sign Out"
-  },
-  "procedures": {
-    "title": "Procedures & Checklists",
-    "loading": "Loading procedures & checklists...",
-    "addNew": "Add New",
-    "itemSingle": "item",
-    "itemPlural": "items",
-    "createdOn": "Created {{date}}",
-    "deleted": "DELETED",
-    "empty": {
-      "title": "No Procedures or Checklists",
-      "descriptionCanCreate": "Create your first procedure or checklist to get started.",
-      "descriptionCannotCreate": "No procedures or checklists have been created yet."
-    },
-    "delete": {
-      "title": "Delete Procedure/Checklist",
-      "confirmMessage": "Are you sure you want to delete \"{{title}}\"? This action can be undone by an admin.",
-      "successMessage": "Procedure/checklist deleted successfully",
-      "errorMessage": "Failed to delete procedure/checklist"
-    },
-    "restore": {
-      "button": "Restore",
-      "successMessage": "Procedure/checklist restored successfully",
-      "errorMessage": "Failed to restore procedure/checklist"
-    },
-    "errors": {
-      "fetchFailed": "Failed to fetch procedures/checklists"
-    }
-  },
-  "user": {
-    "roles": {
-      "admin": "ADMINISTRATOR",
-      "manager": "MANAGER",
-      "user": "USER"
-    }
   }
 }

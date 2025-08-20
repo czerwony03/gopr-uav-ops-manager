@@ -12,9 +12,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Drone } from '../types/Drone';
-import { useAuth } from '../contexts/AuthContext';
-import { DroneService } from '../services/droneService';
+import { Drone } from '@/types/Drone';
+import { useAuth } from '@/contexts/AuthContext';
+import { DroneService } from '@/services/droneService';
 
 type DroneFormData = Omit<Drone, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'isDeleted' | 'createdBy' | 'updatedBy'>;
 

@@ -11,10 +11,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Flight } from '../types/Flight';
-import { useAuth } from '../contexts/AuthContext';
-import { FlightService } from '../services/flightService';
-import { UserService } from '../services/userService';
+import { Flight } from '@/types/Flight';
+import { useAuth } from '@/contexts/AuthContext';
+import { FlightService } from '@/services/flightService';
+import { UserService } from '@/services/userService';
 
 export default function FlightDetailsScreen() {
   const { t } = useTranslation('common');

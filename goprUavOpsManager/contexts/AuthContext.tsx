@@ -1,10 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, firestore } from '../firebaseConfig';
-import { User as FullUser } from '../types/User';
-import { UserService } from '../services/userService';
-import { AuditLogService } from '../services/auditLogService';
+import React, {createContext, useContext, useEffect, useState} from 'react';
+import {onAuthStateChanged, User} from 'firebase/auth';
+import {doc, getDoc, setDoc} from 'firebase/firestore';
+import {auth, firestore} from '@/firebaseConfig';
+import {User as FullUser} from '../types/User';
+import {UserService} from '@/services/userService';
 
 export type UserRole = 'user' | 'manager' | 'admin';
 
@@ -136,10 +135,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
       return;
     }
-    
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
+
+    return onAuthStateChanged(auth, async (firebaseUser: User | null) => {
       console.log('[AuthContext] Auth state changed, firebaseUser:', firebaseUser?.uid, firebaseUser?.email);
-      
+
       if (firebaseUser) {
         console.log('[AuthContext] User is authenticated, loading user data');
         try {
@@ -164,8 +163,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('[AuthContext] Setting loading to false');
       setLoading(false);
     });
-
-    return unsubscribe;
   }, []);
 
   return (

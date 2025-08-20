@@ -12,10 +12,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Drone } from '../types/Drone';
-import { useAuth } from '../contexts/AuthContext';
-import { DroneService } from '../services/droneService';
-import { UserService } from '../services/userService';
+import { Drone } from '@/types/Drone';
+import { useAuth } from '@/contexts/AuthContext';
+import { DroneService } from '@/services/droneService';
+import { UserService } from '@/services/userService';
 
 export default function DroneDetailsScreen() {
   const [drone, setDrone] = useState<Drone | null>(null);

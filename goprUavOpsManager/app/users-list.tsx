@@ -11,12 +11,12 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useAuth, UserRole } from '../contexts/AuthContext';
+import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { doc, updateDoc } from 'firebase/firestore';
-import { firestore } from '../firebaseConfig';
+import { firestore } from '@/firebaseConfig';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { UserService } from '../services/userService';
+import { UserService } from '@/services/userService';
 
 interface UserData {
   id: string;
@@ -119,7 +119,7 @@ export default function UsersListScreen() {
     }
   };
 
-  const showRoleUpdateDialog = (userId: string, currentRole: UserRole) => {
+  const showRoleUpdateDialog = (userId: string, _currentRole: UserRole) => {
     Alert.alert(
       t('users.updateRole'),
       t('users.selectNewRole'),

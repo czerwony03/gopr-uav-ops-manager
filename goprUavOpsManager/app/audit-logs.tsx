@@ -14,9 +14,9 @@ import { Picker } from '@react-native-picker/picker';
 import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { AuditLogService } from '../services/auditLogService';
-import { AuditLog, AuditLogQuery, PaginatedAuditLogResponse, AuditEntityType, AuditAction } from '../types/AuditLog';
-import { useAuth } from '../contexts/AuthContext';
+import { AuditLogService } from '@/services/auditLogService';
+import { AuditLog, AuditLogQuery, PaginatedAuditLogResponse, AuditEntityType, AuditAction } from '@/types/AuditLog';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AuditLogsScreen() {
   const { t } = useTranslation('common');
@@ -436,7 +436,7 @@ export default function AuditLogsScreen() {
           </View>
         ) : (
           <View style={styles.logsList}>
-            {auditLogs.map((log, index) => (
+            {auditLogs.map((log, _index) => (
               <View key={log.id} style={styles.logItem}>
                 <View style={styles.logHeader}>
                   <View style={styles.actionBadge}>

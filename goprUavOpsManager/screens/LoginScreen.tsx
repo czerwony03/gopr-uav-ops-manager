@@ -14,7 +14,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { signInWithEmailAndPassword, signInWithPopup, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
-import { auth } from '../firebaseConfig';
+import { auth } from '@/firebaseConfig';
 import {AuditLogService} from "@/services/auditLogService";
 import {User} from "@/types/User";
 

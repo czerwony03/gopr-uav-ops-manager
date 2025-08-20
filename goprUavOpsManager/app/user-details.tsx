@@ -11,10 +11,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../contexts/AuthContext';
-import { User } from '../types/User';
-import { UserService } from '../services/userService';
-import { formatDate, formatLastLogin } from '../utils/dateUtils';
+import { useAuth } from '@/contexts/AuthContext';
+import { User } from '@/types/User';
+import { UserService } from '@/services/userService';
+import { formatDate, formatLastLogin } from '@/utils/dateUtils';
 
 export default function UserDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

@@ -1,11 +1,11 @@
 import React from "react";
-import { Text, View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
+import { Text, View, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { useTranslation } from 'react-i18next';
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "expo-router";
 import LoginScreen from "../screens/LoginScreen";
-import { Footer } from "../components/Footer";
-import { formatDate, formatLastLogin } from "../utils/dateUtils";
+import { Footer } from "@/components/Footer";
+import { formatDate, formatLastLogin } from "@/utils/dateUtils";
 
 export default function Index() {
   const { user, loading } = useAuth();
@@ -74,7 +74,7 @@ export default function Index() {
       </View>
 
       <View style={styles.capabilitiesContainer}>
-        <Text style={styles.capabilitiesTitle}>{t('dashboard.capabilities')}:</Text>
+        <Text style={styles.capabilitiesTitle}>{t('dashboard.capabilitiesTitle')}:</Text>
         {getRoleCapabilities(user.role).map((capability, index) => (
           <Text key={index} style={styles.capabilityItem}>
             • {capability}

@@ -13,9 +13,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { ProcedureChecklist } from '../types/ProcedureChecklist';
-import { useAuth } from '../contexts/AuthContext';
-import { ProcedureChecklistService } from '../services/procedureChecklistService';
+import { ProcedureChecklist } from '@/types/ProcedureChecklist';
+import { useAuth } from '@/contexts/AuthContext';
+import { ProcedureChecklistService } from '@/services/procedureChecklistService';
 
 export default function ProceduresChecklistsListScreen() {
   const [checklists, setChecklists] = useState<ProcedureChecklist[]>([]);

@@ -15,10 +15,10 @@ import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import ImageViewer from '../components/ImageViewer';
-import { ProcedureChecklist, ChecklistItem } from '../types/ProcedureChecklist';
-import { useAuth } from '../contexts/AuthContext';
-import { ProcedureChecklistService } from '../services/procedureChecklistService';
-import { UserService } from '../services/userService';
+import { ProcedureChecklist, ChecklistItem } from '@/types/ProcedureChecklist';
+import { useAuth } from '@/contexts/AuthContext';
+import { ProcedureChecklistService } from '@/services/procedureChecklistService';
+import { UserService } from '@/services/userService';
 
 export default function ProcedureChecklistDetailsScreen() {
   const [checklist, setChecklist] = useState<ProcedureChecklist | null>(null);
@@ -96,7 +96,7 @@ export default function ProcedureChecklistDetailsScreen() {
       [
         { text: t('common.cancel'), style: 'cancel' },
         {
-          text: t('procedures.delete'),
+          text: t('procedures.delete.button'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -168,7 +168,7 @@ export default function ProcedureChecklistDetailsScreen() {
     }
   }, [getImageIndex]);
 
-  const renderChecklistItem = (item: ChecklistItem, index: number) => (
+  const renderChecklistItem = (item: ChecklistItem, _index: number) => (
     <View key={item.id} style={styles.itemContainer}>
       <View style={styles.itemHeader}>
         <View style={styles.itemNumber}>
@@ -286,7 +286,7 @@ export default function ProcedureChecklistDetailsScreen() {
 
               <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
                 <Ionicons name="trash-outline" size={20} color="#fff" />
-                <Text style={styles.deleteButtonText}>{t('procedures.delete')}</Text>
+                <Text style={styles.deleteButtonText}>{t('procedures.delete.button')}</Text>
               </TouchableOpacity>
             </>
           )}
@@ -294,7 +294,7 @@ export default function ProcedureChecklistDetailsScreen() {
           {user?.role === 'admin' && checklist.isDeleted && (
             <TouchableOpacity style={styles.restoreButton} onPress={handleRestore}>
               <Ionicons name="refresh-outline" size={20} color="#fff" />
-              <Text style={styles.restoreButtonText}>{t('procedures.restore')}</Text>
+              <Text style={styles.restoreButtonText}>{t('procedures.restore.button')}</Text>
             </TouchableOpacity>
           )}
         </View>

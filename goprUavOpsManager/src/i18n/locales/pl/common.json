@@ -17,7 +17,12 @@
     "welcome": "Witaj",
     "capabilities": "Uprawnienia",
     "accessDenied": "Brak dostępu",
-    "permissionDenied": "Nie masz uprawnień do tworzenia lub edytowania dronów."
+    "permissionDenied": "Nie masz uprawnień do tworzenia lub edytowania dronów.",
+    "profile": "Profil",
+    "lastLogin": "Ostatnie logowanie",
+    "accountActivity": "Aktywność konta",
+    "contactAdmin": "Skontaktuj się z administratorem w celu uzyskania dostępu do konta",
+    "time": "Czas"
   },
   "nav": {
     "home": "Strona główna",
@@ -26,7 +31,7 @@
     "users": "Użytkownicy",
     "procedures": "Procedury i listy kontrolne",
     "info": "Informacje i kontakt",
-    "auditLogs": "Dziennik audytu"
+    "auditLogs": "Logi aplikacji"
   },
   "flights": {
     "title": "Loty",
@@ -102,35 +107,6 @@
     "theme": "Motyw",
     "profile": "Profil"
   },
-  "common": {
-    "ok": "OK",
-    "yes": "Tak",
-    "no": "Nie",
-    "cancel": "Anuluj",
-    "save": "Zapisz",
-    "edit": "Edytuj",
-    "delete": "Usuń",
-    "view": "Zobacz",
-    "back": "Powrót",
-    "loading": "Ładowanie...",
-    "error": "Błąd",
-    "success": "Sukces",
-    "warning": "Ostrzeżenie",
-    "info": "Informacja",
-    "welcome": "Witaj",
-    "profile": "Profil",
-    "lastLogin": "Ostatnie logowanie",
-    "accountActivity": "Aktywność konta",
-    "capabilities": "Twoje uprawnienia",
-    "contactAdmin": "Skontaktuj się z administratorem w celu uzyskania dostępu do konta",
-    "time": "Czas"
-  },
-  "procedures": {
-    "title": "Procedury i listy kontrolne",
-    "errors": {
-      "fetchFailed": "Nie udało się pobrać procedur/list kontrolnych. Sprawdź połączenie i spróbuj ponownie."
-    }
-  },
   "users": {
     "title": "Użytkownicy",
     "management": "Zarządzanie użytkownikami",
@@ -155,7 +131,12 @@
     "user": "Użytkownik",
     "email": "E-mail",
     "firstName": "Imię",
-    "lastName": "Nazwisko"
+    "lastName": "Nazwisko",
+    "roles": {
+      "admin": "ADMINISTRATOR",
+      "manager": "MENEDŻER",
+      "user": "UŻYTKOWNIK"
+    }
   },
   "userForm": {
     "editTitle": "Edytuj użytkownika",
@@ -179,13 +160,13 @@
     "role": "Rola",
     "operatorNumber": "Numer operatora",
     "operatorNumberPlaceholder": "Wprowadź numer operatora",
-    "operatorValidityDate": "Data ważności operatora",
+    "operatorValidityDate": "Data ważności uprawnień operatora",
     "pilotNumber": "Numer pilota",
     "pilotNumberPlaceholder": "Wprowadź numer pilota",
-    "pilotValidityDate": "Data ważności pilota",
+    "pilotValidityDate": "Data ważności uprawnień pilota",
     "licenseConversionNumber": "Numer konwersji licencji lub numer decyzji administracyjnej",
     "licenseConversionPlaceholder": "Wprowadź numer konwersji licencji",
-    "insuranceDate": "Data ubezpieczenia",
+    "insuranceDate": "Data ważności ubezpieczenia",
     "updateButton": "Zaktualizuj użytkownika",
     "createButton": "Utwórz użytkownika",
     "updateSuccess": "Użytkownik został pomyślnie zaktualizowany",
@@ -367,7 +348,6 @@
     "basicInfo": "Informacje podstawowe",
     "technicalInfo": "Informacje techniczne",
     "operationalInfo": "Informacje operacyjne",
-    "name": "Nazwa",
     "namePlaceholder": "Wprowadź nazwę drona",
     "model": "Model",
     "modelPlaceholder": "Wprowadź model drona",
@@ -391,7 +371,7 @@
     "flightTimePlaceholder": "Wprowadź czas lotu",
     "location": "Lokalizacja",
     "locationPlaceholder": "Wprowadź lokalizację",
-    "insurance": "Data ubezpieczenia",
+    "insurance": "Data ważności ubezpieczenia",
     "insurancePlaceholder": "YYYY-MM-DD",
     "manufactured": "Data produkcji",
     "manufacturedPlaceholder": "YYYY-MM-DD",
@@ -411,14 +391,10 @@
       "callSignRequired": "Znak wywoławczy jest wymagany",
       "registrationRequired": "Rejestracja jest wymagana",
       "manufacturerRequired": "Producent jest wymagany"
-    }
-  },
-  "droneForm": {
+    },
     "title": "Drony",
     "addTitle": "Dodaj nowy dron",
-    "editTitle": "Edytuj drona",
     "loading": "Ładowanie danych drona...",
-    "basicInfo": "Informacje podstawowe",
     "flightInfo": "Informacje o locie",
     "physicalSpecs": "Specyfikacje fizyczne",
     "batteryInfo": "Informacje o baterii",
@@ -426,24 +402,13 @@
     "documentation": "Dokumentacja",
     "name": "Nazwa drona",
     "nameRequired": "Nazwa drona jest wymagana",
-    "namePlaceholder": "Wprowadź nazwę drona",
-    "callSign": "Znak wywoławczy",
     "callSignRequired": "Znak wywoławczy jest wymagany",
-    "callSignPlaceholder": "Wprowadź znak wywoławczy",
     "registrationNumber": "Numer rejestracyjny",
     "registrationRequired": "Numer rejestracyjny jest wymagany",
-    "registrationPlaceholder": "Wprowadź numer rejestracyjny",
     "equipmentRegistration": "Numer rejestracyjny sprzętu",
     "equipmentRegistrationPlaceholder": "Wprowadź numer rejestracyjny sprzętu",
-    "location": "Lokalizacja",
-    "locationPlaceholder": "Wprowadź aktualną lokalizację",
-    "insurance": "Ubezpieczenie",
-    "insurancePlaceholder": "Wprowadź informacje o ubezpieczeniu",
     "totalFlightTime": "Całkowity czas lotu (minuty)",
     "operatingTime": "Czas pracy (minuty)",
-    "maxSpeed": "Maksymalna prędkość (km/h)",
-    "range": "Zasięg (metry)",
-    "weight": "Waga (gramy)",
     "maxTakeoffWeight": "Maksymalna waga startowa (gramy)",
     "length": "Długość (mm)",
     "width": "Szerokość (mm)",
@@ -473,7 +438,7 @@
   "dashboard": {
     "title": "GOPR UAV Ops Manager",
     "welcome": "Witaj",
-    "capabilities": "Uprawnienia",
+    "capabilitiesTitle": "Uprawnienia",
     "accountActivity": "Aktywność konta",
     "lastLogin": "Ostatnie logowanie",
     "profileData": "Moje dane profilu",
@@ -492,11 +457,11 @@
     "phone": "Telefon",
     "residentialAddress": "Adres zamieszkania",
     "operatorNumber": "Numer operatora",
-    "operatorValidityDate": "Data ważności operatora",
+    "operatorValidityDate": "Data ważności uprawnień operatora",
     "pilotNumber": "Numer pilota",
-    "pilotValidityDate": "Data ważności pilota",
-    "licenseConversion": "Numer konwersji licencji",
-    "insuranceDate": "Data ubezpieczenia",
+    "pilotValidityDate": "Data ważności uprawnień pilota",
+    "licenseConversion": "Numer konwersji licencji/decyzji administracyjnej",
+    "insuranceDate": "Data ważności ubezpieczenia",
     "noQualifications": "Brak ustawionych kwalifikacji",
     "notSet": "Nie ustawiono",
     "capabilities": {
@@ -529,8 +494,6 @@
     "notFoundDescription": "Żądana procedura lub lista kontrolna nie mogła zostać znaleziona.",
     "goBack": "Wróć",
     "edit": "Edytuj",
-    "delete": "Usuń",
-    "restore": "Przywróć",
     "deleted": "USUNIĘTY",
     "created": "Utworzono",
     "updated": "Zaktualizowano",
@@ -546,7 +509,31 @@
     "restoreTitle": "Przywróć procedurę/listę kontrolną",
     "restoreConfirmation": "Czy na pewno chcesz przywrócić \"{{title}}\"?",
     "restoreSuccess": "Procedura/lista kontrolna została pomyślnie przywrócona",
-    "restoreError": "Nie udało się przywrócić procedury/listy kontrolnej"
+    "restoreError": "Nie udało się przywrócić procedury/listy kontrolnej",
+    "addNew": "Dodaj nową",
+    "itemSingle": "element",
+    "itemPlural": "elementów",
+    "createdOn": "Utworzono {{date}}",
+    "empty": {
+      "title": "Brak procedur lub list kontrolnych",
+      "descriptionCanCreate": "Utwórz swoją pierwszą procedurę lub listę kontrolną, aby rozpocząć.",
+      "descriptionCannotCreate": "Nie utworzono jeszcze żadnych procedur ani list kontrolnych."
+    },
+    "delete": {
+      "button": "Usuń",
+      "title": "Usuń procedurę/listę kontrolną",
+      "confirmMessage": "Czy na pewno chcesz usunąć \"{{title}}\"? Ta akcja może być cofnięta przez administratora.",
+      "successMessage": "Procedura/lista kontrolna została pomyślnie usunięta",
+      "errorMessage": "Nie udało się usunąć procedury/listy kontrolnej"
+    },
+    "restore": {
+      "button": "Przywróć",
+      "successMessage": "Procedura/lista kontrolna została pomyślnie przywrócona",
+      "errorMessage": "Nie udało się przywrócić procedury/listy kontrolnej"
+    },
+    "errors": {
+      "fetchFailed": "Nie udało się pobrać procedur/list kontrolnych"
+    }
   },
   "procedureForm": {
     "createTitle": "Utwórz nową procedurę/listę kontrolną",
@@ -591,14 +578,14 @@
   "contact": {
     "title": "Informacje i kontakt",
     "about": "O aplikacji",
-    "aboutDescription": "Ta aplikacja GOPR UAV Operations Manager została opracowana przez RedMed Software, aby pomóc w efektywnym i bezpiecznym zarządzaniu operacjami UAV.",
+    "aboutDescription": "Aplikacja \"GOPR UAV Operations Manager\" została opracowana przez, aby pomóc w efektywnym monitorowaniu i zarządzaniu operacjami BSP oraz operatorami BSP.",
     "contactInfo": "Informacje kontaktowe",
     "company": "Firma",
     "companyName": "RedMed Software",
     "generalContact": "Kontakt ogólny",
     "technicalContact": "Kontakt techniczny",
     "applicationInfo": "Informacje o aplikacji",
-    "versionInfo": "GOPR UAV Ops Manager v{{version}}\nOpracowano dla GOPR (Ochotnicza Górska Służba Ratownicza)",
+    "versionInfo": "GOPR UAV Ops Manager v{{version}}\nOpracowano dla Grupy Bieszczadzkiej GOPR",
     "cannotOpenLink": "Nie można otworzyć tego linku",
     "failedToOpenLink": "Nie udało się otworzyć linku"
   },
@@ -606,40 +593,5 @@
     "appTitle": "GOPR UAV Ops Manager",
     "editProfile": "Edytuj profil",
     "signOut": "Wyloguj się"
-  },
-  "procedures": {
-    "title": "Procedury i listy kontrolne",
-    "loading": "Ładowanie procedur i list kontrolnych...",
-    "addNew": "Dodaj nową",
-    "itemSingle": "element",
-    "itemPlural": "elementów",
-    "createdOn": "Utworzono {{date}}",
-    "deleted": "USUNIĘTY",
-    "empty": {
-      "title": "Brak procedur lub list kontrolnych",
-      "descriptionCanCreate": "Utwórz swoją pierwszą procedurę lub listę kontrolną, aby rozpocząć.",
-      "descriptionCannotCreate": "Nie utworzono jeszcze żadnych procedur ani list kontrolnych."
-    },
-    "delete": {
-      "title": "Usuń procedurę/listę kontrolną",
-      "confirmMessage": "Czy na pewno chcesz usunąć \"{{title}}\"? Ta akcja może być cofnięta przez administratora.",
-      "successMessage": "Procedura/lista kontrolna została pomyślnie usunięta",
-      "errorMessage": "Nie udało się usunąć procedury/listy kontrolnej"
-    },
-    "restore": {
-      "button": "Przywróć",
-      "successMessage": "Procedura/lista kontrolna została pomyślnie przywrócona",
-      "errorMessage": "Nie udało się przywrócić procedury/listy kontrolnej"
-    },
-    "errors": {
-      "fetchFailed": "Nie udało się pobrać procedur/list kontrolnych"
-    }
-  },
-  "user": {
-    "roles": {
-      "admin": "ADMINISTRATOR",
-      "manager": "MENEDŻER",
-      "user": "UŻYTKOWNIK"
-    }
   }
 }

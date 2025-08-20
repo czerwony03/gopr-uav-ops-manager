@@ -13,9 +13,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../contexts/AuthContext';
-import { FlightService } from '../services/flightService';
-import { Flight } from '../types/Flight';
+import { useAuth } from '@/contexts/AuthContext';
+import { FlightService } from '@/services/flightService';
+import { Flight } from '@/types/Flight';
 
 export default function FlightsListScreen() {
   const { user } = useAuth();

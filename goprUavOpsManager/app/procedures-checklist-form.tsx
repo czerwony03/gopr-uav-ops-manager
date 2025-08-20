@@ -17,9 +17,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { ProcedureChecklistFormData, ChecklistItemFormData } from '../types/ProcedureChecklist';
-import { useAuth } from '../contexts/AuthContext';
-import { ProcedureChecklistService } from '../services/procedureChecklistService';
+import { ProcedureChecklistFormData, ChecklistItemFormData } from '@/types/ProcedureChecklist';
+import { useAuth } from '@/contexts/AuthContext';
+import { ProcedureChecklistService } from '@/services/procedureChecklistService';
 
 export default function ProcedureChecklistFormScreen() {
   const [loading, setLoading] = useState(false);
@@ -194,7 +194,7 @@ export default function ProcedureChecklistFormScreen() {
     }
   };
 
-  const renderItem = (item: ChecklistItemFormData, index: number) => (
+  const renderItem = (item: ChecklistItemFormData, _index: number) => (
     <View key={item.id} style={styles.itemContainer}>
       <View style={styles.itemHeader}>
         <Text style={styles.itemTitle}>{t('procedureForm.item')} {item.number}</Text>

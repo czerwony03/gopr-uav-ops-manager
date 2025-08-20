@@ -15,10 +15,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../contexts/AuthContext';
-import { FlightService } from '../services/flightService';
-import { DroneService } from '../services/droneService';
-import { Drone } from '../types/Drone';
+import { useAuth } from '@/contexts/AuthContext';
+import { FlightService } from '@/services/flightService';
+import { DroneService } from '@/services/droneService';
+import { Drone } from '@/types/Drone';
 import { 
   FlightCategory, 
   OperationType, 

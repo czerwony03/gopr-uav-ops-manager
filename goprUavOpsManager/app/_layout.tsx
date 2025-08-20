@@ -1,8 +1,8 @@
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
 import { Stack } from 'expo-router';
-import { AuthProvider, useAuth } from "../contexts/AuthContext";
-import { CustomDrawerContent } from "../components/CustomDrawerContent";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { CustomDrawerContent } from "@/components/CustomDrawerContent";
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import '../src/i18n'; // Initialize i18n
