@@ -53,6 +53,14 @@ jobs:
           echo "$VARS_CONTEXT" | jq -r 'to_entries | .[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
         shell: bash
 
+      - name: Export Android SDK paths (self-hosted only)
+        if: contains(runner.labels, 'self-hosted')
+        run: |
+          echo "ANDROID_HOME=$HOME/Android" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$HOME/Android" >> $GITHUB_ENV
+          echo "$HOME/Android/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$HOME/Android/platform-tools" >> $GITHUB_PATH
+
       - name: Restore google-services.json
         run: |
           echo "$GOOGLE_SERVICES_JSON" | base64 --decode > google-services.json
