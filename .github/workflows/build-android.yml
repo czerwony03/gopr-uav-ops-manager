@@ -54,7 +54,7 @@ jobs:
         shell: bash
 
       - name: Export Android SDK paths (self-hosted only)
-        if: contains(runner.labels, 'self-hosted')
+        if: ${{ contains(runner.labels, 'self-hosted') }}
         run: |
           echo "ANDROID_HOME=$HOME/Android" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=$HOME/Android" >> $GITHUB_ENV
