@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   TextInput
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -385,7 +386,7 @@ export default function AuditLogsScreen() {
   // Only show to admins
   if (user?.role !== 'admin') {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <Stack.Screen options={{ title: 'Audit Logs' }} />
         <View style={styles.unauthorized}>
           <Ionicons name="lock-closed-outline" size={48} color="#9E9E9E" />
@@ -393,22 +394,22 @@ export default function AuditLogsScreen() {
             You don&apos;t have permission to view audit logs.
           </Text>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.loadingContainer}>
         <Stack.Screen options={{ title: 'Audit Logs' }} />
         <ActivityIndicator size="large" color="#007AFF" />
         <Text style={styles.loadingText}>Loading audit logs...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ title: 'Audit Logs' }} />
       
       <ScrollView 
@@ -479,7 +480,7 @@ export default function AuditLogsScreen() {
         {/* Bottom Pagination Controls */}
         {renderPaginationControls()}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

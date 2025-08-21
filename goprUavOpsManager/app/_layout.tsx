@@ -1,6 +1,7 @@
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
 import { Stack } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CustomDrawerContent } from "@/components/CustomDrawerContent";
 import { Ionicons } from '@expo/vector-icons';
@@ -192,9 +193,11 @@ function RootLayoutNavigation() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <RootLayoutNavigation />
-      </AuthProvider>
+      <SafeAreaView style={{ flex: 1 }}>
+        <AuthProvider>
+          <RootLayoutNavigation />
+        </AuthProvider>
+      </SafeAreaView>
     </GestureHandlerRootView>
   );
 }

@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, View, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "expo-router";
@@ -20,10 +21,10 @@ export default function Index() {
   if (loading) {
     console.log('[Index] Showing loading screen');
     return (
-      <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
         <Text style={styles.loadingText}>{t('common.loading')}</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -61,11 +62,12 @@ export default function Index() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('dashboard.title')}</Text>
-        <Text style={styles.welcomeText}>{t('dashboard.welcome')}, {user.email}</Text>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.header}>
+          <Text style={styles.title}>{t('dashboard.title')}</Text>
+          <Text style={styles.welcomeText}>{t('dashboard.welcome')}, {user.email}</Text>
+        </View>
 
       <View style={styles.roleContainer}>
         <View style={[styles.roleBadge, { backgroundColor: getRoleColor(user.role) }]}>
@@ -190,9 +192,10 @@ export default function Index() {
           {t('dashboard.roleInfo', { role: user.role })}
         </Text>
       </View>
-      
-      <Footer />
-    </ScrollView>
+        
+        <Footer />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -200,6 +203,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  scrollView: {
     padding: 20,
     paddingBottom: 32,
   },

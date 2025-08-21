@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, Linking, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ApplicationMetadata } from "@/utils/applicationMetadata";
@@ -12,10 +13,11 @@ export default function InfoContact() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('contact.title')}</Text>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.header}>
+          <Text style={styles.title}>{t('contact.title')}</Text>
+        </View>
 
       <View style={styles.logoContainer}>
         <Image 
@@ -66,7 +68,8 @@ export default function InfoContact() {
           {t('contact.versionInfo', { version: ApplicationMetadata.getMetadata().applicationVersion })}
         </Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -74,6 +77,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  scrollView: {
     padding: 20,
     paddingBottom: 32,
   },
