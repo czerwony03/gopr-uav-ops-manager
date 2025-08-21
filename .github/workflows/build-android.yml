@@ -31,6 +31,8 @@ jobs:
 
     env:
       VARS_CONTEXT: ${{ toJson(vars) }}
+      BUILD_TYPE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.buildType || 'both' }}
+      EXPO_PUBLIC_GIT_COMMIT_HASH: ${{ github.sha }}
 
     steps:
       - name: Checkout
@@ -46,17 +48,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Set BUILD_TYPE
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "BUILD_TYPE=${{ github.event.inputs.buildType }}" >> $GITHUB_ENV
-          else
-            echo "BUILD_TYPE=both" >> $GITHUB_ENV
-          fi
-
       - name: Set env vars from vars context JSON
         run: |
           echo "$VARS_CONTEXT" | jq -r 'to_entries | .[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
+        shell: bash
 
       - name: Restore google-services.json
         run: |
@@ -64,9 +59,6 @@ jobs:
         shell: bash
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
-
-      - name: Set Git commit hash
-        run: echo "EXPO_PUBLIC_GIT_COMMIT_HASH=${GITHUB_SHA}" >> $GITHUB_ENV
 
       - name: Prebuild
         run: npx expo prebuild --platform android
@@ -90,6 +82,7 @@ jobs:
           else
             echo "✅ Release signing config already present."
           fi
+        shell: bash
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -110,11 +103,13 @@ jobs:
       - name: Decode Keystore
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/my-release-key.keystore
+        shell: bash
 
       - name: Verify keystore
         run: |
           ls -lh android/app/*.keystore
           keytool -list -v -keystore android/app/my-release-key.keystore -storepass ${{ secrets.ANDROID_KEYSTORE_PASSWORD }} || true
+        shell: bash
 
       - name: Build Release APK
         if: env.BUILD_TYPE == 'apk' || env.BUILD_TYPE == 'both'
@@ -127,6 +122,7 @@ jobs:
             -PMYAPP_UPLOAD_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
         env:
           EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
+        shell: bash
 
       - name: Build Release AAB
         if: env.BUILD_TYPE == 'aab' || env.BUILD_TYPE == 'both'
@@ -139,6 +135,7 @@ jobs:
             -PMYAPP_UPLOAD_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
         env:
           EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
+        shell: bash
 
       - name: Upload APK/AAB
         uses: actions/upload-artifact@v4
