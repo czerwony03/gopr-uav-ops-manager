@@ -12,9 +12,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Drone } from '../types/Drone';
-import { UserRole } from '../contexts/AuthContext';
 import { AuditLogService } from './auditLogService';
 import { UserService } from './userService';
+import {UserRole} from "@/types/UserRole";
 
 export class DroneService {
   private static readonly COLLECTION_NAME = 'drones';

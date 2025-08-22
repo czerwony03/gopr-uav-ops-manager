@@ -215,15 +215,15 @@ export default function FlightsListScreen() {
   };
 
   const handleEditFlight = (flightId: string) => {
-    router.push(`/flight-form?id=${flightId}`);
+    router.push(`/flights/${flightId}/edit`);
   };
 
   const handleViewFlight = (flightId: string) => {
-    router.push(`/flight-details?id=${flightId}`);
+    router.push(`/flights/${flightId}`);
   };
 
   const handleAddFlight = () => {
-    router.push('/flight-form');
+    router.push('/flights/create');
   };
 
   const renderFlightItem = ({ item }: { item: Flight }) => {

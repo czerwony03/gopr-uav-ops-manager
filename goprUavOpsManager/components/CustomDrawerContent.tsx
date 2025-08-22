@@ -56,7 +56,7 @@ export function CustomDrawerContent(props: any) {
             <Text style={styles.appTitle}>{t('drawer.appTitle')}</Text>
             <TouchableOpacity 
               style={styles.profileButton}
-              onPress={() => handleNavigation(`/user-form?id=${user.uid}`)}
+              onPress={() => handleNavigation(`/users/${user.uid}/edit`)}
             >
               <Ionicons name="person-outline" size={14} color="#0066CC" />
               <Text style={styles.profileButtonText}>{t('drawer.editProfile')}</Text>
@@ -86,7 +86,7 @@ export function CustomDrawerContent(props: any) {
 
           <DrawerItem
             label={t('nav.flights')}
-            onPress={() => handleNavigation('/flights-list')}
+            onPress={() => handleNavigation('/flights')}
             icon={({color, size}) => (
               <Ionicons name="airplane-outline" size={size} color={color}/>
             )}
@@ -96,7 +96,7 @@ export function CustomDrawerContent(props: any) {
 
           <DrawerItem
             label={t('nav.drones')}
-            onPress={() => handleNavigation('/drones-list')}
+            onPress={() => handleNavigation('/drones')}
             icon={({color, size}) => (
               <Ionicons name="hardware-chip-outline" size={size} color={color}/>
             )}
@@ -106,7 +106,7 @@ export function CustomDrawerContent(props: any) {
 
           <DrawerItem
             label={t('nav.procedures')}
-            onPress={() => handleNavigation('/procedures-checklists-list')}
+            onPress={() => handleNavigation('/procedures')}
             icon={({color, size}) => (
               <Ionicons name="clipboard-outline" size={size} color={color}/>
             )}
@@ -118,7 +118,7 @@ export function CustomDrawerContent(props: any) {
           {(user.role === 'admin' || user.role === 'manager') && (
             <DrawerItem
               label={t('nav.users')}
-              onPress={() => handleNavigation('/users-list')}
+              onPress={() => handleNavigation('/users')}
               icon={({color, size}) => (
                 <Ionicons name="people-outline" size={size} color={color}/>
               )}

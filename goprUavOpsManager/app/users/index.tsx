@@ -1,22 +1,23 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
   ActivityIndicator,
   Alert,
-  TouchableOpacity,
-  SafeAreaView,
+  FlatList,
   RefreshControl,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useAuth, UserRole } from '@/contexts/AuthContext';
-import { doc, updateDoc } from 'firebase/firestore';
-import { firestore } from '@/firebaseConfig';
-import { useFocusEffect } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
-import { UserService } from '@/services/userService';
+import {useTranslation} from 'react-i18next';
+import {useAuth} from '@/contexts/AuthContext';
+import {doc, updateDoc} from 'firebase/firestore';
+import {firestore} from '@/firebaseConfig';
+import {useFocusEffect} from '@react-navigation/native';
+import {useRouter} from 'expo-router';
+import {UserService} from '@/services/userService';
+import {UserRole} from "@/types/UserRole";
 
 interface UserData {
   id: string;
@@ -126,15 +127,15 @@ export default function UsersListScreen() {
       [
         {
           text: t('user.user'),
-          onPress: () => updateUserRole(userId, 'user'),
+          onPress: () => updateUserRole(userId, UserRole.USER),
         },
         {
           text: t('user.manager'),
-          onPress: () => updateUserRole(userId, 'manager'),
+          onPress: () => updateUserRole(userId, UserRole.MANAGER),
         },
         {
           text: t('user.admin'),
-          onPress: () => updateUserRole(userId, 'admin'),
+          onPress: () => updateUserRole(userId, UserRole.ADMIN),
         },
         {
           text: t('common.cancel'),
@@ -174,13 +175,13 @@ export default function UsersListScreen() {
       <View style={styles.actionButtons}>
         <TouchableOpacity
           style={styles.viewButton}
-          onPress={() => router.push(`/user-details?id=${item.id}`)}
+          onPress={() => router.push(`/users/${item.id}`)}
         >
           <Text style={styles.viewButtonText}>{t('users.viewDetails')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.editButton}
-          onPress={() => router.push(`/user-form?id=${item.id}`)}
+          onPress={() => router.push(`/users/${item.id}/edit`)}
         >
           <Text style={styles.editButtonText}>{t('common.edit')}</Text>
         </TouchableOpacity>
@@ -212,6 +213,14 @@ export default function UsersListScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>{t('users.management')}</Text>
         <Text style={styles.subtitle}>{t('users.manageRolesPermissions')}</Text>
+        {/* Temporarily hidden - create functionality not implemented yet
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => router.push('/users/create')}
+        >
+          <Text style={styles.addButtonText}>{t('userForm.createTitle')}</Text>
+        </TouchableOpacity>
+        */}
       </View>
 
       <FlatList
@@ -277,6 +286,19 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#666',
+    marginBottom: 16,
+  },
+  addButton: {
+    backgroundColor: '#0066CC',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  addButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   list: {
     flex: 1,

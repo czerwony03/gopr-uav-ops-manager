@@ -13,10 +13,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
-import { FlightService } from '@/services/flightService';
 import { DroneService } from '@/services/droneService';
 import { Drone } from '@/types/Drone';
 import { 
@@ -26,9 +24,9 @@ import {
   AVAILABLE_FLIGHT_CATEGORIES,
   AVAILABLE_OPERATION_TYPES,
   AVAILABLE_ACTIVITY_TYPES
-} from '../types/Flight';
+} from '@/types/Flight';
 
-interface FlightFormData {
+export interface FlightFormData {
   date: string;
   location: string;
   flightCategory: FlightCategory | '';
@@ -42,14 +40,18 @@ interface FlightFormData {
   conditions: string;
 }
 
-export default function FlightFormScreen() {
+interface FlightFormProps {
+  mode: 'create' | 'edit';
+  initialData?: FlightFormData;
+  onSave: (data: FlightFormData) => Promise<void>;
+  onCancel: () => void;
+  loading?: boolean;
+}
+
+export default function FlightForm({ mode, initialData, onSave, onCancel, loading = false }: FlightFormProps) {
   const { user } = useAuth();
-  const router = useRouter();
-  const { id } = useLocalSearchParams();
-  const isEditing = !!id;
   const { t } = useTranslation('common');
 
-  const [loading, setLoading] = useState(false);
   const [dronesLoading, setDronesLoading] = useState(true);
   const [drones, setDrones] = useState<Drone[]>([]);
   
@@ -71,7 +73,7 @@ export default function FlightFormScreen() {
     };
   }, []);
 
-  const [formData, setFormData] = useState<FlightFormData>(defaultFormData);
+  const [formData, setFormData] = useState<FlightFormData>(initialData || defaultFormData);
 
   const fetchDrones = useCallback(async () => {
     if (!user) return;
@@ -89,79 +91,17 @@ export default function FlightFormScreen() {
     }
   }, [user]);
 
-  const fetchFlight = useCallback(async (flightId: string) => {
-    if (!user) return;
-
-    try {
-      setLoading(true);
-      const flight = await FlightService.getFlight(flightId, user.role, user.uid);
-      if (flight) {
-        // Handle backward compatibility for time format
-        const parseDateTime = (timeStr: string, fallbackDate: string) => {
-          // If it's already a datetime string, parse it
-          if (timeStr.includes('T') || timeStr.includes('Z')) {
-            const dt = new Date(timeStr);
-            return {
-              date: dt.toISOString().split('T')[0],
-              time: dt.toTimeString().substring(0, 5)
-            };
-          }
-          // If it's in HH:mm format, use fallback date
-          if (timeStr.match(/^\d{2}:\d{2}$/)) {
-            return {
-              date: fallbackDate,
-              time: timeStr
-            };
-          }
-          return { date: fallbackDate, time: '' };
-        };
-
-        const startDateTime = parseDateTime(flight.startTime, flight.date);
-        const endDateTime = parseDateTime(flight.endTime, flight.date);
-
-        setFormData({
-          date: flight.date,
-          location: flight.location,
-          flightCategory: flight.flightCategory as FlightCategory,
-          operationType: flight.operationType as OperationType,
-          activityType: flight.activityType as ActivityType,
-          droneId: flight.droneId,
-          startDate: startDateTime.date,
-          startTime: startDateTime.time,
-          endDate: endDateTime.date,
-          endTime: endDateTime.time,
-          conditions: flight.conditions || '',
-        });
-      } else {
-        Alert.alert(t('common.error'), t('flightForm.notFound'));
-        router.back();
-      }
-    } catch (error) {
-      console.error('Error fetching flight:', error);
-      Alert.alert(t('common.error'), t('flightForm.loadError'));
-      router.back();
-    } finally {
-      setLoading(false);
-    }
-  }, [user, router]);
-
-  // Authentication check - redirect if not logged in
-  useEffect(() => {
-    if (!user) {
-      router.replace('/');
-      return;
-    }
-  }, [user, router]);
-
   useEffect(() => {
     fetchDrones();
-    if (isEditing && id && typeof id === 'string') {
-      fetchFlight(id);
-    } else {
-      // Reset form to default values when creating a new flight
+  }, [fetchDrones]);
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    } else if (mode === 'create') {
       setFormData(defaultFormData);
     }
-  }, [fetchDrones, fetchFlight, isEditing, id, defaultFormData]);
+  }, [initialData, mode, defaultFormData]);
 
   const updateFormData = (field: keyof FlightFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -242,57 +182,14 @@ export default function FlightFormScreen() {
   };
 
   const handleSave = async () => {
-    if (!user || !validateForm()) return;
+    if (!validateForm()) return;
 
     try {
-      setLoading(true);
-
-      // Get drone name for the snapshot
-      const selectedDrone = drones.find(drone => drone.id === formData.droneId);
-      const droneName = selectedDrone?.name || '';
-
-      // Convert separate date/time fields to datetime strings
-      const startDateTime = `${formData.startDate}T${formData.startTime}:00`;
-      const endDateTime = `${formData.endDate}T${formData.endTime}:00`;
-
-      const flightData = {
-        date: formData.date,
-        location: formData.location,
-        flightCategory: formData.flightCategory as FlightCategory,
-        operationType: formData.operationType as OperationType,
-        activityType: formData.activityType as ActivityType,
-        droneId: formData.droneId,
-        droneName,
-        startTime: startDateTime,
-        endTime: endDateTime,
-        conditions: formData.conditions,
-        userId: user.uid,
-        userEmail: user.email,
-      };
-
-      if (isEditing && id && typeof id === 'string') {
-        await FlightService.updateFlight(id, flightData, user.role, user.uid);
-        // Navigate back immediately after successful update
-        router.back();
-        // Show success alert without blocking navigation
-        Alert.alert(t('common.success'), t('flightForm.updateSuccess'));
-      } else {
-        await FlightService.createFlight(flightData, user.uid, user.email);
-        // Navigate back immediately after successful creation
-        router.back();
-        // Show success alert without blocking navigation
-        Alert.alert(t('common.success'), t('flightForm.createSuccess'));
-      }
+      await onSave(formData);
     } catch (error) {
-      console.error('Error saving flight:', error);
-      Alert.alert(t('common.error'), t('flightForm.saveError'));
-    } finally {
-      setLoading(false);
+      // Error handling is done by the parent component
+      throw error;
     }
-  };
-
-  const handleCancel = () => {
-    router.back();
   };
 
   if (dronesLoading) {
@@ -448,7 +345,7 @@ export default function FlightFormScreen() {
           <View style={styles.actionButtons}>
             <TouchableOpacity
               style={styles.cancelButton}
-              onPress={handleCancel}
+              onPress={onCancel}
               disabled={loading}
             >
               <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
@@ -463,7 +360,7 @@ export default function FlightFormScreen() {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.submitButtonText}>
-                  {isEditing ? t('flightForm.updateButton') : t('flightForm.createButton')}
+                  {mode === 'create' ? t('flightForm.createButton') : t('flightForm.updateButton')}
                 </Text>
               )}
             </TouchableOpacity>

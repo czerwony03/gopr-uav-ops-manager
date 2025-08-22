@@ -45,9 +45,10 @@ function RootLayoutNavigation() {
           }}
         />
         <Drawer.Screen
-          name="flights-list"
+          name="flights"
           options={{
             title: t('flights.title'),
+            headerShown: false,
             drawerLabel: t('nav.flights'),
             drawerIcon: ({ color, size }) => (
               <Ionicons name="airplane-outline" size={size} color={color} />
@@ -55,9 +56,10 @@ function RootLayoutNavigation() {
           }}
         />
         <Drawer.Screen
-          name="drones-list"
+          name="drones"
           options={{
             title: t('drones.title'),
+            headerShown: false,
             drawerLabel: t('nav.drones'),
             drawerIcon: ({ color, size }) => (
               <Ionicons name="hardware-chip-outline" size={size} color={color} />
@@ -65,9 +67,10 @@ function RootLayoutNavigation() {
           }}
         />
         <Drawer.Screen
-          name="users-list"
+          name="users"
           options={{
-            title: t('nav.users'),
+            title: t('users.title'),
+            headerShown: false,
             drawerLabel: t('nav.users'),
             drawerIcon: ({ color, size }) => (
               <Ionicons name="people-outline" size={size} color={color} />
@@ -75,9 +78,10 @@ function RootLayoutNavigation() {
           }}
         />
         <Drawer.Screen
-          name="procedures-checklists-list"
+          name="procedures"
           options={{
-            title: t('nav.procedures'),
+            title: t('procedures.title'),
+            headerShown: false,
             drawerLabel: t('nav.procedures'),
             drawerIcon: ({ color, size }) => (
               <Ionicons name="clipboard-outline" size={size} color={color} />
@@ -103,64 +107,6 @@ function RootLayoutNavigation() {
               <Ionicons name="document-text-outline" size={size} color={color} />
             ),
             drawerItemStyle: { display: 'none' }, // Hidden by default, visibility controlled in CustomDrawerContent
-          }}
-        />
-        {/* Detail and form screens - hidden from drawer */}
-        <Drawer.Screen
-          name="drone-details"
-          options={{
-            title: t('drones.details'),
-            drawerItemStyle: { display: 'none' },
-          }}
-        />
-        <Drawer.Screen
-          name="flight-details"
-          options={{
-            title: t('flights.flightDetails'),
-            drawerItemStyle: { display: 'none' },
-          }}
-        />
-        <Drawer.Screen
-          name="drone-form"
-          options={{
-            title: t('drones.title'),
-            drawerItemStyle: { display: 'none' },
-          }}
-        />
-        <Drawer.Screen
-          name="flight-form"
-          options={{
-            title: t('flights.title'),
-            drawerItemStyle: { display: 'none' },
-          }}
-        />
-        <Drawer.Screen
-          name="user-form"
-          options={{
-            title: t('nav.users'),
-            drawerItemStyle: { display: 'none' },
-          }}
-        />
-        <Drawer.Screen
-          name="user-details"
-          options={{
-            title: t('user.details'),
-            drawerItemStyle: { display: 'none' },
-          }}
-        />
-        {/* Procedures & Checklists detail and form screens - hidden from drawer */}
-        <Drawer.Screen
-          name="procedures-checklist-details"
-          options={{
-            title: t('nav.procedures'),
-            drawerItemStyle: { display: 'none' },
-          }}
-        />
-        <Drawer.Screen
-          name="procedures-checklist-form"
-          options={{
-            title: t('nav.procedures'),
-            drawerItemStyle: { display: 'none' },
           }}
         />
       </Drawer>

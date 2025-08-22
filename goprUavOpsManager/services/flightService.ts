@@ -13,11 +13,11 @@ import {
   getCountFromServer,
   Timestamp 
 } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
-import { Flight, FlightQuery, PaginatedFlightResponse } from '../types/Flight';
-import { UserRole } from '../contexts/AuthContext';
+import { db } from '@/firebaseConfig';
+import { Flight, FlightQuery, PaginatedFlightResponse } from '@/types/Flight';
 import { AuditLogService } from './auditLogService';
 import { UserService } from './userService';
+import {UserRole} from "@/types/UserRole";
 
 export class FlightService {
   private static readonly COLLECTION_NAME = 'flights';

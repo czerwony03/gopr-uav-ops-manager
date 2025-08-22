@@ -199,7 +199,7 @@ export default function UserDetailsScreen() {
           <View style={styles.actionButtons}>
             <TouchableOpacity
               style={styles.editButton}
-              onPress={() => router.push(`/user-form?id=${user.uid}`)}
+              onPress={() => router.push(`/users/${user.uid}/edit`)}
             >
               <Text style={styles.editButtonText}>{t('userDetails.editButton')}</Text>
             </TouchableOpacity>

@@ -17,7 +17,7 @@ import { ProcedureChecklist } from '@/types/ProcedureChecklist';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
 
-export default function ProceduresChecklistsListScreen() {
+export default function ProceduresListScreen() {
   const [checklists, setChecklists] = useState<ProcedureChecklist[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -41,7 +41,7 @@ export default function ProceduresChecklistsListScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user]);
+  }, [user, t]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {
@@ -70,15 +70,15 @@ export default function ProceduresChecklistsListScreen() {
   };
 
   const handleCreateChecklist = () => {
-    router.push('/procedures-checklist-form');
+    router.push('/procedures/create');
   };
 
   const handleEditChecklist = (checklist: ProcedureChecklist) => {
-    router.push(`/procedures-checklist-form?id=${checklist.id}`);
+    router.push(`/procedures/${checklist.id}/edit`);
   };
 
   const handleViewDetails = (checklist: ProcedureChecklist) => {
-    router.push(`/procedures-checklist-details?id=${checklist.id}`);
+    router.push(`/procedures/${checklist.id}`);
   };
 
   const handleDeleteChecklist = async (checklist: ProcedureChecklist) => {

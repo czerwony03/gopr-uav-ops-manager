@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Flight } from '@/types/Flight';
 import { useAuth } from '@/contexts/AuthContext';
@@ -88,7 +88,7 @@ export default function FlightDetailsScreen() {
 
   const handleEdit = () => {
     if (flight) {
-      router.push(`/flight-form?id=${flight.id}`);
+      router.push(`/flights/${flight.id}/edit`);
     }
   };
 
@@ -117,76 +117,84 @@ export default function FlightDetailsScreen() {
   const crossesMidnight = checkIfCrossesMidnight(flight.startTime, flight.endTime);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView>
-        <View style={styles.card}>
-          <View style={styles.header}>
-            <Text style={styles.title}>{t('flightDetails.title')}</Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('flightDetails.basicInfo')}</Text>
-            <Text style={styles.detail}>{t('flightDetails.date')}: {flight.date}</Text>
-            <Text style={styles.detail}>{t('flightDetails.location')}: {flight.location}</Text>
-            <Text style={styles.detail}>
-              {t('common.time')}: {crossesMidnight ? (
-                `${formatDateTime(flight.startTime)} - ${formatDateTime(flight.endTime)}`
-              ) : (
-                `${formatTime(flight.startTime)} - ${formatTime(flight.endTime)}`
-              )}
-            </Text>
-            <Text style={styles.detail}>{t('flightDetails.conditions')}: {flight.conditions}</Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('flightDetails.operationalInfo')}</Text>
-            <Text style={styles.detail}>{t('flightDetails.category')}: {flight.flightCategory}</Text>
-            <Text style={styles.detail}>{t('flightDetails.operation')}: {flight.operationType}</Text>
-            <Text style={styles.detail}>{t('flightDetails.activity')}: {flight.activityType}</Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('drones.title')}</Text>
-            <Text style={styles.detail}>{t('flightDetails.drone')}: {flight.droneName || flight.droneId}</Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('users.title')}</Text>
-            <Text style={styles.detail}>{t('flightDetails.operator')}: {flight.userEmail || t('userDetails.noData')}</Text>
-          </View>
-
-          {(flight.createdAt || flight.updatedAt) && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t('flightDetails.auditInfo')}</Text>
-              {flight.createdAt && (
-                <Text style={styles.detail}>
-                  {t('flightDetails.createdAt')}: {flight.createdAt.toLocaleDateString()} {flight.createdAt.toLocaleTimeString()}
-                  {createdByEmail && ` ${t('flightDetails.createdBy')} ${createdByEmail}`}
-                </Text>
-              )}
-              {flight.updatedAt && (
-                <Text style={styles.detail}>
-                  {t('flightDetails.updatedAt')}: {flight.updatedAt.toLocaleDateString()} {flight.updatedAt.toLocaleTimeString()}
-                  {updatedByEmail && ` ${t('flightDetails.updatedBy')} ${updatedByEmail}`}
-                </Text>
-              )}
+    <>
+      <Stack.Screen options={{
+        title: t('flights.flightDetails'),
+        headerStyle: { backgroundColor: '#0066CC' },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' },
+      }} />
+      <SafeAreaView style={styles.container}>
+        <ScrollView>
+          <View style={styles.card}>
+            <View style={styles.header}>
+              <Text style={styles.title}>{t('flightDetails.title')}</Text>
             </View>
-          )}
 
-          <View style={styles.actionButtons}>
-            {canEdit && (
-              <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-                <Text style={styles.editButtonText}>{t('flightDetails.editButton')}</Text>
-              </TouchableOpacity>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('flightDetails.basicInfo')}</Text>
+              <Text style={styles.detail}>{t('flightDetails.date')}: {flight.date}</Text>
+              <Text style={styles.detail}>{t('flightDetails.location')}: {flight.location}</Text>
+              <Text style={styles.detail}>
+                {t('common.time')}: {crossesMidnight ? (
+                  `${formatDateTime(flight.startTime)} - ${formatDateTime(flight.endTime)}`
+                ) : (
+                  `${formatTime(flight.startTime)} - ${formatTime(flight.endTime)}`
+                )}
+              </Text>
+              <Text style={styles.detail}>{t('flightDetails.conditions')}: {flight.conditions}</Text>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('flightDetails.operationalInfo')}</Text>
+              <Text style={styles.detail}>{t('flightDetails.category')}: {flight.flightCategory}</Text>
+              <Text style={styles.detail}>{t('flightDetails.operation')}: {flight.operationType}</Text>
+              <Text style={styles.detail}>{t('flightDetails.activity')}: {flight.activityType}</Text>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('drones.title')}</Text>
+              <Text style={styles.detail}>{t('flightDetails.drone')}: {flight.droneName || flight.droneId}</Text>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('users.title')}</Text>
+              <Text style={styles.detail}>{t('flightDetails.operator')}: {flight.userEmail || t('userDetails.noData')}</Text>
+            </View>
+
+            {(flight.createdAt || flight.updatedAt) && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{t('flightDetails.auditInfo')}</Text>
+                {flight.createdAt && (
+                  <Text style={styles.detail}>
+                    {t('flightDetails.createdAt')}: {flight.createdAt.toLocaleDateString()} {flight.createdAt.toLocaleTimeString()}
+                    {createdByEmail && ` ${t('flightDetails.createdBy')} ${createdByEmail}`}
+                  </Text>
+                )}
+                {flight.updatedAt && (
+                  <Text style={styles.detail}>
+                    {t('flightDetails.updatedAt')}: {flight.updatedAt.toLocaleDateString()} {flight.updatedAt.toLocaleTimeString()}
+                    {updatedByEmail && ` ${t('flightDetails.updatedBy')} ${updatedByEmail}`}
+                  </Text>
+                )}
+              </View>
             )}
-            
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <Text style={styles.backButtonText}>{t('common.back')}</Text>
-            </TouchableOpacity>
+
+            <View style={styles.actionButtons}>
+              {canEdit && (
+                <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+                  <Text style={styles.editButtonText}>{t('flightDetails.editButton')}</Text>
+                </TouchableOpacity>
+              )}
+              
+              <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <Text style={styles.backButtonText}>{t('common.back')}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </>
   );
 }
 
@@ -284,3 +292,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+
