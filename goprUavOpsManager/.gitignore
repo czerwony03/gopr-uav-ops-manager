@@ -44,3 +44,5 @@ app-example
 test-*.ts
 
 .env
+
+.env.local

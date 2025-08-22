@@ -5,6 +5,19 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CustomDrawerContent } from "@/components/CustomDrawerContent";
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_URL,
+  sendDefaultPii: true,
+});
+
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  Sentry.captureMessage(args.map(String).join(" "), 'error');
+  originalConsoleError.apply(console, args);
+};
+
 import '../src/i18n'; // Initialize i18n
 
 function RootLayoutNavigation() {
@@ -142,7 +155,7 @@ function RootLayoutNavigation() {
   );
 }
 
-export default function RootLayout() {
+export default Sentry.wrap(function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
@@ -150,4 +163,4 @@ export default function RootLayout() {
       </AuthProvider>
     </GestureHandlerRootView>
   );
-}
+});
