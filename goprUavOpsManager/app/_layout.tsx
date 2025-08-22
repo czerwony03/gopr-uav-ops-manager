@@ -45,7 +45,7 @@ function RootLayoutNavigation() {
           }}
         />
         <Drawer.Screen
-          name="flights-list"
+          name="flights"
           options={{
             title: t('flights.title'),
             drawerLabel: t('nav.flights'),
@@ -114,23 +114,9 @@ function RootLayoutNavigation() {
           }}
         />
         <Drawer.Screen
-          name="flight-details"
-          options={{
-            title: t('flights.flightDetails'),
-            drawerItemStyle: { display: 'none' },
-          }}
-        />
-        <Drawer.Screen
           name="drone-form"
           options={{
             title: t('drones.title'),
-            drawerItemStyle: { display: 'none' },
-          }}
-        />
-        <Drawer.Screen
-          name="flight-form"
-          options={{
-            title: t('flights.title'),
             drawerItemStyle: { display: 'none' },
           }}
         />

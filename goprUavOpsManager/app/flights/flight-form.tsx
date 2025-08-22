@@ -26,7 +26,7 @@ import {
   AVAILABLE_FLIGHT_CATEGORIES,
   AVAILABLE_OPERATION_TYPES,
   AVAILABLE_ACTIVITY_TYPES
-} from '../types/Flight';
+} from '../../types/Flight';
 
 interface FlightFormData {
   date: string;
