@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 /**
  * Date formatting utility functions
  */
@@ -27,4 +29,14 @@ export const formatLastLogin = (date: Date | undefined): string => {
     minute: '2-digit',
     hour12: true,
   });
+};
+
+export const toDateIfTimestamp = (value: any): Date | undefined => {
+  if (value instanceof Timestamp) {
+    return value.toDate();
+  }
+  if (value instanceof Date) {
+    return value;
+  }
+  return undefined;
 };

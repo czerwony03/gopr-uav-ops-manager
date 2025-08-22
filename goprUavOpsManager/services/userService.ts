@@ -2,6 +2,7 @@ import {collection, doc, getDoc, getDocs, orderBy, query, Timestamp, updateDoc} 
 import {db} from '@/firebaseConfig';
 import {User} from '@/types/User';
 import {UserRole} from "@/types/UserRole";
+import {toDateIfTimestamp} from "@/utils/dateUtils";
 
 export class UserService {
   private static readonly COLLECTION_NAME = 'users';
@@ -54,12 +55,12 @@ export class UserService {
         uid: snapshot.id,
         ...userData,
         // Convert Firestore Timestamps to Dates
-        operatorValidityDate: userData.operatorValidityDate?.toDate(),
-        pilotValidityDate: userData.pilotValidityDate?.toDate(),
-        insurance: userData.insurance?.toDate(),
-        createdAt: userData.createdAt?.toDate(),
-        updatedAt: userData.updatedAt?.toDate(),
-        lastLoginAt: userData.lastLoginAt?.toDate(),
+        operatorValidityDate: toDateIfTimestamp(userData.operatorValidityDate),
+        pilotValidityDate: toDateIfTimestamp(userData.pilotValidityDate),
+        insurance: toDateIfTimestamp(userData.insurance),
+        createdAt: toDateIfTimestamp(userData.createdAt),
+        updatedAt: toDateIfTimestamp(userData.updatedAt),
+        lastLoginAt: toDateIfTimestamp(userData.lastLoginAt),
       } as User;
     } catch (error) {
       console.error('Error fetching user:', error);
