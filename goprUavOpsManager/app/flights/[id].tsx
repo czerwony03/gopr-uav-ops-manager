@@ -88,7 +88,7 @@ export default function FlightDetailsScreen() {
 
   const handleEdit = () => {
     if (flight) {
-      router.push(`/flights/flight-form?id=${flight.id}`);
+      router.push(`/flights/${flight.id}/edit`);
     }
   };
 

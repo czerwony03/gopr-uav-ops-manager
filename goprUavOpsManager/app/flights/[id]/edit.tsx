@@ -42,11 +42,10 @@ interface FlightFormData {
   conditions: string;
 }
 
-export default function FlightFormScreen() {
+export default function EditFlightScreen() {
   const { user } = useAuth();
   const router = useRouter();
-  const { id } = useLocalSearchParams();
-  const isEditing = !!id;
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation('common');
 
   const [loading, setLoading] = useState(false);
@@ -155,13 +154,13 @@ export default function FlightFormScreen() {
 
   useEffect(() => {
     fetchDrones();
-    if (isEditing && id && typeof id === 'string') {
+    if (id && typeof id === 'string') {
       fetchFlight(id);
     } else {
-      // Reset form to default values when creating a new flight
-      setFormData(defaultFormData);
+      // If no ID, navigate back
+      router.back();
     }
-  }, [fetchDrones, fetchFlight, isEditing, id, defaultFormData]);
+  }, [fetchDrones, fetchFlight, id, router]);
 
   const updateFormData = (field: keyof FlightFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -242,7 +241,7 @@ export default function FlightFormScreen() {
   };
 
   const handleSave = async () => {
-    if (!user || !validateForm()) return;
+    if (!user || !validateForm() || !id || typeof id !== 'string') return;
 
     try {
       setLoading(true);
@@ -270,19 +269,11 @@ export default function FlightFormScreen() {
         userEmail: user.email,
       };
 
-      if (isEditing && id && typeof id === 'string') {
-        await FlightService.updateFlight(id, flightData, user.role, user.uid);
-        // Navigate back immediately after successful update
-        router.back();
-        // Show success alert without blocking navigation
-        Alert.alert(t('common.success'), t('flightForm.updateSuccess'));
-      } else {
-        await FlightService.createFlight(flightData, user.uid, user.email);
-        // Navigate back immediately after successful creation
-        router.back();
-        // Show success alert without blocking navigation
-        Alert.alert(t('common.success'), t('flightForm.createSuccess'));
-      }
+      await FlightService.updateFlight(id, flightData, user.role, user.uid);
+      // Navigate back immediately after successful update
+      router.back();
+      // Show success alert without blocking navigation
+      Alert.alert(t('common.success'), t('flightForm.updateSuccess'));
     } catch (error) {
       console.error('Error saving flight:', error);
       Alert.alert(t('common.error'), t('flightForm.saveError'));
@@ -463,7 +454,7 @@ export default function FlightFormScreen() {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.submitButtonText}>
-                  {isEditing ? t('flightForm.updateButton') : t('flightForm.createButton')}
+                  {t('flightForm.updateButton')}
                 </Text>
               )}
             </TouchableOpacity>

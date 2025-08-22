@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-export default function FlightsLayout() {
+export default function FlightIdLayout() {
   const { t } = useTranslation('common');
 
   return (
@@ -17,25 +17,7 @@ export default function FlightsLayout() {
       }}
     >
       <Stack.Screen
-        name="index"
-        options={{
-          title: t('flights.title'),
-        }}
-      />
-      <Stack.Screen
-        name="[id]"
-        options={{
-          title: t('flights.flightDetails'),
-        }}
-      />
-      <Stack.Screen
-        name="create"
-        options={{
-          title: t('flights.addFlight'),
-        }}
-      />
-      <Stack.Screen
-        name="[id]/edit"
+        name="edit"
         options={{
           title: t('flights.editFlight'),
         }}
