@@ -195,7 +195,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('droneForm.specifications')}</Text>
+            <Text style={styles.sectionTitle}>{t('droneDetails.technicalInfo')}</Text>
             
             <Text style={styles.label}>{t('droneForm.yearOfManufacture')}</Text>
             <TextInput
@@ -253,7 +253,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('droneForm.dimensions')}</Text>
+            <Text style={styles.sectionTitle}>{t('droneDetails.dimensions')}</Text>
             
             <Text style={styles.label}>{t('droneForm.length')} (cm)</Text>
             <TextInput
@@ -284,7 +284,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('droneForm.battery')}</Text>
+            <Text style={styles.sectionTitle}>{t('droneForm.batteryType')}</Text>
             
             <Text style={styles.label}>{t('droneForm.batteryType')}</Text>
             <TextInput
@@ -294,7 +294,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
               placeholder={t('droneForm.batteryTypePlaceholder')}
             />
 
-            <Text style={styles.label}>{t('droneForm.batteryCapacity')} (mAh)</Text>
+            <Text style={styles.label}>{t('droneForm.capacity')} (mAh)</Text>
             <TextInput
               style={styles.input}
               value={formData.battery.capacity.toString()}
@@ -303,7 +303,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
               keyboardType="numeric"
             />
 
-            <Text style={styles.label}>{t('droneForm.batteryVoltage')} (V)</Text>
+            <Text style={styles.label}>{t('droneForm.voltage')} (V)</Text>
             <TextInput
               style={styles.input}
               value={formData.battery.voltage.toString()}
