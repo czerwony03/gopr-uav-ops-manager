@@ -542,6 +542,7 @@
     }
   },
   "procedureForm": {
+    "header": "Procedura/Checklista",
     "createTitle": "Utwórz nową procedurę/listę kontrolną",
     "editTitle": "Edytuj procedurę/listę kontrolną",
     "loading": "Ładowanie danych listy kontrolnej...",

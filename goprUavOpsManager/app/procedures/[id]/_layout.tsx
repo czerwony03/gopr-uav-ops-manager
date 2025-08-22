@@ -11,6 +11,12 @@ export default function ProcedureIdLayout() {
       headerTitleStyle: { fontWeight: 'bold' },
     }}>
       <Stack.Screen
+        name="index"
+        options={{
+          title: t('procedureForm.header'),
+        }}
+      />
+      <Stack.Screen
         name="edit"
         options={{
           title: t('procedureForm.editTitle'),

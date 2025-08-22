@@ -542,6 +542,7 @@
     }
   },
   "procedureForm": {
+    "header": "Procedure/Checklist",
     "createTitle": "Create New Procedure/Checklist",
     "editTitle": "Edit Procedure/Checklist",
     "loading": "Loading checklist data...",
