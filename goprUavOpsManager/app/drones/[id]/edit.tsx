@@ -192,7 +192,7 @@ export default function EditDroneScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView>
       <View style={styles.card}>
-        <Text style={styles.title}>{t('droneForm.editTitle')}</Text>
+        <Text style={styles.title}>{t('drones.editDrone')}</Text>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('droneForm.basicInfo')}</Text>
@@ -418,7 +418,7 @@ export default function EditDroneScreen() {
               <ActivityIndicator size="small" color="white" />
             ) : (
               <Text style={styles.submitButtonText}>
-                {t('droneForm.updateDrone')}
+                {t('drones.editDrone')}
               </Text>
             )}
           </TouchableOpacity>

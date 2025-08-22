@@ -59,6 +59,9 @@
     "registry": "Rejestr dronów",
     "add": "Dodaj drona",
     "edit": "Edytuj drona",
+    "addDrone": "Dodaj drona",
+    "editDrone": "Edytuj drona",
+    "droneDetails": "Szczegóły drona",
     "details": "Szczegóły drona",
     "viewDetails": "Zobacz szczegóły",
     "deleted": "USUNIĘTY",
@@ -87,7 +90,7 @@
       "fetchFailed": "Nie udało się pobrać dronów. Sprawdź konfigurację Firebase i spróbuj ponownie.",
       "deleteFailed": "Nie udało się usunąć drona",
       "restoreFailed": "Nie udało się przywrócić drona",
-      "notFoundOrNoPermission": "Dron nie został znaleziony lub nie masz uprawnień do jego wyświetlenia"
+      "notFoundOrNoPermission": "Dron nie został znaleziony lub nie masz uprawnień do jego wyśwątlenia"
     }
   },
   "missions": {

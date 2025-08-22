@@ -130,7 +130,7 @@ export default function CreateDroneScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView>
       <View style={styles.card}>
-        <Text style={styles.title}>{t('droneForm.addTitle')}</Text>
+        <Text style={styles.title}>{t('drones.addDrone')}</Text>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('droneForm.basicInfo')}</Text>
@@ -355,9 +355,9 @@ export default function CreateDroneScreen() {
             {loading ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text style={styles.submitButtonText}>
-                {t('droneForm.createDrone')}
-              </Text>
+                             <Text style={styles.submitButtonText}>
+                 {t('drones.addDrone')}
+               </Text>
             )}
           </TouchableOpacity>
         </View>
