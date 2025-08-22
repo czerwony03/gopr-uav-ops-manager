@@ -212,12 +212,14 @@ export default function UsersListScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>{t('users.management')}</Text>
         <Text style={styles.subtitle}>{t('users.manageRolesPermissions')}</Text>
+        {/* Temporarily hidden - create functionality not implemented yet
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => router.push('/users/create')}
         >
           <Text style={styles.addButtonText}>{t('userForm.createTitle')}</Text>
         </TouchableOpacity>
+        */}
       </View>
 
       <FlatList

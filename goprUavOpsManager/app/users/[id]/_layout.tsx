@@ -11,6 +11,12 @@ export default function UserIdLayout() {
       headerTitleStyle: { fontWeight: 'bold' },
     }}>
       <Stack.Screen
+        name="index"
+        options={{
+          title: t('userDetails.title'),
+        }}
+      />
+      <Stack.Screen
         name="edit"
         options={{
           title: t('userForm.editTitle'),
