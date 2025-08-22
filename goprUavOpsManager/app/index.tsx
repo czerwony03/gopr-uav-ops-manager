@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, View, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "expo-router";
@@ -11,6 +12,7 @@ export default function Index() {
   const { user, loading } = useAuth();
   const { t } = useTranslation('common');
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   console.log('[Index] Component render - user:', user?.uid, 'loading:', loading);
 
@@ -61,7 +63,10 @@ export default function Index() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <ScrollView 
+      style={styles.container} 
+      contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom + 32, 32) }]}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>{t('dashboard.title')}</Text>
         <Text style={styles.welcomeText}>{t('dashboard.welcome')}, {user.email}</Text>
@@ -203,7 +208,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 32,
   },
   loadingContainer: {
     flex: 1,

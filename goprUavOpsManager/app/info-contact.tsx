@@ -1,18 +1,23 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, Linking, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ApplicationMetadata } from "@/utils/applicationMetadata";
 
 export default function InfoContact() {
   const { t } = useTranslation('common');
+  const insets = useSafeAreaInsets();
   
   const handleEmailPress = (email: string) => {
     Linking.openURL(`mailto:${email}`);
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <ScrollView 
+      style={styles.container} 
+      contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom + 32, 32) }]}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>{t('contact.title')}</Text>
       </View>
@@ -77,7 +82,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 32,
   },
   header: {
     alignItems: 'center',
