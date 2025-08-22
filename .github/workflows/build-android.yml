@@ -145,11 +145,18 @@ jobs:
           EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
         shell: bash
 
-      - name: Upload APK/AAB
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: android-builds
+          name: android-build-apk
           path: |
             goprUavOpsManager/android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: ignore
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-aab
+          path: |
             goprUavOpsManager/android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: ignore
