@@ -146,6 +146,7 @@
   "userForm": {
     "editTitle": "Edit User",
     "createTitle": "Create User",
+    "loading": "Loading user data...",
     "basicInfo": "Basic Information",
     "operatorInfo": "Operator Information",
     "pilotInfo": "Pilot Information",
