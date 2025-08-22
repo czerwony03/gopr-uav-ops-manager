@@ -56,9 +56,10 @@ function RootLayoutNavigation() {
           }}
         />
         <Drawer.Screen
-          name="drones-list"
+          name="drones"
           options={{
             title: t('drones.title'),
+            headerShown: false,
             drawerLabel: t('nav.drones'),
             drawerIcon: ({ color, size }) => (
               <Ionicons name="hardware-chip-outline" size={size} color={color} />
@@ -107,20 +108,6 @@ function RootLayoutNavigation() {
           }}
         />
         {/* Detail and form screens - hidden from drawer */}
-        <Drawer.Screen
-          name="drone-details"
-          options={{
-            title: t('drones.details'),
-            drawerItemStyle: { display: 'none' },
-          }}
-        />
-        <Drawer.Screen
-          name="drone-form"
-          options={{
-            title: t('drones.title'),
-            drawerItemStyle: { display: 'none' },
-          }}
-        />
         <Drawer.Screen
           name="user-form"
           options={{

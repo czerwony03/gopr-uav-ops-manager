@@ -18,13 +18,12 @@ import { DroneService } from '@/services/droneService';
 
 type DroneFormData = Omit<Drone, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'isDeleted' | 'createdBy' | 'updatedBy'>;
 
-export default function DroneFormScreen() {
+export default function EditDroneScreen() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(false);
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const router = useRouter();
-  const isEditing = !!id;
   const { t } = useTranslation('common');
 
   // Default form data for creating new drones
@@ -123,16 +122,13 @@ export default function DroneFormScreen() {
     }
 
     // Load existing drone data for editing
-    if (isEditing && id) {
+    if (id) {
       loadDroneData();
-    } else {
-      // Reset form to default values when creating a new drone
-      setFormData(defaultFormData);
     }
-  }, [id, user, isEditing, router, loadDroneData, defaultFormData]);
+  }, [id, user, router, loadDroneData]);
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user || !id) return;
 
     // Basic validation
     if (!formData.name.trim()) {
@@ -150,22 +146,14 @@ export default function DroneFormScreen() {
 
     setLoading(true);
     try {
-      if (isEditing && id) {
-        await DroneService.updateDrone(id, formData, user.role, user.uid);
-        // Navigate back immediately after successful update
-        router.back();
-        // Show success alert without blocking navigation
-        Alert.alert(t('droneForm.success'), t('droneForm.droneUpdated'));
-      } else {
-        await DroneService.createDrone(formData, user.role, user.uid);
-        // Navigate back immediately after successful creation
-        router.back();
-        // Show success alert without blocking navigation
-        Alert.alert(t('droneForm.success'), t('droneForm.droneCreated'));
-      }
+      await DroneService.updateDrone(id, formData, user.role, user.uid);
+      // Navigate back immediately after successful update
+      router.back();
+      // Show success alert without blocking navigation
+      Alert.alert(t('droneForm.success'), t('droneForm.droneUpdated'));
     } catch (error) {
-      console.error('Error saving drone:', error);
-      Alert.alert(t('droneForm.error'), `${t(isEditing ? 'droneForm.failedToUpdate' : 'droneForm.failedToCreate')}`);
+      console.error('Error updating drone:', error);
+      Alert.alert(t('droneForm.error'), t('droneForm.failedToUpdate'));
     } finally {
       setLoading(false);
     }
@@ -204,7 +192,7 @@ export default function DroneFormScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView>
       <View style={styles.card}>
-        <Text style={styles.title}>{isEditing ? t('droneForm.editTitle') : t('droneForm.addTitle')}</Text>
+        <Text style={styles.title}>{t('droneForm.editTitle')}</Text>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('droneForm.basicInfo')}</Text>
@@ -430,7 +418,7 @@ export default function DroneFormScreen() {
               <ActivityIndicator size="small" color="white" />
             ) : (
               <Text style={styles.submitButtonText}>
-                {isEditing ? t('droneForm.updateDrone') : t('droneForm.createDrone')}
+                {t('droneForm.updateDrone')}
               </Text>
             )}
           </TouchableOpacity>
@@ -503,15 +491,6 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     backgroundColor: '#fff',
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 6,
-    backgroundColor: '#fff',
-  },
-  picker: {
-    height: 50,
   },
   actionButtons: {
     flexDirection: 'row',

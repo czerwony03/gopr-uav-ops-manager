@@ -10,7 +10,7 @@ import {
   Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Drone } from '@/types/Drone';
 import { useAuth } from '@/contexts/AuthContext';
@@ -71,7 +71,7 @@ export default function DroneDetailsScreen() {
 
   const handleEdit = () => {
     if (!drone) return;
-    router.push(`/drone-form?id=${drone.id}`);
+    router.push(`/drones/${drone.id}/edit`);
   };
 
   const handleDelete = async () => {
@@ -164,7 +164,14 @@ export default function DroneDetailsScreen() {
   const canRestore = user?.role === 'admin' && drone.isDeleted;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <>
+      <Stack.Screen options={{
+        title: t('drones.droneDetails'),
+        headerStyle: { backgroundColor: '#0066CC' },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' },
+      }} />
+      <SafeAreaView style={styles.container}>
       <ScrollView>
       <View style={[styles.card, drone.isDeleted && styles.deletedCard]}>
         <View style={styles.header}>
@@ -268,6 +275,7 @@ export default function DroneDetailsScreen() {
       </View>
     </ScrollView>
     </SafeAreaView>
+    </>
   );
 }
 

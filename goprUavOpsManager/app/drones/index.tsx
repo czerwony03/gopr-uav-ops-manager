@@ -69,11 +69,11 @@ export default function DronesListScreen() {
   };
 
   const handleCreateDrone = () => {
-    router.push('/drone-form');
+    router.push('/drones/create');
   };
 
   const handleEditDrone = (drone: Drone) => {
-    router.push(`/drone-form?id=${drone.id}`);
+    router.push(`/drones/${drone.id}/edit`);
   };
 
   const handleDeleteDrone = async (drone: Drone) => {
@@ -155,7 +155,7 @@ export default function DronesListScreen() {
       </Text>
 
       <View style={styles.actionButtons}>
-        <Link href={`/drone-details?id=${item.id}`} asChild>
+        <Link href={`/drones/${item.id}`} asChild>
           <TouchableOpacity style={styles.viewButton}>
             <Text style={styles.viewButtonText}>{t('drones.viewDetails')}</Text>
           </TouchableOpacity>
