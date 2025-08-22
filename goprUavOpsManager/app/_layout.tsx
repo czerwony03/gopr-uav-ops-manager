@@ -114,6 +114,13 @@ function RootLayoutNavigation() {
           }}
         />
         <Drawer.Screen
+          name="flight-details"
+          options={{
+            title: t('flights.flightDetails'),
+            drawerItemStyle: { display: 'none' },
+          }}
+        />
+        <Drawer.Screen
           name="drone-form"
           options={{
             title: t('drones.title'),

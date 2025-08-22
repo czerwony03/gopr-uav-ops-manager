@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginTop: 60,
+    marginTop: 16,
     marginBottom: 30,
   },
   title: {
