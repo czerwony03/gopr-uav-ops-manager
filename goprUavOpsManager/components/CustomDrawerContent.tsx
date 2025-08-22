@@ -86,7 +86,7 @@ export function CustomDrawerContent(props: any) {
 
           <DrawerItem
             label={t('nav.flights')}
-            onPress={() => handleNavigation('/flights-list')}
+            onPress={() => handleNavigation('/flights')}
             icon={({color, size}) => (
               <Ionicons name="airplane-outline" size={size} color={color}/>
             )}

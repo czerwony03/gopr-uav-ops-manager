@@ -554,7 +554,7 @@ For mobile platforms (Android/iOS), the app now uses React Native Firebase with 
 ```
 ├── Home (index.tsx)
 ├── Flights
-│   ├── flights-list.tsx
+│   ├── index.tsx (flights list)
 │   ├── flight-details.tsx
 │   └── flight-form.tsx
 ├── Drones  
