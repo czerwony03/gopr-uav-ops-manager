@@ -22,6 +22,7 @@ jobs:
 
     env:
       VARS_CONTEXT: ${{ toJson(vars) }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
     steps:
       - name: Checkout repository
