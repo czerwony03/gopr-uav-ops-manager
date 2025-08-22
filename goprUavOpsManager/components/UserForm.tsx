@@ -1,19 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Picker } from '@react-native-picker/picker';
-import { useTranslation } from 'react-i18next';
-import { UserFormData, AVAILABLE_QUALIFICATIONS, Qualification } from '@/types/User';
-import { LanguagePickerField } from '@/src/components/LanguagePickerField';
+import React, {useEffect, useState} from 'react';
+import {ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {Picker} from '@react-native-picker/picker';
+import {useTranslation} from 'react-i18next';
+import {AVAILABLE_QUALIFICATIONS, Qualification, UserFormData} from '@/types/User';
+import {LanguagePickerField} from '@/src/components/LanguagePickerField';
 import {UserRole} from "@/types/UserRole";
 
 interface UserFormProps {
@@ -30,7 +21,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
   // Default form data
   const defaultFormData: UserFormData = {
     email: '',
-    role: 'user',
+    role: UserRole.USER,
     firstname: '',
     surname: '',
     phone: '',
@@ -79,10 +70,6 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
 
     if (!formData.surname.trim()) {
       newErrors.surname = t('userForm.validation.surnameRequired');
-    }
-
-    if (!formData.role) {
-      newErrors.role = t('userForm.validation.roleRequired');
     }
 
     setErrors(newErrors);
@@ -157,9 +144,13 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
                 style={styles.picker}
               >
                 <Picker.Item label={t('userForm.rolePlaceholder')} value="" />
-                <Picker.Item label={t('user.roles.user')} value="user" />
-                <Picker.Item label={t('user.roles.manager')} value="manager" />
-                <Picker.Item label={t('user.roles.admin')} value="admin" />
+                {userRoles.map(role => (
+                  <Picker.Item
+                    key={role}
+                    label={t(`user.roles.${role}`)}
+                    value={role}
+                  />
+                ))}
               </Picker>
             </View>
             {errors.role && <Text style={styles.errorText}>{errors.role}</Text>}

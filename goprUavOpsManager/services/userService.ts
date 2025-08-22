@@ -1,15 +1,7 @@
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  updateDoc, 
-  query, 
-  orderBy,
-  Timestamp 
-} from 'firebase/firestore';
-import { db } from '../firebaseConfig';
-import { User } from '../types/User';
+import {collection, doc, getDoc, getDocs, orderBy, query, Timestamp, updateDoc} from 'firebase/firestore';
+import {db} from '@/firebaseConfig';
+import {User} from '@/types/User';
+import {UserRole} from "@/types/UserRole";
 
 export class UserService {
   private static readonly COLLECTION_NAME = 'users';
@@ -83,12 +75,12 @@ export class UserService {
     requestorUid: string
   ): Promise<void> {
     // Users can update their own profile (except role), managers and admins can update any profile
-    if (requestorRole !== 'admin' && requestorRole !== 'manager' && requestorUid !== uid) {
+    if (requestorRole !== UserRole.ADMIN && requestorRole !== UserRole.MANAGER && requestorUid !== uid) {
       throw new Error('Access denied. You can only update your own profile.');
     }
 
     // Only admins can change roles
-    if (userData.role && requestorRole !== 'admin') {
+    if (userData.role && requestorRole !== UserRole.ADMIN) {
       throw new Error('Access denied. Only administrators can change user roles.');
     }
 

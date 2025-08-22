@@ -80,7 +80,14 @@ export default function EditUserScreen() {
 
     setLoading(true);
     try {
-      await UserService.updateUser(id, formData, user.role, user.uid);
+      const formDataWithDates = {
+        ...formData,
+        operatorValidityDate: formData.operatorValidityDate ? new Date(formData.operatorValidityDate) : undefined,
+        pilotValidityDate: formData.pilotValidityDate ? new Date(formData.pilotValidityDate) : undefined,
+        insurance: formData.insurance ? new Date(formData.insurance) : undefined,
+      };
+
+      await UserService.updateUser(id, formDataWithDates, user.role, user.uid);
       router.back();
       Alert.alert(t('userForm.success'), t('userForm.userUpdated'));
     } catch (error) {
