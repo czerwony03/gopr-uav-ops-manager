@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { FlightService } from '@/services/flightService';
@@ -26,7 +26,7 @@ import {
   AVAILABLE_FLIGHT_CATEGORIES,
   AVAILABLE_OPERATION_TYPES,
   AVAILABLE_ACTIVITY_TYPES
-} from '../../types/Flight';
+} from '@/types/Flight';
 
 interface FlightFormData {
   date: string;
@@ -296,6 +296,13 @@ export default function EditFlightScreen() {
   }
 
   return (
+    <>
+    <Stack.Screen options={{
+      title: t('flights.editFlight'),
+      headerStyle: { backgroundColor: '#0066CC' },
+      headerTintColor: '#fff',
+      headerTitleStyle: { fontWeight: 'bold' },
+    }} />
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView 
         style={styles.keyboardAvoidingView}
@@ -462,6 +469,7 @@ export default function EditFlightScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </>
   );
 }
 

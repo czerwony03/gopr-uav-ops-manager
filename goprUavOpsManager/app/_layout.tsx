@@ -48,6 +48,7 @@ function RootLayoutNavigation() {
           name="flights"
           options={{
             title: t('flights.title'),
+            headerShown: false,
             drawerLabel: t('nav.flights'),
             drawerIcon: ({ color, size }) => (
               <Ionicons name="airplane-outline" size={size} color={color} />

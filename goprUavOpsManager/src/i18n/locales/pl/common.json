@@ -38,6 +38,8 @@
     "newFlight": "Nowy lot",
     "logbook": "Dziennik lotów",
     "flightDetails": "Szczegóły lotu",
+    "addFlight": "Dodaj lot",
+    "editFlight": "Edytuj lot",
     "add": "Dodaj lot",
     "edit": "Edytuj lot",
     "delete": "Usuń lot",

@@ -38,6 +38,8 @@
     "newFlight": "New Flight",
     "logbook": "Logbook",
     "flightDetails": "Flight Details",
+    "addFlight": "Add Flight",
+    "editFlight": "Edit Flight",
     "add": "Add Flight",
     "edit": "Edit Flight",
     "delete": "Delete Flight",
