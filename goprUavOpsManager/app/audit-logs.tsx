@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   TextInput
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function AuditLogsScreen() {
   const { t } = useTranslation('common');
+  const insets = useSafeAreaInsets();
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -412,7 +414,7 @@ export default function AuditLogsScreen() {
       <Stack.Screen options={{ title: 'Audit Logs' }} />
       
       <ScrollView 
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom + 20, 20) }]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }

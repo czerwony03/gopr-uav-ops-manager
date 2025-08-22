@@ -167,8 +167,8 @@
     "licenseConversionNumber": "Numer konwersji licencji lub numer decyzji administracyjnej",
     "licenseConversionPlaceholder": "Wprowadź numer konwersji licencji",
     "insuranceDate": "Data ważności ubezpieczenia",
-    "updateButton": "Zaktualizuj użytkownika",
-    "createButton": "Utwórz użytkownika",
+    "updateButton": "Zaktualizuj",
+    "createButton": "Utwórz",
     "updateSuccess": "Użytkownik został pomyślnie zaktualizowany",
     "createSuccess": "Użytkownik został pomyślnie utworzony",
     "saveError": "Nie udało się zapisać danych użytkownika",
@@ -488,7 +488,7 @@
     }
   },
   "procedures": {
-    "title": "Procedury/Lista kontrolna",
+    "title": "Procedury/Checklisty",
     "loading": "Ładowanie procedury/listy kontrolnej...",
     "notFound": "Procedura/Lista kontrolna nie została znaleziona",
     "notFoundDescription": "Żądana procedura lub lista kontrolna nie mogła zostać znaleziona.",

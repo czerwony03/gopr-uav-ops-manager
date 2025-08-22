@@ -1,9 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function Footer() {
+  const insets = useSafeAreaInsets();
+  
   return (
-    <View style={styles.footer}>
+    <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 15) }]}>
       <View style={styles.authorInfo}>
         <Text style={styles.companyText}>RedMed Software</Text>
         <Text style={styles.contactText}>admin@redmed.dev</Text>
