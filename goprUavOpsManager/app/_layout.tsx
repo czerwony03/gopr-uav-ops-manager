@@ -67,9 +67,10 @@ function RootLayoutNavigation() {
           }}
         />
         <Drawer.Screen
-          name="users-list"
+          name="users"
           options={{
-            title: t('nav.users'),
+            title: t('users.title'),
+            headerShown: false,
             drawerLabel: t('nav.users'),
             drawerIcon: ({ color, size }) => (
               <Ionicons name="people-outline" size={size} color={color} />
@@ -105,21 +106,6 @@ function RootLayoutNavigation() {
               <Ionicons name="document-text-outline" size={size} color={color} />
             ),
             drawerItemStyle: { display: 'none' }, // Hidden by default, visibility controlled in CustomDrawerContent
-          }}
-        />
-        {/* Detail and form screens - hidden from drawer */}
-        <Drawer.Screen
-          name="user-form"
-          options={{
-            title: t('nav.users'),
-            drawerItemStyle: { display: 'none' },
-          }}
-        />
-        <Drawer.Screen
-          name="user-details"
-          options={{
-            title: t('user.details'),
-            drawerItemStyle: { display: 'none' },
           }}
         />
         {/* Procedures & Checklists detail and form screens - hidden from drawer */}

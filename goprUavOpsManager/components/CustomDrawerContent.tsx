@@ -56,7 +56,7 @@ export function CustomDrawerContent(props: any) {
             <Text style={styles.appTitle}>{t('drawer.appTitle')}</Text>
             <TouchableOpacity 
               style={styles.profileButton}
-              onPress={() => handleNavigation(`/user-form?id=${user.uid}`)}
+              onPress={() => handleNavigation(`/users/${user.uid}/edit`)}
             >
               <Ionicons name="person-outline" size={14} color="#0066CC" />
               <Text style={styles.profileButtonText}>{t('drawer.editProfile')}</Text>
@@ -118,7 +118,7 @@ export function CustomDrawerContent(props: any) {
           {(user.role === 'admin' || user.role === 'manager') && (
             <DrawerItem
               label={t('nav.users')}
-              onPress={() => handleNavigation('/users-list')}
+              onPress={() => handleNavigation('/users')}
               icon={({color, size}) => (
                 <Ionicons name="people-outline" size={size} color={color}/>
               )}
