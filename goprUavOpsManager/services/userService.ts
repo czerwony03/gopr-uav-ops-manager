@@ -10,7 +10,6 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { User } from '../types/User';
-import { UserRole } from '../contexts/AuthContext';
 
 export class UserService {
   private static readonly COLLECTION_NAME = 'users';

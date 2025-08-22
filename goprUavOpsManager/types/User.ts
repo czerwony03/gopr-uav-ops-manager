@@ -1,6 +1,6 @@
-import { UserRole } from '../contexts/AuthContext';
+import {UserRole} from "@/types/UserRole";
 
-export type Qualification = 
+export type Qualification =
   | 'A1' | 'A2' | 'A3' 
   | 'NSTS01' | 'NSTS02' | 'NSTS03' | 'NSTS04' | 'NSTS05' | 'NSTS06'
   | 'STS01' | 'STS02';

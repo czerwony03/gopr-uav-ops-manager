@@ -1,22 +1,23 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
   ActivityIndicator,
   Alert,
-  TouchableOpacity,
-  SafeAreaView,
+  FlatList,
   RefreshControl,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useAuth, UserRole } from '@/contexts/AuthContext';
-import { doc, updateDoc } from 'firebase/firestore';
-import { firestore } from '@/firebaseConfig';
-import { useFocusEffect } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
-import { UserService } from '@/services/userService';
+import {useTranslation} from 'react-i18next';
+import {useAuth} from '@/contexts/AuthContext';
+import {doc, updateDoc} from 'firebase/firestore';
+import {firestore} from '@/firebaseConfig';
+import {useFocusEffect} from '@react-navigation/native';
+import {useRouter} from 'expo-router';
+import {UserService} from '@/services/userService';
+import {UserRole} from "@/types/UserRole";
 
 interface UserData {
   id: string;
@@ -126,15 +127,15 @@ export default function UsersListScreen() {
       [
         {
           text: t('user.user'),
-          onPress: () => updateUserRole(userId, 'user'),
+          onPress: () => updateUserRole(userId, UserRole.USER),
         },
         {
           text: t('user.manager'),
-          onPress: () => updateUserRole(userId, 'manager'),
+          onPress: () => updateUserRole(userId, UserRole.MANAGER),
         },
         {
           text: t('user.admin'),
-          onPress: () => updateUserRole(userId, 'admin'),
+          onPress: () => updateUserRole(userId, UserRole.ADMIN),
         },
         {
           text: t('common.cancel'),

@@ -152,11 +152,11 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
       <ScrollView>
         <View style={styles.card}>
           <Text style={styles.title}>
-            {mode === 'create' ? t('procedures.addProcedure') : t('procedures.editProcedure')}
+            {mode === 'create' ? t('procedureForm.create') : t('procedureForm.update')}
           </Text>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('procedureForm.basicInfo')}</Text>
+            <Text style={styles.sectionTitle}>{t('procedureForm.header')}</Text>
             
             <Text style={styles.label}>{t('procedureForm.title')} *</Text>
             <TextInput
@@ -179,7 +179,7 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('procedureForm.items')}</Text>
+              <Text style={styles.sectionTitle}>{t('procedureForm.checklistItems')}</Text>
               <TouchableOpacity style={styles.addButton} onPress={addItem}>
                 <Ionicons name="add-circle" size={24} color="#0066CC" />
                 <Text style={styles.addButtonText}>{t('procedureForm.addItem')}</Text>
@@ -207,39 +207,39 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
                   </View>
                 </View>
 
-                <Text style={styles.label}>{t('procedureForm.itemTopic')} *</Text>
+                <Text style={styles.label}>{t('procedureForm.topic')} *</Text>
                 <TextInput
                   style={styles.input}
                   value={item.topic}
                   onChangeText={(value) => updateItemFormData(index, 'topic', value)}
-                  placeholder={t('procedureForm.itemTopicPlaceholder')}
+                  placeholder={t('procedureForm.topicPlaceholder')}
                 />
 
-                <Text style={styles.label}>{t('procedureForm.itemContent')} *</Text>
+                <Text style={styles.label}>{t('procedureForm.content')} *</Text>
                 <TextInput
                   style={[styles.input, styles.textArea]}
                   value={item.content}
                   onChangeText={(value) => updateItemFormData(index, 'content', value)}
-                  placeholder={t('procedureForm.itemContentPlaceholder')}
+                  placeholder={t('procedureForm.contentPlaceholder')}
                   multiline
                   numberOfLines={4}
                 />
 
-                <Text style={styles.label}>{t('procedureForm.itemLink')}</Text>
+                <Text style={styles.label}>{t('procedureForm.link')}</Text>
                 <TextInput
                   style={styles.input}
                   value={item.link || ''}
                   onChangeText={(value) => updateItemFormData(index, 'link', value)}
-                  placeholder={t('procedureForm.itemLinkPlaceholder')}
+                  placeholder={t('procedureForm.linkPlaceholder')}
                 />
               </View>
             ))}
 
             {formData.items.length === 0 && (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>{t('procedureForm.noItems')}</Text>
+                <Text style={styles.emptyStateText}>{t('procedureForm.noItemsYet')}</Text>
                 <TouchableOpacity style={styles.addFirstButton} onPress={addItem}>
-                  <Text style={styles.addFirstButtonText}>{t('procedureForm.addFirstItem')}</Text>
+                  <Text style={styles.addFirstButtonText}>{t('procedureForm.clickAddItem')}</Text>
                 </TouchableOpacity>
               </View>
             )}

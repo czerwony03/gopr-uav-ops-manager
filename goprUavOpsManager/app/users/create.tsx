@@ -34,7 +34,7 @@ export default function CreateUserScreen() {
 
     setLoading(true);
     try {
-      await UserService.createUser(formData, user.uid, user.email);
+      //await UserService.createUser(formData, user.uid, user.email);
       router.back();
       Alert.alert(t('userForm.success'), t('userForm.userCreated'));
     } catch (error) {

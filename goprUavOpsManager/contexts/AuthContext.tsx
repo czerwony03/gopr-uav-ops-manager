@@ -4,8 +4,7 @@ import {doc, getDoc, setDoc} from 'firebase/firestore';
 import {auth, firestore} from '@/firebaseConfig';
 import {User as FullUser} from '../types/User';
 import {UserService} from '@/services/userService';
-
-export type UserRole = 'user' | 'manager' | 'admin';
+import {UserRole} from "@/types/UserRole";
 
 // Extended interface that includes all user profile data
 export interface UserData extends FullUser {
@@ -53,10 +52,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userDoc = await getDoc(userDocRef);
       console.log('[AuthContext] User document exists:', userDoc.exists());
       
-      let role: UserRole = 'user';
+      let role: UserRole = UserRole.USER;
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        role = userData.role as UserRole || 'user';
+        role = userData.role as UserRole || UserRole.USER;
         console.log('[AuthContext] Found existing user with role:', role);
       } else {
         console.log('[AuthContext] Creating new user document with default role');

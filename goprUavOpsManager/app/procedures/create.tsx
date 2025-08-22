@@ -34,7 +34,7 @@ export default function CreateProcedureScreen() {
 
     setLoading(true);
     try {
-      await ProcedureChecklistService.createProcedureChecklist(formData, user.uid, user.email);
+      await ProcedureChecklistService.createProcedureChecklist(formData, user.role, user.uid);
       router.back();
       Alert.alert(t('procedureForm.success'), t('procedureForm.procedureCreated'));
     } catch (error) {

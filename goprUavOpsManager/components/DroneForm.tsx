@@ -343,7 +343,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.submitButtonText}>
-                  {mode === 'create' ? t('droneForm.create') : t('droneForm.update')}
+                  {mode === 'create' ? t('droneForm.createDrone') : t('droneForm.updateDrone')}
                 </Text>
               )}
             </TouchableOpacity>

@@ -18,9 +18,9 @@ import {
 } from 'firebase/storage';
 import { db, storage } from '../firebaseConfig';
 import { ProcedureChecklist, ProcedureChecklistFormData, ChecklistItemFormData } from '../types/ProcedureChecklist';
-import { UserRole } from '../contexts/AuthContext';
 import { AuditLogService } from './auditLogService';
 import { UserService } from './userService';
+import {UserRole} from "@/types/UserRole";
 
 export class ProcedureChecklistService {
   private static readonly COLLECTION_NAME = 'procedures_checklists';

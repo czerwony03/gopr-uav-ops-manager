@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { DroneService } from '@/services/droneService';
 import DroneForm, { DroneFormData } from '@/components/DroneForm';
+import {UserRole} from "@/types/UserRole";
 
 export default function CreateDroneScreen() {
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,7 @@ export default function CreateDroneScreen() {
     }
 
     // Check permissions
-    if (user.role !== 'manager' && user.role !== 'admin') {
+    if (user.role !== UserRole.MANAGER && user.role !== UserRole.ADMIN) {
       Alert.alert(t('common.accessDenied'), t('common.permissionDenied'), [
         { text: 'OK', onPress: () => router.back() }
       ]);
@@ -33,7 +34,7 @@ export default function CreateDroneScreen() {
 
     setLoading(true);
     try {
-      await DroneService.createDrone(formData, user.uid, user.email);
+      await DroneService.createDrone(formData, user.role, user.uid);
       router.back();
       Alert.alert(t('droneForm.success'), t('droneForm.droneCreated'));
     } catch (error) {

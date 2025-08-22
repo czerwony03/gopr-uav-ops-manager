@@ -21,7 +21,7 @@ export default function EditUserScreen() {
 
     try {
       setLoading(true);
-      const userData = await UserService.getUser(userId, user.role);
+      const userData = await UserService.getUser(userId, user.role, user.uid);
       if (userData) {
         // Convert the user data to form data format (dates as strings)
         const formData: UserFormData = {
@@ -98,7 +98,7 @@ export default function EditUserScreen() {
   return (
     <>
       <Stack.Screen options={{
-        title: t('users.editUser'),
+        title: t('userForm.editTitle'),
         headerStyle: { backgroundColor: '#0066CC' },
         headerTintColor: '#fff',
         headerTitleStyle: { fontWeight: 'bold' },

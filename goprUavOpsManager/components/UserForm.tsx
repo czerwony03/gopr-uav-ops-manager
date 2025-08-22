@@ -13,8 +13,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { useTranslation } from 'react-i18next';
 import { UserFormData, AVAILABLE_QUALIFICATIONS, Qualification } from '@/types/User';
-import { UserRole } from '@/contexts/AuthContext';
 import { LanguagePickerField } from '@/src/components/LanguagePickerField';
+import {UserRole} from "@/types/UserRole";
 
 interface UserFormProps {
   mode: 'create' | 'edit';
@@ -46,6 +46,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
 
   const [formData, setFormData] = useState<UserFormData>(initialData || defaultFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const userRoles = Object.values(UserRole);
 
   useEffect(() => {
     if (initialData) {
@@ -113,7 +114,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
       <ScrollView>
         <View style={styles.card}>
           <Text style={styles.title}>
-            {mode === 'create' ? t('users.addUser') : t('users.editUser')}
+            {mode === 'create' ? t('userForm.createTitle') : t('userForm.editTitle')}
           </Text>
 
           <View style={styles.section}>
@@ -130,12 +131,12 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
             />
             {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
-            <Text style={styles.label}>{t('userForm.firstname')} *</Text>
+            <Text style={styles.label}>{t('userForm.firstName')} *</Text>
             <TextInput
               style={[styles.input, errors.firstname && styles.inputError]}
               value={formData.firstname}
               onChangeText={(value) => updateFormData('firstname', value)}
-              placeholder={t('userForm.firstnamePlaceholder')}
+              placeholder={t('userForm.firstNamePlaceholder')}
             />
             {errors.firstname && <Text style={styles.errorText}>{errors.firstname}</Text>}
 
@@ -156,9 +157,9 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
                 style={styles.picker}
               >
                 <Picker.Item label={t('userForm.rolePlaceholder')} value="" />
-                <Picker.Item label={t('userForm.roles.user')} value="user" />
-                <Picker.Item label={t('userForm.roles.manager')} value="manager" />
-                <Picker.Item label={t('userForm.roles.admin')} value="admin" />
+                <Picker.Item label={t('user.roles.user')} value="user" />
+                <Picker.Item label={t('user.roles.manager')} value="manager" />
+                <Picker.Item label={t('user.roles.admin')} value="admin" />
               </Picker>
             </View>
             {errors.role && <Text style={styles.errorText}>{errors.role}</Text>}
@@ -172,12 +173,12 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
               keyboardType="phone-pad"
             />
 
-            <Text style={styles.label}>{t('userForm.residentialAddress')}</Text>
+            <Text style={styles.label}>{t('userForm.address')}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.residentialAddress}
               onChangeText={(value) => updateFormData('residentialAddress', value)}
-              placeholder={t('userForm.residentialAddressPlaceholder')}
+              placeholder={t('userForm.addressPlaceholder')}
               multiline
               numberOfLines={3}
             />
@@ -199,7 +200,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
               style={styles.input}
               value={formData.operatorValidityDate}
               onChangeText={(value) => updateFormData('operatorValidityDate', value)}
-              placeholder={t('userForm.datePlaceholder')}
+              placeholder={t('userForm.operatorValidityDate')}
             />
           </View>
 
@@ -219,7 +220,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
               style={styles.input}
               value={formData.pilotValidityDate}
               onChangeText={(value) => updateFormData('pilotValidityDate', value)}
-              placeholder={t('userForm.datePlaceholder')}
+              placeholder={t('userForm.pilotValidityDate')}
             />
 
             <Text style={styles.label}>{t('userForm.licenseConversionNumber')}</Text>
@@ -227,7 +228,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
               style={styles.input}
               value={formData.licenseConversionNumber}
               onChangeText={(value) => updateFormData('licenseConversionNumber', value)}
-              placeholder={t('userForm.licenseConversionNumberPlaceholder')}
+              placeholder={t('userForm.licenseConversionPlaceholder')}
             />
           </View>
 
@@ -258,12 +259,12 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('userForm.insurance')}</Text>
             
-            <Text style={styles.label}>{t('userForm.insuranceValidityDate')}</Text>
+            <Text style={styles.label}>{t('userForm.insuranceDate')}</Text>
             <TextInput
               style={styles.input}
               value={formData.insurance}
               onChangeText={(value) => updateFormData('insurance', value)}
-              placeholder={t('userForm.datePlaceholder')}
+              placeholder={t('userForm.insuranceDatePlaceholder')}
             />
           </View>
 
@@ -285,7 +286,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.submitButtonText}>
-                  {mode === 'create' ? t('userForm.create') : t('userForm.update')}
+                  {mode === 'create' ? t('userForm.createButton') : t('userForm.updateButton')}
                 </Text>
               )}
             </TouchableOpacity>
