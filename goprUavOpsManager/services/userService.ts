@@ -4,6 +4,8 @@ import {User} from '@/types/User';
 import {UserRole} from "@/types/UserRole";
 import {toDateIfTimestamp} from "@/utils/dateUtils";
 import {filterUndefinedProperties} from "@/utils/filterUndefinedProperties";
+import {AuditLogService} from "@/services/auditLogService";
+import {Drone} from "@/types/Drone";
 
 export class UserService {
   private static readonly COLLECTION_NAME = 'users';
@@ -87,7 +89,14 @@ export class UserService {
     }
 
     try {
-      const userDoc = doc(db, this.COLLECTION_NAME, uid);
+      const userRef = doc(db, this.COLLECTION_NAME, uid);
+      const userDoc = await getDoc(userRef);
+
+      if (!userDoc.exists()) {
+        throw new Error('User not found');
+      }
+
+      const currentUser = userDoc.data() as User;
       
       // Prepare data for Firestore (convert dates to Timestamps)
       const firestoreData: any = {
@@ -106,7 +115,23 @@ export class UserService {
         firestoreData.insurance = Timestamp.fromDate(userData.insurance);
       }
 
-      await updateDoc(userDoc, filterUndefinedProperties(firestoreData));
+      // Store previous values for audit log
+      const previousValues = { ...currentUser };
+      const newValues = { ...currentUser, ...userData };
+
+      await updateDoc(userRef, filterUndefinedProperties(firestoreData));
+
+      const requestorEmail = await UserService.getUserEmail(requestorUid);
+      await AuditLogService.createAuditLog({
+        entityType: 'user',
+        entityId: uid,
+        action: 'edit',
+        requestorUid,
+        requestorEmail,
+        details: AuditLogService.createChangeDetails('edit', 'user', { previous: previousValues, new: newValues }),
+        previousValues,
+        newValues
+      });
     } catch (error) {
       console.error('Error updating user:', error);
       throw new Error('Failed to update user');

@@ -14,6 +14,8 @@ import { db } from '@/firebaseConfig';
 import { AuditLog, AuditLogData, AuditLogQuery, PaginatedAuditLogResponse } from '@/types/AuditLog';
 import { ApplicationMetadata } from '@/utils/applicationMetadata';
 import { deepDiff, formatChanges } from '@/utils/deepDiff';
+import {filterUndefinedProperties} from "@/utils/filterUndefinedProperties";
+import {toDateIfTimestamp} from "@/utils/dateUtils";
 
 export class AuditLogService {
   private static readonly COLLECTION_NAME = 'auditLogs';
@@ -32,7 +34,7 @@ export class AuditLogService {
         timestamp: now,
       };
 
-      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), completeAuditData);
+      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), filterUndefinedProperties(completeAuditData));
       
       console.log(`Audit log created: ${auditData.action} on ${auditData.entityType}:${auditData.entityId} by ${auditData.userEmail || auditData.userId} [${metadata.applicationPlatform} v${metadata.applicationVersion}${metadata.commitHash ? ` @${metadata.commitHash.substring(0, 7)}` : ''}]`);
       return docRef.id;
@@ -99,7 +101,7 @@ export class AuditLogService {
         id: doc.id,
         ...doc.data(),
         // Convert Firestore Timestamp to Date
-        timestamp: doc.data().timestamp?.toDate(),
+        timestamp: toDateIfTimestamp(doc.data().timestamp),
       } as AuditLog));
     } catch (error) {
       console.error('Error fetching audit logs:', error);
@@ -195,7 +197,7 @@ export class AuditLogService {
         id: doc.id,
         ...doc.data(),
         // Convert Firestore Timestamp to Date
-        timestamp: doc.data().timestamp?.toDate(),
+        timestamp: toDateIfTimestamp(doc.data().timestamp),
       } as AuditLog));
 
       const lastDocumentSnapshot = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;

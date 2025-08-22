@@ -321,6 +321,9 @@ export default function AuditLogsScreen() {
   };
 
   const formatTimestamp = (timestamp: Date) => {
+    if (!(timestamp instanceof Date) || isNaN(timestamp.getTime())) {
+      return 'Invalid date';
+    }
     return timestamp.toLocaleString('en-US', {
       month: 'short',
       day: '2-digit',
