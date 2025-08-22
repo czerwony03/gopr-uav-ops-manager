@@ -3,6 +3,7 @@ import {db} from '@/firebaseConfig';
 import {User} from '@/types/User';
 import {UserRole} from "@/types/UserRole";
 import {toDateIfTimestamp} from "@/utils/dateUtils";
+import {filterUndefinedProperties} from "@/utils/filterUndefinedProperties";
 
 export class UserService {
   private static readonly COLLECTION_NAME = 'users';
@@ -105,7 +106,7 @@ export class UserService {
         firestoreData.insurance = Timestamp.fromDate(userData.insurance);
       }
 
-      await updateDoc(userDoc, firestoreData);
+      await updateDoc(userDoc, filterUndefinedProperties(firestoreData));
     } catch (error) {
       console.error('Error updating user:', error);
       throw new Error('Failed to update user');
