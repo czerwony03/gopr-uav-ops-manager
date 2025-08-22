@@ -14,13 +14,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import ImageViewer from '../components/ImageViewer';
+import ImageViewer from '../../../components/ImageViewer';
 import { ProcedureChecklist, ChecklistItem } from '@/types/ProcedureChecklist';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
 import { UserService } from '@/services/userService';
 
-export default function ProcedureChecklistDetailsScreen() {
+export default function ProcedureDetailsScreen() {
   const [checklist, setChecklist] = useState<ProcedureChecklist | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
@@ -58,7 +58,7 @@ export default function ProcedureChecklistDetailsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [user, id, router]);
+  }, [user, id, router, t]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {
@@ -83,7 +83,7 @@ export default function ProcedureChecklistDetailsScreen() {
 
   const handleEdit = () => {
     if (checklist) {
-      router.push(`/procedures-checklist-form?id=${checklist.id}`);
+      router.push(`/procedures/${checklist.id}/edit`);
     }
   };
 

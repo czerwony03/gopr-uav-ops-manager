@@ -106,7 +106,7 @@ export function CustomDrawerContent(props: any) {
 
           <DrawerItem
             label={t('nav.procedures')}
-            onPress={() => handleNavigation('/procedures-checklists-list')}
+            onPress={() => handleNavigation('/procedures')}
             icon={({color, size}) => (
               <Ionicons name="clipboard-outline" size={size} color={color}/>
             )}

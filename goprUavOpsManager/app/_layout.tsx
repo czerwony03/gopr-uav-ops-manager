@@ -78,9 +78,10 @@ function RootLayoutNavigation() {
           }}
         />
         <Drawer.Screen
-          name="procedures-checklists-list"
+          name="procedures"
           options={{
-            title: t('nav.procedures'),
+            title: t('procedures.title'),
+            headerShown: false,
             drawerLabel: t('nav.procedures'),
             drawerIcon: ({ color, size }) => (
               <Ionicons name="clipboard-outline" size={size} color={color} />
@@ -106,21 +107,6 @@ function RootLayoutNavigation() {
               <Ionicons name="document-text-outline" size={size} color={color} />
             ),
             drawerItemStyle: { display: 'none' }, // Hidden by default, visibility controlled in CustomDrawerContent
-          }}
-        />
-        {/* Procedures & Checklists detail and form screens - hidden from drawer */}
-        <Drawer.Screen
-          name="procedures-checklist-details"
-          options={{
-            title: t('nav.procedures'),
-            drawerItemStyle: { display: 'none' },
-          }}
-        />
-        <Drawer.Screen
-          name="procedures-checklist-form"
-          options={{
-            title: t('nav.procedures'),
-            drawerItemStyle: { display: 'none' },
           }}
         />
       </Drawer>

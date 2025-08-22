@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -21,13 +21,10 @@ import { ProcedureChecklistFormData, ChecklistItemFormData } from '@/types/Proce
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
 
-export default function ProcedureChecklistFormScreen() {
+export default function CreateProcedureScreen() {
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(false);
-  const { id } = useLocalSearchParams<{ id?: string }>();
   const { user } = useAuth();
   const router = useRouter();
-  const isEditing = !!id;
   const { t } = useTranslation('common');
 
   // Default form data
@@ -39,35 +36,6 @@ export default function ProcedureChecklistFormScreen() {
 
   const [formData, setFormData] = useState<ProcedureChecklistFormData>(defaultFormData);
 
-  const loadChecklistData = useCallback(async () => {
-    if (!user || !id) return;
-
-    setInitialLoading(true);
-    try {
-      const checklist = await ProcedureChecklistService.getProcedureChecklist(id, user.role);
-      if (checklist) {
-        setFormData({
-          title: checklist.title,
-          description: checklist.description || '',
-          items: checklist.items.map(item => ({
-            id: item.id,
-            topic: item.topic,
-            image: item.image,
-            content: item.content,
-            number: item.number,
-            link: item.link || '',
-            file: item.file,
-          })),
-        });
-      }
-    } catch (error) {
-      console.error('Error loading checklist data:', error);
-      Alert.alert(t('common.error'), t('procedureForm.failedToLoad'));
-    } finally {
-      setInitialLoading(false);
-    }
-  }, [user, id]);
-
   // Authentication and permission check
   useEffect(() => {
     if (!user) {
@@ -75,22 +43,14 @@ export default function ProcedureChecklistFormScreen() {
       return;
     }
 
-    // Only managers and admins can create/edit procedures
+    // Only managers and admins can create procedures
     if (user.role !== 'manager' && user.role !== 'admin') {
       Alert.alert(t('procedureForm.permissionRequired'), t('procedureForm.permissionDenied'), [
         { text: 'OK', onPress: () => router.back() }
       ]);
       return;
     }
-
-    // Load existing checklist data for editing
-    if (isEditing && id) {
-      loadChecklistData();
-    } else if (!isEditing) {
-      // Reset form to default values when creating new
-      setFormData(defaultFormData);
-    }
-  }, [id, user, isEditing, router, loadChecklistData, defaultFormData]);
+  }, [user, router, t]);
 
   const handleSubmit = async () => {
     if (!user) return;
@@ -120,18 +80,12 @@ export default function ProcedureChecklistFormScreen() {
 
     setLoading(true);
     try {
-      if (isEditing && id) {
-        await ProcedureChecklistService.updateProcedureChecklist(id, formData, user.role, user.uid);
-        // Navigate back to details page for editing
-        router.push(`/procedures-checklist-details?id=${id}`);
-      } else {
-        // Create new procedure and navigate to its details page
-        const newId = await ProcedureChecklistService.createProcedureChecklist(formData, user.role, user.uid);
-        router.push(`/procedures-checklist-details?id=${newId}`);
-      }
+      // Create new procedure and navigate to its details page
+      const newId = await ProcedureChecklistService.createProcedureChecklist(formData, user.role, user.uid);
+      router.push(`/procedures/${newId}`);
     } catch (error) {
-      console.error('Error saving checklist:', error);
-      Alert.alert(t('procedureForm.error'), `${t(isEditing ? 'procedureForm.failedToUpdate' : 'procedureForm.failedToCreate')}`);
+      console.error('Error creating checklist:', error);
+      Alert.alert(t('procedureForm.error'), t('procedureForm.failedToCreate'));
     } finally {
       setLoading(false);
     }
@@ -271,15 +225,6 @@ export default function ProcedureChecklistFormScreen() {
     </View>
   );
 
-  if (initialLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0066CC" />
-        <Text style={styles.loadingText}>{t('procedureForm.loading')}</Text>
-      </View>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView 
@@ -289,9 +234,7 @@ export default function ProcedureChecklistFormScreen() {
       >
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
-            <Text style={styles.title}>
-              {isEditing ? t('procedureForm.editTitle') : t('procedureForm.createTitle')}
-            </Text>
+            <Text style={styles.title}>{t('procedureForm.createTitle')}</Text>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t('procedureForm.title')} *</Text>
@@ -349,9 +292,7 @@ export default function ProcedureChecklistFormScreen() {
             ) : (
               <>
                 <Ionicons name="checkmark" size={20} color="#fff" />
-                <Text style={styles.submitButtonText}>
-                  {isEditing ? t('procedureForm.update') : t('procedureForm.create')}
-                </Text>
+                <Text style={styles.submitButtonText}>{t('procedureForm.create')}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -368,16 +309,6 @@ const styles = StyleSheet.create({
   },
   keyboardAvoidingView: {
     flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
   },
   scrollView: {
     flex: 1,
