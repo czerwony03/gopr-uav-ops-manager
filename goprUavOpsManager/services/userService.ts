@@ -25,12 +25,12 @@ export class UserService {
         uid: doc.id,
         ...doc.data(),
         // Convert Firestore Timestamps to Dates
-        operatorValidityDate: doc.data().operatorValidityDate?.toDate(),
-        pilotValidityDate: doc.data().pilotValidityDate?.toDate(),
-        insurance: doc.data().insurance?.toDate(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
-        lastLoginAt: doc.data().lastLoginAt?.toDate(),
+        operatorValidityDate: toDateIfTimestamp(doc.data().operatorValidityDate),
+        pilotValidityDate: toDateIfTimestamp(doc.data().pilotValidityDate),
+        insurance: toDateIfTimestamp(doc.data().insurance),
+        createdAt: toDateIfTimestamp(doc.data().createdAt),
+        updatedAt: toDateIfTimestamp(doc.data().updatedAt),
+        lastLoginAt: toDateIfTimestamp(doc.data().lastLoginAt),
       } as User));
     } catch (error) {
       console.error('Error fetching users:', error);

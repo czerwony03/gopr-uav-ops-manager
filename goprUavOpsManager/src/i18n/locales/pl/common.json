@@ -188,7 +188,13 @@
       "firstNameRequired": "Imię jest wymagane",
       "surnameRequired": "Nazwisko jest wymagane",
       "operatorOrPilotRequired": "Wymagany jest numer operatora lub numer pilota",
-      "qualificationsRequired": "Musi być wybrana co najmniej jedna kwalifikacja/uprawnienie"
+      "qualificationsRequired": "Musi być wybrana co najmniej jedna kwalifikacja/uprawnienie",
+      "emailInvalid": "Wprowadź poprawny adres e-mail.",
+      "firstnameRequired": "Imię jest wymagane.",
+      "roleRequired": "Rola jest wymagana.",
+      "phoneInvalid": "Wprowadź poprawny numer telefonu.",
+      "dateInvalid": "Użyj formatu daty RRRR-MM-DD.",
+      "qualificationsInvalid": "Wybrana kwalifikacja jest nieprawidłowa."
     }
   },
   "userDetails": {

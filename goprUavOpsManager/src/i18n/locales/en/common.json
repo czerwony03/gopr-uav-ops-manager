@@ -188,7 +188,13 @@
       "firstNameRequired": "First name is required",
       "surnameRequired": "Surname is required",
       "operatorOrPilotRequired": "Either Operator Number or Pilot Number is required",
-      "qualificationsRequired": "At least one qualification/authorization must be selected"
+      "qualificationsRequired": "At least one qualification/authorization must be selected",
+      "emailInvalid": "Please enter a valid email address.",
+      "firstnameRequired": "First name is required.",
+      "roleRequired": "Role is required.",
+      "phoneInvalid": "Please enter a valid phone number.",
+      "dateInvalid": "Please use the YYYY-MM-DD date format.",
+      "qualificationsInvalid": "Selected qualification is not valid."
     }
   },
   "userDetails": {

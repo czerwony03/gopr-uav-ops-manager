@@ -57,19 +57,58 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const phoneRegex = /^\+?[0-9\s\-]{6,15}$/;
 
+    // Email
     if (!formData.email.trim()) {
       newErrors.email = t('userForm.validation.emailRequired');
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!emailRegex.test(formData.email)) {
       newErrors.email = t('userForm.validation.emailInvalid');
     }
 
+    // Firstname
     if (!formData.firstname.trim()) {
       newErrors.firstname = t('userForm.validation.firstnameRequired');
     }
 
+    // Surname
     if (!formData.surname.trim()) {
       newErrors.surname = t('userForm.validation.surnameRequired');
+    }
+
+    // Role
+    if (formData.role && !userRoles.includes(formData.role)) {
+      newErrors.role = t('userForm.validation.roleRequired');
+    }
+
+    // Phone
+    if (formData.phone && !phoneRegex.test(formData.phone.trim())) {
+      newErrors.phone = t('userForm.validation.phoneInvalid');
+    }
+
+    // Operator Validity Date
+    if (formData.operatorValidityDate && !dateRegex.test(formData.operatorValidityDate)) {
+      newErrors.operatorValidityDate = t('userForm.validation.dateInvalid');
+    }
+
+    // Pilot Validity Date
+    if (formData.pilotValidityDate && !dateRegex.test(formData.pilotValidityDate)) {
+      newErrors.pilotValidityDate = t('userForm.validation.dateInvalid');
+    }
+
+    // Insurance Date
+    if (formData.insurance && !dateRegex.test(formData.insurance)) {
+      newErrors.insurance = t('userForm.validation.dateInvalid');
+    }
+
+    // Qualifications
+    if (
+      formData.qualifications &&
+      formData.qualifications.some(q => !AVAILABLE_QUALIFICATIONS.includes(q))
+    ) {
+      newErrors.qualifications = t('userForm.validation.qualificationsInvalid');
     }
 
     setErrors(newErrors);
