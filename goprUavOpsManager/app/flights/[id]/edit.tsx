@@ -1,46 +1,16 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Picker } from '@react-native-picker/picker';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Alert } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { FlightService } from '@/services/flightService';
 import { DroneService } from '@/services/droneService';
-import { Drone } from '@/types/Drone';
+import FlightForm, { FlightFormData } from '@/components/FlightForm';
 import { 
   FlightCategory, 
   OperationType, 
-  ActivityType,
-  AVAILABLE_FLIGHT_CATEGORIES,
-  AVAILABLE_OPERATION_TYPES,
-  AVAILABLE_ACTIVITY_TYPES
+  ActivityType
 } from '@/types/Flight';
-
-interface FlightFormData {
-  date: string;
-  location: string;
-  flightCategory: FlightCategory | '';
-  operationType: OperationType | '';
-  activityType: ActivityType | '';
-  droneId: string;
-  startDate: string; // YYYY-MM-DD
-  startTime: string; // HH:mm
-  endDate: string; // YYYY-MM-DD
-  endTime: string; // HH:mm
-  conditions: string;
-}
 
 export default function EditFlightScreen() {
   const { user } = useAuth();
@@ -49,44 +19,7 @@ export default function EditFlightScreen() {
   const { t } = useTranslation('common');
 
   const [loading, setLoading] = useState(false);
-  const [dronesLoading, setDronesLoading] = useState(true);
-  const [drones, setDrones] = useState<Drone[]>([]);
-  
-  // Default form data for creating new flights
-  const defaultFormData = useMemo((): FlightFormData => {
-    const today = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
-    return {
-      date: today,
-      location: '',
-      flightCategory: '',
-      operationType: '',
-      activityType: '',
-      droneId: '',
-      startDate: today,
-      startTime: '',
-      endDate: today,
-      endTime: '',
-      conditions: '',
-    };
-  }, []);
-
-  const [formData, setFormData] = useState<FlightFormData>(defaultFormData);
-
-  const fetchDrones = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      const fetchedDrones = await DroneService.getDrones(user.role);
-      // Filter out deleted drones for flight creation (applies to all users including admins)
-      const availableDrones = fetchedDrones.filter(drone => !drone.isDeleted);
-      setDrones(availableDrones);
-    } catch (error) {
-      console.error('Error fetching drones:', error);
-      Alert.alert('Error', 'Failed to fetch drones');
-    } finally {
-      setDronesLoading(false);
-    }
-  }, [user]);
+  const [initialData, setInitialData] = useState<FlightFormData | undefined>();
 
   const fetchFlight = useCallback(async (flightId: string) => {
     if (!user) return;
@@ -118,7 +51,7 @@ export default function EditFlightScreen() {
         const startDateTime = parseDateTime(flight.startTime, flight.date);
         const endDateTime = parseDateTime(flight.endTime, flight.date);
 
-        setFormData({
+        setInitialData({
           date: flight.date,
           location: flight.location,
           flightCategory: flight.flightCategory as FlightCategory,
@@ -142,7 +75,7 @@ export default function EditFlightScreen() {
     } finally {
       setLoading(false);
     }
-  }, [user, router]);
+  }, [user, router, t]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {
@@ -153,101 +86,22 @@ export default function EditFlightScreen() {
   }, [user, router]);
 
   useEffect(() => {
-    fetchDrones();
     if (id && typeof id === 'string') {
       fetchFlight(id);
     } else {
       // If no ID, navigate back
       router.back();
     }
-  }, [fetchDrones, fetchFlight, id, router]);
+  }, [fetchFlight, id, router]);
 
-  const updateFormData = (field: keyof FlightFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const handleSave = async (formData: FlightFormData) => {
+    if (!user || !id || typeof id !== 'string') return;
 
-  const validateForm = (): boolean => {
-    const requiredFields: (keyof FlightFormData)[] = [
-      'date', 'location', 'flightCategory', 'operationType', 
-      'activityType', 'droneId', 'startDate', 'startTime', 'endDate', 'endTime'
-    ];
-
-    for (const field of requiredFields) {
-      const value = formData[field];
-      if (!value || (typeof value === 'string' && !value.trim())) {
-        Alert.alert(t('flightForm.validation.title'), t(`flightForm.validation.${field}Required`));
-        return false;
-      }
-    }
-
-    // Check if drones are available
-    if (drones.length === 0) {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.noDronesAvailable'));
-      return false;
-    }
-
-    // Validate selected drone exists
-    if (!drones.find(drone => drone.id === formData.droneId)) {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.selectValidDrone'));
-      return false;
-    }
-
-    // Validate date formats (YYYY-MM-DD)
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(formData.date)) {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.dateFormat'));
-      return false;
-    }
-    if (!dateRegex.test(formData.startDate)) {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.startDateFormat'));
-      return false;
-    }
-    if (!dateRegex.test(formData.endDate)) {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.endDateFormat'));
-      return false;
-    }
-
-    // Validate time formats (HH:mm)
-    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(formData.startTime)) {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.startTimeFormat'));
-      return false;
-    }
-    if (!timeRegex.test(formData.endTime)) {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.endTimeFormat'));
-      return false;
-    }
-
-    // Validate that end datetime is after start datetime
+    setLoading(true);
     try {
-      const startDateTime = new Date(`${formData.startDate}T${formData.startTime}:00`);
-      const endDateTime = new Date(`${formData.endDate}T${formData.endTime}:00`);
-      
-      if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
-        Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.invalidDateTime'));
-        return false;
-      }
-      
-      if (endDateTime <= startDateTime) {
-        Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.endAfterStart'));
-        return false;
-      }
-    } catch {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.invalidDateTime'));
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleSave = async () => {
-    if (!user || !validateForm() || !id || typeof id !== 'string') return;
-
-    try {
-      setLoading(true);
-
       // Get drone name for the snapshot
-      const selectedDrone = drones.find(drone => drone.id === formData.droneId);
+      const fetchedDrones = await DroneService.getDrones(user.role);
+      const selectedDrone = fetchedDrones.find(drone => drone.id === formData.droneId);
       const droneName = selectedDrone?.name || '';
 
       // Convert separate date/time fields to datetime strings
@@ -286,298 +140,23 @@ export default function EditFlightScreen() {
     router.back();
   };
 
-  if (dronesLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0066CC" />
-        <Text style={styles.loadingText}>{t('common.loading')}</Text>
-      </View>
-    );
-  }
-
   return (
     <>
-    <Stack.Screen options={{
-      title: t('flights.editFlight'),
-      headerStyle: { backgroundColor: '#0066CC' },
-      headerTintColor: '#fff',
-      headerTitleStyle: { fontWeight: 'bold' },
-    }} />
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView contentContainerStyle={styles.contentContainer}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('flightForm.basicInfo')}</Text>
-            
-            <Text style={styles.label}>{t('flightForm.date')} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.date}
-              onChangeText={(value) => updateFormData('date', value)}
-              placeholder={t('flightForm.datePlaceholder')}
-            />
-
-            <Text style={styles.label}>{t('flightForm.location')} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.location}
-              onChangeText={(value) => updateFormData('location', value)}
-              placeholder={t('flightForm.locationPlaceholder')}
-            />
-
-            <Text style={styles.label}>{t('flightForm.category')} *</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={formData.flightCategory}
-                onValueChange={(value) => updateFormData('flightCategory', value)}
-                style={styles.picker}
-              >
-                <Picker.Item label={t('flightForm.categoryPlaceholder')} value="" />
-                {AVAILABLE_FLIGHT_CATEGORIES.map((category) => (
-                  <Picker.Item
-                    key={category}
-                    label={category}
-                    value={category}
-                  />
-                ))}
-              </Picker>
-            </View>
-
-            <Text style={styles.label}>{t('flightForm.operation')} *</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={formData.operationType}
-                onValueChange={(value) => updateFormData('operationType', value)}
-                style={styles.picker}
-              >
-                <Picker.Item label={t('flightForm.operationPlaceholder')} value="" />
-                {AVAILABLE_OPERATION_TYPES.map((type) => (
-                  <Picker.Item
-                    key={type}
-                    label={type}
-                    value={type}
-                  />
-                ))}
-              </Picker>
-            </View>
-
-            <Text style={styles.label}>{t('flightForm.activity')} *</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={formData.activityType}
-                onValueChange={(value) => updateFormData('activityType', value)}
-                style={styles.picker}
-              >
-                <Picker.Item label={t('flightForm.activityPlaceholder')} value="" />
-                {AVAILABLE_ACTIVITY_TYPES.map((type) => (
-                  <Picker.Item
-                    key={type}
-                    label={type}
-                    value={type}
-                  />
-                ))}
-              </Picker>
-            </View>
-
-            <Text style={styles.label}>{t('flightForm.drone')} *</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={formData.droneId}
-                onValueChange={(value) => updateFormData('droneId', value)}
-                style={styles.picker}
-              >
-                <Picker.Item label={t('flightForm.dronePlaceholder')} value="" />
-                {drones.map((drone) => (
-                  <Picker.Item
-                    key={drone.id}
-                    label={`${drone.name} (${drone.callSign})`}
-                    value={drone.id}
-                  />
-                ))}
-              </Picker>
-            </View>
-
-            <Text style={styles.label}>{t('flightForm.startDate')} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.startDate}
-              onChangeText={(value) => updateFormData('startDate', value)}
-              placeholder={t('flightForm.datePlaceholder')}
-            />
-
-            <Text style={styles.label}>{t('flightForm.startTime')} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.startTime}
-              onChangeText={(value) => updateFormData('startTime', value)}
-              placeholder={t('flightForm.startTimePlaceholder')}
-            />
-
-            <Text style={styles.label}>{t('flightForm.endDate')} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.endDate}
-              onChangeText={(value) => updateFormData('endDate', value)}
-              placeholder={t('flightForm.datePlaceholder')}
-            />
-
-            <Text style={styles.label}>{t('flightForm.endTime')} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.endTime}
-              onChangeText={(value) => updateFormData('endTime', value)}
-              placeholder={t('flightForm.endTimePlaceholder')}
-            />
-
-            <Text style={styles.label}>{t('flightForm.conditions')}</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={formData.conditions}
-              onChangeText={(value) => updateFormData('conditions', value)}
-              placeholder={t('flightForm.conditionsPlaceholder')}
-              multiline
-              numberOfLines={3}
-            />
-          </View>
-
-          <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={handleCancel}
-              disabled={loading}
-            >
-              <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.submitButton, loading && styles.disabledButton]}
-              onPress={handleSave}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.submitButtonText}>
-                  {t('flightForm.updateButton')}
-                </Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      <Stack.Screen options={{
+        title: t('flights.editFlight'),
+        headerStyle: { backgroundColor: '#0066CC' },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' },
+      }} />
+      <FlightForm
+        mode="edit"
+        initialData={initialData}
+        onSave={handleSave}
+        onCancel={handleCancel}
+        loading={loading}
+      />
     </>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  contentContainer: {
-    flexGrow: 1,
-    padding: 16,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-  section: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#333',
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 6,
-    color: '#333',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 6,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: '#fff',
-    marginBottom: 16,
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 6,
-    backgroundColor: '#fff',
-    marginBottom: 16,
-  },
-  picker: {
-    height: 50,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-    gap: 12,
-  },
-  submitButton: {
-    backgroundColor: '#0066CC',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 6,
-    flex: 1,
-    alignItems: 'center',
-  },
-  submitButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  cancelButton: {
-    backgroundColor: '#666',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 6,
-    flex: 1,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  disabledButton: {
-    backgroundColor: '#ccc',
-  },
-});
+
