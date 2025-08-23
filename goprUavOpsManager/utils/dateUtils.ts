@@ -43,6 +43,11 @@ export const toDateIfTimestamp = (value: any): Date | undefined => {
 
 /**
  * Converts various date input types to a Firestore Timestamp
+ * 
+ * This utility fixes the issue where form submissions pass date fields as strings (YYYY-MM-DD),
+ * but Firestore expects Timestamp objects. Without proper conversion, dates get saved as 
+ * { seconds, nanoseconds } objects which break queries and display logic.
+ * 
  * @param value - The value to convert (string, Date, Timestamp, { seconds, nanoseconds }, null, or undefined)
  * @returns Firestore Timestamp or null if invalid input
  */

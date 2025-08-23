@@ -105,6 +105,11 @@ export class UserService {
       };
 
       // Convert Date objects to Firestore Timestamps using the utility function
+      // This fixes the issue where form date fields come as strings (YYYY-MM-DD) 
+      // and need to be converted to proper Firestore Timestamps to avoid 
+      // { seconds, nanoseconds } objects being saved to the database
+      // 
+      // Manual test: Edit a user profile with date fields, save, check Firestore console
       if (userData.operatorValidityDate !== undefined) {
         firestoreData.operatorValidityDate = toFirestoreTimestamp(userData.operatorValidityDate);
       }
