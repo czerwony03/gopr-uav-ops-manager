@@ -38,6 +38,16 @@ export const toDateIfTimestamp = (value: any): Date | undefined => {
   if (value instanceof Date) {
     return value;
   }
+  // Handle corrupted { seconds, nanoseconds } objects from Firestore
+  if (value && typeof value === 'object' && 'seconds' in value && 'nanoseconds' in value) {
+    try {
+      const timestamp = new Timestamp(value.seconds, value.nanoseconds);
+      return timestamp.toDate();
+    } catch (error) {
+      console.warn('Failed to convert corrupted timestamp object:', value, error);
+      return undefined;
+    }
+  }
   return undefined;
 };
 
