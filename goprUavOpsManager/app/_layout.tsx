@@ -6,6 +6,7 @@ import { CustomDrawerContent } from "@/components/CustomDrawerContent";
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import * as Sentry from '@sentry/react-native';
+import { CrossPlatformAlertProvider } from '@/components/CrossPlatformAlert';
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_URL,
@@ -164,7 +165,9 @@ export default Sentry.wrap(function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <RootLayoutNavigation />
+        <CrossPlatformAlertProvider>
+          <RootLayoutNavigation />
+        </CrossPlatformAlertProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );

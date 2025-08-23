@@ -1,7 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   RefreshControl,
   SafeAreaView,
@@ -18,6 +17,7 @@ import {useRouter} from 'expo-router';
 import {UserService} from '@/services/userService';
 import {UserRole} from "@/types/UserRole";
 import UserComponent from '@/components/UserComponent';
+import CrossPlatformAlert from '@/components/CrossPlatformAlert';
 
 interface UserData {
   id: string;
@@ -50,7 +50,7 @@ export default function UsersListScreen() {
       setUsers(usersData);
     } catch (error) {
       console.error('Error fetching users:', error);
-      Alert.alert(t('common.error'), t('users.errors.fetchFailed'));
+      CrossPlatformAlert.alert(t('common.error'), t('users.errors.fetchFailed'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -71,7 +71,7 @@ export default function UsersListScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (user?.role === 'admin' || user?.role === 'manager') {
+      if (user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER) {
         fetchUsers();
       }
     }, [fetchUsers, user])
@@ -88,7 +88,7 @@ export default function UsersListScreen() {
     return null;
   }
 
-  if (user.role !== 'admin' && user.role !== 'manager') {
+  if (user.role !== UserRole.ADMIN && user.role !== UserRole.MANAGER) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
@@ -113,15 +113,15 @@ export default function UsersListScreen() {
         )
       );
       
-      Alert.alert(t('common.success'), t('users.roleUpdated', { role: newRole }));
+      CrossPlatformAlert.alert(t('common.success'), t('users.roleUpdated', { role: newRole }));
     } catch (error) {
       console.error('Error updating user role:', error);
-      Alert.alert(t('common.error'), t('users.errors.roleUpdateFailed'));
+      CrossPlatformAlert.alert(t('common.error'), t('users.errors.roleUpdateFailed'));
     }
   };
 
   const showRoleUpdateDialog = (userId: string, _currentRole: UserRole) => {
-    Alert.alert(
+    CrossPlatformAlert.alert(
       t('users.updateRole'),
       t('users.selectNewRole'),
       [
@@ -141,8 +141,7 @@ export default function UsersListScreen() {
           text: t('common.cancel'),
           style: 'cancel',
         },
-      ],
-      { cancelable: true }
+      ]
     );
   };
 

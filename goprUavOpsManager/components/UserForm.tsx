@@ -5,7 +5,7 @@ import {Picker} from '@react-native-picker/picker';
 import {useTranslation} from 'react-i18next';
 import {AVAILABLE_QUALIFICATIONS, Qualification, UserFormData} from '@/types/User';
 import {UserRole} from "@/types/UserRole";
-import DatePicker from './DatePicker';
+import WebCompatibleDatePicker from './WebCompatibleDatePicker';
 
 interface UserFormProps {
   mode: 'create' | 'edit';
@@ -225,7 +225,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
               placeholder={t('userForm.operatorNumberPlaceholder')}
             />
 
-            <DatePicker
+            <WebCompatibleDatePicker
               label={t('userForm.operatorValidityDate')}
               value={formData.operatorValidityDate}
               onDateChange={(value) => updateFormData('operatorValidityDate', value)}
@@ -244,7 +244,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
               placeholder={t('userForm.pilotNumberPlaceholder')}
             />
 
-            <DatePicker
+            <WebCompatibleDatePicker
               label={t('userForm.pilotValidityDate')}
               value={formData.pilotValidityDate}
               onDateChange={(value) => updateFormData('pilotValidityDate', value)}
@@ -287,7 +287,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('userForm.insurance')}</Text>
             
-            <DatePicker
+            <WebCompatibleDatePicker
               label={t('userForm.insuranceDate')}
               value={formData.insurance}
               onDateChange={(value) => updateFormData('insurance', value)}

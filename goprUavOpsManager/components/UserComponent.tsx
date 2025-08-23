@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { formatDate, formatLastLogin } from '@/utils/dateUtils';
 import { UserRole } from '@/types/UserRole';
+import CrossPlatformAlert from './CrossPlatformAlert';
 
 interface UserData {
   id?: string;
@@ -50,11 +51,11 @@ export default function UserComponent({
 
   const getRoleColor = (role: UserRole) => {
     switch (role) {
-      case 'admin':
+      case UserRole.ADMIN:
         return '#FF6B6B';
-      case 'manager':
+      case UserRole.MANAGER:
         return '#4ECDC4';
-      case 'user':
+      case UserRole.USER:
         return '#45B7D1';
       default:
         return '#999';
@@ -95,7 +96,7 @@ export default function UserComponent({
             >
               <Text style={styles.editButtonText}>{t('common.edit')}</Text>
             </TouchableOpacity>
-            {currentUserRole === 'admin' && onRoleUpdate && (
+            {currentUserRole === UserRole.ADMIN && onRoleUpdate && (
               <TouchableOpacity
                 style={styles.roleButton}
                 onPress={() => onRoleUpdate(userId, user.role)}
