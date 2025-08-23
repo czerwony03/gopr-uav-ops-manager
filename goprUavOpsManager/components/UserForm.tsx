@@ -227,11 +227,13 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
 
             <Text style={styles.label}>{t('userForm.operatorValidityDate')}</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.operatorValidityDate && styles.inputError]}
               value={formData.operatorValidityDate}
               onChangeText={(value) => updateFormData('operatorValidityDate', value)}
-              placeholder={t('userForm.operatorValidityDate')}
+              placeholder="YYYY-MM-DD (e.g. 2024-12-31)"
+              keyboardType="numbers-and-punctuation"
             />
+            {errors.operatorValidityDate && <Text style={styles.errorText}>{errors.operatorValidityDate}</Text>}
           </View>
 
           <View style={styles.section}>
@@ -247,11 +249,13 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
 
             <Text style={styles.label}>{t('userForm.pilotValidityDate')}</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.pilotValidityDate && styles.inputError]}
               value={formData.pilotValidityDate}
               onChangeText={(value) => updateFormData('pilotValidityDate', value)}
-              placeholder={t('userForm.pilotValidityDate')}
+              placeholder="YYYY-MM-DD (e.g. 2024-12-31)"
+              keyboardType="numbers-and-punctuation"
             />
+            {errors.pilotValidityDate && <Text style={styles.errorText}>{errors.pilotValidityDate}</Text>}
 
             <Text style={styles.label}>{t('userForm.licenseConversionNumber')}</Text>
             <TextInput
@@ -291,11 +295,13 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
             
             <Text style={styles.label}>{t('userForm.insuranceDate')}</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.insurance && styles.inputError]}
               value={formData.insurance}
               onChangeText={(value) => updateFormData('insurance', value)}
-              placeholder={t('userForm.insuranceDatePlaceholder')}
+              placeholder="YYYY-MM-DD (e.g. 2024-12-31)"
+              keyboardType="numbers-and-punctuation"
             />
+            {errors.insurance && <Text style={styles.errorText}>{errors.insurance}</Text>}
           </View>
 
           <View style={styles.actionButtons}>
