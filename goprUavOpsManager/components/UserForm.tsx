@@ -4,8 +4,8 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {Picker} from '@react-native-picker/picker';
 import {useTranslation} from 'react-i18next';
 import {AVAILABLE_QUALIFICATIONS, Qualification, UserFormData} from '@/types/User';
-import {LanguagePickerField} from '@/src/components/LanguagePickerField';
 import {UserRole} from "@/types/UserRole";
+import DatePicker from './DatePicker';
 
 interface UserFormProps {
   mode: 'create' | 'edit';
@@ -225,15 +225,12 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
               placeholder={t('userForm.operatorNumberPlaceholder')}
             />
 
-            <Text style={styles.label}>{t('userForm.operatorValidityDate')}</Text>
-            <TextInput
-              style={[styles.input, errors.operatorValidityDate && styles.inputError]}
+            <DatePicker
+              label={t('userForm.operatorValidityDate')}
               value={formData.operatorValidityDate}
-              onChangeText={(value) => updateFormData('operatorValidityDate', value)}
-              placeholder="YYYY-MM-DD (e.g. 2024-12-31)"
-              keyboardType="numbers-and-punctuation"
+              onDateChange={(value) => updateFormData('operatorValidityDate', value)}
+              error={errors.operatorValidityDate}
             />
-            {errors.operatorValidityDate && <Text style={styles.errorText}>{errors.operatorValidityDate}</Text>}
           </View>
 
           <View style={styles.section}>
@@ -247,15 +244,12 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
               placeholder={t('userForm.pilotNumberPlaceholder')}
             />
 
-            <Text style={styles.label}>{t('userForm.pilotValidityDate')}</Text>
-            <TextInput
-              style={[styles.input, errors.pilotValidityDate && styles.inputError]}
+            <DatePicker
+              label={t('userForm.pilotValidityDate')}
               value={formData.pilotValidityDate}
-              onChangeText={(value) => updateFormData('pilotValidityDate', value)}
-              placeholder="YYYY-MM-DD (e.g. 2024-12-31)"
-              keyboardType="numbers-and-punctuation"
+              onDateChange={(value) => updateFormData('pilotValidityDate', value)}
+              error={errors.pilotValidityDate}
             />
-            {errors.pilotValidityDate && <Text style={styles.errorText}>{errors.pilotValidityDate}</Text>}
 
             <Text style={styles.label}>{t('userForm.licenseConversionNumber')}</Text>
             <TextInput
@@ -293,15 +287,12 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('userForm.insurance')}</Text>
             
-            <Text style={styles.label}>{t('userForm.insuranceDate')}</Text>
-            <TextInput
-              style={[styles.input, errors.insurance && styles.inputError]}
+            <DatePicker
+              label={t('userForm.insuranceDate')}
               value={formData.insurance}
-              onChangeText={(value) => updateFormData('insurance', value)}
-              placeholder="YYYY-MM-DD (e.g. 2024-12-31)"
-              keyboardType="numbers-and-punctuation"
+              onDateChange={(value) => updateFormData('insurance', value)}
+              error={errors.insurance}
             />
-            {errors.insurance && <Text style={styles.errorText}>{errors.insurance}</Text>}
           </View>
 
           <View style={styles.actionButtons}>

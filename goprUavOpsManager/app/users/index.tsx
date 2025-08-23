@@ -7,7 +7,6 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
@@ -18,6 +17,7 @@ import {useFocusEffect} from '@react-navigation/native';
 import {useRouter} from 'expo-router';
 import {UserService} from '@/services/userService';
 import {UserRole} from "@/types/UserRole";
+import UserComponent from '@/components/UserComponent';
 
 interface UserData {
   id: string;
@@ -146,55 +146,13 @@ export default function UsersListScreen() {
     );
   };
 
-  const getRoleColor = (role: UserRole) => {
-    switch (role) {
-      case 'admin':
-        return '#FF6B6B';
-      case 'manager':
-        return '#4ECDC4';
-      case 'user':
-        return '#45B7D1';
-      default:
-        return '#999';
-    }
-  };
-
   const renderUserItem = ({ item }: { item: UserData }) => (
-    <View style={styles.userCard}>
-      <View style={styles.userInfo}>
-        <Text style={styles.userEmail}>{item.email}</Text>
-        {(item.firstname || item.surname) && (
-          <Text style={styles.userName}>
-            {[item.firstname, item.surname].filter(Boolean).join(' ')}
-          </Text>
-        )}
-        <View style={[styles.roleBadge, { backgroundColor: getRoleColor(item.role) }]}>
-          <Text style={styles.roleText}>{item.role.toUpperCase()}</Text>
-        </View>
-      </View>
-      <View style={styles.actionButtons}>
-        <TouchableOpacity
-          style={styles.viewButton}
-          onPress={() => router.push(`/users/${item.id}`)}
-        >
-          <Text style={styles.viewButtonText}>{t('users.viewDetails')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => router.push(`/users/${item.id}/edit`)}
-        >
-          <Text style={styles.editButtonText}>{t('common.edit')}</Text>
-        </TouchableOpacity>
-        {user?.role === 'admin' && (
-          <TouchableOpacity
-            style={styles.roleButton}
-            onPress={() => showRoleUpdateDialog(item.id, item.role)}
-          >
-            <Text style={styles.roleButtonText}>{t('users.role')}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
+    <UserComponent
+      user={item}
+      mode="card"
+      currentUserRole={user?.role}
+      onRoleUpdate={showRoleUpdateDialog}
+    />
   );
 
   if (loading) {
@@ -303,90 +261,5 @@ const styles = StyleSheet.create({
   list: {
     flex: 1,
     padding: 16,
-  },
-  userCard: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userEmail: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 4,
-  },
-  userName: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  roleBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  roleText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  actionButtons: {
-    flexDirection: 'column',
-    gap: 6,
-  },
-  viewButton: {
-    backgroundColor: '#28a745',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 4,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  viewButtonText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  editButton: {
-    backgroundColor: '#0066CC',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 4,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  editButtonText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  roleButton: {
-    backgroundColor: '#ffc107',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 4,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  roleButtonText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: 'bold',
   },
 });
