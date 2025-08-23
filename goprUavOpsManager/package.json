@@ -61,6 +61,7 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@react-native-community/cli": "latest",
+    "@types/node": "^24.3.0",
     "@types/react": "~19.1.10",
     "eas-cli": "^16.17.4",
     "eslint": "^9.25.0",
