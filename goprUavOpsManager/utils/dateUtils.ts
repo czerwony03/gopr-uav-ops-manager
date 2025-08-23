@@ -40,3 +40,51 @@ export const toDateIfTimestamp = (value: any): Date | undefined => {
   }
   return undefined;
 };
+
+/**
+ * Converts various date input types to a Firestore Timestamp
+ * @param value - The value to convert (string, Date, Timestamp, { seconds, nanoseconds }, null, or undefined)
+ * @returns Firestore Timestamp or null if invalid input
+ */
+export const toFirestoreTimestamp = (value: any): Timestamp | null => {
+  // Handle null/undefined
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  // Already a Firestore Timestamp - return as is
+  if (value instanceof Timestamp) {
+    return value;
+  }
+
+  // JS Date object - convert to Timestamp
+  if (value instanceof Date) {
+    return Timestamp.fromDate(value);
+  }
+
+  // String date (YYYY-MM-DD format) - convert to Date then Timestamp
+  if (typeof value === 'string' && value.trim()) {
+    // Check if it's a valid YYYY-MM-DD format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (dateRegex.test(value.trim())) {
+      const date = new Date(value.trim() + 'T00:00:00.000Z'); // Parse as UTC to avoid timezone issues
+      if (!isNaN(date.getTime())) {
+        return Timestamp.fromDate(date);
+      }
+    }
+    
+    // Try parsing as ISO string or other date format
+    const parsedDate = new Date(value.trim());
+    if (!isNaN(parsedDate.getTime())) {
+      return Timestamp.fromDate(parsedDate);
+    }
+  }
+
+  // { seconds, nanoseconds } object - convert to Timestamp
+  if (value && typeof value === 'object' && 'seconds' in value && 'nanoseconds' in value) {
+    return new Timestamp(value.seconds, value.nanoseconds);
+  }
+
+  // Invalid input - return null
+  return null;
+};

@@ -2,7 +2,7 @@ import {collection, doc, getDoc, getDocs, orderBy, query, Timestamp, updateDoc} 
 import {db} from '@/firebaseConfig';
 import {User} from '@/types/User';
 import {UserRole} from "@/types/UserRole";
-import {toDateIfTimestamp} from "@/utils/dateUtils";
+import {toDateIfTimestamp, toFirestoreTimestamp} from "@/utils/dateUtils";
 import {filterUndefinedProperties} from "@/utils/filterUndefinedProperties";
 import {AuditLogService} from "@/services/auditLogService";
 import {Drone} from "@/types/Drone";
@@ -104,15 +104,15 @@ export class UserService {
         updatedAt: Timestamp.now(),
       };
 
-      // Convert Date objects to Firestore Timestamps
-      if (userData.operatorValidityDate) {
-        firestoreData.operatorValidityDate = Timestamp.fromDate(userData.operatorValidityDate);
+      // Convert Date objects to Firestore Timestamps using the utility function
+      if (userData.operatorValidityDate !== undefined) {
+        firestoreData.operatorValidityDate = toFirestoreTimestamp(userData.operatorValidityDate);
       }
-      if (userData.pilotValidityDate) {
-        firestoreData.pilotValidityDate = Timestamp.fromDate(userData.pilotValidityDate);
+      if (userData.pilotValidityDate !== undefined) {
+        firestoreData.pilotValidityDate = toFirestoreTimestamp(userData.pilotValidityDate);
       }
-      if (userData.insurance) {
-        firestoreData.insurance = Timestamp.fromDate(userData.insurance);
+      if (userData.insurance !== undefined) {
+        firestoreData.insurance = toFirestoreTimestamp(userData.insurance);
       }
 
       // Store previous values for audit log
