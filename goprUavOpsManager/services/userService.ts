@@ -120,9 +120,28 @@ export class UserService {
         firestoreData.insurance = toFirestoreTimestamp(userData.insurance);
       }
 
-      // Store previous values for audit log
-      const previousValues = { ...currentUser };
-      const newValues = { ...currentUser, ...userData };
+      // Store previous values for audit log - convert existing Firestore timestamps to Date objects for proper comparison
+      const previousValues = {
+        ...currentUser,
+        operatorValidityDate: toDateIfTimestamp(currentUser.operatorValidityDate),
+        pilotValidityDate: toDateIfTimestamp(currentUser.pilotValidityDate),
+        insurance: toDateIfTimestamp(currentUser.insurance),
+      };
+      
+      // Store new values for audit log - ensure date fields are properly converted
+      const newValues = { ...previousValues }; // Start with current state
+      
+      // Apply updates - convert the data that will be saved to what it will look like after save
+      Object.keys(userData).forEach(key => {
+        if (key === 'operatorValidityDate' || key === 'pilotValidityDate' || key === 'insurance') {
+          // Convert to Date object for audit log (what will be displayed) - handling undefined to null conversion
+          const inputValue = userData[key as keyof typeof userData];
+          const timestampValue = toFirestoreTimestamp(inputValue);
+          (newValues as any)[key] = timestampValue ? timestampValue.toDate() : undefined;
+        } else {
+          (newValues as any)[key] = userData[key as keyof typeof userData];
+        }
+      });
 
       await updateDoc(userRef, filterUndefinedProperties(firestoreData));
 
@@ -131,8 +150,8 @@ export class UserService {
         entityType: 'user',
         entityId: uid,
         action: 'edit',
-        requestorUid,
-        requestorEmail,
+        userId: requestorUid,
+        userEmail: requestorEmail,
         details: AuditLogService.createChangeDetails('edit', 'user', { previous: previousValues, new: newValues }),
         previousValues,
         newValues

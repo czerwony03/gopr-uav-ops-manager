@@ -82,6 +82,8 @@ export default function EditUserScreen() {
     try {
       const formDataWithDates = {
         ...formData,
+        // Convert empty strings to undefined (to maintain User type compatibility), valid date strings to Date objects
+        // This ensures empty date fields are properly cleared in Firestore
         operatorValidityDate: formData.operatorValidityDate ? new Date(formData.operatorValidityDate) : undefined,
         pilotValidityDate: formData.pilotValidityDate ? new Date(formData.pilotValidityDate) : undefined,
         insurance: formData.insurance ? new Date(formData.insurance) : undefined,
