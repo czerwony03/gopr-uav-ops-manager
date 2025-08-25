@@ -70,4 +70,4 @@ jobs:
           EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
 
       - name: Deploy to EAS Hosting (alias test)
-        run: npx eas deploy --alias test
+        run: npx eas deploy --platform web --alias test
