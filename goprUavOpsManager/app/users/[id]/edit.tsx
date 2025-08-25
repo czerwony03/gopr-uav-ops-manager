@@ -31,6 +31,7 @@ export default function EditUserScreen() {
           surname: userData.surname || '',
           phone: userData.phone || '',
           residentialAddress: userData.residentialAddress || '',
+          language: userData.language || 'pl', // Default to Polish if not set
           operatorNumber: userData.operatorNumber || '',
           operatorValidityDate: userData.operatorValidityDate ? userData.operatorValidityDate.toISOString().split('T')[0] : '',
           pilotNumber: userData.pilotNumber || '',
@@ -60,8 +61,8 @@ export default function EditUserScreen() {
       return;
     }
 
-    // Check permissions - only admins can edit users
-    if (user.role !== 'admin') {
+    // Check permissions - users can edit their own profile, managers and admins can edit any profile
+    if (user.role !== 'admin' && user.role !== 'manager' && user.uid !== id) {
       Alert.alert(t('common.accessDenied'), t('common.permissionDenied'), [
         { text: 'OK', onPress: () => router.back() }
       ]);
@@ -82,6 +83,8 @@ export default function EditUserScreen() {
     try {
       const formDataWithDates = {
         ...formData,
+        // Convert empty strings to undefined (to maintain User type compatibility), valid date strings to Date objects
+        // This ensures empty date fields are properly cleared in Firestore
         operatorValidityDate: formData.operatorValidityDate ? new Date(formData.operatorValidityDate) : undefined,
         pilotValidityDate: formData.pilotValidityDate ? new Date(formData.pilotValidityDate) : undefined,
         insurance: formData.insurance ? new Date(formData.insurance) : undefined,
@@ -116,6 +119,7 @@ export default function EditUserScreen() {
         onSave={handleSave}
         onCancel={handleCancel}
         loading={loading}
+        currentUserRole={user?.role}
       />
     </>
   );

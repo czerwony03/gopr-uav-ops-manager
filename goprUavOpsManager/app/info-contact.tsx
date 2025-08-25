@@ -68,7 +68,7 @@ export default function InfoContact() {
       <View style={styles.infoCard}>
         <Text style={styles.sectionTitle}>{t('contact.applicationInfo')}</Text>
         <Text style={styles.description}>
-          {t('contact.versionInfo', { version: ApplicationMetadata.getMetadata().applicationVersion })}
+          {t('contact.versionInfo', { version: ApplicationMetadata.getMetadata().applicationVersion, commitHash: ApplicationMetadata.getMetadata().commitHash })}
         </Text>
       </View>
     </ScrollView>

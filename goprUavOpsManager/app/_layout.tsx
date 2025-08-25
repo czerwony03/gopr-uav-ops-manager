@@ -6,6 +6,8 @@ import { CustomDrawerContent } from "@/components/CustomDrawerContent";
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import * as Sentry from '@sentry/react-native';
+import { CrossPlatformAlertProvider } from '@/components/CrossPlatformAlert';
+import '../src/i18n';
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_URL,
@@ -22,8 +24,6 @@ console.warn = (...args) => {
   Sentry.captureMessage(args.map(String).join(" "), 'warning');
   originalConsoleWarn.apply(console, args);
 };
-
-import '../src/i18n'; // Initialize i18n
 
 function RootLayoutNavigation() {
   const { user, loading } = useAuth();
@@ -164,7 +164,9 @@ export default Sentry.wrap(function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <RootLayoutNavigation />
+        <CrossPlatformAlertProvider>
+          <RootLayoutNavigation />
+        </CrossPlatformAlertProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );

@@ -4,8 +4,9 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {Picker} from '@react-native-picker/picker';
 import {useTranslation} from 'react-i18next';
 import {AVAILABLE_QUALIFICATIONS, Qualification, UserFormData} from '@/types/User';
-import {LanguagePickerField} from '@/src/components/LanguagePickerField';
 import {UserRole} from "@/types/UserRole";
+import WebCompatibleDatePicker from './WebCompatibleDatePicker';
+import {getAvailableLanguages} from '@/src/i18n';
 
 interface UserFormProps {
   mode: 'create' | 'edit';
@@ -13,9 +14,10 @@ interface UserFormProps {
   onSave: (data: UserFormData) => Promise<void>;
   onCancel: () => void;
   loading?: boolean;
+  currentUserRole?: UserRole;
 }
 
-export default function UserForm({ mode, initialData, onSave, onCancel, loading = false }: UserFormProps) {
+export default function UserForm({ mode, initialData, onSave, onCancel, loading = false, currentUserRole }: UserFormProps) {
   const { t } = useTranslation('common');
 
   // Default form data
@@ -26,6 +28,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
     surname: '',
     phone: '',
     residentialAddress: '',
+    language: 'pl', // Default to Polish
     operatorNumber: '',
     operatorValidityDate: '',
     pilotNumber: '',
@@ -38,6 +41,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
   const [formData, setFormData] = useState<UserFormData>(initialData || defaultFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const userRoles = Object.values(UserRole);
+  const availableLanguages = getAvailableLanguages();
 
   useEffect(() => {
     if (initialData) {
@@ -78,9 +82,16 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
       newErrors.surname = t('userForm.validation.surnameRequired');
     }
 
-    // Role
-    if (formData.role && !userRoles.includes(formData.role)) {
+    // Role (only validate if current user is admin)
+    if (currentUserRole === UserRole.ADMIN && formData.role && !userRoles.includes(formData.role)) {
       newErrors.role = t('userForm.validation.roleRequired');
+    }
+
+    // Language
+    if (!formData.language.trim()) {
+      newErrors.language = t('userForm.validation.languageRequired');
+    } else if (!availableLanguages.some(lang => lang.code === formData.language)) {
+      newErrors.language = t('userForm.validation.languageInvalid');
     }
 
     // Phone
@@ -119,7 +130,13 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
     if (!validateForm()) return;
 
     try {
-      await onSave(formData);
+      // Remove role from form data if current user is not admin
+      const submitData = { ...formData };
+      if (currentUserRole !== UserRole.ADMIN) {
+        delete submitData.role;
+      }
+      
+      await onSave(submitData);
     } catch (error) {
       // Error handling is done by the parent component
       throw error;
@@ -148,12 +165,13 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
             
             <Text style={styles.label}>{t('userForm.email')} *</Text>
             <TextInput
-              style={[styles.input, errors.email && styles.inputError]}
+              style={[styles.input, styles.disabledInput, errors.email && styles.inputError]}
               value={formData.email}
               onChangeText={(value) => updateFormData('email', value)}
               placeholder={t('userForm.emailPlaceholder')}
               keyboardType="email-address"
               autoCapitalize="none"
+              editable={false}
             />
             {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
@@ -175,24 +193,29 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
             />
             {errors.surname && <Text style={styles.errorText}>{errors.surname}</Text>}
 
-            <Text style={styles.label}>{t('userForm.role')} *</Text>
-            <View style={[styles.pickerContainer, errors.role && styles.inputError]}>
-              <Picker
-                selectedValue={formData.role}
-                onValueChange={(value) => updateFormData('role', value)}
-                style={styles.picker}
-              >
-                <Picker.Item label={t('userForm.rolePlaceholder')} value="" />
-                {userRoles.map(role => (
-                  <Picker.Item
-                    key={role}
-                    label={t(`user.roles.${role}`)}
-                    value={role}
-                  />
-                ))}
-              </Picker>
-            </View>
-            {errors.role && <Text style={styles.errorText}>{errors.role}</Text>}
+            {/* Only show role field for admin users */}
+            {currentUserRole === UserRole.ADMIN && (
+              <>
+                <Text style={styles.label}>{t('userForm.role')} *</Text>
+                <View style={[styles.pickerContainer, errors.role && styles.inputError]}>
+                  <Picker
+                    selectedValue={formData.role}
+                    onValueChange={(value) => updateFormData('role', value)}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label={t('userForm.rolePlaceholder')} value="" />
+                    {userRoles.map(role => (
+                      <Picker.Item
+                        key={role}
+                        label={t(`user.roles.${role}`)}
+                        value={role}
+                      />
+                    ))}
+                  </Picker>
+                </View>
+                {errors.role && <Text style={styles.errorText}>{errors.role}</Text>}
+              </>
+            )}
 
             <Text style={styles.label}>{t('userForm.phone')}</Text>
             <TextInput
@@ -212,6 +235,25 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
               multiline
               numberOfLines={3}
             />
+
+            <Text style={styles.label}>{t('userForm.language')}</Text>
+            <View style={[styles.pickerContainer, errors.language && styles.inputError]}>
+              <Picker
+                selectedValue={formData.language}
+                onValueChange={(value) => updateFormData('language', value)}
+                style={styles.picker}
+              >
+                <Picker.Item label={t('userForm.languagePlaceholder')} value="" />
+                {availableLanguages.map(lang => (
+                  <Picker.Item
+                    key={lang.code}
+                    label={t(`languages.${lang.code}`)}
+                    value={lang.code}
+                  />
+                ))}
+              </Picker>
+            </View>
+            {errors.language && <Text style={styles.errorText}>{errors.language}</Text>}
           </View>
 
           <View style={styles.section}>
@@ -225,12 +267,11 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
               placeholder={t('userForm.operatorNumberPlaceholder')}
             />
 
-            <Text style={styles.label}>{t('userForm.operatorValidityDate')}</Text>
-            <TextInput
-              style={styles.input}
+            <WebCompatibleDatePicker
+              label={t('userForm.operatorValidityDate')}
               value={formData.operatorValidityDate}
-              onChangeText={(value) => updateFormData('operatorValidityDate', value)}
-              placeholder={t('userForm.operatorValidityDate')}
+              onDateChange={(value) => updateFormData('operatorValidityDate', value)}
+              error={errors.operatorValidityDate}
             />
           </View>
 
@@ -245,12 +286,11 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
               placeholder={t('userForm.pilotNumberPlaceholder')}
             />
 
-            <Text style={styles.label}>{t('userForm.pilotValidityDate')}</Text>
-            <TextInput
-              style={styles.input}
+            <WebCompatibleDatePicker
+              label={t('userForm.pilotValidityDate')}
               value={formData.pilotValidityDate}
-              onChangeText={(value) => updateFormData('pilotValidityDate', value)}
-              placeholder={t('userForm.pilotValidityDate')}
+              onDateChange={(value) => updateFormData('pilotValidityDate', value)}
+              error={errors.pilotValidityDate}
             />
 
             <Text style={styles.label}>{t('userForm.licenseConversionNumber')}</Text>
@@ -289,12 +329,11 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('userForm.insurance')}</Text>
             
-            <Text style={styles.label}>{t('userForm.insuranceDate')}</Text>
-            <TextInput
-              style={styles.input}
+            <WebCompatibleDatePicker
+              label={t('userForm.insuranceDate')}
               value={formData.insurance}
-              onChangeText={(value) => updateFormData('insurance', value)}
-              placeholder={t('userForm.insuranceDatePlaceholder')}
+              onDateChange={(value) => updateFormData('insurance', value)}
+              error={errors.insurance}
             />
           </View>
 
@@ -379,6 +418,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#fff',
     marginBottom: 8,
+  },
+  disabledInput: {
+    backgroundColor: '#f5f5f5',
+    color: '#666',
   },
   inputError: {
     borderColor: '#ff0000',

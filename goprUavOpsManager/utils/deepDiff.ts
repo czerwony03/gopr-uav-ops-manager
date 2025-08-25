@@ -120,8 +120,24 @@ export function deepDiff(previous: any, current: any, basePath: string = ''): Ch
         !Array.isArray(prevValue) && !Array.isArray(currValue)) {
       const nestedChanges = deepDiff(prevValue, currValue, newPath);
       changes.push(...nestedChanges);
+    } else if (Array.isArray(prevValue) && Array.isArray(currValue)) {
+      // Handle arrays as object properties - compare content, not reference
+      if (JSON.stringify(prevValue) !== JSON.stringify(currValue)) {
+        changes.push({
+          path: newPath,
+          previousValue: prevValue,
+          newValue: currValue
+        });
+      }
+    } else if (Array.isArray(prevValue) || Array.isArray(currValue)) {
+      // Handle case where one is array and other is not (always different)
+      changes.push({
+        path: newPath,
+        previousValue: prevValue,
+        newValue: currValue
+      });
     } else {
-      // For primitives, arrays, or mixed types
+      // For primitives or mixed types
       if (prevValue !== currValue) {
         changes.push({
           path: newPath,

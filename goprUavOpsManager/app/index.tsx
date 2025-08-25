@@ -3,15 +3,15 @@ import { Text, View, StyleSheet, ScrollView, ActivityIndicator } from "react-nat
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "expo-router";
 import LoginScreen from "../screens/LoginScreen";
 import { Footer } from "@/components/Footer";
-import { formatDate, formatLastLogin } from "@/utils/dateUtils";
+import { formatLastLogin } from "@/utils/dateUtils";
+import UserComponent from "@/components/UserComponent";
+import { UserRole } from "@/types/UserRole";
 
 export default function Index() {
   const { user, loading } = useAuth();
   const { t } = useTranslation('common');
-  const router = useRouter();
   const insets = useSafeAreaInsets();
 
   console.log('[Index] Component render - user:', user?.uid, 'loading:', loading);
@@ -36,26 +36,26 @@ export default function Index() {
 
   console.log('[Index] User authenticated, showing dashboard for:', user.uid);
 
-  const getRoleColor = (role: string) => {
+  const getRoleColor = (role: UserRole) => {
     switch (role) {
-      case 'admin':
+      case UserRole.ADMIN:
         return '#FF6B6B';
-      case 'manager':
+      case UserRole.MANAGER:
         return '#4ECDC4';
-      case 'user':
+      case UserRole.USER:
         return '#45B7D1';
       default:
         return '#999';
     }
   };
 
-  const getRoleCapabilities = (role: string) => {
+  const getRoleCapabilities = (role: UserRole) => {
     switch (role) {
-      case 'admin':
+      case UserRole.ADMIN:
         return t('dashboard.capabilities.admin', { returnObjects: true }) as string[];
-      case 'manager':
+      case UserRole.MANAGER:
         return t('dashboard.capabilities.manager', { returnObjects: true }) as string[];
-      case 'user':
+      case UserRole.USER:
         return t('dashboard.capabilities.user', { returnObjects: true }) as string[];
       default:
         return t('dashboard.capabilities.default', { returnObjects: true }) as string[];
@@ -95,96 +95,15 @@ export default function Index() {
         </View>
       </View>
 
-      <View style={styles.profileDataContainer}>
-        <Text style={styles.profileDataTitle}>{t('dashboard.profileData')}</Text>
-        
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('dashboard.basicInformation')}</Text>
-          
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>{t('dashboard.email')}</Text>
-            <Text style={styles.fieldValue}>{user.email}</Text>
-          </View>
-          
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>{t('dashboard.firstName')}</Text>
-            <Text style={styles.fieldValue}>{user.firstname || t('dashboard.notSet')}</Text>
-          </View>
-          
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>{t('dashboard.surname')}</Text>
-            <Text style={styles.fieldValue}>{user.surname || t('dashboard.notSet')}</Text>
-          </View>
-          
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>{t('dashboard.phone')}</Text>
-            <Text style={styles.fieldValue}>{user.phone || t('dashboard.notSet')}</Text>
-          </View>
-          
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>{t('dashboard.residentialAddress')}</Text>
-            <Text style={styles.fieldValue}>{user.residentialAddress || t('dashboard.notSet')}</Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('dashboard.operatorInfo')}</Text>
-          
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>{t('dashboard.operatorNumber')}</Text>
-            <Text style={styles.fieldValue}>{user.operatorNumber || t('dashboard.notSet')}</Text>
-          </View>
-          
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>{t('dashboard.operatorValidityDate')}</Text>
-            <Text style={styles.fieldValue}>{formatDate(user.operatorValidityDate)}</Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('dashboard.pilotInfo')}</Text>
-          
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>{t('dashboard.pilotNumber')}</Text>
-            <Text style={styles.fieldValue}>{user.pilotNumber || t('dashboard.notSet')}</Text>
-          </View>
-          
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>{t('dashboard.pilotValidityDate')}</Text>
-            <Text style={styles.fieldValue}>{formatDate(user.pilotValidityDate)}</Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('dashboard.additionalInfo')}</Text>
-          
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>{t('dashboard.licenseConversion')}</Text>
-            <Text style={styles.fieldValue}>{user.licenseConversionNumber || t('dashboard.notSet')}</Text>
-          </View>
-          
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>{t('dashboard.insuranceDate')}</Text>
-            <Text style={styles.fieldValue}>{formatDate(user.insurance)}</Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('dashboard.qualifications')}</Text>
-          
-          {user.qualifications && user.qualifications.length > 0 ? (
-            <View style={styles.qualificationsContainer}>
-              {user.qualifications.map((qualification) => (
-                <View key={qualification} style={styles.qualificationBadge}>
-                  <Text style={styles.qualificationText}>{qualification}</Text>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <Text style={styles.fieldValue}>{t('dashboard.noQualifications')}</Text>
-          )}
-        </View>
-
+      <View style={styles.userDetailsContainer}>
+        <Text style={styles.userDetailsTitle}>{t('dashboard.profileData')}</Text>
+        <UserComponent 
+          user={user} 
+          mode="detail" 
+          showActions={true}
+          showDetailActions={false}
+          currentUserRole={user.role}
+        />
       </View>
 
       <View style={styles.infoContainer}>
@@ -294,7 +213,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     color: '#333',
   },
-  profileDataContainer: {
+  userDetailsContainer: {
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     padding: 20,
@@ -308,24 +227,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  profileDataTitle: {
+  userDetailsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 20,
     color: '#333',
     textAlign: 'center',
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-    paddingBottom: 5,
   },
   field: {
     marginBottom: 10,
@@ -339,22 +246,6 @@ const styles = StyleSheet.create({
   fieldValue: {
     fontSize: 16,
     color: '#333',
-  },
-  qualificationsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  qualificationBadge: {
-    backgroundColor: '#0066CC',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-  },
-  qualificationText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
   },
   infoContainer: {
     backgroundColor: '#FFFFFF',

@@ -2,7 +2,7 @@ import {collection, doc, getDoc, getDocs, orderBy, query, Timestamp, updateDoc} 
 import {db} from '@/firebaseConfig';
 import {User} from '@/types/User';
 import {UserRole} from "@/types/UserRole";
-import {toDateIfTimestamp} from "@/utils/dateUtils";
+import {toDateIfTimestamp, toFirestoreTimestamp} from "@/utils/dateUtils";
 import {filterUndefinedProperties} from "@/utils/filterUndefinedProperties";
 import {AuditLogService} from "@/services/auditLogService";
 import {Drone} from "@/types/Drone";
@@ -104,20 +104,45 @@ export class UserService {
         updatedAt: Timestamp.now(),
       };
 
-      // Convert Date objects to Firestore Timestamps
-      if (userData.operatorValidityDate) {
-        firestoreData.operatorValidityDate = Timestamp.fromDate(userData.operatorValidityDate);
+      // Convert Date objects to Firestore Timestamps using the utility function
+      // This fixes the issue where form date fields come as strings (YYYY-MM-DD) 
+      // and need to be converted to proper Firestore Timestamps to avoid 
+      // { seconds, nanoseconds } objects being saved to the database
+      // 
+      // Process date fields even when undefined to allow clearing them (undefined -> null)
+      // Manual test: Edit a user profile with date fields, save, check Firestore console
+      if ('operatorValidityDate' in userData) {
+        firestoreData.operatorValidityDate = toFirestoreTimestamp(userData.operatorValidityDate);
       }
-      if (userData.pilotValidityDate) {
-        firestoreData.pilotValidityDate = Timestamp.fromDate(userData.pilotValidityDate);
+      if ('pilotValidityDate' in userData) {
+        firestoreData.pilotValidityDate = toFirestoreTimestamp(userData.pilotValidityDate);
       }
-      if (userData.insurance) {
-        firestoreData.insurance = Timestamp.fromDate(userData.insurance);
+      if ('insurance' in userData) {
+        firestoreData.insurance = toFirestoreTimestamp(userData.insurance);
       }
 
-      // Store previous values for audit log
-      const previousValues = { ...currentUser };
-      const newValues = { ...currentUser, ...userData };
+      // Store previous values for audit log - convert existing Firestore timestamps to Date objects for proper comparison
+      const previousValues = {
+        ...currentUser,
+        operatorValidityDate: toDateIfTimestamp(currentUser.operatorValidityDate),
+        pilotValidityDate: toDateIfTimestamp(currentUser.pilotValidityDate),
+        insurance: toDateIfTimestamp(currentUser.insurance),
+      };
+      
+      // Store new values for audit log - ensure date fields are properly converted
+      const newValues = { ...previousValues }; // Start with current state
+      
+      // Apply updates - convert the data that will be saved to what it will look like after save
+      Object.keys(userData).forEach(key => {
+        if (key === 'operatorValidityDate' || key === 'pilotValidityDate' || key === 'insurance') {
+          // Convert to Date object for audit log (what will be displayed) - handling undefined to null conversion
+          const inputValue = userData[key as keyof typeof userData];
+          const timestampValue = toFirestoreTimestamp(inputValue);
+          (newValues as any)[key] = timestampValue ? timestampValue.toDate() : null;
+        } else {
+          (newValues as any)[key] = userData[key as keyof typeof userData];
+        }
+      });
 
       await updateDoc(userRef, filterUndefinedProperties(firestoreData));
 
@@ -126,8 +151,8 @@ export class UserService {
         entityType: 'user',
         entityId: uid,
         action: 'edit',
-        requestorUid,
-        requestorEmail,
+        userId: requestorUid,
+        userEmail: requestorEmail,
         details: AuditLogService.createChangeDetails('edit', 'user', { previous: previousValues, new: newValues }),
         previousValues,
         newValues

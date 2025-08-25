@@ -67,7 +67,7 @@ export default function DroneDetailsScreen() {
     }
 
     fetchDrone();
-  }, [id, user, router]);
+  }, [id, user, router, t]);
 
   const handleEdit = () => {
     if (!drone) return;

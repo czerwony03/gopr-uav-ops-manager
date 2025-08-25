@@ -3,7 +3,6 @@ import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserService } from '@/services/userService';
 import UserForm from '@/components/UserForm';
 import { UserFormData } from '@/types/User';
 
@@ -29,7 +28,7 @@ export default function CreateUserScreen() {
     }
   }, [user, router, t]);
 
-  const handleSave = async (formData: UserFormData) => {
+  const handleSave = async (_formData: UserFormData) => {
     if (!user) return;
 
     setLoading(true);
@@ -55,6 +54,7 @@ export default function CreateUserScreen() {
       onSave={handleSave}
       onCancel={handleCancel}
       loading={loading}
+      currentUserRole={user?.role}
     />
   );
 }
