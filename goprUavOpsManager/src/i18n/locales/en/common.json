@@ -601,7 +601,7 @@
     "generalContact": "General Contact",
     "technicalContact": "Technical Contact",
     "applicationInfo": "Application Info",
-    "versionInfo": "GOPR UAV Ops Manager v{{version}}\nDeveloped for GOPR (Volunteer Mountain Rescue Service)",
+    "versionInfo": "GOPR UAV Ops Manager v{{version}} ({{commitHash}})\nDeveloped for GOPR (Volunteer Mountain Rescue Service)",
     "cannotOpenLink": "Cannot open this link",
     "failedToOpenLink": "Failed to open link"
   },

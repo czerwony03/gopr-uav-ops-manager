@@ -601,7 +601,7 @@
     "generalContact": "Kontakt ogólny",
     "technicalContact": "Kontakt techniczny",
     "applicationInfo": "Informacje o aplikacji",
-    "versionInfo": "GOPR UAV Ops Manager v{{version}}\nOpracowano dla Grupy Bieszczadzkiej GOPR",
+    "versionInfo": "GOPR UAV Ops Manager v{{version}} ({{commitHash}})\nOpracowano dla Grupy Bieszczadzkiej GOPR",
     "cannotOpenLink": "Nie można otworzyć tego linku",
     "failedToOpenLink": "Nie udało się otworzyć linku"
   },
