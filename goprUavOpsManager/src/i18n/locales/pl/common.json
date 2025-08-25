@@ -112,6 +112,10 @@
     "theme": "Motyw",
     "profile": "Profil"
   },
+  "languages": {
+    "pl": "Polski",
+    "en": "English"
+  },
   "users": {
     "title": "Użytkownicy",
     "management": "Zarządzanie użytkownikami",
@@ -163,6 +167,8 @@
     "phonePlaceholder": "Wprowadź numer telefonu",
     "address": "Adres zamieszkania",
     "addressPlaceholder": "Wprowadź adres zamieszkania",
+    "language": "Język",
+    "languagePlaceholder": "Wybierz język",
     "role": "Rola",
     "rolePlaceholder": "Wybierz rolę",
     "operatorNumber": "Numer operatora",
@@ -192,6 +198,8 @@
       "emailInvalid": "Wprowadź poprawny adres e-mail.",
       "firstnameRequired": "Imię jest wymagane.",
       "roleRequired": "Rola jest wymagana.",
+      "languageRequired": "Język jest wymagany.",
+      "languageInvalid": "Wybrany język jest nieprawidłowy.",
       "phoneInvalid": "Wprowadź poprawny numer telefonu.",
       "dateInvalid": "Użyj formatu daty RRRR-MM-DD.",
       "qualificationsInvalid": "Wybrana kwalifikacja jest nieprawidłowa."

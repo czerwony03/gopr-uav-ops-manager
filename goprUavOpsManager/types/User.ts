@@ -15,6 +15,7 @@ export interface User {
   surname?: string;
   phone?: string;
   residentialAddress?: string;
+  language?: string; // 'pl' or 'en'
   
   // Operator Information
   operatorNumber?: string;
@@ -47,6 +48,7 @@ export interface UserFormData {
   surname: string;
   phone: string;
   residentialAddress: string;
+  language: string; // 'pl' or 'en'
   operatorNumber: string;
   operatorValidityDate: string; // YYYY-MM-DD format
   pilotNumber: string;

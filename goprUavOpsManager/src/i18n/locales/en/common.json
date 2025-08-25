@@ -112,6 +112,10 @@
     "theme": "Theme",
     "profile": "Profile"
   },
+  "languages": {
+    "pl": "Polski",
+    "en": "English"
+  },
   "users": {
     "title": "Users",
     "management": "User Management",
@@ -163,6 +167,8 @@
     "phonePlaceholder": "Enter phone number",
     "address": "Residential Address",
     "addressPlaceholder": "Enter residential address",
+    "language": "Language",
+    "languagePlaceholder": "Choose language",
     "role": "Role",
     "rolePlaceholder": "Choose role",
     "operatorNumber": "Operator Number",
@@ -192,6 +198,8 @@
       "emailInvalid": "Please enter a valid email address.",
       "firstnameRequired": "First name is required.",
       "roleRequired": "Role is required.",
+      "languageRequired": "Language is required.",
+      "languageInvalid": "Selected language is not valid.",
       "phoneInvalid": "Please enter a valid phone number.",
       "dateInvalid": "Please use the YYYY-MM-DD date format.",
       "qualificationsInvalid": "Selected qualification is not valid."

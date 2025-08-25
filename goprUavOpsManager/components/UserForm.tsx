@@ -6,6 +6,7 @@ import {useTranslation} from 'react-i18next';
 import {AVAILABLE_QUALIFICATIONS, Qualification, UserFormData} from '@/types/User';
 import {UserRole} from "@/types/UserRole";
 import WebCompatibleDatePicker from './WebCompatibleDatePicker';
+import {getAvailableLanguages} from '@/src/i18n';
 
 interface UserFormProps {
   mode: 'create' | 'edit';
@@ -27,6 +28,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
     surname: '',
     phone: '',
     residentialAddress: '',
+    language: 'pl', // Default to Polish
     operatorNumber: '',
     operatorValidityDate: '',
     pilotNumber: '',
@@ -39,6 +41,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
   const [formData, setFormData] = useState<UserFormData>(initialData || defaultFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const userRoles = Object.values(UserRole);
+  const availableLanguages = getAvailableLanguages();
 
   useEffect(() => {
     if (initialData) {
@@ -82,6 +85,13 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
     // Role (only validate if current user is admin)
     if (currentUserRole === UserRole.ADMIN && formData.role && !userRoles.includes(formData.role)) {
       newErrors.role = t('userForm.validation.roleRequired');
+    }
+
+    // Language
+    if (!formData.language.trim()) {
+      newErrors.language = t('userForm.validation.languageRequired');
+    } else if (!availableLanguages.some(lang => lang.code === formData.language)) {
+      newErrors.language = t('userForm.validation.languageInvalid');
     }
 
     // Phone
@@ -155,12 +165,13 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
             
             <Text style={styles.label}>{t('userForm.email')} *</Text>
             <TextInput
-              style={[styles.input, errors.email && styles.inputError]}
+              style={[styles.input, styles.disabledInput, errors.email && styles.inputError]}
               value={formData.email}
               onChangeText={(value) => updateFormData('email', value)}
               placeholder={t('userForm.emailPlaceholder')}
               keyboardType="email-address"
               autoCapitalize="none"
+              editable={false}
             />
             {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
@@ -224,6 +235,25 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
               multiline
               numberOfLines={3}
             />
+
+            <Text style={styles.label}>{t('userForm.language')}</Text>
+            <View style={[styles.pickerContainer, errors.language && styles.inputError]}>
+              <Picker
+                selectedValue={formData.language}
+                onValueChange={(value) => updateFormData('language', value)}
+                style={styles.picker}
+              >
+                <Picker.Item label={t('userForm.languagePlaceholder')} value="" />
+                {availableLanguages.map(lang => (
+                  <Picker.Item
+                    key={lang.code}
+                    label={t(`languages.${lang.code}`)}
+                    value={lang.code}
+                  />
+                ))}
+              </Picker>
+            </View>
+            {errors.language && <Text style={styles.errorText}>{errors.language}</Text>}
           </View>
 
           <View style={styles.section}>
@@ -388,6 +418,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#fff',
     marginBottom: 8,
+  },
+  disabledInput: {
+    backgroundColor: '#f5f5f5',
+    color: '#666',
   },
   inputError: {
     borderColor: '#ff0000',

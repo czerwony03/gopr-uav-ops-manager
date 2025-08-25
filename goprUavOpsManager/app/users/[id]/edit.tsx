@@ -31,6 +31,7 @@ export default function EditUserScreen() {
           surname: userData.surname || '',
           phone: userData.phone || '',
           residentialAddress: userData.residentialAddress || '',
+          language: userData.language || 'pl', // Default to Polish if not set
           operatorNumber: userData.operatorNumber || '',
           operatorValidityDate: userData.operatorValidityDate ? userData.operatorValidityDate.toISOString().split('T')[0] : '',
           pilotNumber: userData.pilotNumber || '',
