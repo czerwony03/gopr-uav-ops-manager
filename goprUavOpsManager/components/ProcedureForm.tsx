@@ -8,10 +8,12 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { ProcedureChecklistFormData, ChecklistItemFormData } from '@/types/ProcedureChecklist';
 
 interface ProcedureFormProps {
@@ -108,6 +110,87 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
         items: newItems.map((item, i) => ({ ...item, number: i + 1 }))
       };
     });
+  };
+
+  // Image handling functions
+  const selectImage = async (itemIndex: number) => {
+    try {
+      // Request permissions
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert(t('procedureForm.imagePermissionTitle'), t('procedureForm.imagePermissionMessage'));
+        return;
+      }
+
+      // Launch image picker
+      const pickerResult = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!pickerResult.canceled && pickerResult.assets[0]) {
+        updateItemFormData(itemIndex, 'image', pickerResult.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error selecting image:', error);
+      Alert.alert(t('procedureForm.error'), t('procedureForm.imageSelectionError'));
+    }
+  };
+
+  const takePhoto = async (itemIndex: number) => {
+    try {
+      // Request permissions
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert(t('procedureForm.cameraPermissionTitle'), t('procedureForm.cameraPermissionMessage'));
+        return;
+      }
+
+      // Launch camera
+      const cameraResult = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!cameraResult.canceled && cameraResult.assets[0]) {
+        updateItemFormData(itemIndex, 'image', cameraResult.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      Alert.alert(t('procedureForm.error'), t('procedureForm.photoError'));
+    }
+  };
+
+  const removeImage = (itemIndex: number) => {
+    Alert.alert(
+      t('procedureForm.removeImageTitle'),
+      t('procedureForm.removeImageMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.remove'),
+          style: 'destructive',
+          onPress: () => updateItemFormData(itemIndex, 'image', '')
+        }
+      ]
+    );
+  };
+
+  const showImageOptions = (itemIndex: number) => {
+    Alert.alert(
+      t('procedureForm.selectImageTitle'),
+      t('procedureForm.selectImageMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('procedureForm.takePhoto'), onPress: () => takePhoto(itemIndex) },
+        { text: t('procedureForm.chooseFromLibrary'), onPress: () => selectImage(itemIndex) }
+      ]
+    );
   };
 
   const validateForm = (): boolean => {
@@ -232,6 +315,43 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
                   onChangeText={(value) => updateItemFormData(index, 'link', value)}
                   placeholder={t('procedureForm.linkPlaceholder')}
                 />
+
+                <Text style={styles.label}>{t('procedureForm.image')}</Text>
+                <View style={styles.imageSection}>
+                  {item.image ? (
+                    <View style={styles.imageContainer}>
+                      <Image 
+                        source={{ uri: item.image }} 
+                        style={styles.previewImage}
+                        resizeMode="cover"
+                      />
+                      <View style={styles.imageActions}>
+                        <TouchableOpacity 
+                          style={styles.imageActionButton}
+                          onPress={() => showImageOptions(index)}
+                        >
+                          <Ionicons name="camera" size={16} color="#0066CC" />
+                          <Text style={styles.imageActionText}>{t('procedureForm.changeImage')}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                          style={[styles.imageActionButton, styles.removeImageButton]}
+                          onPress={() => removeImage(index)}
+                        >
+                          <Ionicons name="trash" size={16} color="#ff0000" />
+                          <Text style={[styles.imageActionText, styles.removeImageText]}>{t('procedureForm.removeImage')}</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : (
+                    <TouchableOpacity 
+                      style={styles.addImageButton}
+                      onPress={() => showImageOptions(index)}
+                    >
+                      <Ionicons name="camera" size={24} color="#666" />
+                      <Text style={styles.addImageText}>{t('procedureForm.addImage')}</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             ))}
 
@@ -423,5 +543,67 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#ccc',
+  },
+  // Image upload styles
+  imageSection: {
+    marginBottom: 16,
+  },
+  imageContainer: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#f8f9fa',
+  },
+  previewImage: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#f0f0f0',
+  },
+  imageActions: {
+    flexDirection: 'row',
+    padding: 12,
+    gap: 12,
+  },
+  imageActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#0066CC',
+  },
+  removeImageButton: {
+    borderColor: '#ff0000',
+  },
+  imageActionText: {
+    color: '#0066CC',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  removeImageText: {
+    color: '#ff0000',
+  },
+  addImageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 32,
+    paddingHorizontal: 16,
+    borderWidth: 2,
+    borderColor: '#ddd',
+    borderStyle: 'dashed',
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
+  },
+  addImageText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '500',
   },
 });

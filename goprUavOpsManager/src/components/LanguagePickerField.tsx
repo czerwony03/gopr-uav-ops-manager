@@ -33,7 +33,7 @@ export const LanguagePickerField: React.FC<LanguagePickerFieldProps> = ({
       <Text style={styles.label}>{t('settings.language')}</Text>
       <View style={styles.pickerContainer}>
         <Picker
-          selectedValue={currentLanguage}
+          selectedValue={String(currentLanguage || '')}
           onValueChange={handleLanguageChange}
           style={styles.picker}
         >

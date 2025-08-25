@@ -23,12 +23,12 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
   // Default form data
   const defaultFormData: UserFormData = {
     email: '',
-    role: UserRole.USER,
+    role: '' as UserRole, // Use empty string for proper picker behavior on Android
     firstname: '',
     surname: '',
     phone: '',
     residentialAddress: '',
-    language: 'pl', // Default to Polish
+    language: '', // Use empty string for proper picker behavior on Android  
     operatorNumber: '',
     operatorValidityDate: '',
     pilotNumber: '',
@@ -199,7 +199,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
                 <Text style={styles.label}>{t('userForm.role')} *</Text>
                 <View style={[styles.pickerContainer, errors.role && styles.inputError]}>
                   <Picker
-                    selectedValue={formData.role}
+                    selectedValue={String(formData.role || '')}
                     onValueChange={(value) => updateFormData('role', value)}
                     style={styles.picker}
                   >
@@ -239,7 +239,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
             <Text style={styles.label}>{t('userForm.language')}</Text>
             <View style={[styles.pickerContainer, errors.language && styles.inputError]}>
               <Picker
-                selectedValue={formData.language}
+                selectedValue={String(formData.language || '')}
                 onValueChange={(value) => updateFormData('language', value)}
                 style={styles.picker}
               >
