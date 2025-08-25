@@ -102,7 +102,8 @@ export default function Index() {
         <UserComponent 
           user={user} 
           mode="detail" 
-          showActions={false}
+          showActions={true}
+          currentUserRole={user.role}
         />
       </View>
 

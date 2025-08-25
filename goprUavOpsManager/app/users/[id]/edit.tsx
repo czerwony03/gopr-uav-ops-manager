@@ -60,8 +60,8 @@ export default function EditUserScreen() {
       return;
     }
 
-    // Check permissions - only admins can edit users
-    if (user.role !== 'admin') {
+    // Check permissions - users can edit their own profile, managers and admins can edit any profile
+    if (user.role !== 'admin' && user.role !== 'manager' && user.uid !== id) {
       Alert.alert(t('common.accessDenied'), t('common.permissionDenied'), [
         { text: 'OK', onPress: () => router.back() }
       ]);
