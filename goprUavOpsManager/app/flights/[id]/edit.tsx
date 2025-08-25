@@ -119,8 +119,8 @@ export default function EditFlightScreen() {
         startTime: startDateTime,
         endTime: endDateTime,
         conditions: formData.conditions,
-        userId: user.uid,
-        userEmail: user.email,
+        // Don't include userId and userEmail in updates - they should remain as the original user's data
+        // Only the updatedBy field should track who made the change
       };
 
       await FlightService.updateFlight(id, flightData, user.role, user.uid);

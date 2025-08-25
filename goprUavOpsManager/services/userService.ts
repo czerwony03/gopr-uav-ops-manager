@@ -109,14 +109,15 @@ export class UserService {
       // and need to be converted to proper Firestore Timestamps to avoid 
       // { seconds, nanoseconds } objects being saved to the database
       // 
+      // Process date fields even when undefined to allow clearing them (undefined -> null)
       // Manual test: Edit a user profile with date fields, save, check Firestore console
-      if (userData.operatorValidityDate !== undefined) {
+      if ('operatorValidityDate' in userData) {
         firestoreData.operatorValidityDate = toFirestoreTimestamp(userData.operatorValidityDate);
       }
-      if (userData.pilotValidityDate !== undefined) {
+      if ('pilotValidityDate' in userData) {
         firestoreData.pilotValidityDate = toFirestoreTimestamp(userData.pilotValidityDate);
       }
-      if (userData.insurance !== undefined) {
+      if ('insurance' in userData) {
         firestoreData.insurance = toFirestoreTimestamp(userData.insurance);
       }
 
@@ -137,7 +138,7 @@ export class UserService {
           // Convert to Date object for audit log (what will be displayed) - handling undefined to null conversion
           const inputValue = userData[key as keyof typeof userData];
           const timestampValue = toFirestoreTimestamp(inputValue);
-          (newValues as any)[key] = timestampValue ? timestampValue.toDate() : undefined;
+          (newValues as any)[key] = timestampValue ? timestampValue.toDate() : null;
         } else {
           (newValues as any)[key] = userData[key as keyof typeof userData];
         }
