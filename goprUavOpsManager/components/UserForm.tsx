@@ -131,12 +131,12 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
 
     try {
       // Remove role from form data if current user is not admin
-      const submitData = { ...formData };
       if (currentUserRole !== UserRole.ADMIN) {
-        delete submitData.role;
+        const { role, ...submitDataWithoutRole } = formData;
+        await onSave(submitDataWithoutRole as UserFormData);
+      } else {
+        await onSave(formData);
       }
-      
-      await onSave(submitData);
     } catch (error) {
       // Error handling is done by the parent component
       throw error;
