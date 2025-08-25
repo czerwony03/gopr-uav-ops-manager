@@ -1,6 +1,7 @@
 name: Deploy Expo Web to EAS Hosting
 permissions:
   contents: read
+  pull-requests: write
 
 on:
   workflow_dispatch:
@@ -8,12 +9,17 @@ on:
     workflows: [ "Automatic Version Bump" ]
     types:
       - completed
+  issue_comment:
+    types: [created]
 
 jobs:
-  deploy:
+  deploy-web:
     if: >
-      (github.event_name == 'workflow_dispatch') ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'issue_comment' &&
+       (github.event.comment.body == '/build' || github.event.comment.body == '/build web') &&
+       github.event.issue.pull_request != null)
     runs-on: ubuntu-latest
 
     defaults:
@@ -64,4 +70,4 @@ jobs:
           EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
 
       - name: Deploy to EAS Hosting (alias test)
-        run: npx eas deploy --alias test
+        run: npx eas deploy --platform web --alias test

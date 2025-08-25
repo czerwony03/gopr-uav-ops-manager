@@ -1,6 +1,7 @@
 name: Build Android Signed APK & AAB
 permissions:
   contents: read
+  pull-requests: write
 
 on:
   workflow_dispatch:
@@ -18,12 +19,18 @@ on:
     workflows: [ "Automatic Version Bump" ]
     types:
       - completed
+  issue_comment:
+    types: [created]
 
 jobs:
   build-android:
-    if: github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
-    runs-on: self-hosted #ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'issue_comment' &&
+       (github.event.comment.body == '/build' || github.event.comment.body == '/build android') &&
+       github.event.issue.pull_request != null)
+    runs-on: self-hosted
 
     defaults:
       run:
@@ -31,7 +38,11 @@ jobs:
 
     env:
       VARS_CONTEXT: ${{ toJson(vars) }}
-      BUILD_TYPE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.buildType || 'both' }}
+      BUILD_TYPE: ${{
+          github.event_name == 'workflow_dispatch' && github.event.inputs.buildType ||
+          (github.event_name == 'issue_comment' && (github.event.comment.body == '/build' || github.event.comment.body == '/build android') && 'apk') ||
+          'both'
+      }}
       EXPO_PUBLIC_GIT_COMMIT_HASH: ${{ github.sha }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 

@@ -17,6 +17,11 @@ console.error = (...args) => {
   Sentry.captureMessage(args.map(String).join(" "), 'error');
   originalConsoleError.apply(console, args);
 };
+const originalConsoleWarn = console.warn;
+console.warn = (...args) => {
+  Sentry.captureMessage(args.map(String).join(" "), 'warning');
+  originalConsoleWarn.apply(console, args);
+};
 
 import '../src/i18n'; // Initialize i18n
 
