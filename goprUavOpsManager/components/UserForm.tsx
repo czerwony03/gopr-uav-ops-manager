@@ -13,9 +13,10 @@ interface UserFormProps {
   onSave: (data: UserFormData) => Promise<void>;
   onCancel: () => void;
   loading?: boolean;
+  currentUserRole?: UserRole;
 }
 
-export default function UserForm({ mode, initialData, onSave, onCancel, loading = false }: UserFormProps) {
+export default function UserForm({ mode, initialData, onSave, onCancel, loading = false, currentUserRole }: UserFormProps) {
   const { t } = useTranslation('common');
 
   // Default form data
@@ -78,8 +79,8 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
       newErrors.surname = t('userForm.validation.surnameRequired');
     }
 
-    // Role
-    if (formData.role && !userRoles.includes(formData.role)) {
+    // Role (only validate if current user is admin)
+    if (currentUserRole === UserRole.ADMIN && formData.role && !userRoles.includes(formData.role)) {
       newErrors.role = t('userForm.validation.roleRequired');
     }
 
@@ -119,7 +120,13 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
     if (!validateForm()) return;
 
     try {
-      await onSave(formData);
+      // Remove role from form data if current user is not admin
+      const submitData = { ...formData };
+      if (currentUserRole !== UserRole.ADMIN) {
+        delete submitData.role;
+      }
+      
+      await onSave(submitData);
     } catch (error) {
       // Error handling is done by the parent component
       throw error;
@@ -175,24 +182,29 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
             />
             {errors.surname && <Text style={styles.errorText}>{errors.surname}</Text>}
 
-            <Text style={styles.label}>{t('userForm.role')} *</Text>
-            <View style={[styles.pickerContainer, errors.role && styles.inputError]}>
-              <Picker
-                selectedValue={formData.role}
-                onValueChange={(value) => updateFormData('role', value)}
-                style={styles.picker}
-              >
-                <Picker.Item label={t('userForm.rolePlaceholder')} value="" />
-                {userRoles.map(role => (
-                  <Picker.Item
-                    key={role}
-                    label={t(`user.roles.${role}`)}
-                    value={role}
-                  />
-                ))}
-              </Picker>
-            </View>
-            {errors.role && <Text style={styles.errorText}>{errors.role}</Text>}
+            {/* Only show role field for admin users */}
+            {currentUserRole === UserRole.ADMIN && (
+              <>
+                <Text style={styles.label}>{t('userForm.role')} *</Text>
+                <View style={[styles.pickerContainer, errors.role && styles.inputError]}>
+                  <Picker
+                    selectedValue={formData.role}
+                    onValueChange={(value) => updateFormData('role', value)}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label={t('userForm.rolePlaceholder')} value="" />
+                    {userRoles.map(role => (
+                      <Picker.Item
+                        key={role}
+                        label={t(`user.roles.${role}`)}
+                        value={role}
+                      />
+                    ))}
+                  </Picker>
+                </View>
+                {errors.role && <Text style={styles.errorText}>{errors.role}</Text>}
+              </>
+            )}
 
             <Text style={styles.label}>{t('userForm.phone')}</Text>
             <TextInput

@@ -54,6 +54,7 @@ export default function CreateUserScreen() {
       onSave={handleSave}
       onCancel={handleCancel}
       loading={loading}
+      currentUserRole={user?.role}
     />
   );
 }

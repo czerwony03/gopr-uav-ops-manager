@@ -118,6 +118,7 @@ export default function EditUserScreen() {
         onSave={handleSave}
         onCancel={handleCancel}
         loading={loading}
+        currentUserRole={user?.role}
       />
     </>
   );
