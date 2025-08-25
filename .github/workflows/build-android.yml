@@ -38,11 +38,7 @@ jobs:
 
     env:
       VARS_CONTEXT: ${{ toJson(vars) }}
-      BUILD_TYPE: ${{
-          github.event_name == 'workflow_dispatch' && github.event.inputs.buildType ||
-          (github.event_name == 'issue_comment' && (github.event.comment.body == '/build' || github.event.comment.body == '/build android') && 'apk') ||
-          'both'
-      }}
+      BUILD_TYPE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.buildType || (github.event_name == 'issue_comment' && (github.event.comment.body == '/build' || github.event.comment.body == '/build android') && 'apk') || 'both' }}
       EXPO_PUBLIC_GIT_COMMIT_HASH: ${{ github.sha }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
