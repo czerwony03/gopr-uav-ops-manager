@@ -5,6 +5,7 @@ import {auth, firestore} from '@/firebaseConfig';
 import {User as FullUser} from '../types/User';
 import {UserService} from '@/services/userService';
 import {UserRole} from "@/types/UserRole";
+import {changeLanguage} from '@/src/i18n';
 
 // Extended interface that includes all user profile data
 export interface UserData extends FullUser {
@@ -80,6 +81,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const fullUserData = await UserService.getUser(firebaseUser.uid, role, firebaseUser.uid);
         if (fullUserData) {
           console.log('[AuthContext] Successfully loaded full user data');
+          
+          // Apply user's language preference if set
+          if (fullUserData.language && (fullUserData.language === 'pl' || fullUserData.language === 'en')) {
+            console.log('[AuthContext] Applying user language preference:', fullUserData.language);
+            try {
+              await changeLanguage(fullUserData.language);
+            } catch (languageError) {
+              console.warn('[AuthContext] Failed to change language:', languageError);
+            }
+          }
+          
           return fullUserData as UserData;
         }
         console.log('[AuthContext] No full user data returned from UserService');

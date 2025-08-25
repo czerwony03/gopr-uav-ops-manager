@@ -78,6 +78,7 @@ export default function UserDetailsScreen() {
         <UserComponent
           user={user}
           mode="detail"
+          showDetailActions={true}
         />
       </ScrollView>
     </SafeAreaView>

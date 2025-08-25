@@ -101,6 +101,7 @@ export default function Index() {
           user={user} 
           mode="detail" 
           showActions={true}
+          showDetailActions={false}
           currentUserRole={user.role}
         />
       </View>

@@ -19,6 +19,7 @@ interface UserData {
   surname?: string;
   phone?: string;
   residentialAddress?: string;
+  language?: string;
   operatorNumber?: string;
   operatorValidityDate?: Date;
   pilotNumber?: string;
@@ -33,6 +34,7 @@ interface UserComponentProps {
   user: UserData;
   mode: 'card' | 'detail';
   showActions?: boolean;
+  showDetailActions?: boolean; // Controls edit/back buttons in detail mode
   currentUserRole?: UserRole;
   onRoleUpdate?: (userId: string, currentRole: UserRole) => void;
 }
@@ -41,6 +43,7 @@ export default function UserComponent({
   user,
   mode,
   showActions = true,
+  showDetailActions = true,
   currentUserRole,
   onRoleUpdate,
 }: UserComponentProps) {
@@ -146,6 +149,13 @@ export default function UserComponent({
           <Text style={styles.fieldLabel}>{t('userForm.address')}</Text>
           <Text style={styles.fieldValue}>{user.residentialAddress || t('userDetails.noAddress')}</Text>
         </View>
+        
+        <View style={styles.field}>
+          <Text style={styles.fieldLabel}>{t('userForm.language')}</Text>
+          <Text style={styles.fieldValue}>
+            {user.language === 'en' ? 'English' : user.language === 'pl' ? 'Polski' : t('userDetails.noData')}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.section}>
@@ -217,7 +227,7 @@ export default function UserComponent({
         </View>
       )}
 
-      {showActions && (
+      {showDetailActions && (
         <View style={styles.detailActionButtons}>
           <TouchableOpacity
             style={styles.editButton}
