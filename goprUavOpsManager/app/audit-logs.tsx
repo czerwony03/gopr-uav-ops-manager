@@ -13,14 +13,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { Stack } from 'expo-router';
-import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { AuditLogService } from '@/services/auditLogService';
 import { AuditLog, AuditLogQuery, PaginatedAuditLogResponse, AuditEntityType, AuditAction } from '@/types/AuditLog';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function AuditLogsScreen() {
-  const { t } = useTranslation('common');
   const insets = useSafeAreaInsets();
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);

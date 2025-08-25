@@ -55,7 +55,7 @@ export default function UsersListScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user]);
+  }, [user, t]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {

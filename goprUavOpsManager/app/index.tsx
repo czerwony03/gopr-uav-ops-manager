@@ -3,17 +3,15 @@ import { Text, View, StyleSheet, ScrollView, ActivityIndicator } from "react-nat
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "expo-router";
 import LoginScreen from "../screens/LoginScreen";
 import { Footer } from "@/components/Footer";
-import { formatDate, formatLastLogin } from "@/utils/dateUtils";
+import { formatLastLogin } from "@/utils/dateUtils";
 import UserComponent from "@/components/UserComponent";
 import { UserRole } from "@/types/UserRole";
 
 export default function Index() {
   const { user, loading } = useAuth();
   const { t } = useTranslation('common');
-  const router = useRouter();
   const insets = useSafeAreaInsets();
 
   console.log('[Index] Component render - user:', user?.uid, 'loading:', loading);

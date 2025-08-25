@@ -9,7 +9,6 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { formatDate, formatLastLogin } from '@/utils/dateUtils';
 import { UserRole } from '@/types/UserRole';
-import CrossPlatformAlert from './CrossPlatformAlert';
 
 interface UserData {
   id?: string;
