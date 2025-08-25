@@ -9,11 +9,12 @@ import {
   Alert,
   ActivityIndicator,
   Image,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
+import { WebCompatibleImagePicker } from './WebCompatibleImagePicker';
 import { ProcedureChecklistFormData, ChecklistItemFormData } from '@/types/ProcedureChecklist';
 
 interface ProcedureFormProps {
@@ -116,7 +117,7 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
   const selectImage = async (itemIndex: number) => {
     try {
       // Request permissions
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permissionResult = await WebCompatibleImagePicker.requestMediaLibraryPermissionsAsync();
       
       if (permissionResult.granted === false) {
         Alert.alert(t('procedureForm.imagePermissionTitle'), t('procedureForm.imagePermissionMessage'));
@@ -124,14 +125,14 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
       }
 
       // Launch image picker
-      const pickerResult = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      const pickerResult = await WebCompatibleImagePicker.launchImageLibraryAsync({
+        mediaTypes: 'Images',
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
       });
 
-      if (!pickerResult.canceled && pickerResult.assets[0]) {
+      if (!pickerResult.canceled && pickerResult.assets?.[0]) {
         updateItemFormData(itemIndex, 'image', pickerResult.assets[0].uri);
       }
     } catch (error) {
@@ -143,7 +144,7 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
   const takePhoto = async (itemIndex: number) => {
     try {
       // Request permissions
-      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      const permissionResult = await WebCompatibleImagePicker.requestCameraPermissionsAsync();
       
       if (permissionResult.granted === false) {
         Alert.alert(t('procedureForm.cameraPermissionTitle'), t('procedureForm.cameraPermissionMessage'));
@@ -151,13 +152,13 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
       }
 
       // Launch camera
-      const cameraResult = await ImagePicker.launchCameraAsync({
+      const cameraResult = await WebCompatibleImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
       });
 
-      if (!cameraResult.canceled && cameraResult.assets[0]) {
+      if (!cameraResult.canceled && cameraResult.assets?.[0]) {
         updateItemFormData(itemIndex, 'image', cameraResult.assets[0].uri);
       }
     } catch (error) {
@@ -182,15 +183,28 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
   };
 
   const showImageOptions = (itemIndex: number) => {
-    Alert.alert(
-      t('procedureForm.selectImageTitle'),
-      t('procedureForm.selectImageMessage'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        { text: t('procedureForm.takePhoto'), onPress: () => takePhoto(itemIndex) },
-        { text: t('procedureForm.chooseFromLibrary'), onPress: () => selectImage(itemIndex) }
-      ]
-    );
+    if (Platform.OS === 'web') {
+      // On web, only show file selection since camera access is different
+      Alert.alert(
+        t('procedureForm.selectImageTitle'),
+        t('procedureForm.selectImageMessage'),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('procedureForm.chooseFromLibrary'), onPress: () => selectImage(itemIndex) }
+        ]
+      );
+    } else {
+      // On mobile, show both camera and library options
+      Alert.alert(
+        t('procedureForm.selectImageTitle'),
+        t('procedureForm.selectImageMessage'),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('procedureForm.takePhoto'), onPress: () => takePhoto(itemIndex) },
+          { text: t('procedureForm.chooseFromLibrary'), onPress: () => selectImage(itemIndex) }
+        ]
+      );
+    }
   };
 
   const validateForm = (): boolean => {

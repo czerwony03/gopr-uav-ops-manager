@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
+import {ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Platform} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Picker} from '@react-native-picker/picker';
 import {useTranslation} from 'react-i18next';
@@ -23,12 +23,12 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
   // Default form data
   const defaultFormData: UserFormData = {
     email: '',
-    role: '' as UserRole, // Use empty string for proper picker behavior on Android
+    role: '' as UserRole, // Keep empty for placeholder, but handle display better
     firstname: '',
     surname: '',
     phone: '',
     residentialAddress: '',
-    language: '', // Use empty string for proper picker behavior on Android  
+    language: '', // Keep empty for placeholder, but handle display better
     operatorNumber: '',
     operatorValidityDate: '',
     pilotNumber: '',
@@ -436,9 +436,22 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: '#fff',
     marginBottom: 8,
+    // Android-specific styling to ensure proper display
+    ...(Platform.OS === 'android' && {
+      paddingHorizontal: 4,
+    }),
   },
   picker: {
     height: 50,
+    // Android-specific styling to ensure selected value is visible
+    ...(Platform.OS === 'android' && {
+      color: '#333',
+      backgroundColor: 'transparent',
+    }),
+    // iOS specific styling
+    ...(Platform.OS === 'ios' && {
+      color: '#333',
+    }),
   },
   errorText: {
     color: '#ff0000',

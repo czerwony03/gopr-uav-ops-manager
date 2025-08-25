@@ -439,9 +439,22 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: '#fff',
     marginBottom: 16,
+    // Android-specific styling to ensure proper display
+    ...(Platform.OS === 'android' && {
+      paddingHorizontal: 4,
+    }),
   },
   picker: {
     height: 50,
+    // Android-specific styling to ensure selected value is visible
+    ...(Platform.OS === 'android' && {
+      color: '#333',
+      backgroundColor: 'transparent',
+    }),
+    // iOS specific styling
+    ...(Platform.OS === 'ios' && {
+      color: '#333',
+    }),
   },
   actionButtons: {
     flexDirection: 'row',
