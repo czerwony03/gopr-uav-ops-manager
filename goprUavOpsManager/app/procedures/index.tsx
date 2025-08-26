@@ -5,7 +5,6 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
@@ -16,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ProcedureChecklist } from '@/types/ProcedureChecklist';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 export default function ProceduresListScreen() {
   const [checklists, setChecklists] = useState<ProcedureChecklist[]>([]);
@@ -24,6 +24,7 @@ export default function ProceduresListScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   const fetchChecklists = useCallback(async () => {
     if (!user) return;
