@@ -218,16 +218,18 @@ const styles = StyleSheet.create({
 
 // Hook for using CrossPlatformAlert in components
 export function useCrossPlatformAlert() {
-  return {
-    showAlert: (options: {
-      title: string;
-      message?: string;
-      buttons?: AlertButton[];
-      options?: any;
-    }) => {
-      CrossPlatformAlert.alert(options.title, options.message, options.buttons, options.options);
-    }
-  };
+  const showAlert = React.useCallback((options: {
+    title: string;
+    message?: string;
+    buttons?: AlertButton[];
+    options?: any;
+  }) => {
+    CrossPlatformAlert.alert(options.title, options.message, options.buttons, options.options);
+  }, []);
+
+  return React.useMemo(() => ({
+    showAlert
+  }), [showAlert]);
 }
 
 export default CrossPlatformAlert;
