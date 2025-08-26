@@ -65,7 +65,7 @@ export default function Index() {
   return (
     <ScrollView 
       style={styles.container} 
-      contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom + 32, 32) }]}
+      contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom + 20, 20) }]}
     >
       <View style={styles.header}>
         <Text style={styles.title}>{t('dashboard.title')}</Text>
