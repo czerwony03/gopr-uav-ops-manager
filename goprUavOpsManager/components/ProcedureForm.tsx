@@ -127,8 +127,7 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
       // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
-        allowsEditing: true,
-        aspect: [16, 9],
+        allowsEditing: false,
         quality: 0.8,
       });
 
