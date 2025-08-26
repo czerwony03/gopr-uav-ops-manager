@@ -22,7 +22,8 @@
     "lastLogin": "Ostatnie logowanie",
     "accountActivity": "Aktywność konta",
     "contactAdmin": "Skontaktuj się z administratorem w celu uzyskania dostępu do konta",
-    "time": "Czas"
+    "time": "Czas",
+    "totalTime": "Całkowity czas"
   },
   "nav": {
     "home": "Strona główna",
