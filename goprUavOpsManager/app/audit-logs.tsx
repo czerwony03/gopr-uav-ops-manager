@@ -5,7 +5,6 @@ import {
   Text, 
   View, 
   ActivityIndicator,
-  Alert,
   RefreshControl,
   TouchableOpacity,
   TextInput
@@ -17,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AuditLogService } from '@/services/auditLogService';
 import { AuditLog, AuditLogQuery, PaginatedAuditLogResponse, AuditEntityType, AuditAction } from '@/types/AuditLog';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 export default function AuditLogsScreen() {
   const insets = useSafeAreaInsets();
@@ -24,6 +24,7 @@ export default function AuditLogsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [paginationData, setPaginationData] = useState<PaginatedAuditLogResponse | null>(null);
+  const crossPlatformAlert = useCrossPlatformAlert();
   
   // Filter states
   const [filters, setFilters] = useState<AuditLogQuery>({
@@ -61,7 +62,7 @@ export default function AuditLogsScreen() {
       setPaginationData(response);
     } catch (error) {
       console.error('Error loading audit logs:', error);
-      Alert.alert('Error', 'Failed to load audit logs');
+      crossPlatformAlert.showAlert({ title: 'Error', message: 'Failed to load audit logs' });
     } finally {
       if (showLoadingIndicator) {
         setLoading(false);

@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
@@ -15,6 +14,7 @@ import { Flight } from '@/types/Flight';
 import { useAuth } from '@/contexts/AuthContext';
 import { FlightService } from '@/services/flightService';
 import { UserService } from '@/services/userService';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 export default function FlightDetailsScreen() {
   const { t } = useTranslation('common');
@@ -25,6 +25,7 @@ export default function FlightDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const router = useRouter();
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   useEffect(() => {
     const fetchFlight = async () => {
@@ -33,9 +34,13 @@ export default function FlightDetailsScreen() {
       try {
         const flightData = await FlightService.getFlight(id, user.role, user.uid);
         if (!flightData) {
-          Alert.alert(t('common.error'), t('flightDetails.notFound'), [
-            { text: t('common.ok'), onPress: () => router.back() }
-          ]);
+          crossPlatformAlert.showAlert({ 
+            title: t('common.error'), 
+            message: t('flightDetails.notFound'),
+            buttons: [
+              { text: t('common.ok'), onPress: () => router.back() }
+            ]
+          });
           return;
         }
         setFlight(flightData);
@@ -51,9 +56,13 @@ export default function FlightDetailsScreen() {
         }
       } catch (error) {
         console.error('Error fetching flight:', error);
-        Alert.alert(t('common.error'), t('flightDetails.loadError'), [
-          { text: t('common.ok'), onPress: () => router.back() }
-        ]);
+        crossPlatformAlert.showAlert({ 
+          title: t('common.error'), 
+          message: t('flightDetails.loadError'),
+          buttons: [
+            { text: t('common.ok'), onPress: () => router.back() }
+          ]
+        });
       } finally {
         setLoading(false);
       }

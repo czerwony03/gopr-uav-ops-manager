@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -14,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { User } from '@/types/User';
 import { UserService } from '@/services/userService';
 import UserComponent from '@/components/UserComponent';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 export default function UserDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -22,6 +22,7 @@ export default function UserDetailsScreen() {
   const { t } = useTranslation('common');
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   const fetchUserDetails = useCallback(async () => {
     if (!currentUser || !id) return;
@@ -31,13 +32,17 @@ export default function UserDetailsScreen() {
       setUser(userData);
     } catch (error) {
       console.error('Error fetching user details:', error);
-      Alert.alert(t('common.error'), t('userDetails.loadError'), [
-        { text: t('common.ok'), onPress: () => router.back() }
-      ]);
+      crossPlatformAlert.showAlert({ 
+        title: t('common.error'), 
+        message: t('userDetails.loadError'),
+        buttons: [
+          { text: t('common.ok'), onPress: () => router.back() }
+        ]
+      });
     } finally {
       setLoading(false);
     }
-  }, [currentUser, id, router, t]);
+  }, [currentUser, id, router, t, crossPlatformAlert]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {

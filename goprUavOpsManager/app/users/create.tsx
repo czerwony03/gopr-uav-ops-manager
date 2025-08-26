@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import UserForm from '@/components/UserForm';
 import { UserFormData } from '@/types/User';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 export default function CreateUserScreen() {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   useEffect(() => {
     // Check authentication first - redirect to login if not authenticated
@@ -21,12 +22,16 @@ export default function CreateUserScreen() {
 
     // Check permissions - only admins can create users
     if (user.role !== 'admin') {
-      Alert.alert(t('common.accessDenied'), t('common.permissionDenied'), [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
+      crossPlatformAlert.showAlert({ 
+        title: t('common.accessDenied'), 
+        message: t('common.permissionDenied'),
+        buttons: [
+          { text: 'OK', onPress: () => router.back() }
+        ]
+      });
       return;
     }
-  }, [user, router, t]);
+  }, [user, router, t, crossPlatformAlert]);
 
   const handleSave = async (_formData: UserFormData) => {
     if (!user) return;
@@ -35,10 +40,10 @@ export default function CreateUserScreen() {
     try {
       //await UserService.createUser(formData, user.uid, user.email);
       router.back();
-      Alert.alert(t('userForm.success'), t('userForm.userCreated'));
+      crossPlatformAlert.showAlert({ title: t('userForm.success'), message: t('userForm.userCreated') });
     } catch (error) {
       console.error('Error creating user:', error);
-      Alert.alert(t('userForm.error'), t('userForm.failedToCreate'));
+      crossPlatformAlert.showAlert({ title: t('userForm.error'), message: t('userForm.failedToCreate') });
     } finally {
       setLoading(false);
     }

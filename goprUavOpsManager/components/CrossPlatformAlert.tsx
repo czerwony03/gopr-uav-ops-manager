@@ -216,4 +216,18 @@ const styles = StyleSheet.create({
   },
 });
 
+// Hook for using CrossPlatformAlert in components
+export function useCrossPlatformAlert() {
+  return {
+    showAlert: (options: {
+      title: string;
+      message?: string;
+      buttons?: AlertButton[];
+      options?: any;
+    }) => {
+      CrossPlatformAlert.alert(options.title, options.message, options.buttons, options.options);
+    }
+  };
+}
+
 export default CrossPlatformAlert;
