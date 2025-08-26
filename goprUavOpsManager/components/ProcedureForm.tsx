@@ -6,7 +6,6 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   Image,
 } from 'react-native';
@@ -15,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { ProcedureChecklistFormData, ChecklistItemFormData } from '@/types/ProcedureChecklist';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 interface ProcedureFormProps {
   mode: 'create' | 'edit';
@@ -26,6 +26,7 @@ interface ProcedureFormProps {
 
 export default function ProcedureForm({ mode, initialData, onSave, onCancel, loading = false }: ProcedureFormProps) {
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   // Default form data
   const defaultFormData: ProcedureChecklistFormData = {
@@ -72,10 +73,10 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
   };
 
   const removeItem = (index: number) => {
-    Alert.alert(
-      t('procedureForm.confirmDelete'),
-      t('procedureForm.confirmDeleteMessage'),
-      [
+    crossPlatformAlert.showAlert({
+      title: t('procedureForm.confirmDelete'),
+      message: t('procedureForm.confirmDeleteMessage'),
+      buttons: [
         { text: t('common.cancel'), style: 'cancel' },
         {
           text: t('common.delete'),
@@ -91,7 +92,7 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
           }
         }
       ]
-    );
+    });
   };
 
   const moveItem = (index: number, direction: 'up' | 'down') => {
@@ -115,7 +116,10 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
       // Request permission
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert(t('procedureForm.permissionRequired'), t('procedureForm.permissionDenied'));
+        crossPlatformAlert.showAlert({ 
+          title: t('procedureForm.permissionRequired'), 
+          message: t('procedureForm.permissionDenied') 
+        });
         return;
       }
 
@@ -135,29 +139,44 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert(t('procedureForm.error'), t('procedureForm.failedToPickImage'));
+      crossPlatformAlert.showAlert({ 
+        title: t('procedureForm.error'), 
+        message: t('procedureForm.failedToPickImage') 
+      });
     }
   };
 
   const validateForm = (): boolean => {
     if (!formData.title.trim()) {
-      Alert.alert(t('procedureForm.error'), t('procedureForm.titleRequired'));
+      crossPlatformAlert.showAlert({ 
+        title: t('procedureForm.error'), 
+        message: t('procedureForm.titleRequired') 
+      });
       return false;
     }
 
     if (formData.items.length === 0) {
-      Alert.alert(t('procedureForm.error'), t('procedureForm.itemsRequired'));
+      crossPlatformAlert.showAlert({ 
+        title: t('procedureForm.error'), 
+        message: t('procedureForm.itemsRequired') 
+      });
       return false;
     }
 
     for (let i = 0; i < formData.items.length; i++) {
       const item = formData.items[i];
       if (!item.topic.trim()) {
-        Alert.alert(t('procedureForm.error'), t('procedureForm.itemTopicRequired', { number: i + 1 }));
+        crossPlatformAlert.showAlert({ 
+          title: t('procedureForm.error'), 
+          message: t('procedureForm.itemTopicRequired', { number: i + 1 }) 
+        });
         return false;
       }
       if (!item.content.trim()) {
-        Alert.alert(t('procedureForm.error'), t('procedureForm.itemContentRequired', { number: i + 1 }));
+        crossPlatformAlert.showAlert({ 
+          title: t('procedureForm.error'), 
+          message: t('procedureForm.itemContentRequired', { number: i + 1 }) 
+        });
         return false;
       }
     }
