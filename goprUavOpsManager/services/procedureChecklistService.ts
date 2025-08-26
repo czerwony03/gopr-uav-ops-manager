@@ -1,27 +1,22 @@
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  query, 
-  where,
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
   orderBy,
-  Timestamp 
+  query,
+  Timestamp,
+  updateDoc,
+  where
 } from 'firebase/firestore';
-import { 
-  ref, 
-  uploadBytes, 
-  getDownloadURL, 
-  deleteObject 
-} from 'firebase/storage';
-import { db, storage } from '../firebaseConfig';
-import { ProcedureChecklist, ProcedureChecklistFormData, ChecklistItemFormData } from '../types/ProcedureChecklist';
-import { AuditLogService } from './auditLogService';
-import { UserService } from './userService';
+import {deleteObject, getDownloadURL, ref, uploadBytes} from 'firebase/storage';
+import {db, storage} from '@/firebaseConfig';
+import {ChecklistItemFormData, ProcedureChecklist, ProcedureChecklistFormData} from '@/types/ProcedureChecklist';
+import {AuditLogService} from './auditLogService';
+import {UserService} from './userService';
 import {UserRole} from "@/types/UserRole";
-import { ImageProcessingService } from '../utils/imageProcessing';
+import {ImageProcessingService} from '@/utils/imageProcessing';
 
 export class ProcedureChecklistService {
   private static readonly COLLECTION_NAME = 'procedures_checklists';
@@ -288,7 +283,9 @@ export class ProcedureChecklistService {
       const blob = await response.blob();
       
       const imageRef = ref(storage, `procedures_checklists/images/${fileName}`);
-      await uploadBytes(imageRef, blob);
+      await uploadBytes(imageRef, blob, {
+        cacheControl: 'public,max-age=31536000' // Cache for 1 year
+      });
       
       const downloadUrl = await getDownloadURL(imageRef);
       
@@ -341,8 +338,7 @@ export class ProcedureChecklistService {
       if (item.image && (item.image.startsWith('data:') || item.image.startsWith('file:'))) {
         try {
           const fileName = `${Date.now()}_${item.id}.jpg`;
-          const imageUrl = await this.uploadImage(item.image, fileName);
-          processedItem.image = imageUrl;
+          processedItem.image = await this.uploadImage(item.image, fileName);
         } catch (error) {
           console.error('Error uploading image for item:', item.id, error);
           // Continue without image if upload fails
