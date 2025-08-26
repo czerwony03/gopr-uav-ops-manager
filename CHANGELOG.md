@@ -5,7 +5,7 @@ All notable changes to the GOPR UAV Ops Manager application are documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.32] - 2024-12-XX
+## [1.0.32] - 2025-08-26
 
 ### Enhanced
 - Improved application stability and performance optimizations
@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minor bug fixes and performance improvements
 - Improved error handling and user feedback
 
-## [1.0.31] - 2024-12-XX
+## [1.0.31] - 2025-08-26
 
 ### Enhanced
 - Refined audit logging system with better performance
@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resolved minor UI inconsistencies
 - Fixed date picker compatibility issues on web platform
 
-## [1.0.30] - 2024-12-XX
+## [1.0.30] - 2025-08-26
 
 ### Enhanced
 - Optimized Firestore query performance
@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed soft-delete restoration functionality
 - Resolved image upload issues on certain devices
 
-## [1.0.29] - 2024-12-XX
+## [1.0.29] - 2025-08-25
 
 ### Enhanced
 - Improved drawer navigation performance
@@ -49,7 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed authentication state management edge cases
 - Resolved internationalization loading issues
 
-## [1.0.28] - 2024-12-XX
+## [1.0.28] - 2025-08-23
 
 ### Enhanced
 - Enhanced audit trail filtering capabilities
@@ -60,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Google Workspace SSO on mobile platforms
 - Resolved form submission edge cases
 
-## [1.0.27] - 2024-12-XX
+## [1.0.27] - 2025-08-22
 
 ### Enhanced
 - Improved Info & Contact screen layout
@@ -71,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed image preview functionality
 - Resolved date formatting issues across locales
 
-## [1.0.26] - 2024-12-XX
+## [1.0.26] - 2025-08-22
 
 ### Enhanced
 - Optimized Firebase Storage integration
@@ -82,7 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed procedure checklist image display
 - Resolved authentication token refresh issues
 
-## [1.0.25] - 2024-12-XX
+## [1.0.25] - 2025-08-22
 
 ### Enhanced
 - Improved user management interface
@@ -93,7 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed user profile update functionality
 - Resolved operator number validation
 
-## [1.0.24] - 2024-12-XX
+## [1.0.24] - 2025-08-22
 
 ### Enhanced
 - Enhanced audit log search and filtering
@@ -104,7 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed audit log pagination issues
 - Resolved timestamp display inconsistencies
 
-## [1.0.23] - 2024-12-XX
+## [1.0.23] - 2025-08-22
 
 ### Enhanced
 - Improved drone management interface
@@ -115,7 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed soft-delete functionality for drones
 - Resolved weight unit display issues
 
-## [1.0.22] - 2024-12-XX
+## [1.0.22] - 2025-08-20
 
 ### Enhanced
 - Enhanced procedure checklist management
@@ -126,7 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed procedure creation workflow
 - Resolved image upload validation
 
-## [1.0.21] - 2024-12-XX
+## [1.0.21] - 2025-08-20
 
 ### Enhanced
 - Improved Polish language translations
@@ -137,7 +137,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed translation keys for new features
 - Resolved locale-specific date formatting
 
-## [1.0.20] - 2024-12-XX
+## [1.0.20] - 2025-08-20
 
 ### Enhanced
 - Enhanced Sentry error reporting configuration
@@ -148,7 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed memory leaks in component lifecycle
 - Resolved navigation state issues
 
-## [1.0.19] - 2024-12-XX
+## [1.0.19] - 2025-08-20
 
 ### Enhanced
 - Improved web platform compatibility
@@ -159,7 +159,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed web-specific authentication flows
 - Resolved CSS styling issues on web platform
 
-## [1.0.18] - 2024-12-XX
+## [1.0.18] - 2025-08-20
 
 ### Enhanced
 - Enhanced Firebase Functions for domain validation
@@ -170,7 +170,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed domain restriction enforcement
 - Resolved Firebase Functions deployment issues
 
-## [1.0.17] - 2024-12-XX
+## [1.0.17] - 2025-08-20
 
 ### Enhanced
 - Improved Android deep linking configuration
@@ -181,7 +181,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Android package name conflicts
 - Resolved version code synchronization
 
-## [1.0.16] - 2024-12-XX
+## [1.0.16] - 2025-08-20
 
 ### Enhanced
 - Enhanced iOS platform support
@@ -192,7 +192,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed iOS build configuration issues
 - Resolved certificate validation problems
 
-## [1.0.15] - 2024-12-XX
+## [1.0.15] - 2025-08-20
 
 ### Added
 - Comprehensive audit logging system
@@ -205,7 +205,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced compliance capabilities
 - Better data integrity tracking
 
-## [1.0.14] - 2024-12-XX
+## [1.0.14] - 2025-08-20
 
 ### Enhanced
 - Improved soft-delete functionality
@@ -216,7 +216,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed restore workflow edge cases
 - Resolved soft-delete state synchronization
 
-## [1.0.13] - 2024-12-XX
+## [1.0.13] - 2025-08-20
 
 ### Added
 - Firebase Storage integration
@@ -228,7 +228,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better visual procedure guidance
 - Enhanced user experience with visual aids
 
-## [1.0.12] - 2024-12-XX
+## [1.0.12] - 2025-08-19
 
 ### Enhanced
 - Improved form validation across all entities
@@ -239,7 +239,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed validation edge cases
 - Resolved form submission race conditions
 
-## [1.0.11] - 2024-12-XX
+## [1.0.11] - 2025-08-19
 
 ### Added
 - Real-time data synchronization with Firestore
@@ -251,7 +251,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better collaboration capabilities
 - Enhanced multi-user experience
 
-## [1.0.10] - 2024-12-XX
+## [1.0.10] - 2025-08-19
 
 ### Added
 - Advanced role-based access control
@@ -264,7 +264,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Secure data access patterns
 - Better administrative capabilities
 
-## [1.0.9] - 2024-12-XX
+## [1.0.9] - 2025-08-19
 
 ### Added
 - Comprehensive internationalization (i18n) support
@@ -277,7 +277,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better accessibility for Polish users
 - Professional multilingual interface
 
-## [1.0.8] - 2024-12-XX
+## [1.0.8] - 2025-08-18
 
 ### Added
 - Google Workspace Single Sign-On (SSO)
@@ -290,7 +290,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better security through domain restrictions
 - Professional authentication flow
 
-## [1.0.7] - 2024-12-XX
+## [1.0.7] - 2025-08-18
 
 ### Enhanced
 - Improved drawer navigation interface
@@ -301,7 +301,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed navigation state management
 - Resolved drawer animation issues
 
-## [1.0.6] - 2024-12-XX
+## [1.0.6] - 2025-08-18
 
 ### Added
 - Soft-delete functionality for critical entities
@@ -313,7 +313,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced administrative controls
 - Improved data recovery workflows
 
-## [1.0.5] - 2024-12-XX
+## [1.0.5] - 2025-08-18
 
 ### Added
 - Procedures and Checklists management
@@ -325,7 +325,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better procedure standardization
 - Enhanced operational safety
 
-## [1.0.4] - 2024-12-XX
+## [1.0.4] - 2025-08-18
 
 ### Added
 - Users management system
@@ -338,7 +338,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better personnel tracking
 - Enhanced compliance capabilities
 
-## [1.0.3] - 2024-12-XX
+## [1.0.3] - 2025-08-18
 
 ### Added
 - Flight management system
@@ -350,7 +350,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better operational tracking
 - Enhanced record keeping
 
-## [1.0.2] - 2024-12-XX
+## [1.0.2] - 2025-08-18
 
 ### Added
 - Drone registry management
@@ -363,7 +363,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better equipment tracking
 - Enhanced inventory control
 
-## [1.0.1] - 2024-12-XX
+## [1.0.1] - 2025-08-18
 
 ### Added
 - Firebase Authentication integration
@@ -380,7 +380,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial security vulnerabilities
 - Authentication flow improvements
 
-## [1.0.0] - 2024-12-XX
+## [1.0.0] - 2025-08-17
 
 ### Added
 - Initial release of GOPR UAV Ops Manager
