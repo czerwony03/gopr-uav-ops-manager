@@ -42,7 +42,7 @@ export default function CreateFlightScreen() {
       const endDateTime = `${formData.endDate}T${formData.endTime}:00`;
 
       const flightData = {
-        date: formData.date,
+        date: formData.startDate, // Derive date from startDate for database indexing
         location: formData.location,
         flightCategory: formData.flightCategory as FlightCategory,
         operationType: formData.operationType as OperationType,
