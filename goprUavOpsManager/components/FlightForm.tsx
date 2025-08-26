@@ -6,7 +6,6 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -17,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { DroneService } from '@/services/droneService';
 import { Drone } from '@/types/Drone';
+import { useCrossPlatformAlert } from './CrossPlatformAlert';
 import { 
   FlightCategory, 
   OperationType, 
@@ -51,6 +51,7 @@ interface FlightFormProps {
 export default function FlightForm({ mode, initialData, onSave, onCancel, loading = false }: FlightFormProps) {
   const { user } = useAuth();
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   const [dronesLoading, setDronesLoading] = useState(true);
   const [drones, setDrones] = useState<Drone[]>([]);
@@ -85,7 +86,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
       setDrones(availableDrones);
     } catch (error) {
       console.error('Error fetching drones:', error);
-      Alert.alert('Error', 'Failed to fetch drones');
+      crossPlatformAlert.showAlert({ title: 'Error', message: 'Failed to fetch drones' });
     } finally {
       setDronesLoading(false);
     }
@@ -116,46 +117,46 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
     for (const field of requiredFields) {
       const value = formData[field];
       if (!value || (typeof value === 'string' && !value.trim())) {
-        Alert.alert(t('flightForm.validation.title'), t(`flightForm.validation.${field}Required`));
+        crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t(`flightForm.validation.${field}Required`) });
         return false;
       }
     }
 
     // Check if drones are available
     if (drones.length === 0) {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.noDronesAvailable'));
+      crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.noDronesAvailable') });
       return false;
     }
 
     // Validate selected drone exists
     if (!drones.find(drone => drone.id === formData.droneId)) {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.selectValidDrone'));
+      crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.selectValidDrone') });
       return false;
     }
 
     // Validate date formats (YYYY-MM-DD)
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(formData.date)) {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.dateFormat'));
+      crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.dateFormat') });
       return false;
     }
     if (!dateRegex.test(formData.startDate)) {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.startDateFormat'));
+      crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.startDateFormat') });
       return false;
     }
     if (!dateRegex.test(formData.endDate)) {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.endDateFormat'));
+      crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.endDateFormat') });
       return false;
     }
 
     // Validate time formats (HH:mm)
     const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (!timeRegex.test(formData.startTime)) {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.startTimeFormat'));
+      crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.startTimeFormat') });
       return false;
     }
     if (!timeRegex.test(formData.endTime)) {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.endTimeFormat'));
+      crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.endTimeFormat') });
       return false;
     }
 
@@ -165,16 +166,16 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
       const endDateTime = new Date(`${formData.endDate}T${formData.endTime}:00`);
       
       if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
-        Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.invalidDateTime'));
+        crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.invalidDateTime') });
         return false;
       }
       
       if (endDateTime <= startDateTime) {
-        Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.endAfterStart'));
+        crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.endAfterStart') });
         return false;
       }
     } catch {
-      Alert.alert(t('flightForm.validation.title'), t('flightForm.validation.invalidDateTime'));
+      crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.invalidDateTime') });
       return false;
     }
 
