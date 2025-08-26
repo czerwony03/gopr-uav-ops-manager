@@ -187,6 +187,8 @@
     "updateSuccess": "User updated successfully",
     "createSuccess": "User created successfully",
     "saveError": "Failed to save user data",
+    "success": "Success",
+    "userUpdated": "User info updated successfully",
     "validation": {
       "title": "Validation Error",
       "message": "Please correct the highlighted fields and try again.",
@@ -537,6 +539,7 @@
     "itemSingle": "item",
     "itemPlural": "items",
     "createdOn": "Created {{date}}",
+    "editProcedure": "Edit procedure/checklist",
     "empty": {
       "title": "No Procedures or Checklists",
       "descriptionCanCreate": "Create your first procedure or checklist to get started.",
@@ -597,7 +600,9 @@
     "failedToLoad": "Failed to load checklist data",
     "permissionRequired": "Permission Required",
     "permissionDenied": "Only managers and administrators can create or edit procedures/checklists.",
-    "failedToPickImage": "Failed to pick image"
+    "failedToPickImage": "Failed to pick image",
+    "success": "Success",
+    "procedureUpdated": "Procedure updated successfully"
   },
   "contact": {
     "title": "Info & Contact",
