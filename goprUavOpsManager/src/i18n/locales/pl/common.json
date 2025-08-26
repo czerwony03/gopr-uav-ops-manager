@@ -187,6 +187,8 @@
     "updateSuccess": "Użytkownik został pomyślnie zaktualizowany",
     "createSuccess": "Użytkownik został pomyślnie utworzony",
     "saveError": "Nie udało się zapisać danych użytkownika",
+    "success": "Sukces",
+    "userUpdated": "Dane użytkownika zostały pomyślnie zaktualizowane",
     "validation": {
       "title": "Błąd walidacji",
       "message": "Proszę poprawić wyróżnione pola i spróbować ponownie.",
@@ -537,6 +539,7 @@
     "itemSingle": "element",
     "itemPlural": "elementów",
     "createdOn": "Utworzono {{date}}",
+    "editProcedure": "Edycja procedury/checklisty",
     "empty": {
       "title": "Brak procedur lub list kontrolnych",
       "descriptionCanCreate": "Utwórz swoją pierwszą procedurę lub listę kontrolną, aby rozpocząć.",
@@ -597,7 +600,9 @@
     "failedToLoad": "Nie udało się załadować danych listy kontrolnej",
     "permissionRequired": "Wymagane uprawnienie",
     "permissionDenied": "Tylko menedżerowie i administratorzy mogą tworzyć lub edytować procedury/listy kontrolne.",
-    "failedToPickImage": "Nie udało się wybrać obrazu"
+    "failedToPickImage": "Nie udało się wybrać obrazu",
+    "success": "Sukces",
+    "procedureUpdated": "Procedura została zaktualizowana"
   },
   "contact": {
     "title": "Informacje i kontakt",

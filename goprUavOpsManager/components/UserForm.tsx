@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
+import {ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Platform} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Picker} from '@react-native-picker/picker';
 import {useTranslation} from 'react-i18next';
@@ -23,12 +23,12 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
   // Default form data
   const defaultFormData: UserFormData = {
     email: '',
-    role: UserRole.USER,
+    role: '' as UserRole, // Keep empty for placeholder, but handle display better
     firstname: '',
     surname: '',
     phone: '',
     residentialAddress: '',
-    language: 'pl', // Default to Polish
+    language: '', // Keep empty for placeholder, but handle display better
     operatorNumber: '',
     operatorValidityDate: '',
     pilotNumber: '',
@@ -131,12 +131,12 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
 
     try {
       // Remove role from form data if current user is not admin
-      const submitData = { ...formData };
       if (currentUserRole !== UserRole.ADMIN) {
-        delete submitData.role;
+        const { role, ...submitDataWithoutRole } = formData;
+        await onSave(submitDataWithoutRole as UserFormData);
+      } else {
+        await onSave(formData);
       }
-      
-      await onSave(submitData);
     } catch (error) {
       // Error handling is done by the parent component
       throw error;
@@ -199,7 +199,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
                 <Text style={styles.label}>{t('userForm.role')} *</Text>
                 <View style={[styles.pickerContainer, errors.role && styles.inputError]}>
                   <Picker
-                    selectedValue={formData.role}
+                    selectedValue={String(formData.role || '')}
                     onValueChange={(value) => updateFormData('role', value)}
                     style={styles.picker}
                   >
@@ -239,7 +239,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
             <Text style={styles.label}>{t('userForm.language')}</Text>
             <View style={[styles.pickerContainer, errors.language && styles.inputError]}>
               <Picker
-                selectedValue={formData.language}
+                selectedValue={String(formData.language || '')}
                 onValueChange={(value) => updateFormData('language', value)}
                 style={styles.picker}
               >
@@ -436,9 +436,22 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: '#fff',
     marginBottom: 8,
+    // Android-specific styling to ensure proper display
+    ...(Platform.OS === 'android' && {
+      paddingHorizontal: 4,
+    }),
   },
   picker: {
     height: 50,
+    // Android-specific styling to ensure selected value is visible
+    ...(Platform.OS === 'android' && {
+      color: '#333',
+      backgroundColor: 'transparent',
+    }),
+    // iOS specific styling
+    ...(Platform.OS === 'ios' && {
+      color: '#333',
+    }),
   },
   errorText: {
     color: '#ff0000',

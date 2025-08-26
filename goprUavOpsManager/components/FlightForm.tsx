@@ -230,7 +230,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
             <Text style={styles.label}>{t('flightForm.category')} *</Text>
             <View style={styles.pickerContainer}>
               <Picker
-                selectedValue={formData.flightCategory}
+                selectedValue={String(formData.flightCategory || '')}
                 onValueChange={(value) => updateFormData('flightCategory', value)}
                 style={styles.picker}
               >
@@ -248,7 +248,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
             <Text style={styles.label}>{t('flightForm.operation')} *</Text>
             <View style={styles.pickerContainer}>
               <Picker
-                selectedValue={formData.operationType}
+                selectedValue={String(formData.operationType || '')}
                 onValueChange={(value) => updateFormData('operationType', value)}
                 style={styles.picker}
               >
@@ -266,7 +266,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
             <Text style={styles.label}>{t('flightForm.activity')} *</Text>
             <View style={styles.pickerContainer}>
               <Picker
-                selectedValue={formData.activityType}
+                selectedValue={String(formData.activityType || '')}
                 onValueChange={(value) => updateFormData('activityType', value)}
                 style={styles.picker}
               >
@@ -284,7 +284,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
             <Text style={styles.label}>{t('flightForm.drone')} *</Text>
             <View style={styles.pickerContainer}>
               <Picker
-                selectedValue={formData.droneId}
+                selectedValue={String(formData.droneId || '')}
                 onValueChange={(value) => updateFormData('droneId', value)}
                 style={styles.picker}
               >
@@ -439,9 +439,22 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: '#fff',
     marginBottom: 16,
+    // Android-specific styling to ensure proper display
+    ...(Platform.OS === 'android' && {
+      paddingHorizontal: 4,
+    }),
   },
   picker: {
     height: 50,
+    // Android-specific styling to ensure selected value is visible
+    ...(Platform.OS === 'android' && {
+      color: '#333',
+      backgroundColor: 'transparent',
+    }),
+    // iOS specific styling
+    ...(Platform.OS === 'ios' && {
+      color: '#333',
+    }),
   },
   actionButtons: {
     flexDirection: 'row',
