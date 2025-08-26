@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { FlightService } from '@/services/flightService';
 import { UserService } from '@/services/userService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
+import { calculateFlightDuration } from '@/src/utils/flightUtils';
 
 export default function FlightDetailsScreen() {
   const { t } = useTranslation('common');
@@ -150,6 +151,9 @@ export default function FlightDetailsScreen() {
                 ) : (
                   `${formatTime(flight.startTime)} - ${formatTime(flight.endTime)}`
                 )}
+              </Text>
+              <Text style={styles.detail}>
+                {calculateFlightDuration(flight.startTime, flight.endTime, t)}
               </Text>
               <Text style={styles.detail}>{t('flightDetails.conditions')}: {flight.conditions}</Text>
             </View>

@@ -17,6 +17,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DroneService } from '@/services/droneService';
 import { Drone } from '@/types/Drone';
 import { useCrossPlatformAlert } from './CrossPlatformAlert';
+import WebCompatibleDatePicker from './WebCompatibleDatePicker';
+import TimePicker from './TimePicker';
 import { 
   FlightCategory, 
   OperationType, 
@@ -27,7 +29,6 @@ import {
 } from '@/types/Flight';
 
 export interface FlightFormData {
-  date: string;
   location: string;
   flightCategory: FlightCategory | '';
   operationType: OperationType | '';
@@ -60,7 +61,6 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
   const defaultFormData = useMemo((): FlightFormData => {
     const today = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
     return {
-      date: today,
       location: '',
       flightCategory: '',
       operationType: '',
@@ -108,9 +108,47 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Calculate flight duration for display
+  const getFlightDuration = (): string => {
+    const { startDate, startTime, endDate, endTime } = formData;
+    
+    if (!startDate || !startTime || !endDate || !endTime) {
+      return '';
+    }
+
+    try {
+      const startDateTime = new Date(`${startDate}T${startTime}:00`);
+      const endDateTime = new Date(`${endDate}T${endTime}:00`);
+      
+      if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+        return '';
+      }
+      
+      if (endDateTime <= startDateTime) {
+        return '';
+      }
+
+      const durationMs = endDateTime.getTime() - startDateTime.getTime();
+      const hours = Math.floor(durationMs / (1000 * 60 * 60));
+      const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      if (hours > 0 && minutes > 0) {
+        return `Total time: ${hours}h ${minutes}min`;
+      } else if (hours > 0) {
+        return `Total time: ${hours}h`;
+      } else if (minutes > 0) {
+        return `Total time: ${minutes}min`;
+      } else {
+        return 'Total time: <1min';
+      }
+    } catch {
+      return '';
+    }
+  };
+
   const validateForm = (): boolean => {
     const requiredFields: (keyof FlightFormData)[] = [
-      'date', 'location', 'flightCategory', 'operationType', 
+      'location', 'flightCategory', 'operationType', 
       'activityType', 'droneId', 'startDate', 'startTime', 'endDate', 'endTime'
     ];
 
@@ -136,10 +174,6 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
 
     // Validate date formats (YYYY-MM-DD)
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(formData.date)) {
-      crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.dateFormat') });
-      return false;
-    }
     if (!dateRegex.test(formData.startDate)) {
       crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.startDateFormat') });
       return false;
@@ -160,7 +194,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
       return false;
     }
 
-    // Validate that end datetime is after start datetime
+    // Validate that end datetime is after start datetime and duration doesn't exceed 24 hours
     try {
       const startDateTime = new Date(`${formData.startDate}T${formData.startTime}:00`);
       const endDateTime = new Date(`${formData.endDate}T${formData.endTime}:00`);
@@ -172,6 +206,14 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
       
       if (endDateTime <= startDateTime) {
         crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.endAfterStart') });
+        return false;
+      }
+
+      // Check 24-hour duration limit
+      const durationMs = endDateTime.getTime() - startDateTime.getTime();
+      const durationHours = durationMs / (1000 * 60 * 60);
+      if (durationHours > 24) {
+        crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.maxDuration24Hours') });
         return false;
       }
     } catch {
@@ -212,14 +254,6 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('flightForm.basicInfo')}</Text>
             
-            <Text style={styles.label}>{t('flightForm.date')} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.date}
-              onChangeText={(value) => updateFormData('date', value)}
-              placeholder={t('flightForm.datePlaceholder')}
-            />
-
             <Text style={styles.label}>{t('flightForm.location')} *</Text>
             <TextInput
               style={styles.input}
@@ -300,37 +334,39 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
               </Picker>
             </View>
 
-            <Text style={styles.label}>{t('flightForm.startDate')} *</Text>
-            <TextInput
-              style={styles.input}
+            <WebCompatibleDatePicker
+              label={t('flightForm.startDate')}
               value={formData.startDate}
-              onChangeText={(value) => updateFormData('startDate', value)}
-              placeholder={t('flightForm.datePlaceholder')}
+              onDateChange={(value) => updateFormData('startDate', value)}
+              required={true}
             />
 
-            <Text style={styles.label}>{t('flightForm.startTime')} *</Text>
-            <TextInput
-              style={styles.input}
+            <TimePicker
+              label={t('flightForm.startTime')}
               value={formData.startTime}
-              onChangeText={(value) => updateFormData('startTime', value)}
-              placeholder={t('flightForm.startTimePlaceholder')}
+              onTimeChange={(value) => updateFormData('startTime', value)}
+              required={true}
             />
 
-            <Text style={styles.label}>{t('flightForm.endDate')} *</Text>
-            <TextInput
-              style={styles.input}
+            <WebCompatibleDatePicker
+              label={t('flightForm.endDate')}
               value={formData.endDate}
-              onChangeText={(value) => updateFormData('endDate', value)}
-              placeholder={t('flightForm.datePlaceholder')}
+              onDateChange={(value) => updateFormData('endDate', value)}
+              required={true}
             />
 
-            <Text style={styles.label}>{t('flightForm.endTime')} *</Text>
-            <TextInput
-              style={styles.input}
+            <TimePicker
+              label={t('flightForm.endTime')}
               value={formData.endTime}
-              onChangeText={(value) => updateFormData('endTime', value)}
-              placeholder={t('flightForm.endTimePlaceholder')}
+              onTimeChange={(value) => updateFormData('endTime', value)}
+              required={true}
             />
+
+            {getFlightDuration() && (
+              <View style={styles.durationContainer}>
+                <Text style={styles.durationText}>{getFlightDuration()}</Text>
+              </View>
+            )}
 
             <Text style={styles.label}>{t('flightForm.conditions')}</Text>
             <TextInput
@@ -491,5 +527,19 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#ccc',
+  },
+  durationContainer: {
+    backgroundColor: '#f0f8ff',
+    borderWidth: 1,
+    borderColor: '#0066CC',
+    borderRadius: 6,
+    padding: 12,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  durationText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0066CC',
   },
 });

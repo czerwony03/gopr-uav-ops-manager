@@ -21,6 +21,7 @@ import { DroneService } from '@/services/droneService';
 import { Flight, FlightQuery, PaginatedFlightResponse, AVAILABLE_FLIGHT_CATEGORIES, AVAILABLE_ACTIVITY_TYPES, FlightCategory, ActivityType } from '@/types/Flight';
 import { Drone } from '@/types/Drone';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
+import { formatFlightDurationCompact } from '@/src/utils/flightUtils';
 
 export default function FlightsListScreen() {
   const { user } = useAuth();
@@ -271,6 +272,10 @@ export default function FlightsListScreen() {
             <Text style={styles.detailValue}>{item.conditions}</Text>
           </View>
         )}
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>{t('common.totalTime')}:</Text>
+          <Text style={styles.detailValue}>{formatFlightDurationCompact(item.startTime, item.endTime)}</Text>
+        </View>
         {(user?.role === 'admin' || user?.role === 'manager') && item.userEmail && (
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>{t('flights.operator')}:</Text>

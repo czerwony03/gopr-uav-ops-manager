@@ -53,7 +53,6 @@ export default function EditFlightScreen() {
         const endDateTime = parseDateTime(flight.endTime, flight.date);
 
         setInitialData({
-          date: flight.date,
           location: flight.location,
           flightCategory: flight.flightCategory as FlightCategory,
           operationType: flight.operationType as OperationType,
@@ -110,7 +109,7 @@ export default function EditFlightScreen() {
       const endDateTime = `${formData.endDate}T${formData.endTime}:00`;
 
       const flightData = {
-        date: formData.date,
+        date: formData.startDate, // Derive date from startDate for database indexing
         location: formData.location,
         flightCategory: formData.flightCategory as FlightCategory,
         operationType: formData.operationType as OperationType,

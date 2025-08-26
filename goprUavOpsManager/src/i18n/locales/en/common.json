@@ -22,7 +22,8 @@
     "lastLogin": "Last Login",
     "accountActivity": "Account Activity",
     "contactAdmin": "Contact your administrator for account access",
-    "time": "Time"
+    "time": "Time",
+    "totalTime": "Total time"
   },
   "nav": {
     "home": "Home",
