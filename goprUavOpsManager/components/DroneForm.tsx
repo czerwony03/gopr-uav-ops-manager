@@ -6,12 +6,12 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Drone } from '@/types/Drone';
+import { useCrossPlatformAlert } from './CrossPlatformAlert';
 
 export type DroneFormData = Omit<Drone, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'isDeleted' | 'createdBy' | 'updatedBy'>;
 
@@ -25,6 +25,7 @@ interface DroneFormProps {
 
 export default function DroneForm({ mode, initialData, onSave, onCancel, loading = false }: DroneFormProps) {
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   // Default form data
   const defaultFormData: DroneFormData = {
@@ -87,15 +88,15 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
 
   const validateForm = (): boolean => {
     if (!formData.name.trim()) {
-      Alert.alert(t('droneForm.error'), t('droneForm.nameRequired'));
+      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.nameRequired') });
       return false;
     }
     if (!formData.callSign.trim()) {
-      Alert.alert(t('droneForm.error'), t('droneForm.callSignRequired'));
+      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.callSignRequired') });
       return false;
     }
     if (!formData.registrationNumber.trim()) {
-      Alert.alert(t('droneForm.error'), t('droneForm.registrationRequired'));
+      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.registrationRequired') });
       return false;
     }
     return true;

@@ -79,7 +79,7 @@ export default function EditUserScreen() {
     } else {
       router.back();
     }
-  }, [user, router, t, fetchUser, id]);
+  }, [user, router, t, fetchUser, id, crossPlatformAlert]);
 
   const handleSave = async (formData: UserFormData) => {
     if (!user || !id || typeof id !== 'string') return;

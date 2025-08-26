@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { DroneService } from '@/services/droneService';
 import DroneForm, { DroneFormData } from '@/components/DroneForm';
 import {UserRole} from "@/types/UserRole";
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 export default function CreateDroneScreen() {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   useEffect(() => {
     // Check authentication first - redirect to login if not authenticated
@@ -22,12 +23,16 @@ export default function CreateDroneScreen() {
 
     // Check permissions
     if (user.role !== UserRole.MANAGER && user.role !== UserRole.ADMIN) {
-      Alert.alert(t('common.accessDenied'), t('common.permissionDenied'), [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
+      crossPlatformAlert.showAlert({ 
+        title: t('common.accessDenied'), 
+        message: t('common.permissionDenied'),
+        buttons: [
+          { text: 'OK', onPress: () => router.back() }
+        ]
+      });
       return;
     }
-  }, [user, router, t]);
+  }, [user, router, t, crossPlatformAlert]);
 
   const handleSave = async (formData: DroneFormData) => {
     if (!user) return;
@@ -36,10 +41,10 @@ export default function CreateDroneScreen() {
     try {
       await DroneService.createDrone(formData, user.role, user.uid);
       router.back();
-      Alert.alert(t('droneForm.success'), t('droneForm.droneCreated'));
+      crossPlatformAlert.showAlert({ title: t('droneForm.success'), message: t('droneForm.droneCreated') });
     } catch (error) {
       console.error('Error creating drone:', error);
-      Alert.alert(t('droneForm.error'), t('droneForm.failedToCreate'));
+      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.failedToCreate') });
     } finally {
       setLoading(false);
     }

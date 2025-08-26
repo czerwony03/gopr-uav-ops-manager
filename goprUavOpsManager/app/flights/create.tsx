@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,12 +10,14 @@ import {
   OperationType, 
   ActivityType
 } from '@/types/Flight';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 export default function CreateFlightScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
   const [loading, setLoading] = useState(false);
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   // Authentication check - redirect if not logged in
   useEffect(() => {
@@ -59,10 +60,10 @@ export default function CreateFlightScreen() {
       // Navigate back immediately after successful creation
       router.back();
       // Show success alert without blocking navigation
-      Alert.alert(t('common.success'), t('flightForm.createSuccess'));
+      crossPlatformAlert.showAlert({ title: t('common.success'), message: t('flightForm.createSuccess') });
     } catch (error) {
       console.error('Error saving flight:', error);
-      Alert.alert(t('common.error'), t('flightForm.saveError'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('flightForm.saveError') });
     } finally {
       setLoading(false);
     }
