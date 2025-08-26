@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Alert } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { DroneService } from '@/services/droneService';
 import DroneForm, { DroneFormData } from '@/components/DroneForm';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 export default function EditDroneScreen() {
   const [loading, setLoading] = useState(false);
@@ -12,6 +12,7 @@ export default function EditDroneScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   const [initialData, setInitialData] = useState<DroneFormData | undefined>();
 
@@ -26,12 +27,12 @@ export default function EditDroneScreen() {
         const { id, createdAt, updatedAt, deletedAt, isDeleted, createdBy, updatedBy, ...formData } = drone;
         setInitialData(formData as DroneFormData);
       } else {
-        Alert.alert(t('common.error'), t('droneForm.notFound'));
+        crossPlatformAlert.showAlert({ title: t('common.error'), message: t('droneForm.notFound') });
         router.back();
       }
     } catch (error) {
       console.error('Error fetching drone:', error);
-      Alert.alert(t('common.error'), t('droneForm.loadError'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('droneForm.loadError') });
       router.back();
     } finally {
       setLoading(false);
@@ -47,9 +48,13 @@ export default function EditDroneScreen() {
 
     // Check permissions
     if (user.role !== 'manager' && user.role !== 'admin') {
-      Alert.alert(t('common.accessDenied'), t('common.permissionDenied'), [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
+      crossPlatformAlert.showAlert({ 
+        title: t('common.accessDenied'), 
+        message: t('common.permissionDenied'),
+        buttons: [
+          { text: 'OK', onPress: () => router.back() }
+        ]
+      });
       return;
     }
 
@@ -67,10 +72,10 @@ export default function EditDroneScreen() {
     try {
       await DroneService.updateDrone(id, formData, user.role, user.uid);
       router.back();
-      Alert.alert(t('droneForm.success'), t('droneForm.droneUpdated'));
+      crossPlatformAlert.showAlert({ title: t('droneForm.success'), message: t('droneForm.droneUpdated') });
     } catch (error) {
       console.error('Error updating drone:', error);
-      Alert.alert(t('droneForm.error'), t('droneForm.failedToUpdate'));
+      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.failedToUpdate') });
     } finally {
       setLoading(false);
     }

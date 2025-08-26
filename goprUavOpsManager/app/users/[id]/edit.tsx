@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Alert } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserService } from '@/services/userService';
 import UserForm from '@/components/UserForm';
 import { UserFormData } from '@/types/User';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 export default function EditUserScreen() {
   const [loading, setLoading] = useState(false);
@@ -13,6 +13,7 @@ export default function EditUserScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   const [initialData, setInitialData] = useState<UserFormData | undefined>();
 
@@ -42,17 +43,17 @@ export default function EditUserScreen() {
         };
         setInitialData(formData);
       } else {
-        Alert.alert(t('common.error'), t('userForm.notFound'));
+        crossPlatformAlert.showAlert({ title: t('common.error'), message: t('userForm.notFound') });
         router.back();
       }
     } catch (error) {
       console.error('Error fetching user:', error);
-      Alert.alert(t('common.error'), t('userForm.loadError'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('userForm.loadError') });
       router.back();
     } finally {
       setLoading(false);
     }
-  }, [user, router, t]);
+  }, [user, router, t, crossPlatformAlert]);
 
   useEffect(() => {
     // Check authentication first - redirect to login if not authenticated
@@ -63,9 +64,13 @@ export default function EditUserScreen() {
 
     // Check permissions - users can edit their own profile, managers and admins can edit any profile
     if (user.role !== 'admin' && user.role !== 'manager' && user.uid !== id) {
-      Alert.alert(t('common.accessDenied'), t('common.permissionDenied'), [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
+      crossPlatformAlert.showAlert({ 
+        title: t('common.accessDenied'), 
+        message: t('common.permissionDenied'),
+        buttons: [
+          { text: 'OK', onPress: () => router.back() }
+        ]
+      });
       return;
     }
 
@@ -74,7 +79,7 @@ export default function EditUserScreen() {
     } else {
       router.back();
     }
-  }, [user, router, t, fetchUser, id]);
+  }, [user, router, t, fetchUser, id, crossPlatformAlert]);
 
   const handleSave = async (formData: UserFormData) => {
     if (!user || !id || typeof id !== 'string') return;
@@ -92,10 +97,10 @@ export default function EditUserScreen() {
 
       await UserService.updateUser(id, formDataWithDates, user.role, user.uid);
       router.back();
-      Alert.alert(t('userForm.success'), t('userForm.userUpdated'));
+      crossPlatformAlert.showAlert({ title: t('userForm.success'), message: t('userForm.userUpdated') });
     } catch (error) {
       console.error('Error updating user:', error);
-      Alert.alert(t('userForm.error'), t('userForm.failedToUpdate'));
+      crossPlatformAlert.showAlert({ title: t('userForm.error'), message: t('userForm.failedToUpdate') });
     } finally {
       setLoading(false);
     }

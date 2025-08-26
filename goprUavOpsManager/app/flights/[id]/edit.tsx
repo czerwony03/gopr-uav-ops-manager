@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Alert } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,12 +10,14 @@ import {
   OperationType, 
   ActivityType
 } from '@/types/Flight';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 export default function EditFlightScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   const [loading, setLoading] = useState(false);
   const [initialData, setInitialData] = useState<FlightFormData | undefined>();
@@ -65,12 +66,12 @@ export default function EditFlightScreen() {
           conditions: flight.conditions || '',
         });
       } else {
-        Alert.alert(t('common.error'), t('flightForm.notFound'));
+        crossPlatformAlert.showAlert({ title: t('common.error'), message: t('flightForm.notFound') });
         router.back();
       }
     } catch (error) {
       console.error('Error fetching flight:', error);
-      Alert.alert(t('common.error'), t('flightForm.loadError'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('flightForm.loadError') });
       router.back();
     } finally {
       setLoading(false);
@@ -127,10 +128,10 @@ export default function EditFlightScreen() {
       // Navigate back immediately after successful update
       router.back();
       // Show success alert without blocking navigation
-      Alert.alert(t('common.success'), t('flightForm.updateSuccess'));
+      crossPlatformAlert.showAlert({ title: t('common.success'), message: t('flightForm.updateSuccess') });
     } catch (error) {
       console.error('Error saving flight:', error);
-      Alert.alert(t('common.error'), t('flightForm.saveError'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('flightForm.saveError') });
     } finally {
       setLoading(false);
     }

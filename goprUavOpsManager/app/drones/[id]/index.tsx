@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   TouchableOpacity,
   ScrollView,
   Linking,
@@ -16,6 +15,7 @@ import { Drone } from '@/types/Drone';
 import { useAuth } from '@/contexts/AuthContext';
 import { DroneService } from '@/services/droneService';
 import { UserService } from '@/services/userService';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 export default function DroneDetailsScreen() {
   const [drone, setDrone] = useState<Drone | null>(null);
@@ -26,6 +26,7 @@ export default function DroneDetailsScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   useEffect(() => {
     const fetchDrone = async () => {
@@ -34,9 +35,13 @@ export default function DroneDetailsScreen() {
       try {
         const droneData = await DroneService.getDrone(id, user.role);
         if (!droneData) {
-          Alert.alert(t('common.error'), t('drones.errors.notFoundOrNoPermission'), [
-            { text: t('common.ok'), onPress: () => router.back() }
-          ]);
+          crossPlatformAlert.showAlert({ 
+            title: t('common.error'), 
+            message: t('drones.errors.notFoundOrNoPermission'),
+            buttons: [
+              { text: t('common.ok'), onPress: () => router.back() }
+            ]
+          });
           return;
         }
         setDrone(droneData);
@@ -52,9 +57,13 @@ export default function DroneDetailsScreen() {
         }
       } catch (error) {
         console.error('Error fetching drone:', error);
-        Alert.alert(t('common.error'), t('droneDetails.loadError'), [
-          { text: t('common.ok'), onPress: () => router.back() }
-        ]);
+        crossPlatformAlert.showAlert({ 
+          title: t('common.error'), 
+          message: t('droneDetails.loadError'),
+          buttons: [
+            { text: t('common.ok'), onPress: () => router.back() }
+          ]
+        });
       } finally {
         setLoading(false);
       }
@@ -77,10 +86,10 @@ export default function DroneDetailsScreen() {
   const handleDelete = async () => {
     if (!drone || !user) return;
 
-    Alert.alert(
-      t('droneDetails.deleteConfirmTitle'),
-      t('droneDetails.deleteConfirmMessage', { name: drone.name }),
-      [
+    crossPlatformAlert.showAlert({
+      title: t('droneDetails.deleteConfirmTitle'),
+      message: t('droneDetails.deleteConfirmMessage', { name: drone.name }),
+      buttons: [
         { text: t('common.cancel'), style: 'cancel' },
         {
           text: t('common.delete'),
@@ -88,26 +97,30 @@ export default function DroneDetailsScreen() {
           onPress: async () => {
             try {
               await DroneService.softDeleteDrone(drone.id, user.role, user.uid);
-              Alert.alert(t('common.success'), t('droneDetails.deleteSuccess'), [
-                { text: t('common.ok'), onPress: () => router.back() }
-              ]);
+              crossPlatformAlert.showAlert({ 
+                title: t('common.success'), 
+                message: t('droneDetails.deleteSuccess'),
+                buttons: [
+                  { text: t('common.ok'), onPress: () => router.back() }
+                ]
+              });
             } catch (error) {
               console.error('Error deleting drone:', error);
-              Alert.alert(t('common.error'), t('droneDetails.deleteError'));
+              crossPlatformAlert.showAlert({ title: t('common.error'), message: t('droneDetails.deleteError') });
             }
           },
         },
       ]
-    );
+    });
   };
 
   const handleRestore = async () => {
     if (!drone || !user) return;
 
-    Alert.alert(
-      t('droneDetails.restoreConfirmTitle'),
-      t('droneDetails.restoreConfirmMessage', { name: drone.name }),
-      [
+    crossPlatformAlert.showAlert({
+      title: t('droneDetails.restoreConfirmTitle'),
+      message: t('droneDetails.restoreConfirmMessage', { name: drone.name }),
+      buttons: [
         { text: t('common.cancel'), style: 'cancel' },
         {
           text: t('droneDetails.restoreButton'),
@@ -124,21 +137,21 @@ export default function DroneDetailsScreen() {
                 setUpdatedByEmail(updatedEmail);
               }
               
-              Alert.alert(t('common.success'), t('droneDetails.restoreSuccess'));
+              crossPlatformAlert.showAlert({ title: t('common.success'), message: t('droneDetails.restoreSuccess') });
             } catch (error) {
               console.error('Error restoring drone:', error);
-              Alert.alert(t('common.error'), t('droneDetails.restoreError'));
+              crossPlatformAlert.showAlert({ title: t('common.error'), message: t('droneDetails.restoreError') });
             }
           },
         },
       ]
-    );
+    });
   };
 
   const handleOpenUserManual = () => {
     if (drone?.userManual) {
       Linking.openURL(drone.userManual).catch(() => {
-        Alert.alert(t('common.error'), t('droneDetails.manualError'));
+        crossPlatformAlert.showAlert({ title: t('common.error'), message: t('droneDetails.manualError') });
       });
     }
   };

@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { changeLanguage, getCurrentLanguage, getAvailableLanguages } from '../i18n';
+import { useCrossPlatformAlert } from '../../components/CrossPlatformAlert';
 
 interface LanguageSelectorProps {
   style?: any;
@@ -12,6 +13,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ style }) => 
   const { t } = useTranslation('common');
   const currentLanguage = getCurrentLanguage();
   const availableLanguages = getAvailableLanguages();
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   const handleLanguageChange = () => {
     const options = availableLanguages.map(lang => ({
@@ -20,20 +22,20 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ style }) => 
         try {
           await changeLanguage(lang.code);
           // Show success message in the selected language
-          Alert.alert(
-            lang.code === 'pl' ? 'Sukces' : 'Success',
-            lang.code === 'pl' 
+          crossPlatformAlert.showAlert({
+            title: lang.code === 'pl' ? 'Sukces' : 'Success',
+            message: lang.code === 'pl' 
               ? 'Język został zmieniony' 
               : 'Language has been changed'
-          );
+          });
         } catch (error) {
           console.error('Error changing language:', error);
-          Alert.alert(
-            lang.code === 'pl' ? 'Błąd' : 'Error',
-            lang.code === 'pl' 
+          crossPlatformAlert.showAlert({
+            title: lang.code === 'pl' ? 'Błąd' : 'Error',
+            message: lang.code === 'pl' 
               ? 'Nie udało się zmienić języka' 
               : 'Failed to change language'
-          );
+          });
         }
       },
     }));
@@ -43,12 +45,10 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ style }) => 
       onPress: async () => {},
     });
 
-    Alert.alert(
-      t('settings.language'),
-      undefined,
-      options,
-      { cancelable: true }
-    );
+    crossPlatformAlert.showAlert({
+      title: t('settings.language'),
+      buttons: options
+    });
   };
 
   const getCurrentLanguageDisplay = () => {

@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
-  Alert,
   ScrollView,
   TextInput,
 } from 'react-native';
@@ -21,11 +20,13 @@ import { FlightService } from '@/services/flightService';
 import { DroneService } from '@/services/droneService';
 import { Flight, FlightQuery, PaginatedFlightResponse, AVAILABLE_FLIGHT_CATEGORIES, AVAILABLE_ACTIVITY_TYPES, FlightCategory, ActivityType } from '@/types/Flight';
 import { Drone } from '@/types/Drone';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 export default function FlightsListScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -69,7 +70,7 @@ export default function FlightsListScreen() {
       setPaginationData(response);
     } catch (error) {
       console.error('Error fetching flights:', error);
-      Alert.alert(t('common.error'), t('flights.errors.fetchFailed'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('flights.errors.fetchFailed') });
     } finally {
       if (showLoadingIndicator) {
         setLoading(false);

@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
   Platform,
   KeyboardAvoidingView,
@@ -18,6 +17,7 @@ import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/go
 import { auth } from '@/firebaseConfig';
 import {AuditLogService} from "@/services/auditLogService";
 import {User} from "@/types/User";
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 // Configure Google Sign-In for mobile platforms
 if (Platform.OS !== 'web') {
@@ -33,6 +33,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
@@ -123,12 +124,12 @@ export default function LoginScreen() {
       }
     }
 
-    Alert.alert('Google Login Failed', errorMessage);
+    crossPlatformAlert.showAlert({ title: 'Google Login Failed', message: errorMessage });
   };
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password');
+      crossPlatformAlert.showAlert({ title: 'Error', message: 'Please enter both email and password' });
       return;
     }
 
@@ -139,7 +140,7 @@ export default function LoginScreen() {
       // Navigation will be handled by the auth state change in AuthContext
     } catch (error: any) {
       console.error('Login error:', error);
-      Alert.alert('Login Failed', error.message || 'An error occurred during login');
+      crossPlatformAlert.showAlert({ title: 'Login Failed', message: error.message || 'An error occurred during login' });
     } finally {
       setLoading(false);
     }

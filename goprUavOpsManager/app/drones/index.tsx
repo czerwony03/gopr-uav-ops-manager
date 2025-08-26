@@ -5,7 +5,6 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
@@ -15,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { Drone } from '@/types/Drone';
 import { useAuth } from '@/contexts/AuthContext';
 import { DroneService } from '@/services/droneService';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 export default function DronesListScreen() {
   const [drones, setDrones] = useState<Drone[]>([]);
@@ -23,6 +23,7 @@ export default function DronesListScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   const fetchDrones = useCallback(async () => {
     if (!user) return;
@@ -32,10 +33,10 @@ export default function DronesListScreen() {
       setDrones(dronesList);
     } catch (error) {
       console.error('Error fetching drones:', error);
-      Alert.alert(
-        t('common.error'), 
-        t('drones.errors.fetchFailed')
-      );
+      crossPlatformAlert.showAlert({
+        title: t('common.error'), 
+        message: t('drones.errors.fetchFailed')
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -79,10 +80,10 @@ export default function DronesListScreen() {
   const handleDeleteDrone = async (drone: Drone) => {
     if (!user) return;
 
-    Alert.alert(
-      t('drones.deleteTitle'),
-      t('drones.deleteConfirmation', { name: drone.name }),
-      [
+    crossPlatformAlert.showAlert({
+      title: t('drones.deleteTitle'),
+      message: t('drones.deleteConfirmation', { name: drone.name }),
+      buttons: [
         { text: t('common.cancel'), style: 'cancel' },
         {
           text: t('common.delete'),
@@ -91,24 +92,24 @@ export default function DronesListScreen() {
             try {
               await DroneService.softDeleteDrone(drone.id, user.role, user.uid);
               await fetchDrones(); // Refresh the list
-              Alert.alert(t('common.success'), t('drones.deleteSuccess'));
+              crossPlatformAlert.showAlert({ title: t('common.success'), message: t('drones.deleteSuccess') });
             } catch (error) {
               console.error('Error deleting drone:', error);
-              Alert.alert(t('common.error'), t('drones.errors.deleteFailed'));
+              crossPlatformAlert.showAlert({ title: t('common.error'), message: t('drones.errors.deleteFailed') });
             }
           },
         },
       ]
-    );
+    });
   };
 
   const handleRestoreDrone = async (drone: Drone) => {
     if (!user) return;
 
-    Alert.alert(
-      t('drones.restoreTitle'),
-      t('drones.restoreConfirmation', { name: drone.name }),
-      [
+    crossPlatformAlert.showAlert({
+      title: t('drones.restoreTitle'),
+      message: t('drones.restoreConfirmation', { name: drone.name }),
+      buttons: [
         { text: t('common.cancel'), style: 'cancel' },
         {
           text: t('drones.restore'),
@@ -116,15 +117,15 @@ export default function DronesListScreen() {
             try {
               await DroneService.restoreDrone(drone.id, user.role, user.uid);
               await fetchDrones(); // Refresh the list
-              Alert.alert(t('common.success'), t('drones.restoreSuccess'));
+              crossPlatformAlert.showAlert({ title: t('common.success'), message: t('drones.restoreSuccess') });
             } catch (error) {
               console.error('Error restoring drone:', error);
-              Alert.alert(t('common.error'), t('drones.errors.restoreFailed'));
+              crossPlatformAlert.showAlert({ title: t('common.error'), message: t('drones.errors.restoreFailed') });
             }
           },
         },
       ]
-    );
+    });
   };
 
   const renderDroneItem = ({ item }: { item: Drone }) => (

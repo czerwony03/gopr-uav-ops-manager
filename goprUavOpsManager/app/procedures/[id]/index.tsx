@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  Alert,
   TouchableOpacity,
   Image,
   Linking,
@@ -18,6 +17,7 @@ import ImageViewer from '../../../components/ImageViewer';
 import { ProcedureChecklist, ChecklistItem } from '@/types/ProcedureChecklist';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { UserService } from '@/services/userService';
 
 export default function ProcedureDetailsScreen() {
@@ -31,6 +31,7 @@ export default function ProcedureDetailsScreen() {
   const { user } = useAuth();
   const { t } = useTranslation('common');
   const router = useRouter();
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   const fetchChecklist = useCallback(async () => {
     if (!user || !id) return;
@@ -50,11 +51,11 @@ export default function ProcedureDetailsScreen() {
       }
     } catch (error) {
       console.error('Error fetching procedure/checklist:', error);
-      Alert.alert(
-        t('procedures.error'), 
-        t('procedures.failedToLoad'),
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
+      crossPlatformAlert.showAlert({
+        title: t('procedures.error'), 
+        message: t('procedures.failedToLoad'),
+        buttons: [{ text: 'OK', onPress: () => router.back() }]
+      });
     } finally {
       setLoading(false);
     }
@@ -90,10 +91,10 @@ export default function ProcedureDetailsScreen() {
   const handleDelete = async () => {
     if (!user || !checklist) return;
 
-    Alert.alert(
-      t('procedures.deleteTitle'),
-      t('procedures.deleteConfirmation', { title: checklist.title }),
-      [
+    crossPlatformAlert.showAlert({
+      title: t('procedures.deleteTitle'),
+      message: t('procedures.deleteConfirmation', { title: checklist.title }),
+      buttons: [
         { text: t('common.cancel'), style: 'cancel' },
         {
           text: t('procedures.delete.button'),
@@ -101,17 +102,21 @@ export default function ProcedureDetailsScreen() {
           onPress: async () => {
             try {
               await ProcedureChecklistService.softDeleteProcedureChecklist(checklist.id, user.role, user.uid);
-              Alert.alert(t('common.success'), t('procedures.deleteSuccess'), [
-                { text: 'OK', onPress: () => router.back() }
-              ]);
+              crossPlatformAlert.showAlert({ 
+                title: t('common.success'), 
+                message: t('procedures.deleteSuccess'),
+                buttons: [
+                  { text: 'OK', onPress: () => router.back() }
+                ]
+              });
             } catch (error) {
               console.error('Error deleting procedure/checklist:', error);
-              Alert.alert(t('common.error'), t('procedures.deleteError'));
+              crossPlatformAlert.showAlert({ title: t('common.error'), message: t('procedures.deleteError') });
             }
           },
         },
       ]
-    );
+    });
   };
 
   const handleRestore = async () => {
@@ -120,10 +125,10 @@ export default function ProcedureDetailsScreen() {
     try {
       await ProcedureChecklistService.restoreProcedureChecklist(checklist.id, user.role, user.uid);
       await fetchChecklist(); // Refresh the data
-      Alert.alert(t('common.success'), t('procedures.restoreSuccess'));
+      crossPlatformAlert.showAlert({ title: t('common.success'), message: t('procedures.restoreSuccess') });
     } catch (error) {
       console.error('Error restoring procedure/checklist:', error);
-      Alert.alert(t('common.error'), t('procedures.restoreError'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('procedures.restoreError') });
     }
   };
 
@@ -133,11 +138,11 @@ export default function ProcedureDetailsScreen() {
       if (supported) {
         await Linking.openURL(url);
       } else {
-        Alert.alert(t('common.error'), t('contact.cannotOpenLink'));
+        crossPlatformAlert.showAlert({ title: t('common.error'), message: t('contact.cannotOpenLink') });
       }
     } catch (error) {
       console.error('Error opening link:', error);
-      Alert.alert(t('common.error'), t('contact.failedToOpenLink'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('contact.failedToOpenLink') });
     }
   };
 

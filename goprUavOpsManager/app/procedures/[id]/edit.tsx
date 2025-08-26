@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Alert } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
 import ProcedureForm from '@/components/ProcedureForm';
 import { ProcedureChecklistFormData } from '@/types/ProcedureChecklist';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 export default function EditProcedureScreen() {
   const [loading, setLoading] = useState(false);
@@ -13,6 +13,7 @@ export default function EditProcedureScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   const [initialData, setInitialData] = useState<ProcedureChecklistFormData | undefined>();
 
@@ -39,12 +40,12 @@ export default function EditProcedureScreen() {
         };
         setInitialData(formData);
       } else {
-        Alert.alert(t('common.error'), t('procedureForm.notFound'));
+        crossPlatformAlert.showAlert({ title: t('common.error'), message: t('procedureForm.notFound') });
         router.back();
       }
     } catch (error) {
       console.error('Error fetching procedure:', error);
-      Alert.alert(t('common.error'), t('procedureForm.loadError'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('procedureForm.loadError') });
       router.back();
     } finally {
       setLoading(false);
@@ -60,9 +61,13 @@ export default function EditProcedureScreen() {
 
     // Check permissions - only managers and admins can edit procedures
     if (user.role !== 'manager' && user.role !== 'admin') {
-      Alert.alert(t('common.accessDenied'), t('common.permissionDenied'), [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
+      crossPlatformAlert.showAlert({ 
+        title: t('common.accessDenied'), 
+        message: t('common.permissionDenied'),
+        buttons: [
+          { text: 'OK', onPress: () => router.back() }
+        ]
+      });
       return;
     }
 
@@ -80,10 +85,10 @@ export default function EditProcedureScreen() {
     try {
       await ProcedureChecklistService.updateProcedureChecklist(id, formData, user.role, user.uid);
       router.back();
-      Alert.alert(t('procedureForm.success'), t('procedureForm.procedureUpdated'));
+      crossPlatformAlert.showAlert({ title: t('procedureForm.success'), message: t('procedureForm.procedureUpdated') });
     } catch (error) {
       console.error('Error updating procedure:', error);
-      Alert.alert(t('procedureForm.error'), t('procedureForm.failedToUpdate'));
+      crossPlatformAlert.showAlert({ title: t('procedureForm.error'), message: t('procedureForm.failedToUpdate') });
     } finally {
       setLoading(false);
     }
