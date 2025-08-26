@@ -34,10 +34,10 @@ export default function ProceduresListScreen() {
       setChecklists(checklistsList);
     } catch (error) {
       console.error('Error fetching procedures/checklists:', error);
-      Alert.alert(
-        t('common.error'), 
-        t('procedures.errors.fetchFailed')
-      );
+      crossPlatformAlert.showAlert({
+        title: t('common.error'), 
+        message: t('procedures.errors.fetchFailed')
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -85,10 +85,10 @@ export default function ProceduresListScreen() {
   const handleDeleteChecklist = async (checklist: ProcedureChecklist) => {
     if (!user) return;
 
-    Alert.alert(
-      t('procedures.delete.title'),
-      t('procedures.delete.confirmMessage', { title: checklist.title }),
-      [
+    crossPlatformAlert.showAlert({
+      title: t('procedures.delete.title'),
+      message: t('procedures.delete.confirmMessage', { title: checklist.title }),
+      buttons: [
         { text: t('common.cancel'), style: 'cancel' },
         {
           text: t('common.delete'),
@@ -97,15 +97,15 @@ export default function ProceduresListScreen() {
             try {
               await ProcedureChecklistService.softDeleteProcedureChecklist(checklist.id, user.role, user.uid);
               await fetchChecklists(); // Refresh the list
-              Alert.alert(t('common.success'), t('procedures.delete.successMessage'));
+              crossPlatformAlert.showAlert({ title: t('common.success'), message: t('procedures.delete.successMessage') });
             } catch (error) {
               console.error('Error deleting procedure/checklist:', error);
-              Alert.alert(t('common.error'), t('procedures.delete.errorMessage'));
+              crossPlatformAlert.showAlert({ title: t('common.error'), message: t('procedures.delete.errorMessage') });
             }
           },
         },
       ]
-    );
+    });
   };
 
   const handleRestoreChecklist = async (checklist: ProcedureChecklist) => {
@@ -114,10 +114,10 @@ export default function ProceduresListScreen() {
     try {
       await ProcedureChecklistService.restoreProcedureChecklist(checklist.id, user.role, user.uid);
       await fetchChecklists(); // Refresh the list
-      Alert.alert(t('common.success'), t('procedures.restore.successMessage'));
+      crossPlatformAlert.showAlert({ title: t('common.success'), message: t('procedures.restore.successMessage') });
     } catch (error) {
       console.error('Error restoring procedure/checklist:', error);
-      Alert.alert(t('common.error'), t('procedures.restore.errorMessage'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('procedures.restore.errorMessage') });
     }
   };
 
