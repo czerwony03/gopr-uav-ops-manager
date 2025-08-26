@@ -21,6 +21,7 @@ import { ProcedureChecklist, ProcedureChecklistFormData, ChecklistItemFormData }
 import { AuditLogService } from './auditLogService';
 import { UserService } from './userService';
 import {UserRole} from "@/types/UserRole";
+import { ImageProcessingService } from '../utils/imageProcessing';
 
 export class ProcedureChecklistService {
   private static readonly COLLECTION_NAME = 'procedures_checklists';
@@ -275,13 +276,28 @@ export class ProcedureChecklistService {
   // Upload image to Firebase Storage
   static async uploadImage(imageUri: string, fileName: string): Promise<string> {
     try {
-      const response = await fetch(imageUri);
+      // Process the image before upload (resize, compress, convert format)
+      const processedImage = await ImageProcessingService.processImageForUpload(imageUri, {
+        maxWidth: 1200,
+        maxHeight: 1200,
+        quality: 0.8,
+        format: 'jpeg'
+      });
+
+      const response = await fetch(processedImage.uri);
       const blob = await response.blob();
       
       const imageRef = ref(storage, `procedures_checklists/images/${fileName}`);
       await uploadBytes(imageRef, blob);
       
-      return await getDownloadURL(imageRef);
+      const downloadUrl = await getDownloadURL(imageRef);
+      
+      // Clean up processed image URI if it's a blob URL (web platform)
+      if (processedImage.uri.startsWith('blob:') && processedImage.uri !== imageUri) {
+        URL.revokeObjectURL(processedImage.uri);
+      }
+      
+      return downloadUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
       throw new Error('Failed to upload image');

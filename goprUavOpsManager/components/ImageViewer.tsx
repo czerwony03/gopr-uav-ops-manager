@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -11,6 +11,7 @@ import {
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ImageCacheService } from '../utils/imageCache';
 
 interface ImageItem {
   uri: string;
@@ -34,6 +35,7 @@ export default function ImageViewer({
   onImageIndexChange,
 }: ImageViewerProps) {
   const [currentIndex, setCurrentIndex] = useState(imageIndex);
+  const [cachedImageUris, setCachedImageUris] = useState<string[]>([]);
 
   const handleIndexChange = useCallback((index: number) => {
     setCurrentIndex(index);
@@ -52,6 +54,70 @@ export default function ImageViewer({
     }
   }, [currentIndex, images.length, handleIndexChange]);
 
+  // Initialize image cache and load cached images
+  useEffect(() => {
+    if (!visible || images.length === 0) return;
+
+    const loadCachedImages = async () => {      
+      try {
+        // Initialize cache service
+        await ImageCacheService.initialize();
+        
+        // Load all images from cache or download
+        const cachedUris = await Promise.all(
+          images.map(async (image, index) => {
+            try {
+              const cachedUri = await ImageCacheService.getCachedImage(image.uri);
+              return cachedUri;
+            } catch (error) {
+              console.error(`Error loading cached image ${index}:`, error);
+              return image.uri; // Fallback to original URI
+            }
+          })
+        );
+        
+        setCachedImageUris(cachedUris);
+      } catch (error) {
+        console.error('Error initializing image cache:', error);
+        // Fallback: use original URIs
+        setCachedImageUris(images.map(img => img.uri));
+      }
+    };
+
+    loadCachedImages();
+  }, [visible, images]);
+
+  // Preload adjacent images for better user experience
+  useEffect(() => {
+    if (!visible || cachedImageUris.length === 0) return;
+
+    const preloadAdjacentImages = async () => {
+      try {
+        const preloadPromises: Promise<void>[] = [];
+        
+        // Preload previous image
+        if (currentIndex > 0) {
+          preloadPromises.push(
+            ImageCacheService.preloadImage(images[currentIndex - 1].uri)
+          );
+        }
+        
+        // Preload next image
+        if (currentIndex < images.length - 1) {
+          preloadPromises.push(
+            ImageCacheService.preloadImage(images[currentIndex + 1].uri)
+          );
+        }
+        
+        await Promise.all(preloadPromises);
+      } catch (error) {
+        console.error('Error preloading adjacent images:', error);
+      }
+    };
+
+    preloadAdjacentImages();
+  }, [currentIndex, visible, images]);
+
   React.useEffect(() => {
     setCurrentIndex(imageIndex);
   }, [imageIndex]);
@@ -60,7 +126,7 @@ export default function ImageViewer({
     return null;
   }
 
-  const currentImage = images[currentIndex];
+  const currentImageUri = cachedImageUris[currentIndex] || images[currentIndex]?.uri;
 
   return (
     <Modal
@@ -87,7 +153,7 @@ export default function ImageViewer({
             centerContent
           >
             <Image
-              source={{ uri: currentImage.uri }}
+              source={{ uri: currentImageUri }}
               style={styles.image}
               contentFit="contain"
               transition={200}
