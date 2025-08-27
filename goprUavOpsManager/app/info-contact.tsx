@@ -1,16 +1,62 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, Linking, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ApplicationMetadata } from "@/utils/applicationMetadata";
+import { useConsole } from '@/contexts/ConsoleContext';
 
 export default function InfoContact() {
   const { t } = useTranslation('common');
   const insets = useSafeAreaInsets();
+  const { showConsole } = useConsole();
+  const [tapCount, setTapCount] = useState(0);
+  const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
+      }
+    };
+  }, []);
   
   const handleEmailPress = (email: string) => {
     Linking.openURL(`mailto:${email}`);
+  };
+
+  const handleLogoPress = () => {
+    // Reset timeout if it exists
+    if (tapTimeoutRef.current) {
+      clearTimeout(tapTimeoutRef.current);
+    }
+
+    const newTapCount = tapCount + 1;
+    setTapCount(newTapCount);
+
+    // Add some console messages for demonstration when tapping
+    if (newTapCount === 1) {
+      console.log('[InfoContact] Logo tapped - starting easter egg sequence');
+    } else if (newTapCount === 3) {
+      console.warn('[InfoContact] Halfway to activating debug console...');
+    } else if (newTapCount === 5) {
+      console.info('[InfoContact] Almost there! Two more taps to activate debug console');
+    }
+
+    // If user taps 7 times, show the console
+    if (newTapCount >= 7) {
+      console.info('[InfoContact] 🎉 Easter egg activated! Opening debug console...');
+      console.error('[InfoContact] Sample error message for testing debug console');
+      showConsole();
+      setTapCount(0);
+      return;
+    }
+
+    // Reset tap count after 2 seconds of inactivity
+    tapTimeoutRef.current = setTimeout(() => {
+      setTapCount(0);
+    }, 2000);
   };
 
   return (
@@ -23,11 +69,22 @@ export default function InfoContact() {
       </View>
 
       <View style={styles.logoContainer}>
-        <Image 
-          source={require('../assets/images/redmed-logo.png')}
-          style={styles.logoImage}
-          resizeMode="contain"
-        />
+        <TouchableOpacity 
+          onPress={handleLogoPress}
+          activeOpacity={0.7}
+          style={styles.logoTouchable}
+        >
+          <Image 
+            source={require('../assets/images/redmed-logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+          {tapCount > 0 && tapCount < 7 && (
+            <View style={styles.tapIndicator}>
+              <Text style={styles.tapIndicatorText}>{tapCount}/7</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
       <View style={styles.infoCard}>
@@ -96,11 +153,31 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     marginBottom: 30,
+    position: 'relative',
+  },
+  logoTouchable: {
+    position: 'relative',
   },
   logoImage: {
     width: 200,
     height: 80,
     alignSelf: 'center',
+  },
+  tapIndicator: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    backgroundColor: '#FF6B6B',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    minWidth: 24,
+    alignItems: 'center',
+  },
+  tapIndicatorText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   infoCard: {
     backgroundColor: '#FFFFFF',

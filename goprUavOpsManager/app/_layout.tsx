@@ -2,7 +2,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
 import { Stack } from 'expo-router';
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ConsoleProvider } from "@/contexts/ConsoleContext";
 import { CustomDrawerContent } from "@/components/CustomDrawerContent";
+import ConsoleModal from "@/components/ConsoleModal";
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import * as Sentry from '@sentry/react-native';
@@ -164,11 +166,14 @@ function RootLayoutNavigation() {
 export default Sentry.wrap(function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <CrossPlatformAlertProvider>
-          <RootLayoutNavigation />
-        </CrossPlatformAlertProvider>
-      </AuthProvider>
+      <ConsoleProvider>
+        <AuthProvider>
+          <CrossPlatformAlertProvider>
+            <RootLayoutNavigation />
+            <ConsoleModal />
+          </CrossPlatformAlertProvider>
+        </AuthProvider>
+      </ConsoleProvider>
     </GestureHandlerRootView>
   );
 });
