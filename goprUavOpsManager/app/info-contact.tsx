@@ -11,7 +11,7 @@ export default function InfoContact() {
   const insets = useSafeAreaInsets();
   const { showConsole } = useConsole();
   const [tapCount, setTapCount] = useState(0);
-  const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -37,9 +37,9 @@ export default function InfoContact() {
 
     // Add some console messages for demonstration when tapping
     if (newTapCount === 1) {
-      console.log('[InfoContact] Logo tapped - starting easter egg sequence');
+      console.info('[InfoContact] Logo tapped - starting easter egg sequence');
     } else if (newTapCount === 3) {
-      console.warn('[InfoContact] Halfway to activating debug console...');
+      console.info('[InfoContact] Halfway to activating debug console...');
     } else if (newTapCount === 5) {
       console.info('[InfoContact] Almost there! Two more taps to activate debug console');
     }
@@ -47,7 +47,6 @@ export default function InfoContact() {
     // If user taps 7 times, show the console
     if (newTapCount >= 7) {
       console.info('[InfoContact] 🎉 Easter egg activated! Opening debug console...');
-      console.error('[InfoContact] Sample error message for testing debug console');
       showConsole();
       setTapCount(0);
       return;
@@ -79,11 +78,11 @@ export default function InfoContact() {
             style={styles.logoImage}
             resizeMode="contain"
           />
-          {tapCount > 0 && tapCount < 7 && (
+          {tapCount > 0 && tapCount < 7 ? (
             <View style={styles.tapIndicator}>
               <Text style={styles.tapIndicatorText}>{tapCount}/7</Text>
             </View>
-          )}
+          ) : null}
         </TouchableOpacity>
       </View>
 
