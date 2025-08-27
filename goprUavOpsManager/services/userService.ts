@@ -34,14 +34,14 @@ export class UserService {
       
       return docs.map((doc: any) => ({
         uid: doc.id,
-        ...doc.data(),
+        ...doc.data,
         // Convert Firestore Timestamps to Dates
-        operatorValidityDate: toDateIfTimestamp(doc.data().operatorValidityDate),
-        pilotValidityDate: toDateIfTimestamp(doc.data().pilotValidityDate),
-        insurance: toDateIfTimestamp(doc.data().insurance),
-        createdAt: toDateIfTimestamp(doc.data().createdAt),
-        updatedAt: toDateIfTimestamp(doc.data().updatedAt),
-        lastLoginAt: toDateIfTimestamp(doc.data().lastLoginAt),
+        operatorValidityDate: toDateIfTimestamp(doc.data.operatorValidityDate),
+        pilotValidityDate: toDateIfTimestamp(doc.data.pilotValidityDate),
+        insurance: toDateIfTimestamp(doc.data.insurance),
+        createdAt: toDateIfTimestamp(doc.data.createdAt),
+        updatedAt: toDateIfTimestamp(doc.data.updatedAt),
+        lastLoginAt: toDateIfTimestamp(doc.data.lastLoginAt),
       } as User));
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -107,7 +107,7 @@ export class UserService {
         throw new Error('User not found');
       }
 
-      const currentUser = userDoc.data() as User;
+      const currentUser = userDoc.data as User;
       
       // Prepare data for Firestore (convert dates to Timestamps)
       const firestoreData: any = {
@@ -183,7 +183,7 @@ export class UserService {
         return 'Unknown User';
       }
 
-      const userData = userDoc.data();
+      const userData = userDoc.data;
       return userData.email || 'Unknown User';
     } catch (error) {
       console.error('Error fetching user email:', error);

@@ -103,9 +103,9 @@ export class AuditLogService {
       const docs = getDocsArray(snapshot);
       return docs.map((doc: any) => ({
         id: doc.id,
-        ...doc.data(),
+        ...doc.data,
         // Convert Firestore Timestamp to Date
-        timestamp: toDateIfTimestamp(doc.data().timestamp),
+        timestamp: toDateIfTimestamp(doc.data.timestamp),
       } as AuditLog));
     } catch (error) {
       console.error('Error fetching audit logs:', error);
@@ -175,9 +175,8 @@ export class AuditLogService {
           const skipConstraints = [...constraints, orderBy('timestamp', 'desc'), limit(skipCount)];
           const skipQuery = createQuery(auditLogsCollection, ...skipConstraints);
           const skipSnapshot = await getDocs(skipQuery);
-          const skipDocs = getDocsArray(skipSnapshot);
-          if (skipDocs.length > 0) {
-            const lastVisibleDoc = skipDocs[skipDocs.length - 1];
+          if (skipSnapshot.docs && skipSnapshot.docs.length > 0) {
+            const lastVisibleDoc = skipSnapshot.docs[skipSnapshot.docs.length - 1];
             paginatedConstraints.push(startAfter(lastVisibleDoc));
           }
         }
@@ -189,12 +188,12 @@ export class AuditLogService {
       const docs = getDocsArray(snapshot);
       const logs = docs.map((doc: any) => ({
         id: doc.id,
-        ...doc.data(),
+        ...doc.data,
         // Convert Firestore Timestamp to Date
-        timestamp: toDateIfTimestamp(doc.data().timestamp),
+        timestamp: toDateIfTimestamp(doc.data.timestamp),
       } as AuditLog));
 
-      const lastDocumentSnapshot = docs.length > 0 ? docs[docs.length - 1] : null;
+      const lastDocumentSnapshot = snapshot.docs && snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
 
       return {
         logs,
