@@ -41,7 +41,7 @@ const setupAuthStateListener = (callback: any) => {
     const { onAuthStateChanged } = require('firebase/auth');
     return onAuthStateChanged(auth, callback);
   } else {
-    return auth.onAuthStateChanged(callback);
+    return auth().onAuthStateChanged(callback);
   }
 };
 

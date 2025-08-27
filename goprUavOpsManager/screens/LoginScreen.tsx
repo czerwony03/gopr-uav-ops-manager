@@ -29,12 +29,12 @@ if (Platform.OS === 'web') {
   signInWithCredential = firebaseAuth.signInWithCredential;
   GoogleAuthProvider = firebaseAuth.GoogleAuthProvider;
 } else {
-  // React Native Firebase SDK
+  // React Native Firebase SDK - auth is already an instance
   const authModule = require('@react-native-firebase/auth');
   // For React Native Firebase, these are methods on the auth instance
   signInWithEmailAndPassword = (email: string, password: string) => auth.signInWithEmailAndPassword(email, password);
   signInWithCredential = (credential: any) => auth.signInWithCredential(credential);
-  // GoogleAuthProvider is a static property on the auth module
+  // GoogleAuthProvider is a static class on the auth module
   GoogleAuthProvider = authModule.default.GoogleAuthProvider;
 }
 import {AuditLogService} from "@/services/auditLogService";

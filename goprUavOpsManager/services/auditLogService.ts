@@ -1,21 +1,115 @@
-import { 
-  collection, 
-  addDoc, 
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit as limitQuery,
-  startAfter,
-  getCountFromServer,
-  Timestamp
-} from 'firebase/firestore';
+import { Platform } from 'react-native';
 import { db } from '@/firebaseConfig';
 import { AuditLog, AuditLogData, AuditLogQuery, PaginatedAuditLogResponse } from '@/types/AuditLog';
 import { ApplicationMetadata } from '@/utils/applicationMetadata';
 import { deepDiff, formatChanges } from '@/utils/deepDiff';
 import {filterUndefinedProperties} from "@/utils/filterUndefinedProperties";
 import {toDateIfTimestamp} from "@/utils/dateUtils";
+
+// Platform-aware Firebase imports and helpers
+let webFirestore: any;
+let Timestamp: any;
+
+if (Platform.OS === 'web') {
+  // Web Firebase SDK
+  const firestore = require('firebase/firestore');
+  webFirestore = firestore;
+  Timestamp = firestore.Timestamp;
+} else {
+  // React Native Firebase SDK
+  const firestore = require('@react-native-firebase/firestore');
+  Timestamp = firestore.default.Timestamp;
+}
+
+// Platform-aware helper functions
+const getCollection = (collectionName: string) => {
+  if (Platform.OS === 'web') {
+    return webFirestore.collection(db, collectionName);
+  } else {
+    return db.collection(collectionName);
+  }
+};
+
+const addDocument = async (collectionRef: any, data: any) => {
+  if (Platform.OS === 'web') {
+    return webFirestore.addDoc(collectionRef, data);
+  } else {
+    return collectionRef.add(data);
+  }
+};
+
+const createQuery = (collectionRef: any, ...constraints: any[]) => {
+  if (Platform.OS === 'web') {
+    return webFirestore.query(collectionRef, ...constraints);
+  } else {
+    // React Native Firebase uses chaining
+    let query = collectionRef;
+    
+    for (const constraint of constraints) {
+      if (constraint.type === 'where') {
+        query = query.where(constraint.field, constraint.operator, constraint.value);
+      } else if (constraint.type === 'orderBy') {
+        query = query.orderBy(constraint.field, constraint.direction);
+      } else if (constraint.type === 'limit') {
+        query = query.limit(constraint.value);
+      } else if (constraint.type === 'startAfter') {
+        query = query.startAfter(constraint.value);
+      }
+    }
+    
+    return query;
+  }
+};
+
+const where = (field: string, operator: any, value: any) => {
+  if (Platform.OS === 'web') {
+    return webFirestore.where(field, operator, value);
+  } else {
+    return { type: 'where', field, operator, value };
+  }
+};
+
+const orderBy = (field: string, direction: 'asc' | 'desc' = 'asc') => {
+  if (Platform.OS === 'web') {
+    return webFirestore.orderBy(field, direction);
+  } else {
+    return { type: 'orderBy', field, direction };
+  }
+};
+
+const limit = (value: number) => {
+  if (Platform.OS === 'web') {
+    return webFirestore.limit(value);
+  } else {
+    return { type: 'limit', value };
+  }
+};
+
+const startAfter = (value: any) => {
+  if (Platform.OS === 'web') {
+    return webFirestore.startAfter(value);
+  } else {
+    return { type: 'startAfter', value };
+  }
+};
+
+const getDocs = async (query: any) => {
+  if (Platform.OS === 'web') {
+    return webFirestore.getDocs(query);
+  } else {
+    return query.get();
+  }
+};
+
+const getCountFromServer = async (query: any) => {
+  if (Platform.OS === 'web') {
+    return webFirestore.getCountFromServer(query);
+  } else {
+    // React Native Firebase doesn't have getCountFromServer, we need to get docs and count
+    const snapshot = await query.get();
+    return { data: () => ({ count: snapshot.size }) };
+  }
+};
 
 export class AuditLogService {
   private static readonly COLLECTION_NAME = 'auditLogs';
@@ -34,10 +128,12 @@ export class AuditLogService {
         timestamp: now,
       };
 
-      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), filterUndefinedProperties(completeAuditData));
+      const collectionRef = getCollection(this.COLLECTION_NAME);
+      const docRef = await addDocument(collectionRef, filterUndefinedProperties(completeAuditData));
       
+      const docId = Platform.OS === 'web' ? docRef.id : docRef.id;
       console.log(`Audit log created: ${auditData.action} on ${auditData.entityType}:${auditData.entityId} by ${auditData.userEmail || auditData.userId} [${metadata.applicationPlatform} v${metadata.applicationVersion}${metadata.commitHash ? ` @${metadata.commitHash.substring(0, 7)}` : ''}]`);
-      return docRef.id;
+      return docId;
     } catch (error) {
       console.error('Error creating audit log:', error);
       // Don't throw error to prevent audit logging from breaking main operations
@@ -50,9 +146,8 @@ export class AuditLogService {
    */
   static async getAuditLogs(queryParams?: AuditLogQuery): Promise<AuditLog[]> {
     try {
-      const auditLogsCollection = collection(db, this.COLLECTION_NAME);
-      let q = query(auditLogsCollection);
-
+      const auditLogsCollection = getCollection(this.COLLECTION_NAME);
+      
       // Build query constraints
       const constraints = [];
 
@@ -84,20 +179,21 @@ export class AuditLogService {
         constraints.push(where('timestamp', '<=', Timestamp.fromDate(queryParams.endDate)));
       }
 
-      // Apply constraints
-      if (constraints.length > 0) {
-        q = query(auditLogsCollection, ...constraints, orderBy('timestamp', 'desc'));
-      } else {
-        q = query(auditLogsCollection, orderBy('timestamp', 'desc'));
-      }
+      // Add order by
+      constraints.push(orderBy('timestamp', 'desc'));
 
       // Apply limit
       if (queryParams?.limit) {
-        q = query(q, limitQuery(queryParams.limit));
+        constraints.push(limit(queryParams.limit));
       }
 
+      // Create query
+      const q = createQuery(auditLogsCollection, ...constraints);
+
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
+      
+      const docs = Platform.OS === 'web' ? snapshot.docs : snapshot.docs;
+      return docs.map((doc: any) => ({
         id: doc.id,
         ...doc.data(),
         // Convert Firestore Timestamp to Date
@@ -114,7 +210,7 @@ export class AuditLogService {
    */
   static async getPaginatedAuditLogs(queryParams?: AuditLogQuery): Promise<PaginatedAuditLogResponse> {
     try {
-      const auditLogsCollection = collection(db, this.COLLECTION_NAME);
+      const auditLogsCollection = getCollection(this.COLLECTION_NAME);
       const pageSize = queryParams?.pageSize || 10;
       const pageNumber = queryParams?.pageNumber || 1;
 
@@ -149,13 +245,8 @@ export class AuditLogService {
         constraints.push(where('timestamp', '<=', Timestamp.fromDate(queryParams.endDate)));
       }
 
-      // Build base query for counting
-      let countQuery;
-      if (constraints.length > 0) {
-        countQuery = query(auditLogsCollection, ...constraints);
-      } else {
-        countQuery = query(auditLogsCollection);
-      }
+      // Build query for counting
+      const countQuery = createQuery(auditLogsCollection, ...constraints);
 
       // Get total count
       const countSnapshot = await getCountFromServer(countQuery);
@@ -163,44 +254,39 @@ export class AuditLogService {
       const totalPages = Math.ceil(totalCount / pageSize);
 
       // Build paginated query
-      let paginatedQuery;
-      if (constraints.length > 0) {
-        paginatedQuery = query(auditLogsCollection, ...constraints, orderBy('timestamp', 'desc'), limitQuery(pageSize));
-      } else {
-        paginatedQuery = query(auditLogsCollection, orderBy('timestamp', 'desc'), limitQuery(pageSize));
-      }
+      const paginatedConstraints = [...constraints, orderBy('timestamp', 'desc'), limit(pageSize)];
 
       // Apply pagination with startAfter
       if (queryParams?.lastDocumentSnapshot) {
-        paginatedQuery = query(paginatedQuery, startAfter(queryParams.lastDocumentSnapshot));
+        paginatedConstraints.push(startAfter(queryParams.lastDocumentSnapshot));
       } else if (pageNumber > 1) {
         // For page-based navigation, we need to skip to the right position
         // This is less efficient than cursor-based pagination but needed for page numbers
         const skipCount = (pageNumber - 1) * pageSize;
         if (skipCount > 0) {
-          let skipQuery;
-          if (constraints.length > 0) {
-            skipQuery = query(auditLogsCollection, ...constraints, orderBy('timestamp', 'desc'), limitQuery(skipCount));
-          } else {
-            skipQuery = query(auditLogsCollection, orderBy('timestamp', 'desc'), limitQuery(skipCount));
-          }
+          const skipConstraints = [...constraints, orderBy('timestamp', 'desc'), limit(skipCount)];
+          const skipQuery = createQuery(auditLogsCollection, ...skipConstraints);
           const skipSnapshot = await getDocs(skipQuery);
-          if (skipSnapshot.docs.length > 0) {
-            const lastVisibleDoc = skipSnapshot.docs[skipSnapshot.docs.length - 1];
-            paginatedQuery = query(paginatedQuery, startAfter(lastVisibleDoc));
+          const skipDocs = Platform.OS === 'web' ? skipSnapshot.docs : skipSnapshot.docs;
+          if (skipDocs.length > 0) {
+            const lastVisibleDoc = skipDocs[skipDocs.length - 1];
+            paginatedConstraints.push(startAfter(lastVisibleDoc));
           }
         }
       }
 
+      const paginatedQuery = createQuery(auditLogsCollection, ...paginatedConstraints);
       const snapshot = await getDocs(paginatedQuery);
-      const logs = snapshot.docs.map(doc => ({
+      
+      const docs = Platform.OS === 'web' ? snapshot.docs : snapshot.docs;
+      const logs = docs.map((doc: any) => ({
         id: doc.id,
         ...doc.data(),
         // Convert Firestore Timestamp to Date
         timestamp: toDateIfTimestamp(doc.data().timestamp),
       } as AuditLog));
 
-      const lastDocumentSnapshot = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
+      const lastDocumentSnapshot = docs.length > 0 ? docs[docs.length - 1] : null;
 
       return {
         logs,

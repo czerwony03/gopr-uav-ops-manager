@@ -1,11 +1,91 @@
-import {collection, doc, getDoc, getDocs, orderBy, query, Timestamp, updateDoc} from 'firebase/firestore';
+import { Platform } from 'react-native';
 import {db} from '@/firebaseConfig';
 import {User} from '@/types/User';
 import {UserRole} from "@/types/UserRole";
 import {toDateIfTimestamp, toFirestoreTimestamp} from "@/utils/dateUtils";
 import {filterUndefinedProperties} from "@/utils/filterUndefinedProperties";
 import {AuditLogService} from "@/services/auditLogService";
-import {Drone} from "@/types/Drone";
+
+// Platform-aware Firebase imports and helpers
+let webFirestore: any;
+let Timestamp: any;
+
+if (Platform.OS === 'web') {
+  // Web Firebase SDK
+  const firestore = require('firebase/firestore');
+  webFirestore = firestore;
+  Timestamp = firestore.Timestamp;
+} else {
+  // React Native Firebase SDK
+  const firestore = require('@react-native-firebase/firestore');
+  Timestamp = firestore.default.Timestamp;
+}
+
+// Platform-aware helper functions
+const getCollection = (collectionName: string) => {
+  if (Platform.OS === 'web') {
+    return webFirestore.collection(db, collectionName);
+  } else {
+    return db.collection(collectionName);
+  }
+};
+
+const getDocument = (collectionName: string, docId: string) => {
+  if (Platform.OS === 'web') {
+    return webFirestore.doc(db, collectionName, docId);
+  } else {
+    return db.collection(collectionName).doc(docId);
+  }
+};
+
+const getDocumentData = async (docRef: any) => {
+  if (Platform.OS === 'web') {
+    return webFirestore.getDoc(docRef);
+  } else {
+    return docRef.get();
+  }
+};
+
+const updateDocument = async (docRef: any, data: any) => {
+  if (Platform.OS === 'web') {
+    return webFirestore.updateDoc(docRef, data);
+  } else {
+    return docRef.update(data);
+  }
+};
+
+const createQuery = (collectionRef: any, ...constraints: any[]) => {
+  if (Platform.OS === 'web') {
+    return webFirestore.query(collectionRef, ...constraints);
+  } else {
+    // React Native Firebase uses chaining
+    let query = collectionRef;
+    
+    for (const constraint of constraints) {
+      if (constraint.type === 'orderBy') {
+        query = query.orderBy(constraint.field, constraint.direction);
+      }
+    }
+    
+    return query;
+  }
+};
+
+const orderBy = (field: string, direction: 'asc' | 'desc' = 'asc') => {
+  if (Platform.OS === 'web') {
+    return webFirestore.orderBy(field, direction);
+  } else {
+    return { type: 'orderBy', field, direction };
+  }
+};
+
+const getDocs = async (query: any) => {
+  if (Platform.OS === 'web') {
+    return webFirestore.getDocs(query);
+  } else {
+    return query.get();
+  }
+};
 
 export class UserService {
   private static readonly COLLECTION_NAME = 'users';
@@ -17,11 +97,13 @@ export class UserService {
     }
 
     try {
-      const usersCollection = collection(db, this.COLLECTION_NAME);
-      const q = query(usersCollection, orderBy('email', 'asc'));
+      const usersCollection = getCollection(this.COLLECTION_NAME);
+      const q = createQuery(usersCollection, orderBy('email', 'asc'));
       
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
+      const docs = Platform.OS === 'web' ? snapshot.docs : snapshot.docs;
+      
+      return docs.map((doc: any) => ({
         uid: doc.id,
         ...doc.data(),
         // Convert Firestore Timestamps to Dates
@@ -46,10 +128,11 @@ export class UserService {
     }
 
     try {
-      const userDoc = doc(db, this.COLLECTION_NAME, uid);
-      const snapshot = await getDoc(userDoc);
+      const userDoc = getDocument(this.COLLECTION_NAME, uid);
+      const snapshot = await getDocumentData(userDoc);
       
-      if (!snapshot.exists()) {
+      const exists = Platform.OS === 'web' ? snapshot.exists() : snapshot.exists;
+      if (!exists) {
         return null;
       }
 
@@ -89,10 +172,11 @@ export class UserService {
     }
 
     try {
-      const userRef = doc(db, this.COLLECTION_NAME, uid);
-      const userDoc = await getDoc(userRef);
+      const userRef = getDocument(this.COLLECTION_NAME, uid);
+      const userDoc = await getDocumentData(userRef);
 
-      if (!userDoc.exists()) {
+      const exists = Platform.OS === 'web' ? userDoc.exists() : userDoc.exists;
+      if (!exists) {
         throw new Error('User not found');
       }
 
@@ -144,7 +228,7 @@ export class UserService {
         }
       });
 
-      await updateDoc(userRef, filterUndefinedProperties(firestoreData));
+      await updateDocument(userRef, filterUndefinedProperties(firestoreData));
 
       const requestorEmail = await UserService.getUserEmail(requestorUid);
       await AuditLogService.createAuditLog({
@@ -166,9 +250,10 @@ export class UserService {
   // Get user email by UID (for audit trail display)
   static async getUserEmail(uid: string): Promise<string> {
     try {
-      const userDoc = await getDoc(doc(db, this.COLLECTION_NAME, uid));
+      const userDoc = await getDocumentData(getDocument(this.COLLECTION_NAME, uid));
       
-      if (!userDoc.exists()) {
+      const exists = Platform.OS === 'web' ? userDoc.exists() : userDoc.exists;
+      if (!exists) {
         return 'Unknown User';
       }
 
@@ -183,8 +268,8 @@ export class UserService {
   // Update last login timestamp
   static async updateLastLogin(uid: string): Promise<void> {
     try {
-      const userDoc = doc(db, this.COLLECTION_NAME, uid);
-      await updateDoc(userDoc, {
+      const userDoc = getDocument(this.COLLECTION_NAME, uid);
+      await updateDocument(userDoc, {
         lastLoginAt: Timestamp.now(),
       });
     } catch (error) {
