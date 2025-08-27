@@ -12,6 +12,7 @@ import '../src/i18n';
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_URL,
   sendDefaultPii: true,
+  enabled: process.env.EXPO_PUBLIC_SENTRY_DISABLED !== 'true'
 });
 
 const originalConsoleError = console.error;
