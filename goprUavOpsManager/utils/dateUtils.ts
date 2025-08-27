@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from '@/utils/firebaseUtils';
 
 /**
  * Date formatting utility functions

@@ -1,115 +1,23 @@
-import { Platform } from 'react-native';
-import { db } from '@/firebaseConfig';
 import { AuditLog, AuditLogData, AuditLogQuery, PaginatedAuditLogResponse } from '@/types/AuditLog';
 import { ApplicationMetadata } from '@/utils/applicationMetadata';
 import { deepDiff, formatChanges } from '@/utils/deepDiff';
-import {filterUndefinedProperties} from "@/utils/filterUndefinedProperties";
-import {toDateIfTimestamp} from "@/utils/dateUtils";
-
-// Platform-aware Firebase imports and helpers
-let webFirestore: any;
-let Timestamp: any;
-
-if (Platform.OS === 'web') {
-  // Web Firebase SDK
-  const firestore = require('firebase/firestore');
-  webFirestore = firestore;
-  Timestamp = firestore.Timestamp;
-} else {
-  // React Native Firebase SDK
-  const firestore = require('@react-native-firebase/firestore');
-  Timestamp = firestore.default.Timestamp;
-}
-
-// Platform-aware helper functions
-const getCollection = (collectionName: string) => {
-  if (Platform.OS === 'web') {
-    return webFirestore.collection(db, collectionName);
-  } else {
-    return db.collection(collectionName);
-  }
-};
-
-const addDocument = async (collectionRef: any, data: any) => {
-  if (Platform.OS === 'web') {
-    return webFirestore.addDoc(collectionRef, data);
-  } else {
-    return collectionRef.add(data);
-  }
-};
-
-const createQuery = (collectionRef: any, ...constraints: any[]) => {
-  if (Platform.OS === 'web') {
-    return webFirestore.query(collectionRef, ...constraints);
-  } else {
-    // React Native Firebase uses chaining
-    let query = collectionRef;
-    
-    for (const constraint of constraints) {
-      if (constraint.type === 'where') {
-        query = query.where(constraint.field, constraint.operator, constraint.value);
-      } else if (constraint.type === 'orderBy') {
-        query = query.orderBy(constraint.field, constraint.direction);
-      } else if (constraint.type === 'limit') {
-        query = query.limit(constraint.value);
-      } else if (constraint.type === 'startAfter') {
-        query = query.startAfter(constraint.value);
-      }
-    }
-    
-    return query;
-  }
-};
-
-const where = (field: string, operator: any, value: any) => {
-  if (Platform.OS === 'web') {
-    return webFirestore.where(field, operator, value);
-  } else {
-    return { type: 'where', field, operator, value };
-  }
-};
-
-const orderBy = (field: string, direction: 'asc' | 'desc' = 'asc') => {
-  if (Platform.OS === 'web') {
-    return webFirestore.orderBy(field, direction);
-  } else {
-    return { type: 'orderBy', field, direction };
-  }
-};
-
-const limit = (value: number) => {
-  if (Platform.OS === 'web') {
-    return webFirestore.limit(value);
-  } else {
-    return { type: 'limit', value };
-  }
-};
-
-const startAfter = (value: any) => {
-  if (Platform.OS === 'web') {
-    return webFirestore.startAfter(value);
-  } else {
-    return { type: 'startAfter', value };
-  }
-};
-
-const getDocs = async (query: any) => {
-  if (Platform.OS === 'web') {
-    return webFirestore.getDocs(query);
-  } else {
-    return query.get();
-  }
-};
-
-const getCountFromServer = async (query: any) => {
-  if (Platform.OS === 'web') {
-    return webFirestore.getCountFromServer(query);
-  } else {
-    // React Native Firebase doesn't have getCountFromServer, we need to get docs and count
-    const snapshot = await query.get();
-    return { data: () => ({ count: snapshot.size }) };
-  }
-};
+import { filterUndefinedProperties } from "@/utils/filterUndefinedProperties";
+import { toDateIfTimestamp } from "@/utils/dateUtils";
+import {
+  getCollection,
+  addDocument,
+  createQuery,
+  where,
+  orderBy,
+  limit,
+  startAfter,
+  getDocs,
+  getCountFromServer,
+  getDocsArray,
+  timestampNow,
+  timestampFromDate,
+  Timestamp
+} from '@/utils/firebaseUtils';
 
 export class AuditLogService {
   private static readonly COLLECTION_NAME = 'auditLogs';
@@ -119,7 +27,7 @@ export class AuditLogService {
    */
   static async createAuditLog(auditData: Omit<AuditLogData, 'applicationPlatform' | 'applicationVersion' | 'commitHash'>): Promise<string> {
     try {
-      const now = Timestamp.now();
+      const now = timestampNow();
       const metadata = ApplicationMetadata.getMetadata();
       
       const completeAuditData = {
@@ -131,7 +39,7 @@ export class AuditLogService {
       const collectionRef = getCollection(this.COLLECTION_NAME);
       const docRef = await addDocument(collectionRef, filterUndefinedProperties(completeAuditData));
       
-      const docId = Platform.OS === 'web' ? docRef.id : docRef.id;
+      const docId = docRef.id;
       console.log(`Audit log created: ${auditData.action} on ${auditData.entityType}:${auditData.entityId} by ${auditData.userEmail || auditData.userId} [${metadata.applicationPlatform} v${metadata.applicationVersion}${metadata.commitHash ? ` @${metadata.commitHash.substring(0, 7)}` : ''}]`);
       return docId;
     } catch (error) {
@@ -172,11 +80,11 @@ export class AuditLogService {
       }
 
       if (queryParams?.startDate) {
-        constraints.push(where('timestamp', '>=', Timestamp.fromDate(queryParams.startDate)));
+        constraints.push(where('timestamp', '>=', timestampFromDate(queryParams.startDate)));
       }
 
       if (queryParams?.endDate) {
-        constraints.push(where('timestamp', '<=', Timestamp.fromDate(queryParams.endDate)));
+        constraints.push(where('timestamp', '<=', timestampFromDate(queryParams.endDate)));
       }
 
       // Add order by
@@ -192,7 +100,7 @@ export class AuditLogService {
 
       const snapshot = await getDocs(q);
       
-      const docs = Platform.OS === 'web' ? snapshot.docs : snapshot.docs;
+      const docs = getDocsArray(snapshot);
       return docs.map((doc: any) => ({
         id: doc.id,
         ...doc.data(),
@@ -238,11 +146,11 @@ export class AuditLogService {
       }
 
       if (queryParams?.startDate) {
-        constraints.push(where('timestamp', '>=', Timestamp.fromDate(queryParams.startDate)));
+        constraints.push(where('timestamp', '>=', timestampFromDate(queryParams.startDate)));
       }
 
       if (queryParams?.endDate) {
-        constraints.push(where('timestamp', '<=', Timestamp.fromDate(queryParams.endDate)));
+        constraints.push(where('timestamp', '<=', timestampFromDate(queryParams.endDate)));
       }
 
       // Build query for counting
@@ -267,7 +175,7 @@ export class AuditLogService {
           const skipConstraints = [...constraints, orderBy('timestamp', 'desc'), limit(skipCount)];
           const skipQuery = createQuery(auditLogsCollection, ...skipConstraints);
           const skipSnapshot = await getDocs(skipQuery);
-          const skipDocs = Platform.OS === 'web' ? skipSnapshot.docs : skipSnapshot.docs;
+          const skipDocs = getDocsArray(skipSnapshot);
           if (skipDocs.length > 0) {
             const lastVisibleDoc = skipDocs[skipDocs.length - 1];
             paginatedConstraints.push(startAfter(lastVisibleDoc));
@@ -278,7 +186,7 @@ export class AuditLogService {
       const paginatedQuery = createQuery(auditLogsCollection, ...paginatedConstraints);
       const snapshot = await getDocs(paginatedQuery);
       
-      const docs = Platform.OS === 'web' ? snapshot.docs : snapshot.docs;
+      const docs = getDocsArray(snapshot);
       const logs = docs.map((doc: any) => ({
         id: doc.id,
         ...doc.data(),

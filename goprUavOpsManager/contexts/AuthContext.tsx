@@ -1,49 +1,15 @@
 import React, {createContext, useContext, useEffect, useState, useCallback} from 'react';
-import {Platform} from 'react-native';
-import {auth, firestore} from '@/firebaseConfig';
 import {User as FullUser} from '../types/User';
 import {UserService} from '@/services/userService';
 import {UserRole} from "@/types/UserRole";
 import {changeLanguage} from '@/src/i18n';
-
-// Platform-aware Firebase helper functions
-const getFirebaseDoc = (collection: string, docId: string) => {
-  if (Platform.OS === 'web') {
-    const { doc } = require('firebase/firestore');
-    return doc(firestore, collection, docId);
-  } else {
-    return firestore.collection(collection).doc(docId);
-  }
-};
-
-const getFirebaseDocData = async (docRef: any) => {
-  if (Platform.OS === 'web') {
-    const { getDoc } = require('firebase/firestore');
-    const docSnap = await getDoc(docRef);
-    return { exists: docSnap.exists(), data: docSnap.data() };
-  } else {
-    const docSnap = await docRef.get();
-    return { exists: docSnap.exists, data: docSnap.data() };
-  }
-};
-
-const setFirebaseDocData = async (docRef: any, data: any) => {
-  if (Platform.OS === 'web') {
-    const { setDoc } = require('firebase/firestore');
-    return setDoc(docRef, data);
-  } else {
-    return docRef.set(data);
-  }
-};
-
-const setupAuthStateListener = (callback: any) => {
-  if (Platform.OS === 'web') {
-    const { onAuthStateChanged } = require('firebase/auth');
-    return onAuthStateChanged(auth, callback);
-  } else {
-    return auth().onAuthStateChanged(callback);
-  }
-};
+import {
+  getDocument,
+  getDocumentData,
+  setDocument,
+  onAuthStateChanged,
+  getCurrentUser
+} from '@/utils/firebaseUtils';
 
 /**
  * AuthContext - Firebase Authentication State Management
@@ -106,8 +72,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('[AuthContext] Loading full user data for:', firebaseUser.uid, firebaseUser.email);
     try {
       // First, get or create the basic user document
-      const userDocRef = getFirebaseDoc('users', firebaseUser.uid);
-      const userDocResult = await getFirebaseDocData(userDocRef);
+      const userDocRef = getDocument('users', firebaseUser.uid);
+      const userDocResult = await getDocumentData(userDocRef);
       console.log('[AuthContext] User document exists:', userDocResult.exists);
       
       let role: UserRole = UserRole.USER;
@@ -118,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         console.log('[AuthContext] Creating new user document with default role');
         // Create user document if it doesn't exist
-        await setFirebaseDocData(userDocRef, {
+        await setDocument(userDocRef, {
           email: firebaseUser.email || '',
           role: role,
         });
@@ -178,7 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [isLoadingUserData]);
 
   const refreshUser = async () => {
-    const currentUser = auth.currentUser;
+    const currentUser = getCurrentUser();
     console.log('[AuthContext] refreshUser called, currentUser:', currentUser?.uid, 'existing user:', user?.uid);
     if (currentUser && user) {
       setLoading(true);
@@ -197,19 +163,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     console.log('[AuthContext] Setting up auth state listener');
     
-    // Check if Firebase is properly configured
-    if (!auth) {
-      console.error('[AuthContext] Firebase auth is not initialized properly');
-      setLoading(false);
-      return;
-    }
-
     // Firebase Auth Persistence Notes:
     // - Android/iOS: Native persistence via React Native Firebase (keychain/keystore)
     // - Web: Configured to use browserLocalPersistence in firebaseConfig.ts
     // - Sessions should persist unless signOut() is called or app storage is cleared
     
-    return setupAuthStateListener(async (firebaseUser: any) => {
+    return onAuthStateChanged(async (firebaseUser: any) => {
       console.log('[AuthContext] Auth state changed, firebaseUser:', firebaseUser?.uid, firebaseUser?.email);
       
       if (firebaseUser) {

@@ -13,30 +13,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
-import { auth } from '@/firebaseConfig';
-
-// Platform-aware Firebase imports
-let signInWithEmailAndPassword: any;
-let signInWithPopup: any;
-let signInWithCredential: any;
-let GoogleAuthProvider: any;
-
-if (Platform.OS === 'web') {
-  // Web Firebase SDK
-  const firebaseAuth = require('firebase/auth');
-  signInWithEmailAndPassword = firebaseAuth.signInWithEmailAndPassword;
-  signInWithPopup = firebaseAuth.signInWithPopup;
-  signInWithCredential = firebaseAuth.signInWithCredential;
-  GoogleAuthProvider = firebaseAuth.GoogleAuthProvider;
-} else {
-  // React Native Firebase SDK - auth is already an instance
-  const authModule = require('@react-native-firebase/auth');
-  // For React Native Firebase, these are methods on the auth instance
-  signInWithEmailAndPassword = (email: string, password: string) => auth.signInWithEmailAndPassword(email, password);
-  signInWithCredential = (credential: any) => auth.signInWithCredential(credential);
-  // GoogleAuthProvider is a static class on the auth module
-  GoogleAuthProvider = authModule.default.GoogleAuthProvider;
-}
+import {
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signInWithCredential,
+  GoogleAuthProvider,
+  createGoogleAuthProvider,
+  signOut,
+  getCurrentUser
+} from '@/utils/firebaseUtils';
 import {AuditLogService} from "@/services/auditLogService";
 import {User} from "@/types/User";
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
@@ -77,13 +62,13 @@ export default function LoginScreen() {
 
   const handleWebGoogleLogin = async () => {
     // Create Google Auth Provider with domain restriction
-    const provider = new GoogleAuthProvider();
+    const provider = createGoogleAuthProvider();
     provider.setCustomParameters({
       hd: 'bieszczady.gopr.pl' // Restrict to Google Workspace domain
     });
     
     // Firebase will handle the OAuth flow and domain restriction is managed server-side
-    const result = await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(provider);
     await addLoginAuditLog();
     console.log('Google sign-in successful:', result.user.email);
   };
@@ -112,7 +97,7 @@ export default function LoginScreen() {
       
       // Verify domain restriction (additional check for security)
       if (!firebaseResult.user.email?.endsWith('@bieszczady.gopr.pl')) {
-        await auth.signOut();
+        await signOut();
         throw new Error('Only @bieszczady.gopr.pl users are allowed');
       }
     } catch (error: any) {
@@ -157,11 +142,7 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      if (Platform.OS === 'web') {
-        await signInWithEmailAndPassword(auth, email, password);
-      } else {
-        await signInWithEmailAndPassword(email, password);
-      }
+      await signInWithEmailAndPassword(email, password);
       await addLoginAuditLog();
       // Navigation will be handled by the auth state change in AuthContext
     } catch (error: any) {
@@ -175,13 +156,14 @@ export default function LoginScreen() {
   const addLoginAuditLog = async () => {
       // Create audit log for successful login
       try {
-          if (auth.currentUser) {
+          const currentUser = getCurrentUser();
+          if (currentUser) {
               await AuditLogService.createAuditLog({
                   entityType: 'user',
-                  entityId: auth.currentUser.uid,
+                  entityId: currentUser.uid,
                   action: 'login',
-                  userId: auth.currentUser.uid,
-                  userEmail: auth.currentUser.email as string,
+                  userId: currentUser.uid,
+                  userEmail: currentUser.email as string,
                   details: 'Successful login',
               });
           }

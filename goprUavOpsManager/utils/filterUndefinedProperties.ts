@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from '@/utils/firebaseUtils';
 
 export const filterUndefinedProperties = (data: any): any => {
   if (Array.isArray(data)) {

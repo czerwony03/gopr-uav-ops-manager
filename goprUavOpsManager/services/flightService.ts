@@ -1,23 +1,25 @@
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  query, 
-  where,
-  orderBy,
-  limit as limitQuery,
-  startAfter,
-  getCountFromServer,
-  Timestamp 
-} from 'firebase/firestore';
-import { db } from '@/firebaseConfig';
 import { Flight, FlightQuery, PaginatedFlightResponse } from '@/types/Flight';
 import { AuditLogService } from './auditLogService';
 import { UserService } from './userService';
 import {UserRole} from "@/types/UserRole";
+import {
+  getCollection,
+  getDocument,
+  getDocumentData,
+  addDocument,
+  updateDocument,
+  createQuery,
+  where,
+  orderBy,
+  limit,
+  startAfter,
+  getDocs,
+  getCountFromServer,
+  getDocsArray,
+  timestampNow,
+  timestampFromDate,
+  Timestamp
+} from '@/utils/firebaseUtils';
 
 export class FlightService {
   private static readonly COLLECTION_NAME = 'flights';
@@ -25,12 +27,12 @@ export class FlightService {
   // Get flights based on user role
   static async getFlights(userRole: UserRole, currentUserId: string): Promise<Flight[]> {
     try {
-      const flightsCollection = collection(db, this.COLLECTION_NAME);
+      const flightsCollection = getCollection(this.COLLECTION_NAME);
       let q;
 
       if (userRole === 'admin' || userRole === 'manager') {
         // Admin and manager can see all flights
-        q = query(
+        q = createQuery(
           flightsCollection, 
           orderBy('date', 'desc'),
           orderBy('startTime', 'desc')
@@ -39,7 +41,7 @@ export class FlightService {
         // Users only see their own flights
         // Note: Firestore requires a composite index for this query:
         // Collection: flights, Fields: userId (Ascending), date (Descending), startTime (Descending)
-        q = query(
+        q = createQuery(
           flightsCollection,
           where('userId', '==', currentUserId),
           orderBy('userId', 'asc'),
@@ -49,12 +51,12 @@ export class FlightService {
       }
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
+      return getDocsArray(snapshot).map(doc => ({
         id: doc.id,
-        ...doc.data(),
+        ...doc.data,
         // Convert Firestore Timestamps to Dates
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
+        createdAt: doc.data.createdAt?.toDate(),
+        updatedAt: doc.data.updatedAt?.toDate(),
       } as Flight));
     } catch (error) {
       console.error('Error fetching flights:', error);
@@ -65,17 +67,17 @@ export class FlightService {
   // Get a single flight by ID with access control
   static async getFlight(id: string, userRole: UserRole, currentUserId: string): Promise<Flight | null> {
     try {
-      const flightDoc = await getDoc(doc(db, this.COLLECTION_NAME, id));
+      const flightDoc = await getDocumentData(getDocument(this.COLLECTION_NAME, id));
       
-      if (!flightDoc.exists()) {
+      if (!flightDoc.exists) {
         return null;
       }
 
       const flight = {
         id: flightDoc.id,
-        ...flightDoc.data(),
-        createdAt: flightDoc.data().createdAt?.toDate(),
-        updatedAt: flightDoc.data().updatedAt?.toDate(),
+        ...flightDoc.data,
+        createdAt: flightDoc.data.createdAt?.toDate(),
+        updatedAt: flightDoc.data.updatedAt?.toDate(),
       } as Flight;
 
       // Check access control - owner or admin/manager
@@ -97,8 +99,8 @@ export class FlightService {
     currentUserEmail?: string
   ): Promise<string> {
     try {
-      const now = Timestamp.now();
-      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), {
+      const now = timestampNow();
+      const docRef = await addDocument(getCollection(this.COLLECTION_NAME), {
         ...flightData,
         userId: currentUserId,
         userEmail: currentUserEmail || '',
@@ -135,14 +137,14 @@ export class FlightService {
     currentUserId: string
   ): Promise<void> {
     try {
-      const flightRef = doc(db, this.COLLECTION_NAME, id);
-      const flightDoc = await getDoc(flightRef);
+      const flightRef = getDocument(this.COLLECTION_NAME, id);
+      const flightDoc = await getDocumentData(flightRef);
       
-      if (!flightDoc.exists()) {
+      if (!flightDoc.exists) {
         throw new Error('Flight not found');
       }
 
-      const currentFlight = flightDoc.data() as Flight;
+      const currentFlight = flightDoc.data as Flight;
       
       // Check access control - owner or admin/manager
       if (userRole !== 'admin' && userRole !== 'manager' && currentFlight.userId !== currentUserId) {
@@ -153,9 +155,9 @@ export class FlightService {
       const previousValues = { ...currentFlight };
       const newValues = { ...currentFlight, ...patch };
 
-      await updateDoc(flightRef, {
+      await updateDocument(flightRef, {
         ...patch,
-        updatedAt: Timestamp.now(),
+        updatedAt: timestampNow(),
         updatedBy: currentUserId,
       });
 
@@ -184,7 +186,7 @@ export class FlightService {
     queryParams?: FlightQuery
   ): Promise<PaginatedFlightResponse> {
     try {
-      const flightsCollection = collection(db, this.COLLECTION_NAME);
+      const flightsCollection = getCollection(this.COLLECTION_NAME);
       const pageSize = queryParams?.pageSize || 10;
       const pageNumber = queryParams?.pageNumber || 1;
 
@@ -225,74 +227,74 @@ export class FlightService {
       // Build base query for counting
       let countQuery;
       if (constraints.length > 0) {
-        countQuery = query(flightsCollection, ...constraints);
+        countQuery = createQuery(flightsCollection, ...constraints);
       } else {
-        countQuery = query(flightsCollection);
+        countQuery = createQuery(flightsCollection);
       }
 
       // Get total count
       const countSnapshot = await getCountFromServer(countQuery);
-      const totalCount = countSnapshot.data().count;
+      const totalCount = countSnapshot.data.count;
       const totalPages = Math.ceil(totalCount / pageSize);
 
       // Build paginated query with ordering
       let paginatedQuery;
       if (constraints.length > 0) {
-        paginatedQuery = query(
+        paginatedQuery = createQuery(
           flightsCollection, 
           ...constraints, 
           orderBy('date', 'desc'),
           orderBy('startTime', 'desc'),
-          limitQuery(pageSize)
+          limit(pageSize)
         );
       } else {
-        paginatedQuery = query(
+        paginatedQuery = createQuery(
           flightsCollection, 
           orderBy('date', 'desc'),
           orderBy('startTime', 'desc'),
-          limitQuery(pageSize)
+          limit(pageSize)
         );
       }
 
       // Apply pagination with startAfter
       if (queryParams?.lastDocumentSnapshot) {
-        paginatedQuery = query(paginatedQuery, startAfter(queryParams.lastDocumentSnapshot));
+        paginatedQuery = createQuery(paginatedQuery, startAfter(queryParams.lastDocumentSnapshot));
       } else if (pageNumber > 1) {
         // For page-based navigation, we need to skip to the right position
         const skipCount = (pageNumber - 1) * pageSize;
         if (skipCount > 0) {
           let skipQuery;
           if (constraints.length > 0) {
-            skipQuery = query(
+            skipQuery = createQuery(
               flightsCollection, 
               ...constraints, 
               orderBy('date', 'desc'),
               orderBy('startTime', 'desc'),
-              limitQuery(skipCount)
+              limit(skipCount)
             );
           } else {
-            skipQuery = query(
+            skipQuery = createQuery(
               flightsCollection, 
               orderBy('date', 'desc'),
               orderBy('startTime', 'desc'),
-              limitQuery(skipCount)
+              limit(skipCount)
             );
           }
           const skipSnapshot = await getDocs(skipQuery);
           if (skipSnapshot.docs.length > 0) {
             const lastVisibleDoc = skipSnapshot.docs[skipSnapshot.docs.length - 1];
-            paginatedQuery = query(paginatedQuery, startAfter(lastVisibleDoc));
+            paginatedQuery = createQuery(paginatedQuery, startAfter(lastVisibleDoc));
           }
         }
       }
 
       const snapshot = await getDocs(paginatedQuery);
-      const flights = snapshot.docs.map(doc => ({
+      const flights = getDocsArray(snapshot).map(doc => ({
         id: doc.id,
-        ...doc.data(),
+        ...doc.data,
         // Convert Firestore Timestamps to Dates
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
+        createdAt: doc.data.createdAt?.toDate(),
+        updatedAt: doc.data.updatedAt?.toDate(),
       } as Flight));
 
       return {
@@ -302,7 +304,7 @@ export class FlightService {
         hasPreviousPage: pageNumber > 1,
         currentPage: pageNumber,
         totalPages,
-        lastDocumentSnapshot: snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : undefined,
+        lastDocumentSnapshot: getDocsArray(snapshot).length > 0 ? getDocsArray(snapshot)[getDocsArray(snapshot).length - 1] : undefined,
       };
     } catch (error) {
       console.error('Error fetching paginated flights:', error);
