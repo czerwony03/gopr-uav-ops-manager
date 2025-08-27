@@ -203,7 +203,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('[AuthContext] Auth state processing complete, setting loading to false');
       setLoading(false);
     });
-  }, [loadFullUserData]);
+  }, []); // Removed loadFullUserData dependency to prevent recreation loop
 
   return (
     <AuthContext.Provider value={{ user, loading, refreshUser }}>
