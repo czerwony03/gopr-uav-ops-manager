@@ -208,7 +208,7 @@ export const getCountFromServer = async (query: any) => {
   } else {
     // React Native Firebase doesn't have getCountFromServer, we need to get docs and count
     const snapshot = await query.get();
-    return { data: () => ({ count: snapshot.size }) };
+    return { data: { count: snapshot.size } };
   }
 };
 
@@ -216,7 +216,13 @@ export const getCountFromServer = async (query: any) => {
  * Process query results to extract docs array (platform-independent)
  */
 export const getDocsArray = (snapshot: any) => {
-  return Platform.OS === 'web' ? snapshot.docs : snapshot.docs;
+  const docs = Platform.OS === 'web' ? snapshot.docs : snapshot.docs;
+  
+  // Normalize document structure so consuming code can use doc.data consistently
+  return docs.map((doc: any) => ({
+    id: doc.id,
+    data: typeof doc.data === 'function' ? doc.data() : doc.data
+  }));
 };
 
 // ============================================================================
@@ -274,7 +280,7 @@ export const onAuthStateChanged = (callback: any) => {
   if (Platform.OS === 'web') {
     return webAuth.onAuthStateChanged(auth, callback);
   } else {
-    return auth().onAuthStateChanged(callback);
+    return auth.onAuthStateChanged(callback);
   }
 };
 
@@ -285,7 +291,7 @@ export const getCurrentUser = () => {
   if (Platform.OS === 'web') {
     return auth.currentUser;
   } else {
-    return auth().currentUser;
+    return auth.currentUser;
   }
 };
 
