@@ -12,9 +12,31 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { signInWithEmailAndPassword, signInWithPopup, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { auth } from '@/firebaseConfig';
+
+// Platform-aware Firebase imports
+let signInWithEmailAndPassword: any;
+let signInWithPopup: any;
+let signInWithCredential: any;
+let GoogleAuthProvider: any;
+
+if (Platform.OS === 'web') {
+  // Web Firebase SDK
+  const firebaseAuth = require('firebase/auth');
+  signInWithEmailAndPassword = firebaseAuth.signInWithEmailAndPassword;
+  signInWithPopup = firebaseAuth.signInWithPopup;
+  signInWithCredential = firebaseAuth.signInWithCredential;
+  GoogleAuthProvider = firebaseAuth.GoogleAuthProvider;
+} else {
+  // React Native Firebase SDK
+  const authModule = require('@react-native-firebase/auth');
+  // For React Native Firebase, these are methods on the auth instance
+  signInWithEmailAndPassword = (email: string, password: string) => auth.signInWithEmailAndPassword(email, password);
+  signInWithCredential = (credential: any) => auth.signInWithCredential(credential);
+  // GoogleAuthProvider is a static property on the auth module
+  GoogleAuthProvider = authModule.default.GoogleAuthProvider;
+}
 import {AuditLogService} from "@/services/auditLogService";
 import {User} from "@/types/User";
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
@@ -79,11 +101,11 @@ export default function LoginScreen() {
         throw new Error('No ID token received from Google Sign-In');
       }
       
-      // Create a Google credential with the token
+      // Create a Google credential with the token (React Native Firebase API)
       const googleCredential = GoogleAuthProvider.credential(idToken);
       
-      // Sign in the user with the credential
-      const firebaseResult = await signInWithCredential(auth, googleCredential);
+      // Sign in the user with the credential using React Native Firebase
+      const firebaseResult = await signInWithCredential(googleCredential);
       
       console.log('Mobile Google sign-in successful:', firebaseResult.user.email);
       await addLoginAuditLog();
@@ -135,7 +157,11 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      if (Platform.OS === 'web') {
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(email, password);
+      }
       await addLoginAuditLog();
       // Navigation will be handled by the auth state change in AuthContext
     } catch (error: any) {
