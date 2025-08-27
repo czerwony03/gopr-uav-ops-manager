@@ -39,6 +39,12 @@ export const ConsoleProvider: React.FC<ConsoleProviderProps> = ({
   const [isConsoleVisible, setIsConsoleVisible] = useState(false);
   const messageQueueRef = useRef<ConsoleMessage[]>([]);
   const flushTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const originalMethodsRef = useRef<{
+    log: Function;
+    info: Function;
+    warn: Function;
+    error: Function;
+  } | null>(null);
 
   // Flush queued messages to state
   const flushMessages = React.useCallback(() => {
@@ -54,18 +60,15 @@ export const ConsoleProvider: React.FC<ConsoleProviderProps> = ({
     }
   }, [maxMessages]);
 
-  // Flush messages periodically
-  useEffect(() => {
-    const interval = setInterval(flushMessages, 100);
-    return () => clearInterval(interval);
-  }, [flushMessages]);
-
-  useEffect(() => {
+  // Set up console capture immediately when component is created
+  if (!originalMethodsRef.current) {
     // Store original console methods
-    const originalLog = console.log;
-    const originalInfo = console.info;
-    const originalWarn = console.warn;
-    const originalError = console.error;
+    originalMethodsRef.current = {
+      log: console.log,
+      info: console.info,
+      warn: console.warn,
+      error: console.error,
+    };
 
     // Create enhanced console methods that capture messages
     const createConsoleCapture = (level: ConsoleMessage['level'], originalMethod: Function) => {
@@ -97,25 +100,36 @@ export const ConsoleProvider: React.FC<ConsoleProviderProps> = ({
       };
     };
 
-    // Override console methods
-    console.log = createConsoleCapture('log', originalLog);
-    console.info = createConsoleCapture('info', originalInfo);
-    console.warn = createConsoleCapture('warn', originalWarn);
-    console.error = createConsoleCapture('error', originalError);
+    // Override console methods immediately
+    console.log = createConsoleCapture('log', originalMethodsRef.current.log);
+    console.info = createConsoleCapture('info', originalMethodsRef.current.info);
+    console.warn = createConsoleCapture('warn', originalMethodsRef.current.warn);
+    console.error = createConsoleCapture('error', originalMethodsRef.current.error);
+  }
 
-    // Cleanup on unmount
+  // Flush messages periodically
+  useEffect(() => {
+    const interval = setInterval(flushMessages, 100);
+    return () => clearInterval(interval);
+  }, [flushMessages]);
+
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
-      console.log = originalLog;
-      console.info = originalInfo;
-      console.warn = originalWarn;
-      console.error = originalError;
+      if (originalMethodsRef.current) {
+        console.log = originalMethodsRef.current.log;
+        console.info = originalMethodsRef.current.info;
+        console.warn = originalMethodsRef.current.warn;
+        console.error = originalMethodsRef.current.error;
+        originalMethodsRef.current = null;
+      }
       
       if (flushTimeoutRef.current) {
         clearTimeout(flushTimeoutRef.current);
         flushTimeoutRef.current = null;
       }
     };
-  }, [maxMessages, flushMessages]);
+  }, []);
 
   const clearMessages = () => {
     setMessages([]);
