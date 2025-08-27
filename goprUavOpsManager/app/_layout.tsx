@@ -8,25 +8,20 @@ import ConsoleModal from "@/components/ConsoleModal";
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import * as Sentry from '@sentry/react-native';
+import { captureConsoleIntegration } from '@sentry/core';
 import { CrossPlatformAlertProvider } from '@/components/CrossPlatformAlert';
 import '../src/i18n';
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_URL,
   sendDefaultPii: true,
-  enabled: process.env.EXPO_PUBLIC_SENTRY_DISABLED !== 'true'
+  enabled: process.env.EXPO_PUBLIC_SENTRY_DISABLED !== 'true',
+  integrations: [
+    captureConsoleIntegration({
+      levels: ['error', 'warn']
+    })
+  ]
 });
-
-const originalConsoleError = console.error;
-console.error = (...args) => {
-  Sentry.captureMessage(args.map(String).join(" "), 'error');
-  originalConsoleError.apply(console, args);
-};
-const originalConsoleWarn = console.warn;
-console.warn = (...args) => {
-  Sentry.captureMessage(args.map(String).join(" "), 'warning');
-  originalConsoleWarn.apply(console, args);
-};
 
 function RootLayoutNavigation() {
   const { user, loading } = useAuth();
