@@ -132,11 +132,11 @@ export default function DronesListScreen() {
     <View style={[styles.droneCard, item.isDeleted && styles.deletedCard]}>
       <View style={styles.droneHeader}>
         <Text style={styles.droneName}>{item.name}</Text>
-        {item.isDeleted && user?.role === 'admin' && (
+        {item.isDeleted && user?.role === 'admin' ? (
           <View style={styles.deletedBadge}>
             <Text style={styles.deletedBadgeText}>{t('drones.deleted')}</Text>
           </View>
-        )}
+        ) : null}
       </View>
       
       <Text style={styles.droneDetail}>{t('drones.callSign')}: {item.callSign}</Text>

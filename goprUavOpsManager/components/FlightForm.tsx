@@ -362,11 +362,11 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
               required={true}
             />
 
-            {getFlightDuration() && (
+            {getFlightDuration() ? (
               <View style={styles.durationContainer}>
                 <Text style={styles.durationText}>{getFlightDuration()}</Text>
               </View>
-            )}
+            ) : null}
 
             <Text style={styles.label}>{t('flightForm.conditions')}</Text>
             <TextInput

@@ -189,11 +189,11 @@ export default function DroneDetailsScreen() {
       <View style={[styles.card, drone.isDeleted && styles.deletedCard]}>
         <View style={styles.header}>
           <Text style={styles.title}>{drone.name}</Text>
-          {drone.isDeleted && user?.role === 'admin' && (
+          {drone.isDeleted && user?.role === 'admin' ? (
             <View style={styles.deletedBadge}>
               <Text style={styles.deletedBadgeText}>{t('droneDetails.deleted')}</Text>
             </View>
-          )}
+          ) : null}
         </View>
 
         <View style={styles.section}>
@@ -237,38 +237,38 @@ export default function DroneDetailsScreen() {
           <Text style={styles.detail}>{t('droneDetails.commissioned')}: {drone.yearOfCommissioning}</Text>
         </View>
 
-        {drone.userManual && (
+        {drone.userManual ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('droneDetails.documentation')}</Text>
             <TouchableOpacity style={styles.manualButton} onPress={handleOpenUserManual}>
               <Text style={styles.manualButtonText}>{t('droneDetails.openManual')}</Text>
             </TouchableOpacity>
           </View>
-        )}
+        ) : null}
 
-        {(drone.createdAt || drone.updatedAt || drone.deletedAt) && (
+        {(drone.createdAt || drone.updatedAt || drone.deletedAt) ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('droneDetails.auditInfo')}</Text>
-            {drone.createdAt && (
+            {drone.createdAt ? (
               <Text style={styles.detail}>
                 {t('flightDetails.createdAt')}: {drone.createdAt.toLocaleDateString()} {drone.createdAt.toLocaleTimeString()}
                 {createdByEmail && ` ${t('flightDetails.createdBy')} ${createdByEmail}`}
               </Text>
-            )}
-            {drone.updatedAt && (
+            ) : null}
+            {drone.updatedAt ? (
               <Text style={styles.detail}>
                 {t('flightDetails.updatedAt')}: {drone.updatedAt.toLocaleDateString()} {drone.updatedAt.toLocaleTimeString()}
                 {updatedByEmail && ` ${t('flightDetails.updatedBy')} ${updatedByEmail}`}
               </Text>
-            )}
-            {drone.deletedAt && (
+            ) : null}
+            {drone.deletedAt ? (
               <Text style={styles.detail}>{t('droneDetails.deletedAt')}: {drone.deletedAt.toLocaleDateString()} {drone.deletedAt.toLocaleTimeString()}</Text>
-            )}
+            ) : null}
           </View>
-        )}
+        ) : null}
 
         <View style={styles.actionButtons}>
-          {canModify && (
+          {canModify ? (
             <>
               <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
                 <Text style={styles.editButtonText}>{t('droneDetails.editButton')}</Text>
@@ -277,13 +277,13 @@ export default function DroneDetailsScreen() {
                 <Text style={styles.deleteButtonText}>{t('droneDetails.deleteButton')}</Text>
               </TouchableOpacity>
             </>
-          )}
+          ) : null}
 
-          {canRestore && (
+          {canRestore ? (
             <TouchableOpacity style={styles.restoreButton} onPress={handleRestore}>
               <Text style={styles.restoreButtonText}>{t('droneDetails.restoreButton')}</Text>
             </TouchableOpacity>
-          )}
+          ) : null}
         </View>
       </View>
     </ScrollView>

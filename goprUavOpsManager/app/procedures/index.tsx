@@ -128,11 +128,11 @@ export default function ProceduresListScreen() {
       <View style={styles.checklistHeader}>
         <View style={styles.checklistInfo}>
           <Text style={styles.checklistTitle}>{item.title}</Text>
-          {item.description && (
+          {item.description ? (
             <Text style={styles.checklistDescription} numberOfLines={2}>
               {item.description}
             </Text>
-          )}
+          ) : null}
           <Text style={styles.checklistMeta}>
             {item.items.length} {item.items.length === 1 ? t('procedures.itemSingle') : t('procedures.itemPlural')}
             {item.createdAt && ` • ${t('procedures.createdOn', { date: item.createdAt.toLocaleDateString() })}`}

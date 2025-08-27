@@ -266,22 +266,22 @@ export default function FlightsListScreen() {
           <Text style={styles.detailLabel}>{t('flights.activity')}:</Text>
           <Text style={styles.detailValue}>{item.activityType}</Text>
         </View>
-        {item.conditions && (
+        {item.conditions ? (
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>{t('flights.conditions')}:</Text>
             <Text style={styles.detailValue}>{item.conditions}</Text>
           </View>
-        )}
+        ) : null}
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>{t('common.totalTime')}:</Text>
           <Text style={styles.detailValue}>{formatFlightDurationCompact(item.startTime, item.endTime)}</Text>
         </View>
-        {(user?.role === 'admin' || user?.role === 'manager') && item.userEmail && (
+        {(user?.role === 'admin' || user?.role === 'manager') && item.userEmail ? (
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>{t('flights.operator')}:</Text>
             <Text style={styles.detailValue}>{item.userEmail}</Text>
           </View>
-        )}
+        ) : null}
       </View>
 
       <View style={styles.buttonContainer}>
@@ -292,14 +292,14 @@ export default function FlightsListScreen() {
           <Text style={styles.viewButtonText}>{t('common.view')}</Text>
         </TouchableOpacity>
         
-        {canEditFlight(item) && (
+        {canEditFlight(item) ? (
           <TouchableOpacity
             style={styles.editButton}
             onPress={() => handleEditFlight(item.id)}
           >
             <Text style={styles.editButtonText}>{t('common.edit')}</Text>
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
       </View>
     );
@@ -340,7 +340,7 @@ export default function FlightsListScreen() {
           </TouchableOpacity>
 
           <View style={styles.pageNumbers}>
-            {startPage > 1 && (
+            {startPage > 1 ? (
               <>
                 <TouchableOpacity
                   style={styles.pageNumberButton}
@@ -350,7 +350,7 @@ export default function FlightsListScreen() {
                 </TouchableOpacity>
                 {startPage > 2 && <Text style={styles.ellipsis}>...</Text>}
               </>
-            )}
+            ) : null}
 
             {pageNumbers.map((page) => (
               <TouchableOpacity
@@ -370,7 +370,7 @@ export default function FlightsListScreen() {
               </TouchableOpacity>
             ))}
 
-            {endPage < totalPages && (
+            {endPage < totalPages ? (
               <>
                 {endPage < totalPages - 1 && <Text style={styles.ellipsis}>...</Text>}
                 <TouchableOpacity
@@ -380,7 +380,7 @@ export default function FlightsListScreen() {
                   <Text style={styles.pageNumberText}>{totalPages}</Text>
                 </TouchableOpacity>
               </>
-            )}
+            ) : null}
           </View>
 
           <TouchableOpacity
@@ -411,7 +411,7 @@ export default function FlightsListScreen() {
           </Text>
         </TouchableOpacity>
 
-        {showFilters && (
+        {showFilters ? (
           <View style={styles.filtersContent}>
             <View style={styles.filterRow}>
               <Text style={styles.filterLabel}>Start Date:</Text>
@@ -485,7 +485,7 @@ export default function FlightsListScreen() {
               </View>
             </View>
 
-            {(user?.role === 'admin' || user?.role === 'manager') && (
+            {(user?.role === 'admin' || user?.role === 'manager') ? (
               <View style={styles.filterRow}>
                 <Text style={styles.filterLabel}>Operator Email:</Text>
                 <TextInput
@@ -497,7 +497,7 @@ export default function FlightsListScreen() {
                   autoCorrect={false}
                 />
               </View>
-            )}
+            ) : null}
 
             <View style={styles.filterButtons}>
               <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
@@ -509,7 +509,7 @@ export default function FlightsListScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        )}
+        ) : null}
       </View>
     );
   };

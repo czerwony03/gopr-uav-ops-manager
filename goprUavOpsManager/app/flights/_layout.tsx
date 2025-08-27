@@ -34,7 +34,6 @@ export default function FlightsLayout() {
       />
       {/* Hide parent header for dynamic routes so nested [id] stack controls the header */}
       <Stack.Screen name="[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="[id]/edit" options={{ headerShown: false }} />
       <Stack.Screen
         name="create"
         options={{
