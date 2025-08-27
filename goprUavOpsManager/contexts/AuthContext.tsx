@@ -1,17 +1,55 @@
 import React, {createContext, useContext, useEffect, useState, useCallback} from 'react';
-import {onAuthStateChanged, User} from 'firebase/auth';
-import {doc, getDoc, setDoc} from 'firebase/firestore';
+import {Platform} from 'react-native';
 import {auth, firestore} from '@/firebaseConfig';
 import {User as FullUser} from '../types/User';
 import {UserService} from '@/services/userService';
 import {UserRole} from "@/types/UserRole";
 import {changeLanguage} from '@/src/i18n';
 
+// Platform-aware Firebase helper functions
+const getFirebaseDoc = (collection: string, docId: string) => {
+  if (Platform.OS === 'web') {
+    const { doc } = require('firebase/firestore');
+    return doc(firestore, collection, docId);
+  } else {
+    return firestore.collection(collection).doc(docId);
+  }
+};
+
+const getFirebaseDocData = async (docRef: any) => {
+  if (Platform.OS === 'web') {
+    const { getDoc } = require('firebase/firestore');
+    const docSnap = await getDoc(docRef);
+    return { exists: docSnap.exists(), data: docSnap.data() };
+  } else {
+    const docSnap = await docRef.get();
+    return { exists: docSnap.exists, data: docSnap.data() };
+  }
+};
+
+const setFirebaseDocData = async (docRef: any, data: any) => {
+  if (Platform.OS === 'web') {
+    const { setDoc } = require('firebase/firestore');
+    return setDoc(docRef, data);
+  } else {
+    return docRef.set(data);
+  }
+};
+
+const setupAuthStateListener = (callback: any) => {
+  if (Platform.OS === 'web') {
+    const { onAuthStateChanged } = require('firebase/auth');
+    return onAuthStateChanged(auth, callback);
+  } else {
+    return auth.onAuthStateChanged(callback);
+  }
+};
+
 /**
  * AuthContext - Firebase Authentication State Management
  * 
  * Session Persistence Strategy:
- * - Android/iOS: Firebase Auth automatically persists sessions using AsyncStorage
+ * - Android/iOS: React Native Firebase provides native persistence via native keychain/keystore
  * - Web: Explicitly configured with browserLocalPersistence in firebaseConfig.ts
  * 
  * Persistence Behavior:
@@ -58,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [isLoadingUserData, setIsLoadingUserData] = useState(false);
 
-  const loadFullUserData = useCallback(async (firebaseUser: User): Promise<UserData | null> => {
+  const loadFullUserData = useCallback(async (firebaseUser: any): Promise<UserData | null> => {
     if (isLoadingUserData) {
       console.log('[AuthContext] Already loading user data, skipping duplicate request');
       return null;
@@ -68,19 +106,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('[AuthContext] Loading full user data for:', firebaseUser.uid, firebaseUser.email);
     try {
       // First, get or create the basic user document
-      const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-      const userDoc = await getDoc(userDocRef);
-      console.log('[AuthContext] User document exists:', userDoc.exists());
+      const userDocRef = getFirebaseDoc('users', firebaseUser.uid);
+      const userDocResult = await getFirebaseDocData(userDocRef);
+      console.log('[AuthContext] User document exists:', userDocResult.exists);
       
       let role: UserRole = UserRole.USER;
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
+      if (userDocResult.exists) {
+        const userData = userDocResult.data;
         role = userData.role as UserRole || UserRole.USER;
         console.log('[AuthContext] Found existing user with role:', role);
       } else {
         console.log('[AuthContext] Creating new user document with default role');
         // Create user document if it doesn't exist
-        await setDoc(userDocRef, {
+        await setFirebaseDocData(userDocRef, {
           email: firebaseUser.email || '',
           role: role,
         });
@@ -167,11 +205,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Firebase Auth Persistence Notes:
-    // - Android/iOS: Automatic persistence via AsyncStorage (React Native default)
+    // - Android/iOS: Native persistence via React Native Firebase (keychain/keystore)
     // - Web: Configured to use browserLocalPersistence in firebaseConfig.ts
     // - Sessions should persist unless signOut() is called or app storage is cleared
     
-    return onAuthStateChanged(auth, async (firebaseUser: User | null) => {
+    return setupAuthStateListener(async (firebaseUser: any) => {
       console.log('[AuthContext] Auth state changed, firebaseUser:', firebaseUser?.uid, firebaseUser?.email);
       
       if (firebaseUser) {
