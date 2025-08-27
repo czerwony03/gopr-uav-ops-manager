@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 
 export interface ConsoleMessage {
   id: string;
@@ -37,6 +37,28 @@ export const ConsoleProvider: React.FC<ConsoleProviderProps> = ({
 }) => {
   const [messages, setMessages] = useState<ConsoleMessage[]>([]);
   const [isConsoleVisible, setIsConsoleVisible] = useState(false);
+  const messageQueueRef = useRef<ConsoleMessage[]>([]);
+  const flushTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Flush queued messages to state
+  const flushMessages = React.useCallback(() => {
+    if (messageQueueRef.current.length > 0) {
+      const queuedMessages = [...messageQueueRef.current];
+      messageQueueRef.current = [];
+      
+      setMessages(prev => {
+        const newMessages = [...queuedMessages, ...prev];
+        // Keep only the latest maxMessages
+        return newMessages.slice(0, maxMessages);
+      });
+    }
+  }, [maxMessages]);
+
+  // Flush messages periodically
+  useEffect(() => {
+    const interval = setInterval(flushMessages, 100);
+    return () => clearInterval(interval);
+  }, [flushMessages]);
 
   useEffect(() => {
     // Store original console methods
@@ -62,11 +84,16 @@ export const ConsoleProvider: React.FC<ConsoleProviderProps> = ({
           args
         };
 
-        setMessages(prev => {
-          const newMessages = [message, ...prev];
-          // Keep only the latest maxMessages
-          return newMessages.slice(0, maxMessages);
-        });
+        // Add to queue instead of directly updating state
+        messageQueueRef.current.push(message);
+        
+        // Schedule flush if not already scheduled
+        if (flushTimeoutRef.current === null) {
+          flushTimeoutRef.current = setTimeout(() => {
+            flushTimeoutRef.current = null;
+            flushMessages();
+          }, 0);
+        }
       };
     };
 
@@ -82,8 +109,13 @@ export const ConsoleProvider: React.FC<ConsoleProviderProps> = ({
       console.info = originalInfo;
       console.warn = originalWarn;
       console.error = originalError;
+      
+      if (flushTimeoutRef.current) {
+        clearTimeout(flushTimeoutRef.current);
+        flushTimeoutRef.current = null;
+      }
     };
-  }, [maxMessages]);
+  }, [maxMessages, flushMessages]);
 
   const clearMessages = () => {
     setMessages([]);
