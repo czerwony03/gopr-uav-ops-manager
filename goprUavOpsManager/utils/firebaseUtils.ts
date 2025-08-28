@@ -25,15 +25,20 @@ let webFirestore: any;
 let webAuth: any;
 let Timestamp: any;
 
+// React Native Firebase modular functions
+let rnFirestoreModule: any;
+let rnAuthModule: any;
+
 if (isWeb()) {
   // Web Firebase SDK
   webFirestore = require('firebase/firestore');
   webAuth = require('firebase/auth');
   Timestamp = webFirestore.Timestamp;
 } else {
-  // React Native Firebase SDK
-  const firestoreModule = require('@react-native-firebase/firestore');
-  Timestamp = firestoreModule.default.Timestamp;
+  // React Native Firebase SDK - modular imports for v22+
+  rnFirestoreModule = require('@react-native-firebase/firestore');
+  rnAuthModule = require('@react-native-firebase/auth');
+  Timestamp = rnFirestoreModule.Timestamp;
 }
 
 // ============================================================================
@@ -47,7 +52,8 @@ export const getCollection = (collectionName: string) => {
   if (isWeb()) {
     return webFirestore.collection(firestore, collectionName);
   } else {
-    return firestore.collection(collectionName);
+    // Use modular API for React Native Firebase v22+
+    return rnFirestoreModule.collection(firestore, collectionName);
   }
 };
 
@@ -58,7 +64,8 @@ export const getDocument = (collectionName: string, docId: string) => {
   if (isWeb()) {
     return webFirestore.doc(firestore, collectionName, docId);
   } else {
-    return firestore.collection(collectionName).doc(docId);
+    // Use modular API for React Native Firebase v22+
+    return rnFirestoreModule.doc(firestore, collectionName, docId);
   }
 };
 
@@ -70,8 +77,9 @@ export const getDocumentData = async (docRef: any) => {
     const docSnap = await webFirestore.getDoc(docRef);
     return { exists: docSnap.exists(), data: docSnap.data() };
   } else {
-    const docSnap = await docRef.get();
-    return { exists: docSnap.exists, data: docSnap.data() };
+    // Use modular API for React Native Firebase v22+
+    const docSnap = await rnFirestoreModule.getDoc(docRef);
+    return { exists: docSnap.exists(), data: docSnap.data() };
   }
 };
 
@@ -82,7 +90,8 @@ export const addDocument = async (collectionRef: any, data: any) => {
   if (isWeb()) {
     return webFirestore.addDoc(collectionRef, data);
   } else {
-    return collectionRef.add(data);
+    // Use modular API for React Native Firebase v22+
+    return rnFirestoreModule.addDoc(collectionRef, data);
   }
 };
 
@@ -93,7 +102,8 @@ export const updateDocument = async (docRef: any, data: any) => {
   if (isWeb()) {
     return webFirestore.updateDoc(docRef, data);
   } else {
-    return docRef.update(data);
+    // Use modular API for React Native Firebase v22+
+    return rnFirestoreModule.updateDoc(docRef, data);
   }
 };
 
@@ -104,7 +114,8 @@ export const setDocument = async (docRef: any, data: any) => {
   if (isWeb()) {
     return webFirestore.setDoc(docRef, data);
   } else {
-    return docRef.set(data);
+    // Use modular API for React Native Firebase v22+
+    return rnFirestoreModule.setDoc(docRef, data);
   }
 };
 
@@ -115,7 +126,8 @@ export const deleteDocument = async (docRef: any) => {
   if (isWeb()) {
     return webFirestore.deleteDoc(docRef);
   } else {
-    return docRef.delete();
+    // Use modular API for React Native Firebase v22+
+    return rnFirestoreModule.deleteDoc(docRef);
   }
 };
 
@@ -130,7 +142,8 @@ export const where = (field: string, operator: any, value: any) => {
   if (isWeb()) {
     return webFirestore.where(field, operator, value);
   } else {
-    return { type: 'where', field, operator, value };
+    // Use modular API for React Native Firebase v22+
+    return rnFirestoreModule.where(field, operator, value);
   }
 };
 
@@ -141,7 +154,8 @@ export const orderBy = (field: string, direction: 'asc' | 'desc' = 'asc') => {
   if (isWeb()) {
     return webFirestore.orderBy(field, direction);
   } else {
-    return { type: 'orderBy', field, direction };
+    // Use modular API for React Native Firebase v22+
+    return rnFirestoreModule.orderBy(field, direction);
   }
 };
 
@@ -152,7 +166,8 @@ export const limit = (value: number) => {
   if (isWeb()) {
     return webFirestore.limit(value);
   } else {
-    return { type: 'limit', value };
+    // Use modular API for React Native Firebase v22+
+    return rnFirestoreModule.limit(value);
   }
 };
 
@@ -163,7 +178,8 @@ export const startAfter = (value: any) => {
   if (isWeb()) {
     return webFirestore.startAfter(value);
   } else {
-    return { type: 'startAfter', value };
+    // Use modular API for React Native Firebase v22+
+    return rnFirestoreModule.startAfter(value);
   }
 };
 
@@ -174,22 +190,8 @@ export const createQuery = (collectionRef: any, ...constraints: any[]) => {
   if (isWeb()) {
     return webFirestore.query(collectionRef, ...constraints);
   } else {
-    // React Native Firebase uses chaining
-    let query = collectionRef;
-    
-    for (const constraint of constraints) {
-      if (constraint.type === 'where') {
-        query = query.where(constraint.field, constraint.operator, constraint.value);
-      } else if (constraint.type === 'orderBy') {
-        query = query.orderBy(constraint.field, constraint.direction);
-      } else if (constraint.type === 'limit') {
-        query = query.limit(constraint.value);
-      } else if (constraint.type === 'startAfter') {
-        query = query.startAfter(constraint.value);
-      }
-    }
-    
-    return query;
+    // Use modular API for React Native Firebase v22+
+    return rnFirestoreModule.query(collectionRef, ...constraints);
   }
 };
 
@@ -200,7 +202,8 @@ export const getDocs = async (query: any) => {
   if (isWeb()) {
     return webFirestore.getDocs(query);
   } else {
-    return query.get();
+    // Use modular API for React Native Firebase v22+
+    return rnFirestoreModule.getDocs(query);
   }
 };
 
@@ -212,9 +215,9 @@ export const getCountFromServer = async (query: any) => {
     const snapshot = await webFirestore.getCountFromServer(query);
     return { data: snapshot.data() };
   } else {
-    // React Native Firebase doesn't have getCountFromServer, we need to get docs and count
-    const snapshot = await query.get();
-    return { data: { count: snapshot.size } };
+    // Use modular API for React Native Firebase v22+
+    const snapshot = await rnFirestoreModule.getCountFromServer(query);
+    return { data: snapshot.data() };
   }
 };
 
@@ -240,7 +243,8 @@ export const signInWithEmailAndPassword = async (email: string, password: string
   if (isWeb()) {
     return webAuth.signInWithEmailAndPassword(auth, email, password);
   } else {
-    return auth.signInWithEmailAndPassword(email, password);
+    // Use modular API for React Native Firebase v22+
+    return rnAuthModule.signInWithEmailAndPassword(auth, email, password);
   }
 };
 
@@ -262,7 +266,8 @@ export const signInWithCredential = async (credential: any) => {
   if (isWeb()) {
     return webAuth.signInWithCredential(auth, credential);
   } else {
-    return auth.signInWithCredential(credential);
+    // Use modular API for React Native Firebase v22+
+    return rnAuthModule.signInWithCredential(auth, credential);
   }
 };
 
@@ -273,7 +278,8 @@ export const signOut = async () => {
   if (isWeb()) {
     return webAuth.signOut(auth);
   } else {
-    return auth.signOut();
+    // Use modular API for React Native Firebase v22+
+    return rnAuthModule.signOut(auth);
   }
 };
 
@@ -284,7 +290,8 @@ export const onAuthStateChanged = (callback: any) => {
   if (isWeb()) {
     return webAuth.onAuthStateChanged(auth, callback);
   } else {
-    return auth.onAuthStateChanged(callback);
+    // Use modular API for React Native Firebase v22+
+    return rnAuthModule.onAuthStateChanged(auth, callback);
   }
 };
 
@@ -314,8 +321,8 @@ export const GoogleAuthProvider = (() => {
       credential: provider.credential,
     };
   } else {
-    const authModule = require('@react-native-firebase/auth');
-    return authModule.default.GoogleAuthProvider;
+    // Use modular API for React Native Firebase v22+
+    return rnAuthModule.GoogleAuthProvider;
   }
 })();
 
