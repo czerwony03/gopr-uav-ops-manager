@@ -140,7 +140,8 @@ export default function UsersListScreen() {
           text: t('common.cancel'),
           style: 'cancel',
         },
-      ]
+      ],
+      { cancelable: true },
     );
   };
 
