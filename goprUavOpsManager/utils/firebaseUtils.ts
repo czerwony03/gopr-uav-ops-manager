@@ -209,7 +209,8 @@ export const getDocs = async (query: any) => {
  */
 export const getCountFromServer = async (query: any) => {
   if (isWeb()) {
-    return webFirestore.getCountFromServer(query);
+    const snapshot = await webFirestore.getCountFromServer(query);
+    return { data: snapshot.data() };
   } else {
     // React Native Firebase doesn't have getCountFromServer, we need to get docs and count
     const snapshot = await query.get();

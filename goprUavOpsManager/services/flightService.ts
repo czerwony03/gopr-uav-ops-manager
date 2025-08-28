@@ -232,7 +232,7 @@ export class FlightService {
 
       // Get total count
       const countSnapshot = await getCountFromServer(countQuery);
-      const totalCount = countSnapshot.data().count;
+      const totalCount = countSnapshot.data.count;
       const totalPages = Math.ceil(totalCount / pageSize);
 
       // Build paginated query with ordering

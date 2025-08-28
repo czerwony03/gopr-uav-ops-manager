@@ -15,8 +15,7 @@ import {
   getCountFromServer,
   getDocsArray,
   timestampNow,
-  timestampFromDate,
-  Timestamp
+  timestampFromDate
 } from '@/utils/firebaseUtils';
 
 export class AuditLogService {
@@ -158,7 +157,7 @@ export class AuditLogService {
 
       // Get total count
       const countSnapshot = await getCountFromServer(countQuery);
-      const totalCount = countSnapshot.data().count;
+      const totalCount = countSnapshot.data.count;
       const totalPages = Math.ceil(totalCount / pageSize);
 
       // Build paginated query
