@@ -63,7 +63,7 @@ export class DroneService {
       }
 
       const drone = {
-        id: droneDoc.id,
+        id: id,
         ...droneDoc.data,
         createdAt: droneDoc.data.createdAt?.toDate(),
         updatedAt: droneDoc.data.updatedAt?.toDate(),

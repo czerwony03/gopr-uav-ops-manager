@@ -74,7 +74,7 @@ export class ProcedureChecklistService {
       }
 
       return {
-        id: checklistDoc.id,
+        id: id,
         ...data,
         // Convert Firestore Timestamps to Dates
         createdAt: data.createdAt?.toDate(),
