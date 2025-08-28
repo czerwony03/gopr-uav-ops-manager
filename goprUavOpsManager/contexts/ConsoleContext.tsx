@@ -38,12 +38,12 @@ export const ConsoleProvider: React.FC<ConsoleProviderProps> = ({
   const [messages, setMessages] = useState<ConsoleMessage[]>([]);
   const [isConsoleVisible, setIsConsoleVisible] = useState(false);
   const messageQueueRef = useRef<ConsoleMessage[]>([]);
-  const flushTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const flushTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const originalMethodsRef = useRef<{
-    log: Function;
-    info: Function;
-    warn: Function;
-    error: Function;
+    log: any;
+    info: any;
+    warn: any;
+    error: any;
   } | null>(null);
 
   // Flush queued messages to state

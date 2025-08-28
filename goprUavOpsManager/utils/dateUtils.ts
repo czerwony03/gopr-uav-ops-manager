@@ -64,7 +64,7 @@ export const toDateIfTimestamp = (value: any): Date | undefined => {
  * @param value - The value to convert (string, Date, Timestamp, { seconds, nanoseconds }, null, or undefined)
  * @returns Firestore Timestamp or null if invalid/empty input
  */
-export const toFirestoreTimestamp = (value: any): Timestamp | null => {
+export const toFirestoreTimestamp = (value: any): typeof Timestamp | null => {
   // Handle null/undefined - both should result in null for Firestore (clearing date fields)
   if (value === null || value === undefined) {
     return null;

@@ -30,7 +30,7 @@ if (Platform.OS === 'web') {
   storage = getStorage(app);
 
   // Configure persistence for web
-  setPersistence(auth, browserLocalPersistence).catch((error) => {
+  setPersistence(auth, browserLocalPersistence).catch((error: any) => {
     console.error('[FirebaseConfig] Failed to set auth persistence:', error);
   });
 

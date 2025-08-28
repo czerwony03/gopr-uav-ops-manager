@@ -16,9 +16,7 @@ import {
   getDocs,
   getCountFromServer,
   getDocsArray,
-  timestampNow,
-  timestampFromDate,
-  Timestamp
+  timestampNow
 } from '@/utils/firebaseUtils';
 
 export class FlightService {
@@ -51,7 +49,7 @@ export class FlightService {
       }
 
       const snapshot = await getDocs(q);
-      return getDocsArray(snapshot).map(doc => ({
+      return getDocsArray(snapshot).map((doc: any) => ({
         id: doc.id,
         ...doc.data,
         // Convert Firestore Timestamps to Dates
@@ -289,7 +287,7 @@ export class FlightService {
       }
 
       const snapshot = await getDocs(paginatedQuery);
-      const flights = getDocsArray(snapshot).map(doc => ({
+      const flights = getDocsArray(snapshot).map((doc: any) => ({
         id: doc.id,
         ...doc.data,
         // Convert Firestore Timestamps to Dates

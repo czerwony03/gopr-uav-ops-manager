@@ -1,4 +1,4 @@
-import { Drone } from '../types/Drone';
+import { Drone } from '@/types/Drone';
 import { AuditLogService } from './auditLogService';
 import { UserService } from './userService';
 import {UserRole} from "@/types/UserRole";
@@ -13,8 +13,7 @@ import {
   orderBy,
   getDocs,
   getDocsArray,
-  timestampNow,
-  Timestamp
+  timestampNow
 } from '@/utils/firebaseUtils';
 
 export class DroneService {
@@ -39,7 +38,7 @@ export class DroneService {
       }
 
       const snapshot = await getDocs(q);
-      return getDocsArray(snapshot).map(doc => ({
+      return getDocsArray(snapshot).map((doc: any) => ({
         id: doc.id,
         ...doc.data,
         // Convert Firestore Timestamps to Dates

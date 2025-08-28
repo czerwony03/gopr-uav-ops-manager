@@ -16,8 +16,7 @@ import {
   orderBy,
   getDocs,
   getDocsArray,
-  timestampNow,
-  Timestamp
+  timestampNow
 } from '@/utils/firebaseUtils';
 
 export class ProcedureChecklistService {
@@ -42,7 +41,7 @@ export class ProcedureChecklistService {
       }
 
       const snapshot = await getDocs(q);
-      return getDocsArray(snapshot).map(doc => ({
+      return getDocsArray(snapshot).map((doc: any) => ({
         id: doc.id,
         ...doc.data,
         // Convert Firestore Timestamps to Dates
