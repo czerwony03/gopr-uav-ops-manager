@@ -2,28 +2,41 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
 import { Stack } from 'expo-router';
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ConsoleProvider } from "@/contexts/ConsoleContext";
 import { CustomDrawerContent } from "@/components/CustomDrawerContent";
+import ConsoleModal from "@/components/ConsoleModal";
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import * as Sentry from '@sentry/react-native';
+import { captureConsoleIntegration } from '@sentry/core';
 import { CrossPlatformAlertProvider } from '@/components/CrossPlatformAlert';
 import '../src/i18n';
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_URL,
   sendDefaultPii: true,
+  enabled: process.env.EXPO_PUBLIC_SENTRY_DISABLED !== 'true',
+  integrations: [
+    captureConsoleIntegration({
+      levels: ['error', 'warn']
+    })
+  ],
+  beforeSend(event) {
+    if (event.exception?.values) {
+      event.exception.values.forEach(exception => {
+        if (exception.stacktrace?.frames) {
+          // filter out frames from your console capture wrapper
+          exception.stacktrace.frames = exception.stacktrace.frames.filter(
+            frame =>
+              !frame.function?.includes("createConsoleCapture") &&
+              !frame.function?.includes("wrappedConsole")
+          );
+        }
+      });
+    }
+    return event;
+  }
 });
-
-const originalConsoleError = console.error;
-console.error = (...args) => {
-  Sentry.captureMessage(args.map(String).join(" "), 'error');
-  originalConsoleError.apply(console, args);
-};
-const originalConsoleWarn = console.warn;
-console.warn = (...args) => {
-  Sentry.captureMessage(args.map(String).join(" "), 'warning');
-  originalConsoleWarn.apply(console, args);
-};
 
 function RootLayoutNavigation() {
   const { user, loading } = useAuth();
@@ -163,11 +176,14 @@ function RootLayoutNavigation() {
 export default Sentry.wrap(function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <CrossPlatformAlertProvider>
-          <RootLayoutNavigation />
-        </CrossPlatformAlertProvider>
-      </AuthProvider>
+      <ConsoleProvider>
+        <AuthProvider>
+          <CrossPlatformAlertProvider>
+            <RootLayoutNavigation />
+            <ConsoleModal />
+          </CrossPlatformAlertProvider>
+        </AuthProvider>
+      </ConsoleProvider>
     </GestureHandlerRootView>
   );
 });

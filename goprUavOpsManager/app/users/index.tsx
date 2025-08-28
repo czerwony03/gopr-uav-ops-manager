@@ -10,14 +10,13 @@ import {
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useAuth} from '@/contexts/AuthContext';
-import {doc, updateDoc} from 'firebase/firestore';
-import {firestore} from '@/firebaseConfig';
 import {useFocusEffect} from '@react-navigation/native';
 import {useRouter} from 'expo-router';
 import {UserService} from '@/services/userService';
 import {UserRole} from "@/types/UserRole";
 import UserComponent from '@/components/UserComponent';
 import CrossPlatformAlert from '@/components/CrossPlatformAlert';
+import { getDocument, updateDocument } from '@/utils/firebaseUtils';
 
 interface UserData {
   id: string;
@@ -103,8 +102,8 @@ export default function UsersListScreen() {
 
   const updateUserRole = async (userId: string, newRole: UserRole) => {
     try {
-      const userDoc = doc(firestore, 'users', userId);
-      await updateDoc(userDoc, { role: newRole });
+      const userDoc = getDocument('users', userId);
+      await updateDocument(userDoc, { role: newRole });
       
       // Update local state
       setUsers(prevUsers =>
@@ -141,7 +140,8 @@ export default function UsersListScreen() {
           text: t('common.cancel'),
           style: 'cancel',
         },
-      ]
+      ],
+      { cancelable: true },
     );
   };
 

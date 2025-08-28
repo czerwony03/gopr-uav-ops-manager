@@ -1,22 +1,23 @@
-import {
-  addDoc,
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  orderBy,
-  query,
-  Timestamp,
-  updateDoc,
-  where
-} from 'firebase/firestore';
 import {deleteObject, getDownloadURL, ref, uploadBytes} from 'firebase/storage';
-import {db, storage} from '@/firebaseConfig';
+import {storage} from '@/firebaseConfig';
 import {ChecklistItemFormData, ProcedureChecklist, ProcedureChecklistFormData} from '@/types/ProcedureChecklist';
 import {AuditLogService} from './auditLogService';
 import {UserService} from './userService';
 import {UserRole} from "@/types/UserRole";
 import {ImageProcessingService} from '@/utils/imageProcessing';
+import {
+  getCollection,
+  getDocument,
+  getDocumentData,
+  addDocument,
+  updateDocument,
+  createQuery,
+  where,
+  orderBy,
+  getDocs,
+  getDocsArray,
+  timestampNow
+} from '@/utils/firebaseUtils';
 
 export class ProcedureChecklistService {
   private static readonly COLLECTION_NAME = 'procedures_checklists';
@@ -24,15 +25,15 @@ export class ProcedureChecklistService {
   // Get all procedures/checklists based on user role
   static async getProcedureChecklists(userRole: UserRole): Promise<ProcedureChecklist[]> {
     try {
-      const checklistsCollection = collection(db, this.COLLECTION_NAME);
+      const checklistsCollection = getCollection(this.COLLECTION_NAME);
       let q;
 
       if (userRole === 'admin') {
         // Admin can see all procedures including soft-deleted ones
-        q = query(checklistsCollection, orderBy('createdAt', 'desc'));
+        q = createQuery(checklistsCollection, orderBy('createdAt', 'desc'));
       } else {
         // Users and managers only see non-deleted procedures
-        q = query(
+        q = createQuery(
           checklistsCollection, 
           where('isDeleted', '==', false),
           orderBy('createdAt', 'desc')
@@ -40,13 +41,13 @@ export class ProcedureChecklistService {
       }
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
+      return getDocsArray(snapshot).map((doc: any) => ({
         id: doc.id,
-        ...doc.data(),
+        ...doc.data,
         // Convert Firestore Timestamps to Dates
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
-        deletedAt: doc.data().deletedAt?.toDate(),
+        createdAt: doc.data.createdAt?.toDate(),
+        updatedAt: doc.data.updatedAt?.toDate(),
+        deletedAt: doc.data.deletedAt?.toDate(),
       } as ProcedureChecklist));
     } catch (error) {
       console.error('Error fetching procedures/checklists:', error);
@@ -57,14 +58,14 @@ export class ProcedureChecklistService {
   // Get a single procedure/checklist by ID
   static async getProcedureChecklist(id: string, userRole: UserRole): Promise<ProcedureChecklist | null> {
     try {
-      const checklistRef = doc(db, this.COLLECTION_NAME, id);
-      const checklistDoc = await getDoc(checklistRef);
+      const checklistRef = getDocument(this.COLLECTION_NAME, id);
+      const checklistDoc = await getDocumentData(checklistRef);
       
-      if (!checklistDoc.exists()) {
+      if (!checklistDoc.exists) {
         return null;
       }
 
-      const data = checklistDoc.data();
+      const data = checklistDoc.data;
       
       // Check if non-admin users can access deleted items
       if (userRole !== 'admin' && data.isDeleted) {
@@ -72,7 +73,7 @@ export class ProcedureChecklistService {
       }
 
       return {
-        id: checklistDoc.id,
+        id: id,
         ...data,
         // Convert Firestore Timestamps to Dates
         createdAt: data.createdAt?.toDate(),
@@ -106,12 +107,12 @@ export class ProcedureChecklistService {
         createdBy: userId,
         updatedBy: userId,
         isDeleted: false,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
+        createdAt: timestampNow(),
+        updatedAt: timestampNow(),
       };
 
-      const checklistsCollection = collection(db, this.COLLECTION_NAME);
-      const docRef = await addDoc(checklistsCollection, checklistData);
+      const checklistsCollection = getCollection(this.COLLECTION_NAME);
+      const docRef = await addDocument(checklistsCollection, checklistData);
 
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);
@@ -144,14 +145,14 @@ export class ProcedureChecklistService {
     }
 
     try {
-      const checklistRef = doc(db, this.COLLECTION_NAME, id);
-      const checklistDoc = await getDoc(checklistRef);
+      const checklistRef = getDocument(this.COLLECTION_NAME, id);
+      const checklistDoc = await getDocumentData(checklistRef);
       
-      if (!checklistDoc.exists()) {
+      if (!checklistDoc.exists) {
         throw new Error('Procedure/checklist not found');
       }
 
-      const currentChecklist = checklistDoc.data() as ProcedureChecklist;
+      const currentChecklist = checklistDoc.data as ProcedureChecklist;
 
       // Process items and upload images
       const processedItems = await this.processChecklistItems(formData.items);
@@ -160,7 +161,7 @@ export class ProcedureChecklistService {
         title: formData.title,
         description: formData.description,
         items: processedItems,
-        updatedAt: Timestamp.now(),
+        updatedAt: timestampNow(),
         updatedBy: userId,
       };
 
@@ -168,7 +169,7 @@ export class ProcedureChecklistService {
       const previousValues = { ...currentChecklist };
       const newValues = { ...currentChecklist, ...updateData };
 
-      await updateDoc(checklistRef, updateData);
+      await updateDocument(checklistRef, updateData);
 
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);
@@ -195,19 +196,19 @@ export class ProcedureChecklistService {
     }
 
     try {
-      const checklistRef = doc(db, this.COLLECTION_NAME, id);
-      const checklistDoc = await getDoc(checklistRef);
+      const checklistRef = getDocument(this.COLLECTION_NAME, id);
+      const checklistDoc = await getDocumentData(checklistRef);
       
-      if (!checklistDoc.exists()) {
+      if (!checklistDoc.exists) {
         throw new Error('Procedure/checklist not found');
       }
 
-      const currentChecklist = checklistDoc.data() as ProcedureChecklist;
+      const currentChecklist = checklistDoc.data as ProcedureChecklist;
 
-      await updateDoc(checklistRef, {
+      await updateDocument(checklistRef, {
         isDeleted: true,
-        deletedAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
+        deletedAt: timestampNow(),
+        updatedAt: timestampNow(),
         updatedBy: userId,
       });
 
@@ -235,19 +236,19 @@ export class ProcedureChecklistService {
     }
 
     try {
-      const checklistRef = doc(db, this.COLLECTION_NAME, id);
-      const checklistDoc = await getDoc(checklistRef);
+      const checklistRef = getDocument(this.COLLECTION_NAME, id);
+      const checklistDoc = await getDocumentData(checklistRef);
       
-      if (!checklistDoc.exists()) {
+      if (!checklistDoc.exists) {
         throw new Error('Procedure/checklist not found');
       }
 
-      const currentChecklist = checklistDoc.data() as ProcedureChecklist;
+      const currentChecklist = checklistDoc.data as ProcedureChecklist;
 
-      await updateDoc(checklistRef, {
+      await updateDocument(checklistRef, {
         isDeleted: false,
         deletedAt: null,
-        updatedAt: Timestamp.now(),
+        updatedAt: timestampNow(),
         updatedBy: userId,
       });
 

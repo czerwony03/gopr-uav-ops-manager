@@ -1,11 +1,20 @@
-import {collection, doc, getDoc, getDocs, orderBy, query, Timestamp, updateDoc} from 'firebase/firestore';
-import {db} from '@/firebaseConfig';
 import {User} from '@/types/User';
 import {UserRole} from "@/types/UserRole";
 import {toDateIfTimestamp, toFirestoreTimestamp} from "@/utils/dateUtils";
 import {filterUndefinedProperties} from "@/utils/filterUndefinedProperties";
 import {AuditLogService} from "@/services/auditLogService";
-import {Drone} from "@/types/Drone";
+import {
+  getCollection,
+  getDocument,
+  getDocumentData,
+  updateDocument,
+  createQuery,
+  orderBy,
+  getDocs,
+  getDocsArray,
+  timestampNow,
+  Timestamp
+} from '@/utils/firebaseUtils';
 
 export class UserService {
   private static readonly COLLECTION_NAME = 'users';
@@ -17,20 +26,22 @@ export class UserService {
     }
 
     try {
-      const usersCollection = collection(db, this.COLLECTION_NAME);
-      const q = query(usersCollection, orderBy('email', 'asc'));
+      const usersCollection = getCollection(this.COLLECTION_NAME);
+      const q = createQuery(usersCollection, orderBy('email', 'asc'));
       
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
+      const docs = getDocsArray(snapshot);
+      
+      return docs.map((doc: any) => ({
         uid: doc.id,
-        ...doc.data(),
+        ...doc.data,
         // Convert Firestore Timestamps to Dates
-        operatorValidityDate: toDateIfTimestamp(doc.data().operatorValidityDate),
-        pilotValidityDate: toDateIfTimestamp(doc.data().pilotValidityDate),
-        insurance: toDateIfTimestamp(doc.data().insurance),
-        createdAt: toDateIfTimestamp(doc.data().createdAt),
-        updatedAt: toDateIfTimestamp(doc.data().updatedAt),
-        lastLoginAt: toDateIfTimestamp(doc.data().lastLoginAt),
+        operatorValidityDate: toDateIfTimestamp(doc.data.operatorValidityDate),
+        pilotValidityDate: toDateIfTimestamp(doc.data.pilotValidityDate),
+        insurance: toDateIfTimestamp(doc.data.insurance),
+        createdAt: toDateIfTimestamp(doc.data.createdAt),
+        updatedAt: toDateIfTimestamp(doc.data.updatedAt),
+        lastLoginAt: toDateIfTimestamp(doc.data.lastLoginAt),
       } as User));
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -46,16 +57,16 @@ export class UserService {
     }
 
     try {
-      const userDoc = doc(db, this.COLLECTION_NAME, uid);
-      const snapshot = await getDoc(userDoc);
+      const userDoc = getDocument(this.COLLECTION_NAME, uid);
+      const snapshot = await getDocumentData(userDoc);
       
-      if (!snapshot.exists()) {
+      if (!snapshot.exists) {
         return null;
       }
 
-      const userData = snapshot.data();
+      const userData = snapshot.data;
       return {
-        uid: snapshot.id,
+        uid: uid,
         ...userData,
         // Convert Firestore Timestamps to Dates
         operatorValidityDate: toDateIfTimestamp(userData.operatorValidityDate),
@@ -89,19 +100,19 @@ export class UserService {
     }
 
     try {
-      const userRef = doc(db, this.COLLECTION_NAME, uid);
-      const userDoc = await getDoc(userRef);
+      const userRef = getDocument(this.COLLECTION_NAME, uid);
+      const userDoc = await getDocumentData(userRef);
 
-      if (!userDoc.exists()) {
+      if (!userDoc.exists) {
         throw new Error('User not found');
       }
 
-      const currentUser = userDoc.data() as User;
+      const currentUser = userDoc.data as User;
       
       // Prepare data for Firestore (convert dates to Timestamps)
       const firestoreData: any = {
         ...userData,
-        updatedAt: Timestamp.now(),
+        updatedAt: timestampNow(),
       };
 
       // Convert Date objects to Firestore Timestamps using the utility function
@@ -144,7 +155,7 @@ export class UserService {
         }
       });
 
-      await updateDoc(userRef, filterUndefinedProperties(firestoreData));
+      await updateDocument(userRef, filterUndefinedProperties(firestoreData));
 
       const requestorEmail = await UserService.getUserEmail(requestorUid);
       await AuditLogService.createAuditLog({
@@ -166,13 +177,13 @@ export class UserService {
   // Get user email by UID (for audit trail display)
   static async getUserEmail(uid: string): Promise<string> {
     try {
-      const userDoc = await getDoc(doc(db, this.COLLECTION_NAME, uid));
+      const userDoc = await getDocumentData(getDocument(this.COLLECTION_NAME, uid));
       
-      if (!userDoc.exists()) {
+      if (!userDoc.exists) {
         return 'Unknown User';
       }
 
-      const userData = userDoc.data();
+      const userData = userDoc.data;
       return userData.email || 'Unknown User';
     } catch (error) {
       console.error('Error fetching user email:', error);
@@ -183,9 +194,9 @@ export class UserService {
   // Update last login timestamp
   static async updateLastLogin(uid: string): Promise<void> {
     try {
-      const userDoc = doc(db, this.COLLECTION_NAME, uid);
-      await updateDoc(userDoc, {
-        lastLoginAt: Timestamp.now(),
+      const userDoc = getDocument(this.COLLECTION_NAME, uid);
+      await updateDocument(userDoc, {
+        lastLoginAt: timestampNow(),
       });
     } catch (error) {
       console.error('Error updating last login timestamp:', error);

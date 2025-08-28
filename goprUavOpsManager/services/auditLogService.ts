@@ -1,21 +1,22 @@
-import { 
-  collection, 
-  addDoc, 
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit as limitQuery,
-  startAfter,
-  getCountFromServer,
-  Timestamp
-} from 'firebase/firestore';
-import { db } from '@/firebaseConfig';
 import { AuditLog, AuditLogData, AuditLogQuery, PaginatedAuditLogResponse } from '@/types/AuditLog';
 import { ApplicationMetadata } from '@/utils/applicationMetadata';
 import { deepDiff, formatChanges } from '@/utils/deepDiff';
-import {filterUndefinedProperties} from "@/utils/filterUndefinedProperties";
-import {toDateIfTimestamp} from "@/utils/dateUtils";
+import { filterUndefinedProperties } from "@/utils/filterUndefinedProperties";
+import { toDateIfTimestamp } from "@/utils/dateUtils";
+import {
+  getCollection,
+  addDocument,
+  createQuery,
+  where,
+  orderBy,
+  limit,
+  startAfter,
+  getDocs,
+  getCountFromServer,
+  getDocsArray,
+  timestampNow,
+  timestampFromDate
+} from '@/utils/firebaseUtils';
 
 export class AuditLogService {
   private static readonly COLLECTION_NAME = 'auditLogs';
@@ -25,7 +26,7 @@ export class AuditLogService {
    */
   static async createAuditLog(auditData: Omit<AuditLogData, 'applicationPlatform' | 'applicationVersion' | 'commitHash'>): Promise<string> {
     try {
-      const now = Timestamp.now();
+      const now = timestampNow();
       const metadata = ApplicationMetadata.getMetadata();
       
       const completeAuditData = {
@@ -34,10 +35,12 @@ export class AuditLogService {
         timestamp: now,
       };
 
-      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), filterUndefinedProperties(completeAuditData));
+      const collectionRef = getCollection(this.COLLECTION_NAME);
+      const docRef = await addDocument(collectionRef, filterUndefinedProperties(completeAuditData));
       
+      const docId = docRef.id;
       console.log(`Audit log created: ${auditData.action} on ${auditData.entityType}:${auditData.entityId} by ${auditData.userEmail || auditData.userId} [${metadata.applicationPlatform} v${metadata.applicationVersion}${metadata.commitHash ? ` @${metadata.commitHash.substring(0, 7)}` : ''}]`);
-      return docRef.id;
+      return docId;
     } catch (error) {
       console.error('Error creating audit log:', error);
       // Don't throw error to prevent audit logging from breaking main operations
@@ -50,9 +53,8 @@ export class AuditLogService {
    */
   static async getAuditLogs(queryParams?: AuditLogQuery): Promise<AuditLog[]> {
     try {
-      const auditLogsCollection = collection(db, this.COLLECTION_NAME);
-      let q = query(auditLogsCollection);
-
+      const auditLogsCollection = getCollection(this.COLLECTION_NAME);
+      
       // Build query constraints
       const constraints = [];
 
@@ -77,31 +79,32 @@ export class AuditLogService {
       }
 
       if (queryParams?.startDate) {
-        constraints.push(where('timestamp', '>=', Timestamp.fromDate(queryParams.startDate)));
+        constraints.push(where('timestamp', '>=', timestampFromDate(queryParams.startDate)));
       }
 
       if (queryParams?.endDate) {
-        constraints.push(where('timestamp', '<=', Timestamp.fromDate(queryParams.endDate)));
+        constraints.push(where('timestamp', '<=', timestampFromDate(queryParams.endDate)));
       }
 
-      // Apply constraints
-      if (constraints.length > 0) {
-        q = query(auditLogsCollection, ...constraints, orderBy('timestamp', 'desc'));
-      } else {
-        q = query(auditLogsCollection, orderBy('timestamp', 'desc'));
-      }
+      // Add order by
+      constraints.push(orderBy('timestamp', 'desc'));
 
       // Apply limit
       if (queryParams?.limit) {
-        q = query(q, limitQuery(queryParams.limit));
+        constraints.push(limit(queryParams.limit));
       }
 
+      // Create query
+      const q = createQuery(auditLogsCollection, ...constraints);
+
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
+      
+      const docs = getDocsArray(snapshot);
+      return docs.map((doc: any) => ({
         id: doc.id,
-        ...doc.data(),
+        ...doc.data,
         // Convert Firestore Timestamp to Date
-        timestamp: toDateIfTimestamp(doc.data().timestamp),
+        timestamp: toDateIfTimestamp(doc.data.timestamp),
       } as AuditLog));
     } catch (error) {
       console.error('Error fetching audit logs:', error);
@@ -114,7 +117,7 @@ export class AuditLogService {
    */
   static async getPaginatedAuditLogs(queryParams?: AuditLogQuery): Promise<PaginatedAuditLogResponse> {
     try {
-      const auditLogsCollection = collection(db, this.COLLECTION_NAME);
+      const auditLogsCollection = getCollection(this.COLLECTION_NAME);
       const pageSize = queryParams?.pageSize || 10;
       const pageNumber = queryParams?.pageNumber || 1;
 
@@ -142,65 +145,54 @@ export class AuditLogService {
       }
 
       if (queryParams?.startDate) {
-        constraints.push(where('timestamp', '>=', Timestamp.fromDate(queryParams.startDate)));
+        constraints.push(where('timestamp', '>=', timestampFromDate(queryParams.startDate)));
       }
 
       if (queryParams?.endDate) {
-        constraints.push(where('timestamp', '<=', Timestamp.fromDate(queryParams.endDate)));
+        constraints.push(where('timestamp', '<=', timestampFromDate(queryParams.endDate)));
       }
 
-      // Build base query for counting
-      let countQuery;
-      if (constraints.length > 0) {
-        countQuery = query(auditLogsCollection, ...constraints);
-      } else {
-        countQuery = query(auditLogsCollection);
-      }
+      // Build query for counting
+      const countQuery = createQuery(auditLogsCollection, ...constraints);
 
       // Get total count
       const countSnapshot = await getCountFromServer(countQuery);
-      const totalCount = countSnapshot.data().count;
+      const totalCount = countSnapshot.data.count;
       const totalPages = Math.ceil(totalCount / pageSize);
 
       // Build paginated query
-      let paginatedQuery;
-      if (constraints.length > 0) {
-        paginatedQuery = query(auditLogsCollection, ...constraints, orderBy('timestamp', 'desc'), limitQuery(pageSize));
-      } else {
-        paginatedQuery = query(auditLogsCollection, orderBy('timestamp', 'desc'), limitQuery(pageSize));
-      }
+      const paginatedConstraints = [...constraints, orderBy('timestamp', 'desc'), limit(pageSize)];
 
       // Apply pagination with startAfter
       if (queryParams?.lastDocumentSnapshot) {
-        paginatedQuery = query(paginatedQuery, startAfter(queryParams.lastDocumentSnapshot));
+        paginatedConstraints.push(startAfter(queryParams.lastDocumentSnapshot));
       } else if (pageNumber > 1) {
         // For page-based navigation, we need to skip to the right position
         // This is less efficient than cursor-based pagination but needed for page numbers
         const skipCount = (pageNumber - 1) * pageSize;
         if (skipCount > 0) {
-          let skipQuery;
-          if (constraints.length > 0) {
-            skipQuery = query(auditLogsCollection, ...constraints, orderBy('timestamp', 'desc'), limitQuery(skipCount));
-          } else {
-            skipQuery = query(auditLogsCollection, orderBy('timestamp', 'desc'), limitQuery(skipCount));
-          }
+          const skipConstraints = [...constraints, orderBy('timestamp', 'desc'), limit(skipCount)];
+          const skipQuery = createQuery(auditLogsCollection, ...skipConstraints);
           const skipSnapshot = await getDocs(skipQuery);
-          if (skipSnapshot.docs.length > 0) {
+          if (skipSnapshot.docs && skipSnapshot.docs.length > 0) {
             const lastVisibleDoc = skipSnapshot.docs[skipSnapshot.docs.length - 1];
-            paginatedQuery = query(paginatedQuery, startAfter(lastVisibleDoc));
+            paginatedConstraints.push(startAfter(lastVisibleDoc));
           }
         }
       }
 
+      const paginatedQuery = createQuery(auditLogsCollection, ...paginatedConstraints);
       const snapshot = await getDocs(paginatedQuery);
-      const logs = snapshot.docs.map(doc => ({
+      
+      const docs = getDocsArray(snapshot);
+      const logs = docs.map((doc: any) => ({
         id: doc.id,
-        ...doc.data(),
+        ...doc.data,
         // Convert Firestore Timestamp to Date
-        timestamp: toDateIfTimestamp(doc.data().timestamp),
+        timestamp: toDateIfTimestamp(doc.data.timestamp),
       } as AuditLog));
 
-      const lastDocumentSnapshot = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
+      const lastDocumentSnapshot = snapshot.docs && snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
 
       return {
         logs,

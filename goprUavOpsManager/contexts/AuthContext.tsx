@@ -1,11 +1,34 @@
-import React, {createContext, useContext, useEffect, useState} from 'react';
-import {onAuthStateChanged, User} from 'firebase/auth';
-import {doc, getDoc, setDoc} from 'firebase/firestore';
-import {auth, firestore} from '@/firebaseConfig';
+import React, {createContext, useContext, useEffect, useState, useCallback} from 'react';
 import {User as FullUser} from '../types/User';
 import {UserService} from '@/services/userService';
 import {UserRole} from "@/types/UserRole";
 import {changeLanguage} from '@/src/i18n';
+import {
+  getDocument,
+  getDocumentData,
+  setDocument,
+  onAuthStateChanged,
+  getCurrentUser
+} from '@/utils/firebaseUtils';
+
+/**
+ * AuthContext - Firebase Authentication State Management
+ * 
+ * Session Persistence Strategy:
+ * - Android/iOS: React Native Firebase provides native persistence via native keychain/keystore
+ * - Web: Explicitly configured with browserLocalPersistence in firebaseConfig.ts
+ * 
+ * Persistence Behavior:
+ * - Sessions persist across app restarts, force-close, and browser refresh
+ * - Sessions are cleared only when:
+ *   1. User explicitly calls signOut()
+ *   2. App storage/cache is manually cleared
+ *   3. Firebase token expires (rare, auto-refreshed normally)
+ * 
+ * Session Restoration:
+ * - onAuthStateChanged automatically fires with existing user on app start
+ * - Enhanced logging helps debug whether session was restored or is a fresh login
+ */
 
 // Extended interface that includes all user profile data
 export interface UserData extends FullUser {
@@ -39,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [isLoadingUserData, setIsLoadingUserData] = useState(false);
 
-  const loadFullUserData = async (firebaseUser: User): Promise<UserData | null> => {
+  const loadFullUserData = useCallback(async (firebaseUser: any): Promise<UserData | null> => {
     if (isLoadingUserData) {
       console.log('[AuthContext] Already loading user data, skipping duplicate request');
       return null;
@@ -49,19 +72,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('[AuthContext] Loading full user data for:', firebaseUser.uid, firebaseUser.email);
     try {
       // First, get or create the basic user document
-      const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-      const userDoc = await getDoc(userDocRef);
-      console.log('[AuthContext] User document exists:', userDoc.exists());
+      const userDocRef = getDocument('users', firebaseUser.uid);
+      const userDocResult = await getDocumentData(userDocRef);
+      console.log('[AuthContext] User document exists:', userDocResult.exists);
       
       let role: UserRole = UserRole.USER;
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
+      if (userDocResult.exists) {
+        const userData = userDocResult.data;
         role = userData.role as UserRole || UserRole.USER;
         console.log('[AuthContext] Found existing user with role:', role);
       } else {
         console.log('[AuthContext] Creating new user document with default role');
         // Create user document if it doesn't exist
-        await setDoc(userDocRef, {
+        await setDocument(userDocRef, {
           email: firebaseUser.email || '',
           role: role,
         });
@@ -118,10 +141,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoadingUserData(false);
     }
-  };
+  }, [isLoadingUserData]);
 
   const refreshUser = async () => {
-    const currentUser = auth.currentUser;
+    const currentUser = getCurrentUser();
     console.log('[AuthContext] refreshUser called, currentUser:', currentUser?.uid, 'existing user:', user?.uid);
     if (currentUser && user) {
       setLoading(true);
@@ -140,26 +163,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     console.log('[AuthContext] Setting up auth state listener');
     
-    // Check if Firebase is properly configured
-    if (!auth) {
-      console.error('[AuthContext] Firebase auth is not initialized properly');
-      setLoading(false);
-      return;
-    }
-
-    return onAuthStateChanged(auth, async (firebaseUser: User | null) => {
+    // Firebase Auth Persistence Notes:
+    // - Android/iOS: Native persistence via React Native Firebase (keychain/keystore)
+    // - Web: Configured to use browserLocalPersistence in firebaseConfig.ts
+    // - Sessions should persist unless signOut() is called or app storage is cleared
+    
+    return onAuthStateChanged(async (firebaseUser: any) => {
       console.log('[AuthContext] Auth state changed, firebaseUser:', firebaseUser?.uid, firebaseUser?.email);
-
+      
       if (firebaseUser) {
-        console.log('[AuthContext] User is authenticated, loading user data');
+        console.log('[AuthContext] ✅ User session restored from storage - user is authenticated');
+        console.log('[AuthContext] Session details - UID:', firebaseUser.uid, 'Email:', firebaseUser.email);
+        console.log('[AuthContext] Loading full user data for authenticated session');
+        
         try {
           const userData = await loadFullUserData(firebaseUser);
           if (userData) {
-            console.log('[AuthContext] Setting user data:', userData?.uid);
+            console.log('[AuthContext] ✅ Successfully restored user session with full data:', userData?.uid);
             setUser(userData);
           }
         } catch (error) {
-          console.error('[AuthContext] Error loading user data in auth state change:', error);
+          console.error('[AuthContext] ❌ Error loading user data in auth state change:', error);
+          console.log('[AuthContext] Falling back to basic user data for session restoration');
           // Set basic user data if full loading fails
           setUser({
             uid: firebaseUser.uid,
@@ -168,13 +193,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } as UserData);
         }
       } else {
-        console.log('[AuthContext] User is not authenticated, clearing user data');
+        console.log('[AuthContext] ❌ No user session found - user is not authenticated');
+        console.log('[AuthContext] This indicates either: 1) Fresh app start with no previous login, 2) User explicitly signed out, or 3) Session was cleared');
         setUser(null);
       }
-      console.log('[AuthContext] Setting loading to false');
+      console.log('[AuthContext] Auth state processing complete, setting loading to false');
       setLoading(false);
     });
-  }, []);
+  }, []); // Removed loadFullUserData dependency to prevent recreation loop
 
   return (
     <AuthContext.Provider value={{ user, loading, refreshUser }}>

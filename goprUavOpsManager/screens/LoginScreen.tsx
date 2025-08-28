@@ -12,9 +12,16 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { signInWithEmailAndPassword, signInWithPopup, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
-import { auth } from '@/firebaseConfig';
+import {
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signInWithCredential,
+  GoogleAuthProvider,
+  createGoogleAuthProvider,
+  signOut,
+  getCurrentUser
+} from '@/utils/firebaseUtils';
 import {AuditLogService} from "@/services/auditLogService";
 import {User} from "@/types/User";
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
@@ -55,13 +62,13 @@ export default function LoginScreen() {
 
   const handleWebGoogleLogin = async () => {
     // Create Google Auth Provider with domain restriction
-    const provider = new GoogleAuthProvider();
+    const provider = createGoogleAuthProvider();
     provider.setCustomParameters({
       hd: 'bieszczady.gopr.pl' // Restrict to Google Workspace domain
     });
     
     // Firebase will handle the OAuth flow and domain restriction is managed server-side
-    const result = await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(provider);
     await addLoginAuditLog();
     console.log('Google sign-in successful:', result.user.email);
   };
@@ -79,18 +86,18 @@ export default function LoginScreen() {
         throw new Error('No ID token received from Google Sign-In');
       }
       
-      // Create a Google credential with the token
+      // Create a Google credential with the token (React Native Firebase API)
       const googleCredential = GoogleAuthProvider.credential(idToken);
       
-      // Sign in the user with the credential
-      const firebaseResult = await signInWithCredential(auth, googleCredential);
+      // Sign in the user with the credential using React Native Firebase
+      const firebaseResult = await signInWithCredential(googleCredential);
       
       console.log('Mobile Google sign-in successful:', firebaseResult.user.email);
       await addLoginAuditLog();
       
       // Verify domain restriction (additional check for security)
       if (!firebaseResult.user.email?.endsWith('@bieszczady.gopr.pl')) {
-        await auth.signOut();
+        await signOut();
         throw new Error('Only @bieszczady.gopr.pl users are allowed');
       }
     } catch (error: any) {
@@ -135,7 +142,7 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(email, password);
       await addLoginAuditLog();
       // Navigation will be handled by the auth state change in AuthContext
     } catch (error: any) {
@@ -149,13 +156,14 @@ export default function LoginScreen() {
   const addLoginAuditLog = async () => {
       // Create audit log for successful login
       try {
-          if (auth.currentUser) {
+          const currentUser = getCurrentUser();
+          if (currentUser) {
               await AuditLogService.createAuditLog({
                   entityType: 'user',
-                  entityId: auth.currentUser.uid,
+                  entityId: currentUser.uid,
                   action: 'login',
-                  userId: auth.currentUser.uid,
-                  userEmail: auth.currentUser.email as string,
+                  userId: currentUser.uid,
+                  userEmail: currentUser.email as string,
                   details: 'Successful login',
               });
           }

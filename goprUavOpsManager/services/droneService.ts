@@ -1,20 +1,20 @@
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  query, 
-  where,
-  orderBy,
-  Timestamp 
-} from 'firebase/firestore';
-import { db } from '../firebaseConfig';
-import { Drone } from '../types/Drone';
+import { Drone } from '@/types/Drone';
 import { AuditLogService } from './auditLogService';
 import { UserService } from './userService';
 import {UserRole} from "@/types/UserRole";
+import {
+  getCollection,
+  getDocument,
+  getDocumentData,
+  addDocument,
+  updateDocument,
+  createQuery,
+  where,
+  orderBy,
+  getDocs,
+  getDocsArray,
+  timestampNow
+} from '@/utils/firebaseUtils';
 
 export class DroneService {
   private static readonly COLLECTION_NAME = 'drones';
@@ -22,15 +22,15 @@ export class DroneService {
   // Get all drones based on user role
   static async getDrones(userRole: UserRole): Promise<Drone[]> {
     try {
-      const dronesCollection = collection(db, this.COLLECTION_NAME);
+      const dronesCollection = getCollection(this.COLLECTION_NAME);
       let q;
 
       if (userRole === 'admin') {
         // Admin can see all drones including soft-deleted ones
-        q = query(dronesCollection, orderBy('createdAt', 'desc'));
+        q = createQuery(dronesCollection, orderBy('createdAt', 'desc'));
       } else {
         // Users and managers only see non-deleted drones
-        q = query(
+        q = createQuery(
           dronesCollection, 
           where('isDeleted', '==', false),
           orderBy('createdAt', 'desc')
@@ -38,13 +38,13 @@ export class DroneService {
       }
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
+      return getDocsArray(snapshot).map((doc: any) => ({
         id: doc.id,
-        ...doc.data(),
+        ...doc.data,
         // Convert Firestore Timestamps to Dates
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
-        deletedAt: doc.data().deletedAt?.toDate(),
+        createdAt: doc.data.createdAt?.toDate(),
+        updatedAt: doc.data.updatedAt?.toDate(),
+        deletedAt: doc.data.deletedAt?.toDate(),
       } as Drone));
     } catch (error) {
       console.error('Error fetching drones:', error);
@@ -55,18 +55,18 @@ export class DroneService {
   // Get a single drone by ID
   static async getDrone(id: string, userRole: UserRole): Promise<Drone | null> {
     try {
-      const droneDoc = await getDoc(doc(db, this.COLLECTION_NAME, id));
+      const droneDoc = await getDocumentData(getDocument(this.COLLECTION_NAME, id));
       
-      if (!droneDoc.exists()) {
+      if (!droneDoc.exists) {
         return null;
       }
 
       const drone = {
-        id: droneDoc.id,
-        ...droneDoc.data(),
-        createdAt: droneDoc.data().createdAt?.toDate(),
-        updatedAt: droneDoc.data().updatedAt?.toDate(),
-        deletedAt: droneDoc.data().deletedAt?.toDate(),
+        id: id,
+        ...droneDoc.data,
+        createdAt: droneDoc.data.createdAt?.toDate(),
+        updatedAt: droneDoc.data.updatedAt?.toDate(),
+        deletedAt: droneDoc.data.deletedAt?.toDate(),
       } as Drone;
 
       // Check if user can access this drone
@@ -88,8 +88,8 @@ export class DroneService {
     }
 
     try {
-      const now = Timestamp.now();
-      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), {
+      const now = timestampNow();
+      const docRef = await addDocument(getCollection(this.COLLECTION_NAME), {
         ...droneData,
         isDeleted: false,
         createdAt: now,
@@ -124,15 +124,15 @@ export class DroneService {
     }
 
     try {
-      const droneRef = doc(db, this.COLLECTION_NAME, id);
-      const droneDoc = await getDoc(droneRef);
+      const droneRef = getDocument(this.COLLECTION_NAME, id);
+      const droneDoc = await getDocumentData(droneRef);
       
-      if (!droneDoc.exists()) {
+      if (!droneDoc.exists) {
         throw new Error('Drone not found');
       }
 
       // Check if the drone is soft-deleted and user is not admin
-      const currentDrone = droneDoc.data() as Drone;
+      const currentDrone = droneDoc.data as Drone;
       if (currentDrone.isDeleted && userRole !== 'admin') {
         throw new Error('Cannot update deleted drone');
       }
@@ -141,9 +141,9 @@ export class DroneService {
       const previousValues = { ...currentDrone };
       const newValues = { ...currentDrone, ...droneData };
 
-      await updateDoc(droneRef, {
+      await updateDocument(droneRef, {
         ...droneData,
-        updatedAt: Timestamp.now(),
+        updatedAt: timestampNow(),
         updatedBy: userId,
       });
 
@@ -172,19 +172,19 @@ export class DroneService {
     }
 
     try {
-      const droneRef = doc(db, this.COLLECTION_NAME, id);
-      const droneDoc = await getDoc(droneRef);
+      const droneRef = getDocument(this.COLLECTION_NAME, id);
+      const droneDoc = await getDocumentData(droneRef);
       
-      if (!droneDoc.exists()) {
+      if (!droneDoc.exists) {
         throw new Error('Drone not found');
       }
 
-      const currentDrone = droneDoc.data() as Drone;
+      const currentDrone = droneDoc.data as Drone;
 
-      await updateDoc(droneRef, {
+      await updateDocument(droneRef, {
         isDeleted: true,
-        deletedAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
+        deletedAt: timestampNow(),
+        updatedAt: timestampNow(),
         updatedBy: userId,
       });
 
@@ -212,19 +212,19 @@ export class DroneService {
     }
 
     try {
-      const droneRef = doc(db, this.COLLECTION_NAME, id);
-      const droneDoc = await getDoc(droneRef);
+      const droneRef = getDocument(this.COLLECTION_NAME, id);
+      const droneDoc = await getDocumentData(droneRef);
       
-      if (!droneDoc.exists()) {
+      if (!droneDoc.exists) {
         throw new Error('Drone not found');
       }
 
-      const currentDrone = droneDoc.data() as Drone;
+      const currentDrone = droneDoc.data as Drone;
 
-      await updateDoc(droneRef, {
+      await updateDocument(droneRef, {
         isDeleted: false,
         deletedAt: null,
-        updatedAt: Timestamp.now(),
+        updatedAt: timestampNow(),
         updatedBy: userId,
       });
 
