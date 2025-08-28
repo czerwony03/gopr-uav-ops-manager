@@ -65,9 +65,12 @@ jobs:
           token: ${{ secrets.EAS_TOKEN }}
 
       - name: Export Expo Web App
-        run: npm run export:web
+        run: npm run export:web:sourcemaps
         env:
           EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
+
+      - name: Upload Sentry Source Maps
+        run: npx sentry-expo-upload-sourcemaps dist
 
       - name: Deploy to EAS Hosting (alias test)
         run: npx eas deploy --alias test

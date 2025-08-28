@@ -20,7 +20,22 @@ Sentry.init({
     captureConsoleIntegration({
       levels: ['error', 'warn']
     })
-  ]
+  ],
+  beforeSend(event) {
+    if (event.exception?.values) {
+      event.exception.values.forEach(exception => {
+        if (exception.stacktrace?.frames) {
+          // filter out frames from your console capture wrapper
+          exception.stacktrace.frames = exception.stacktrace.frames.filter(
+            frame =>
+              !frame.function?.includes("createConsoleCapture") &&
+              !frame.function?.includes("wrappedConsole")
+          );
+        }
+      });
+    }
+    return event;
+  }
 });
 
 function RootLayoutNavigation() {

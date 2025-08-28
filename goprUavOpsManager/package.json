@@ -9,6 +9,7 @@
     "web": "npx expo start --web",
     "lint": "npx expo lint",
     "export:web": "npx expo export --platform web",
+    "export:web:sourcemaps": "npx expo export --platform web --source-maps",
     "eas-build-post-install": "bash ./scripts/expo/post-install"
   },
   "dependencies": {

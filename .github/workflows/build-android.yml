@@ -61,6 +61,9 @@ jobs:
           echo "$VARS_CONTEXT" | jq -r 'to_entries | .[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
         shell: bash
 
+      - name: Set Git commit hash
+        run: echo "EXPO_PUBLIC_GIT_COMMIT_HASH=${GITHUB_SHA}" >> $GITHUB_ENV
+
       - name: Export Android SDK paths (self-hosted only)
         if: runner.environment == 'self-hosted'
         run: |
