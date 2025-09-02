@@ -511,6 +511,14 @@
       "default": [
         "Limited access"
       ]
+    },
+    "navigation": {
+      "flights": "Flight Management",
+      "drones": "Drone Registry", 
+      "procedures": "Procedures & Checklists",
+      "profile": "My Profile",
+      "users": "User Management",
+      "logs": "Audit Logs"
     }
   },
   "procedures": {
