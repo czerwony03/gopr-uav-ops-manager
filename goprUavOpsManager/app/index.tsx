@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, View, StyleSheet, ActivityIndicator, TouchableOpacity, Dimensions } from "react-native";
+import { Text, View, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "@/contexts/AuthContext";
@@ -95,7 +95,10 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.content, { paddingTop: Math.max(insets.top, 20) }]}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top, 20) }]}
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>{t('dashboard.title')}</Text>
@@ -123,23 +126,24 @@ export default function Index() {
             </TouchableOpacity>
           ))}
         </View>
-      </View>
+      </ScrollView>
       
       <Footer />
     </View>
   );
 }
 
-const { width } = Dimensions.get('window');
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  scrollContent: {
     padding: 20,
+    paddingBottom: 20,
   },
   loadingContainer: {
     flex: 1,
@@ -169,14 +173,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   navigationGrid: {
-    flex: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    alignContent: 'flex-start',
   },
   navigationButton: {
-    width: width > 768 ? '31%' : '48%', // 3 columns on tablet, 2 on mobile
+    width: '48%', // Always 2 columns
     aspectRatio: 1, // Make buttons square
     borderRadius: 20,
     marginBottom: 20,
