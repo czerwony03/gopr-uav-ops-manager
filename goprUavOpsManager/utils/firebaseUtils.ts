@@ -112,39 +112,56 @@ export const getDocument = (collectionName: string, docId: string) => {
 };
 
 /**
- * Get document data
+ * Get document data with retry logic
  */
 export const getDocumentData = async (docRef: any) => {
-  const docSnap = await firestoreFunctions.getDoc(docRef);
-  return { exists: docSnap.exists(), data: docSnap.data() };
+  return withRetry(
+    async () => {
+      const docSnap = await firestoreFunctions.getDoc(docRef);
+      return { exists: docSnap.exists(), data: docSnap.data() };
+    },
+    'getDocumentData'
+  );
 };
 
 /**
- * Add a new document to a collection
+ * Add a new document to a collection with retry logic
  */
 export const addDocument = async (collectionRef: any, data: any) => {
-  return firestoreFunctions.addDoc(collectionRef, data);
+  return withRetry(
+    () => firestoreFunctions.addDoc(collectionRef, data),
+    'addDocument'
+  );
 };
 
 /**
- * Update a document
+ * Update a document with retry logic
  */
 export const updateDocument = async (docRef: any, data: any) => {
-  return firestoreFunctions.updateDoc(docRef, data);
+  return withRetry(
+    () => firestoreFunctions.updateDoc(docRef, data),
+    'updateDocument'
+  );
 };
 
 /**
- * Set document data
+ * Set document data with retry logic
  */
 export const setDocument = async (docRef: any, data: any) => {
-  return firestoreFunctions.setDoc(docRef, data);
+  return withRetry(
+    () => firestoreFunctions.setDoc(docRef, data),
+    'setDocument'
+  );
 };
 
 /**
- * Delete a document
+ * Delete a document with retry logic
  */
 export const deleteDocument = async (docRef: any) => {
-  return firestoreFunctions.deleteDoc(docRef);
+  return withRetry(
+    () => firestoreFunctions.deleteDoc(docRef),
+    'deleteDocument'
+  );
 };
 
 // ============================================================================
@@ -256,18 +273,26 @@ export const createQuery = (collectionRef: any, ...constraints: any[]) => {
 };
 
 /**
- * Get documents from a query
+ * Get documents from a query with retry logic
  */
 export const getDocs = async (query: any) => {
-  return firestoreFunctions.getDocs(query);
+  return withRetry(
+    () => firestoreFunctions.getDocs(query),
+    'getDocs'
+  );
 };
 
 /**
- * Get count from server
+ * Get count from server with retry logic
  */
 export const getCountFromServer = async (query: any) => {
-  const snapshot = await firestoreFunctions.getCountFromServer(query);
-  return { data: snapshot.data() };
+  return withRetry(
+    async () => {
+      const snapshot = await firestoreFunctions.getCountFromServer(query);
+      return { data: snapshot.data() };
+    },
+    'getCountFromServer'
+  );
 };
 
 // ============================================================================
@@ -294,6 +319,101 @@ export const timestampFromDate = (date: Date) => {
 export { Timestamp };
 
 // ============================================================================
+// RETRY UTILITIES
+// ============================================================================
+
+/**
+ * Configuration for retry behavior
+ */
+export interface RetryConfig {
+  maxAttempts: number;
+  baseDelayMs: number;
+  maxDelayMs: number;
+  backoffMultiplier: number;
+}
+
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxAttempts: 3,
+  baseDelayMs: 1000,
+  maxDelayMs: 10000,
+  backoffMultiplier: 2,
+};
+
+/**
+ * Error codes that should trigger a retry
+ */
+const RETRYABLE_ERROR_CODES = [
+  'unavailable',
+  'deadline-exceeded',
+  'internal',
+  'resource-exhausted',
+  'aborted',
+  'timeout'
+];
+
+/**
+ * Check if an error is retryable based on its code
+ */
+const isRetryableError = (error: any): boolean => {
+  if (!error || typeof error !== 'object') return false;
+  
+  const errorCode = error.code || error.status || '';
+  return RETRYABLE_ERROR_CODES.includes(errorCode.toLowerCase());
+};
+
+/**
+ * Sleep for a specified number of milliseconds
+ */
+const sleep = (ms: number): Promise<void> => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
+
+/**
+ * Calculate delay with exponential backoff and jitter
+ */
+const calculateRetryDelay = (attempt: number, config: RetryConfig): number => {
+  const exponentialDelay = config.baseDelayMs * Math.pow(config.backoffMultiplier, attempt - 1);
+  const delayWithJitter = exponentialDelay + (Math.random() * 1000); // Add up to 1s jitter
+  return Math.min(delayWithJitter, config.maxDelayMs);
+};
+
+/**
+ * Generic retry wrapper for Firestore operations
+ */
+const withRetry = async <T>(
+  operation: () => Promise<T>,
+  operationName: string,
+  config: RetryConfig = DEFAULT_RETRY_CONFIG
+): Promise<T> => {
+  let lastError: any;
+  
+  for (let attempt = 1; attempt <= config.maxAttempts; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      
+      // Log the error for debugging
+      console.warn(`Firebase ${operationName} attempt ${attempt}/${config.maxAttempts} failed:`, error);
+      
+      // Don't retry if it's the last attempt or error is not retryable
+      if (attempt === config.maxAttempts || !isRetryableError(error)) {
+        break;
+      }
+      
+      // Calculate delay and wait before retrying
+      const delayMs = calculateRetryDelay(attempt, config);
+      console.log(`Retrying ${operationName} in ${delayMs}ms...`);
+      await sleep(delayMs);
+    }
+  }
+  
+  // If we get here, all retries failed
+  console.error(`Firebase ${operationName} failed after ${config.maxAttempts} attempts:`, lastError);
+  throw lastError;
+};
+
+// ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 
@@ -306,6 +426,23 @@ export const getDocsArray = (snapshot: any) => {
     id: doc.id,
     data: typeof doc.data === 'function' ? doc.data() : doc.data
   }));
+};
+
+/**
+ * Export retry utilities for advanced usage
+ */
+export const retryUtils = {
+  withRetry,
+  isRetryableError,
+  DEFAULT_RETRY_CONFIG,
+  RETRYABLE_ERROR_CODES
+};
+
+/**
+ * Configure global retry behavior
+ */
+export const configureRetry = (config: Partial<RetryConfig>) => {
+  Object.assign(DEFAULT_RETRY_CONFIG, config);
 };
 
 /**
