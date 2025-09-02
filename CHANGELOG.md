@@ -5,6 +5,74 @@ All notable changes to the GOPR UAV Ops Manager application are documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.36] - 2025-09-02
+
+### Added
+- System Audit Log screen for admins with advanced filtering, pagination, and metadata (entity type, action, user, timestamps, platform, version, commit).
+- Refactor: ProcedureChecklist and AuditLog services now use dedicated repository layers for improved code structure.
+- Retry pattern added to Firestore utilities for connection resilience.
+
+### Changed
+- Refactored User, Drone, Flight, ProcedureChecklist, and AuditLog services to use repositories for data access.
+- Audit logs now record changes for all major entities (Drone, Flight, Procedure/Checklist, User), including create, edit, delete, restore, and view actions.
+- Dashboard refactored to use ScrollView with a 2-column layout and navigation buttons.
+
+### Fixed
+- UI polish and error message consistency in audit log screens.
+- Minor UI inconsistencies in dashboard and entity screens.
+
+## [1.0.35] - 2025-09-02
+
+### Added
+- Admins can restore deleted Drones, Flights, and Procedures/Checklists.
+- Restore actions trigger audit log entries and UI feedback.
+- Restored entities are immediately available and marked as active.
+
+### Changed
+- Permission logic for restore actions enforced (admin only).
+- UI updated to show "deleted" badge for deleted entities and restore option for admins.
+
+### Fixed
+- Fixed edge cases when restoring entities with missing user/audit data.
+
+## [1.0.34] - 2025-08-28
+
+### Added
+- Soft-delete feature for Drones, Flights, and Procedures/Checklists.
+  - Deleted entities remain in the database but are hidden from non-admin views.
+  - Audit logs record delete actions.
+- List, detail, and edit screens now indicate deleted status and hide modification actions for deleted items.
+- Admins can view and manage deleted entities.
+
+### Changed
+- Entity retrieval services filter out deleted entities for non-admins.
+- UI and button controls for delete/restore are now role-based and context-aware.
+
+### Fixed
+- Non-admins no longer see deleted items in lists or details.
+- Minor fixes to delete/restore dialog wording and error alerts.
+
+## [1.0.33] - 2025-08-27
+
+### Added
+- Improved role-based access control across all screens:
+  - Only admins and managers can view and manage users, drones, flights, and procedures.
+  - Users can view and edit only their own profile and flights.
+- Dashboard navigation is now dynamic based on user role (Admin, Manager, User).
+- Polish and English language support improvements throughout the app.
+
+### Changed
+- Permission error alerts are now localized and more informative.
+- Authentication and navigation flow refactored for reliability.
+- Firebase utilities consolidated: created centralized firebaseUtils.ts to eliminate code duplication.
+
+### Fixed
+- Fixed navigation issues on access denied scenarios.
+- React Native Firebase compatibility for Android and web.
+- Fixed "Unexpected text node" errors, totalCount parser, and various typescript errors.
+- Session persistence improvements for native and web platforms.
+- Various UI polish and bug fixes in main screens.
+
 ## [1.0.32] - 2025-08-26
 
 ### Enhanced
