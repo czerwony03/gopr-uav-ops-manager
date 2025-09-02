@@ -17,8 +17,11 @@ import ImageViewer from '../../../components/ImageViewer';
 import { ProcedureChecklist, ChecklistItem } from '@/types/ProcedureChecklist';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
+import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { UserService } from '@/services/userService';
+import { useNetworkStatus } from '@/utils/useNetworkStatus';
+import OfflineInfoBar from '@/components/OfflineInfoBar';
 
 export default function ProcedureDetailsScreen() {
   const [checklist, setChecklist] = useState<ProcedureChecklist | null>(null);
@@ -27,8 +30,10 @@ export default function ProcedureDetailsScreen() {
   const [imageIndex, setImageIndex] = useState(0);
   const [createdByEmail, setCreatedByEmail] = useState<string>('');
   const [updatedByEmail, setUpdatedByEmail] = useState<string>('');
+  const [isFromCache, setIsFromCache] = useState(false);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+  const { isConnected } = useNetworkStatus();
   const { t } = useTranslation('common');
   const router = useRouter();
   const crossPlatformAlert = useCrossPlatformAlert();
@@ -37,17 +42,54 @@ export default function ProcedureDetailsScreen() {
     if (!user || !id) return;
     
     try {
-      const checklistData = await ProcedureChecklistService.getProcedureChecklist(id, user.role);
-      setChecklist(checklistData);
+      // Try to get procedure from offline service first
+      const { procedure, isFromCache: fromCache } = await OfflineProcedureChecklistService.getProcedureChecklist(id, user.role);
       
-      // Fetch user emails for audit trail
-      if (checklistData?.createdBy) {
-        const createdEmail = await UserService.getUserEmail(checklistData.createdBy);
-        setCreatedByEmail(createdEmail);
-      }
-      if (checklistData?.updatedBy) {
-        const updatedEmail = await UserService.getUserEmail(checklistData.updatedBy);
-        setUpdatedByEmail(updatedEmail);
+      if (procedure) {
+        setChecklist(procedure);
+        setIsFromCache(fromCache);
+        
+        // Fetch user emails for audit trail (only if online and not from cache)
+        if (!fromCache && isConnected) {
+          if (procedure.createdBy) {
+            const createdEmail = await UserService.getUserEmail(procedure.createdBy).catch(() => '');
+            setCreatedByEmail(createdEmail);
+          }
+          if (procedure.updatedBy) {
+            const updatedEmail = await UserService.getUserEmail(procedure.updatedBy).catch(() => '');
+            setUpdatedByEmail(updatedEmail);
+          }
+        }
+        
+        // If we got cached data and we're online, try to get fresh data in background
+        if (fromCache && isConnected) {
+          try {
+            const freshProcedure = await ProcedureChecklistService.getProcedureChecklist(id, user.role);
+            if (freshProcedure) {
+              setChecklist(freshProcedure);
+              setIsFromCache(false);
+              
+              // Update user emails for fresh data
+              if (freshProcedure.createdBy) {
+                const createdEmail = await UserService.getUserEmail(freshProcedure.createdBy).catch(() => '');
+                setCreatedByEmail(createdEmail);
+              }
+              if (freshProcedure.updatedBy) {
+                const updatedEmail = await UserService.getUserEmail(freshProcedure.updatedBy).catch(() => '');
+                setUpdatedByEmail(updatedEmail);
+              }
+            }
+          } catch (error) {
+            console.log('Failed to fetch fresh procedure data, keeping cached data:', error);
+          }
+        }
+      } else {
+        // Procedure not found
+        crossPlatformAlert.showAlert({
+          title: t('procedures.error'), 
+          message: t('procedures.failedToLoad'),
+          buttons: [{ text: 'OK', onPress: () => router.back() }]
+        });
       }
     } catch (error) {
       console.error('Error fetching procedure/checklist:', error);
@@ -59,7 +101,7 @@ export default function ProcedureDetailsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [user, id, router, t]);
+  }, [user, id, isConnected, router, t, crossPlatformAlert]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {
@@ -244,6 +286,12 @@ export default function ProcedureDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Offline info bar */}
+      <OfflineInfoBar 
+        visible={!isConnected || isFromCache} 
+        message={!isConnected ? t('offline.noConnection') : t('offline.viewingCachedData')}
+      />
+      
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>

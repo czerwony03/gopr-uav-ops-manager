@@ -10,6 +10,7 @@ import {
   onAuthStateChanged,
   getCurrentUser
 } from '@/utils/firebaseUtils';
+import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
 
 /**
  * AuthContext - Firebase Authentication State Management
@@ -181,16 +182,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (userData) {
             console.log('[AuthContext] ✅ Successfully restored user session with full data:', userData?.uid);
             setUser(userData);
+            
+            // Trigger pre-download of procedures in background after successful login
+            OfflineProcedureChecklistService.preDownloadProcedures(userData.role).catch(error => {
+              console.error('[AuthContext] Error pre-downloading procedures:', error);
+              // Don't block login process if pre-download fails
+            });
           }
         } catch (error) {
           console.error('[AuthContext] ❌ Error loading user data in auth state change:', error);
           console.log('[AuthContext] Falling back to basic user data for session restoration');
           // Set basic user data if full loading fails
-          setUser({
+          const fallbackUserData = {
             uid: firebaseUser.uid,
             email: firebaseUser.email || '',
             role: 'user',
-          } as UserData);
+          } as UserData;
+          setUser(fallbackUserData);
+          
+          // Still try to pre-download procedures with fallback role
+          OfflineProcedureChecklistService.preDownloadProcedures(fallbackUserData.role).catch(error => {
+            console.error('[AuthContext] Error pre-downloading procedures with fallback user:', error);
+          });
         }
       } else {
         console.log('[AuthContext] ❌ No user session found - user is not authenticated');
