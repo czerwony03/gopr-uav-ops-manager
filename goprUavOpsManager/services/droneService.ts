@@ -2,83 +2,28 @@ import { Drone } from '@/types/Drone';
 import { AuditLogService } from './auditLogService';
 import { UserService } from './userService';
 import {UserRole} from "@/types/UserRole";
-import {
-  getCollection,
-  getDocument,
-  getDocumentData,
-  addDocument,
-  updateDocument,
-  createQuery,
-  where,
-  orderBy,
-  getDocs,
-  getDocsArray,
-  timestampNow
-} from '@/utils/firebaseUtils';
+import {DroneRepository} from "@/repositories/DroneRepository";
 
 export class DroneService {
-  private static readonly COLLECTION_NAME = 'drones';
-
   // Get all drones based on user role
   static async getDrones(userRole: UserRole): Promise<Drone[]> {
-    try {
-      const dronesCollection = getCollection(this.COLLECTION_NAME);
-      let q;
-
-      if (userRole === 'admin') {
-        // Admin can see all drones including soft-deleted ones
-        q = createQuery(dronesCollection, orderBy('createdAt', 'desc'));
-      } else {
-        // Users and managers only see non-deleted drones
-        q = createQuery(
-          dronesCollection, 
-          where('isDeleted', '==', false),
-          orderBy('createdAt', 'desc')
-        );
-      }
-
-      const snapshot = await getDocs(q);
-      return getDocsArray(snapshot).map((doc: any) => ({
-        id: doc.id,
-        ...doc.data,
-        // Convert Firestore Timestamps to Dates
-        createdAt: doc.data.createdAt?.toDate(),
-        updatedAt: doc.data.updatedAt?.toDate(),
-        deletedAt: doc.data.deletedAt?.toDate(),
-      } as Drone));
-    } catch (error) {
-      console.error('Error fetching drones:', error);
-      throw new Error('Failed to fetch drones');
-    }
+    return DroneRepository.getDrones(userRole);
   }
 
   // Get a single drone by ID
   static async getDrone(id: string, userRole: UserRole): Promise<Drone | null> {
-    try {
-      const droneDoc = await getDocumentData(getDocument(this.COLLECTION_NAME, id));
-      
-      if (!droneDoc.exists) {
-        return null;
-      }
-
-      const drone = {
-        id: id,
-        ...droneDoc.data,
-        createdAt: droneDoc.data.createdAt?.toDate(),
-        updatedAt: droneDoc.data.updatedAt?.toDate(),
-        deletedAt: droneDoc.data.deletedAt?.toDate(),
-      } as Drone;
-
-      // Check if user can access this drone
-      if (drone.isDeleted && userRole !== 'admin') {
-        return null; // Non-admin users cannot see deleted drones
-      }
-
-      return drone;
-    } catch (error) {
-      console.error('Error fetching drone:', error);
-      throw new Error('Failed to fetch drone');
+    const drone = await DroneRepository.getDrone(id);
+    
+    if (!drone) {
+      return null;
     }
+
+    // Check if user can access this drone
+    if (drone.isDeleted && userRole !== 'admin') {
+      return null; // Non-admin users cannot see deleted drones
+    }
+
+    return drone;
   }
 
   // Create a new drone (manager and admin only)
@@ -88,21 +33,13 @@ export class DroneService {
     }
 
     try {
-      const now = timestampNow();
-      const docRef = await addDocument(getCollection(this.COLLECTION_NAME), {
-        ...droneData,
-        isDeleted: false,
-        createdAt: now,
-        updatedAt: now,
-        createdBy: userId,
-        updatedBy: userId,
-      });
+      const docId = await DroneRepository.createDrone(droneData, userId);
 
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);
       await AuditLogService.createAuditLog({
         entityType: 'drone',
-        entityId: docRef.id,
+        entityId: docId,
         action: 'create',
         userId,
         userEmail,
@@ -110,7 +47,7 @@ export class DroneService {
         newValues: { ...droneData, isDeleted: false }
       });
 
-      return docRef.id;
+      return docId;
     } catch (error) {
       console.error('Error creating drone:', error);
       throw new Error('Failed to create drone');
@@ -124,15 +61,13 @@ export class DroneService {
     }
 
     try {
-      const droneRef = getDocument(this.COLLECTION_NAME, id);
-      const droneDoc = await getDocumentData(droneRef);
-      
-      if (!droneDoc.exists) {
+      // Get current drone data for access control and audit logging
+      const currentDrone = await DroneRepository.getDrone(id);
+      if (!currentDrone) {
         throw new Error('Drone not found');
       }
 
       // Check if the drone is soft-deleted and user is not admin
-      const currentDrone = droneDoc.data as Drone;
       if (currentDrone.isDeleted && userRole !== 'admin') {
         throw new Error('Cannot update deleted drone');
       }
@@ -141,11 +76,8 @@ export class DroneService {
       const previousValues = { ...currentDrone };
       const newValues = { ...currentDrone, ...droneData };
 
-      await updateDocument(droneRef, {
-        ...droneData,
-        updatedAt: timestampNow(),
-        updatedBy: userId,
-      });
+      // Update drone in repository
+      await DroneRepository.updateDrone(id, droneData, userId);
 
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);
@@ -172,21 +104,14 @@ export class DroneService {
     }
 
     try {
-      const droneRef = getDocument(this.COLLECTION_NAME, id);
-      const droneDoc = await getDocumentData(droneRef);
-      
-      if (!droneDoc.exists) {
+      // Get current drone data for audit logging
+      const currentDrone = await DroneRepository.getDrone(id);
+      if (!currentDrone) {
         throw new Error('Drone not found');
       }
 
-      const currentDrone = droneDoc.data as Drone;
-
-      await updateDocument(droneRef, {
-        isDeleted: true,
-        deletedAt: timestampNow(),
-        updatedAt: timestampNow(),
-        updatedBy: userId,
-      });
+      // Soft delete drone in repository
+      await DroneRepository.softDeleteDrone(id, userId);
 
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);
@@ -212,21 +137,14 @@ export class DroneService {
     }
 
     try {
-      const droneRef = getDocument(this.COLLECTION_NAME, id);
-      const droneDoc = await getDocumentData(droneRef);
-      
-      if (!droneDoc.exists) {
+      // Get current drone data for audit logging
+      const currentDrone = await DroneRepository.getDrone(id);
+      if (!currentDrone) {
         throw new Error('Drone not found');
       }
 
-      const currentDrone = droneDoc.data as Drone;
-
-      await updateDocument(droneRef, {
-        isDeleted: false,
-        deletedAt: null,
-        updatedAt: timestampNow(),
-        updatedBy: userId,
-      });
+      // Restore drone in repository
+      await DroneRepository.restoreDrone(id, userId);
 
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);

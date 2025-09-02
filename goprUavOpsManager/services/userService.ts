@@ -1,52 +1,17 @@
 import {User} from '@/types/User';
 import {UserRole} from "@/types/UserRole";
 import {toDateIfTimestamp, toFirestoreTimestamp} from "@/utils/dateUtils";
-import {filterUndefinedProperties} from "@/utils/filterUndefinedProperties";
 import {AuditLogService} from "@/services/auditLogService";
-import {
-  getCollection,
-  getDocument,
-  getDocumentData,
-  updateDocument,
-  createQuery,
-  orderBy,
-  getDocs,
-  getDocsArray,
-  timestampNow,
-  Timestamp
-} from '@/utils/firebaseUtils';
+import {UserRepository} from "@/repositories/UserRepository";
 
 export class UserService {
-  private static readonly COLLECTION_NAME = 'users';
-
   // Get all users (admin and manager)
   static async getUsers(userRole: UserRole): Promise<User[]> {
     if (userRole !== 'admin' && userRole !== 'manager') {
       throw new Error('Access denied. Only administrators and managers can view all users.');
     }
 
-    try {
-      const usersCollection = getCollection(this.COLLECTION_NAME);
-      const q = createQuery(usersCollection, orderBy('email', 'asc'));
-      
-      const snapshot = await getDocs(q);
-      const docs = getDocsArray(snapshot);
-      
-      return docs.map((doc: any) => ({
-        uid: doc.id,
-        ...doc.data,
-        // Convert Firestore Timestamps to Dates
-        operatorValidityDate: toDateIfTimestamp(doc.data.operatorValidityDate),
-        pilotValidityDate: toDateIfTimestamp(doc.data.pilotValidityDate),
-        insurance: toDateIfTimestamp(doc.data.insurance),
-        createdAt: toDateIfTimestamp(doc.data.createdAt),
-        updatedAt: toDateIfTimestamp(doc.data.updatedAt),
-        lastLoginAt: toDateIfTimestamp(doc.data.lastLoginAt),
-      } as User));
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      throw new Error('Failed to fetch users');
-    }
+    return UserRepository.getUsers();
   }
 
   // Get a single user by ID
@@ -56,30 +21,7 @@ export class UserService {
       throw new Error('Access denied. You can only view your own profile.');
     }
 
-    try {
-      const userDoc = getDocument(this.COLLECTION_NAME, uid);
-      const snapshot = await getDocumentData(userDoc);
-      
-      if (!snapshot.exists) {
-        return null;
-      }
-
-      const userData = snapshot.data;
-      return {
-        uid: uid,
-        ...userData,
-        // Convert Firestore Timestamps to Dates
-        operatorValidityDate: toDateIfTimestamp(userData.operatorValidityDate),
-        pilotValidityDate: toDateIfTimestamp(userData.pilotValidityDate),
-        insurance: toDateIfTimestamp(userData.insurance),
-        createdAt: toDateIfTimestamp(userData.createdAt),
-        updatedAt: toDateIfTimestamp(userData.updatedAt),
-        lastLoginAt: toDateIfTimestamp(userData.lastLoginAt),
-      } as User;
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      throw new Error('Failed to fetch user');
-    }
+    return UserRepository.getUser(uid);
   }
 
   // Update an existing user
@@ -100,36 +42,10 @@ export class UserService {
     }
 
     try {
-      const userRef = getDocument(this.COLLECTION_NAME, uid);
-      const userDoc = await getDocumentData(userRef);
-
-      if (!userDoc.exists) {
+      // Get current user data for audit logging
+      const currentUser = await UserRepository.getUser(uid);
+      if (!currentUser) {
         throw new Error('User not found');
-      }
-
-      const currentUser = userDoc.data as User;
-      
-      // Prepare data for Firestore (convert dates to Timestamps)
-      const firestoreData: any = {
-        ...userData,
-        updatedAt: timestampNow(),
-      };
-
-      // Convert Date objects to Firestore Timestamps using the utility function
-      // This fixes the issue where form date fields come as strings (YYYY-MM-DD) 
-      // and need to be converted to proper Firestore Timestamps to avoid 
-      // { seconds, nanoseconds } objects being saved to the database
-      // 
-      // Process date fields even when undefined to allow clearing them (undefined -> null)
-      // Manual test: Edit a user profile with date fields, save, check Firestore console
-      if ('operatorValidityDate' in userData) {
-        firestoreData.operatorValidityDate = toFirestoreTimestamp(userData.operatorValidityDate);
-      }
-      if ('pilotValidityDate' in userData) {
-        firestoreData.pilotValidityDate = toFirestoreTimestamp(userData.pilotValidityDate);
-      }
-      if ('insurance' in userData) {
-        firestoreData.insurance = toFirestoreTimestamp(userData.insurance);
       }
 
       // Store previous values for audit log - convert existing Firestore timestamps to Date objects for proper comparison
@@ -155,9 +71,11 @@ export class UserService {
         }
       });
 
-      await updateDocument(userRef, filterUndefinedProperties(firestoreData));
+      // Update user in repository
+      await UserRepository.updateUser(uid, userData);
 
-      const requestorEmail = await UserService.getUserEmail(requestorUid);
+      // Create audit log entry
+      const requestorEmail = await UserRepository.getUserEmail(requestorUid);
       await AuditLogService.createAuditLog({
         entityType: 'user',
         entityId: uid,
@@ -176,31 +94,11 @@ export class UserService {
 
   // Get user email by UID (for audit trail display)
   static async getUserEmail(uid: string): Promise<string> {
-    try {
-      const userDoc = await getDocumentData(getDocument(this.COLLECTION_NAME, uid));
-      
-      if (!userDoc.exists) {
-        return 'Unknown User';
-      }
-
-      const userData = userDoc.data;
-      return userData.email || 'Unknown User';
-    } catch (error) {
-      console.error('Error fetching user email:', error);
-      return 'Unknown User';
-    }
+    return UserRepository.getUserEmail(uid);
   }
 
   // Update last login timestamp
   static async updateLastLogin(uid: string): Promise<void> {
-    try {
-      const userDoc = getDocument(this.COLLECTION_NAME, uid);
-      await updateDocument(userDoc, {
-        lastLoginAt: timestampNow(),
-      });
-    } catch (error) {
-      console.error('Error updating last login timestamp:', error);
-      // Don't throw error to avoid breaking login flow
-    }
+    await UserRepository.updateLastLogin(uid);
   }
 }
