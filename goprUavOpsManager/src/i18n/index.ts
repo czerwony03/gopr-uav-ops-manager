@@ -21,13 +21,27 @@ const resources = {
 
 // Get device language with fallback to Polish
 const getDeviceLanguage = (): string => {
-  const locales = RNLocalize.getLocales();
-  if (locales.length > 0) {
-    const primaryLocale = locales[0];
-    // Support Polish and English, fallback to Polish
-    if (primaryLocale.languageCode === 'en') {
-      return 'en';
+  try {
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
+      // For web browsers, use navigator.language
+      const browserLanguage = navigator.language;
+      if (browserLanguage.startsWith('en')) {
+        return 'en';
+      }
+    } else if (typeof window === 'undefined') {
+      // For React Native, use RNLocalize
+      const locales = RNLocalize.getLocales();
+      if (locales.length > 0) {
+        const primaryLocale = locales[0];
+        // Support Polish and English, fallback to Polish
+        if (primaryLocale.languageCode === 'en') {
+          return 'en';
+        }
+      }
     }
+  } catch (error) {
+    console.warn('Error getting device language:', error);
   }
   return 'pl'; // Default and fallback to Polish
 };

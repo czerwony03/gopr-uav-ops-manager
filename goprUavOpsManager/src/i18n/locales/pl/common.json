@@ -511,6 +511,14 @@
       "default": [
         "Ograniczony dostęp"
       ]
+    },
+    "navigation": {
+      "flights": "Zarządzanie lotami",
+      "drones": "Rejestr dronów", 
+      "procedures": "Procedury i listy kontrolne",
+      "profile": "Mój profil",
+      "users": "Zarządzanie użytkownikami",
+      "logs": "Logi aplikacji"
     }
   },
   "procedures": {
