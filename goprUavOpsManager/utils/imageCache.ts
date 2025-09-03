@@ -780,6 +780,8 @@ export class ImageCacheService {
   private static isIndexedDBSupported: boolean | null = null;
   private static dbInstance: IDBDatabase | null = null;
   private static dbOperationCount = 0; // Track active operations
+  private static dbInitializationQueue: Array<{ resolve: (db: IDBDatabase) => void; reject: (error: Error) => void }> = [];
+  private static isInitializing = false;
   
   // Blob URL tracking to prevent garbage collection
   private static activeBlobUrls: Map<string, { url: string; blob: Blob; created: number }> = new Map();
@@ -817,25 +819,54 @@ export class ImageCacheService {
   }
 
   /**
-   * Open IndexedDB database with proper initialization (singleton)
+   * Open IndexedDB database with proper initialization (singleton with queuing)
    */
   private static async openIndexedDB(): Promise<IDBDatabase> {
     // Return existing instance if available and not closed
-    if (this.dbInstance && this.dbInstance.version > 0) {
+    if (this.dbInstance && this.isDBConnectionValid(this.dbInstance)) {
       return this.dbInstance;
     }
 
-    // Return existing promise if already opening
-    if (this.dbPromise) {
-      return this.dbPromise;
+    // If already initializing, queue this request
+    if (this.isInitializing) {
+      return new Promise<IDBDatabase>((resolve, reject) => {
+        this.dbInitializationQueue.push({ resolve, reject });
+      });
     }
 
-    this.dbPromise = new Promise((resolve, reject) => {
+    // Set initialization flag
+    this.isInitializing = true;
+
+    try {
+      this.dbInstance = await this.createIndexedDBConnection();
+      
+      // Resolve all queued requests
+      const queue = [...this.dbInitializationQueue];
+      this.dbInitializationQueue = [];
+      queue.forEach(({ resolve }) => resolve(this.dbInstance!));
+      
+      return this.dbInstance;
+    } catch (error) {
+      // Reject all queued requests
+      const queue = [...this.dbInitializationQueue];
+      this.dbInitializationQueue = [];
+      queue.forEach(({ reject }) => reject(error as Error));
+      
+      throw error;
+    } finally {
+      this.isInitializing = false;
+    }
+  }
+
+  /**
+   * Create a new IndexedDB connection
+   */
+  private static async createIndexedDBConnection(): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
       const request = indexedDB.open('ImageCache', 1);
 
       request.onerror = () => {
-        this.dbPromise = null; // Reset promise on error
-        this.dbInstance = null;
+        this.resetIndexedDBState();
         reject(new Error(`IndexedDB error: ${request.error?.message || 'Unknown error'}`));
       };
 
@@ -843,7 +874,6 @@ export class ImageCacheService {
         const db = request.result;
         
         // Only create the object store if it doesn't exist
-        // Don't delete existing stores to avoid race conditions
         if (!db.objectStoreNames.contains('images')) {
           try {
             db.createObjectStore('images', { keyPath: 'key' });
@@ -862,8 +892,7 @@ export class ImageCacheService {
         // Verify that the object store exists
         if (!db.objectStoreNames.contains('images')) {
           db.close();
-          this.dbPromise = null;
-          this.dbInstance = null;
+          this.resetIndexedDBState();
           reject(new Error('Object store "images" was not created properly'));
           return;
         }
@@ -872,7 +901,6 @@ export class ImageCacheService {
         db.onclose = () => {
           console.log('[ImageCache] IndexedDB connection closed');
           this.dbInstance = null;
-          this.dbPromise = null;
         };
 
         db.onerror = (event) => {
@@ -883,10 +911,8 @@ export class ImageCacheService {
           console.log('[ImageCache] IndexedDB version change detected, closing connection');
           db.close();
           this.dbInstance = null;
-          this.dbPromise = null;
         };
         
-        this.dbInstance = db;
         console.log('[ImageCache] Successfully opened IndexedDB with object store "images"');
         resolve(db);
       };
@@ -895,14 +921,64 @@ export class ImageCacheService {
         console.warn('[ImageCache] IndexedDB open request blocked');
       };
     });
-
-    return this.dbPromise;
   }
 
   /**
-   * Save to IndexedDB
+   * Check if database connection is valid and usable
+   */
+  private static isDBConnectionValid(db: IDBDatabase): boolean {
+    try {
+      // Check if database is closed or closing
+      if (db.version === 0) {
+        return false;
+      }
+      
+      // Check if object store exists
+      if (!db.objectStoreNames.contains('images')) {
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Save to IndexedDB with retry logic
    */
   private static async saveToIndexedDB(
+    cacheKey: string,
+    metadata: CachedImageMetadata,
+    blob: Blob
+  ): Promise<void> {
+    const maxRetries = 3;
+    let lastError: Error | null = null;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await this.saveToIndexedDBAttempt(cacheKey, metadata, blob);
+        return; // Success
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(`[ImageCache] SaveToIndexedDB attempt ${attempt} failed:`, error);
+        
+        if (attempt < maxRetries) {
+          // Reset state and try again
+          this.resetIndexedDBState();
+          await new Promise(resolve => setTimeout(resolve, 100 * attempt)); // Exponential backoff
+        }
+      }
+    }
+    
+    // All attempts failed
+    throw new Error(`Failed to save to IndexedDB after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`);
+  }
+
+  /**
+   * Single attempt to save to IndexedDB
+   */
+  private static async saveToIndexedDBAttempt(
     cacheKey: string,
     metadata: CachedImageMetadata,
     blob: Blob
@@ -914,16 +990,9 @@ export class ImageCacheService {
       this.dbOperationCount++; // Track active operation
       
       return new Promise((resolve, reject) => {
-        if (!db) {
+        if (!db || !this.isDBConnectionValid(db)) {
           this.dbOperationCount--;
-          reject(new Error('Database connection is null'));
-          return;
-        }
-
-        // Check if database is still open
-        if (!db.objectStoreNames || db.objectStoreNames.length === 0) {
-          this.dbOperationCount--;
-          reject(new Error('Database connection is closing or closed'));
+          reject(new Error('Database connection is invalid or closing'));
           return;
         }
 
@@ -973,9 +1042,36 @@ export class ImageCacheService {
   }
 
   /**
-   * Get from IndexedDB
+   * Get from IndexedDB with retry logic
    */
   private static async getFromIndexedDB(cacheKey: string): Promise<CachedImageMetadata | null> {
+    const maxRetries = 3;
+    let lastError: Error | null = null;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await this.getFromIndexedDBAttempt(cacheKey);
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(`[ImageCache] GetFromIndexedDB attempt ${attempt} failed:`, error);
+        
+        if (attempt < maxRetries) {
+          // Reset state and try again
+          this.resetIndexedDBState();
+          await new Promise(resolve => setTimeout(resolve, 100 * attempt)); // Exponential backoff
+        }
+      }
+    }
+    
+    // All attempts failed
+    console.error(`[ImageCache] Failed to get from IndexedDB after ${maxRetries} attempts:`, lastError?.message);
+    return null; // Return null instead of throwing for get operations
+  }
+
+  /**
+   * Single attempt to get from IndexedDB
+   */
+  private static async getFromIndexedDBAttempt(cacheKey: string): Promise<CachedImageMetadata | null> {
     let db: IDBDatabase | null = null;
     
     try {
@@ -983,16 +1079,9 @@ export class ImageCacheService {
       this.dbOperationCount++; // Track active operation
       
       return new Promise((resolve, reject) => {
-        if (!db) {
+        if (!db || !this.isDBConnectionValid(db)) {
           this.dbOperationCount--;
-          reject(new Error('Database connection is null'));
-          return;
-        }
-
-        // Check if database is still open
-        if (!db.objectStoreNames || db.objectStoreNames.length === 0) {
-          this.dbOperationCount--;
-          reject(new Error('Database connection is closing or closed'));
+          reject(new Error('Database connection is invalid or closing'));
           return;
         }
 
@@ -1074,8 +1163,14 @@ export class ImageCacheService {
       }
     }
     
+    // Reject any queued initialization requests
+    const queue = [...this.dbInitializationQueue];
+    this.dbInitializationQueue = [];
+    queue.forEach(({ reject }) => reject(new Error('IndexedDB state was reset')));
+    
     this.dbPromise = null;
     this.dbInstance = null;
+    this.isInitializing = false;
     this.isIndexedDBSupported = false; // Mark as unsupported until next check
   }
 
