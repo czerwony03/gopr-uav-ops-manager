@@ -34,18 +34,32 @@ if (Platform.OS === 'web') {
     console.error('[FirebaseConfig] Failed to set auth persistence:', error);
   });
 
-  // Enable Firestore offline persistence for web
-  enableIndexedDbPersistence(firestore).catch((error: any) => {
-    if (error.code === 'failed-precondition') {
-      console.warn('[FirebaseConfig] Firestore persistence failed: Multiple tabs open, persistence enabled only in first tab');
-    } else if (error.code === 'unimplemented') {
-      console.warn('[FirebaseConfig] Firestore persistence not available in this browser');
-    } else {
-      console.error('[FirebaseConfig] Failed to enable Firestore persistence:', error);
+  // Enable Firestore offline persistence for web with timeout
+  const enablePersistence = async () => {
+    try {
+      await Promise.race([
+        enableIndexedDbPersistence(firestore),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Persistence setup timeout')), 5000)
+        )
+      ]);
+      console.log('[FirebaseConfig] Web Firebase initialized with local persistence and offline support');
+    } catch (error: any) {
+      if (error.code === 'failed-precondition') {
+        console.warn('[FirebaseConfig] Firestore persistence failed: Multiple tabs open, persistence enabled only in first tab');
+      } else if (error.code === 'unimplemented') {
+        console.warn('[FirebaseConfig] Firestore persistence not available in this browser');
+      } else if (error.message === 'Persistence setup timeout') {
+        console.warn('[FirebaseConfig] Firestore persistence setup timed out, continuing without offline persistence');
+      } else {
+        console.error('[FirebaseConfig] Failed to enable Firestore persistence:', error);
+      }
+      console.log('[FirebaseConfig] Web Firebase initialized without offline persistence');
     }
-  });
+  };
 
-  console.log('[FirebaseConfig] Web Firebase initialized with local persistence and offline support');
+  // Enable persistence in background to not block app startup
+  enablePersistence();
 } else {
   // React Native (Android/iOS): Use React Native Firebase SDK for proper native persistence
   const rnFirebaseApp = require('@react-native-firebase/app').default;
