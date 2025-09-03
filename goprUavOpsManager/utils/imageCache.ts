@@ -169,14 +169,19 @@ export class ImageCacheService {
    * Initialize web cache
    */
   private static async initializeWebCache(): Promise<void> {
-    // Check if IndexedDB is available
-    if (typeof window !== 'undefined' && window.indexedDB) {
+    // Check if IndexedDB is supported and working
+    const indexedDBSupported = await this.checkIndexedDBSupport();
+    
+    if (indexedDBSupported) {
       try {
         // Initialize IndexedDB database
-        await this.openIndexedDB();
+        const db = await this.openIndexedDB();
+        db.close(); // Close immediately after successful initialization
         return;
       } catch (error) {
         console.warn('Failed to initialize IndexedDB, falling back to localStorage:', error);
+        this.isIndexedDBSupported = false; // Mark as unsupported
+        this.dbPromise = null; // Reset promise
       }
     }
     
@@ -324,18 +329,27 @@ export class ImageCacheService {
    */
   private static async getCachedImageMetadataWeb(cacheKey: string): Promise<CachedImageMetadata | null> {
     try {
-      // Try IndexedDB first
-      if (typeof window !== 'undefined' && window.indexedDB) {
-        return await this.getFromIndexedDB(cacheKey);
+      // Check if IndexedDB is supported and working
+      if (this.isIndexedDBSupported !== false && await this.checkIndexedDBSupport()) {
+        try {
+          return await this.getFromIndexedDB(cacheKey);
+        } catch (error) {
+          console.warn('Failed to get from IndexedDB, falling back to localStorage:', error);
+          this.isIndexedDBSupported = false; // Mark as unsupported
+          this.dbPromise = null; // Reset promise
+        }
       }
       
       // Fallback to localStorage
-      const metadataString = localStorage.getItem(`ImageCache_${cacheKey}`);
-      if (!metadataString) {
-        return null;
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const metadataString = localStorage.getItem(`ImageCache_${cacheKey}`);
+        if (!metadataString) {
+          return null;
+        }
+        return JSON.parse(metadataString);
       }
-
-      return JSON.parse(metadataString);
+      
+      return null;
     } catch (error) {
       return null;
     }
@@ -361,14 +375,22 @@ export class ImageCacheService {
     blob: Blob
   ): Promise<void> {
     try {
-      // Try IndexedDB first
-      if (typeof window !== 'undefined' && window.indexedDB) {
-        await this.saveToIndexedDB(cacheKey, metadata, blob);
-        return;
+      // Check if IndexedDB is supported and working
+      if (this.isIndexedDBSupported !== false && await this.checkIndexedDBSupport()) {
+        try {
+          await this.saveToIndexedDB(cacheKey, metadata, blob);
+          return;
+        } catch (error) {
+          console.warn('Failed to save to IndexedDB, falling back to localStorage:', error);
+          this.isIndexedDBSupported = false; // Mark as unsupported
+          this.dbPromise = null; // Reset promise
+        }
       }
       
       // Fallback to localStorage (without blob data)
-      localStorage.setItem(`ImageCache_${cacheKey}`, JSON.stringify(metadata));
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(`ImageCache_${cacheKey}`, JSON.stringify(metadata));
+      }
     } catch (error) {
       console.error('Error saving cache metadata on web:', error);
     }
@@ -674,27 +696,86 @@ export class ImageCacheService {
   }
 
   // IndexedDB helper methods
+  private static dbPromise: Promise<IDBDatabase> | null = null;
+  private static isIndexedDBSupported: boolean | null = null;
 
   /**
-   * Open IndexedDB database with proper initialization
+   * Check if IndexedDB is supported and working
+   */
+  private static async checkIndexedDBSupport(): Promise<boolean> {
+    if (this.isIndexedDBSupported !== null) {
+      return this.isIndexedDBSupported;
+    }
+
+    try {
+      if (typeof window === 'undefined' || !window.indexedDB) {
+        this.isIndexedDBSupported = false;
+        return false;
+      }
+
+      // Test if IndexedDB actually works
+      const testDB = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open('test', 1);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+      });
+      
+      testDB.close();
+      indexedDB.deleteDatabase('test');
+      
+      this.isIndexedDBSupported = true;
+      return true;
+    } catch (error) {
+      this.isIndexedDBSupported = false;
+      return false;
+    }
+  }
+
+  /**
+   * Open IndexedDB database with proper initialization (singleton)
    */
   private static async openIndexedDB(): Promise<IDBDatabase> {
-    return new Promise((resolve, reject) => {
+    // Return existing promise if already opening/opened
+    if (this.dbPromise) {
+      return this.dbPromise;
+    }
+
+    this.dbPromise = new Promise((resolve, reject) => {
       const request = indexedDB.open('ImageCache', 1);
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        this.dbPromise = null; // Reset promise on error
+        reject(new Error(`IndexedDB error: ${request.error?.message || 'Unknown error'}`));
+      };
 
       request.onupgradeneeded = () => {
         const db = request.result;
-        if (!db.objectStoreNames.contains('images')) {
-          db.createObjectStore('images', { keyPath: 'key' });
+        
+        // Clean up any existing object stores
+        if (db.objectStoreNames.contains('images')) {
+          db.deleteObjectStore('images');
         }
+        
+        // Create the object store
+        db.createObjectStore('images', { keyPath: 'key' });
       };
 
       request.onsuccess = () => {
-        resolve(request.result);
+        const db = request.result;
+        
+        // Verify that the object store exists
+        if (!db.objectStoreNames.contains('images')) {
+          db.close();
+          this.dbPromise = null;
+          reject(new Error('Object store "images" was not created properly'));
+          return;
+        }
+        
+        resolve(db);
       };
     });
+
+    return this.dbPromise;
   }
 
   /**
@@ -705,11 +786,25 @@ export class ImageCacheService {
     metadata: CachedImageMetadata,
     blob: Blob
   ): Promise<void> {
+    let db: IDBDatabase | null = null;
+    
     try {
-      const db = await this.openIndexedDB();
+      db = await this.openIndexedDB();
       
       return new Promise((resolve, reject) => {
-        const transaction = db.transaction(['images'], 'readwrite');
+        if (!db) {
+          reject(new Error('Database connection is null'));
+          return;
+        }
+
+        let transaction: IDBTransaction;
+        try {
+          transaction = db.transaction(['images'], 'readwrite');
+        } catch (error) {
+          reject(new Error(`Failed to create transaction: ${error}`));
+          return;
+        }
+
         const store = transaction.objectStore('images');
 
         const data = {
@@ -719,59 +814,33 @@ export class ImageCacheService {
         };
 
         const putRequest = store.put(data);
+        
         putRequest.onsuccess = () => {
-          db.close();
+          if (db) db.close();
           resolve();
         };
+        
         putRequest.onerror = () => {
-          db.close();
-          reject(putRequest.error);
+          if (db) db.close();
+          reject(new Error(`Put request failed: ${putRequest.error?.message || 'Unknown error'}`));
+        };
+
+        transaction.onerror = () => {
+          if (db) db.close();
+          reject(new Error(`Transaction failed: ${transaction.error?.message || 'Unknown error'}`));
         };
       });
     } catch (error) {
+      if (db) db.close();
       throw new Error(`Failed to save to IndexedDB: ${error}`);
     }
   }
 
   /**
-   * Get from IndexedDB
+   * Reset IndexedDB state (for error recovery)
    */
-  private static async getFromIndexedDB(cacheKey: string): Promise<CachedImageMetadata | null> {
-    try {
-      const db = await this.openIndexedDB();
-      
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction(['images'], 'readonly');
-        const store = transaction.objectStore('images');
-
-        const getRequest = store.get(cacheKey);
-        
-        getRequest.onsuccess = () => {
-          const result = getRequest.result;
-          db.close();
-          
-          if (result) {
-            // Create new blob URL
-            const blobUrl = URL.createObjectURL(result.blob);
-            resolve({
-              ...result.metadata,
-              uri: blobUrl,
-              localPath: blobUrl,
-            });
-          } else {
-            resolve(null);
-          }
-        };
-        
-        getRequest.onerror = () => {
-          db.close();
-          reject(getRequest.error);
-        };
-      });
-    } catch (error) {
-      // If IndexedDB fails, return null to fall back to other storage
-      console.warn('Failed to get from IndexedDB:', error);
-      return null;
-    }
+  private static resetIndexedDBState(): void {
+    this.dbPromise = null;
+    this.isIndexedDBSupported = null;
   }
 }
