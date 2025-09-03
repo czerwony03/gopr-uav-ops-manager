@@ -636,10 +636,29 @@ export class ImageCacheService {
       try {
         if (this.isIndexedDBSupported !== false && await this.checkIndexedDBSupport()) {
           const db = await this.openIndexedDB();
+          this.dbOperationCount++; // Track active operation
+          
           const transaction = db.transaction(['images'], 'readwrite');
           const store = transaction.objectStore('images');
-          store.clear();
-          db.close();
+          
+          const clearRequest = store.clear();
+          
+          await new Promise<void>((resolve, reject) => {
+            clearRequest.onsuccess = () => {
+              this.dbOperationCount--;
+              resolve();
+            };
+            
+            clearRequest.onerror = () => {
+              this.dbOperationCount--;
+              reject(clearRequest.error);
+            };
+            
+            transaction.onerror = () => {
+              this.dbOperationCount--;
+              reject(transaction.error);
+            };
+          });
         }
       } catch (error) {
         console.warn('[ImageCache] Error clearing IndexedDB during clear:', error);
@@ -759,6 +778,8 @@ export class ImageCacheService {
   // IndexedDB helper methods
   private static dbPromise: Promise<IDBDatabase> | null = null;
   private static isIndexedDBSupported: boolean | null = null;
+  private static dbInstance: IDBDatabase | null = null;
+  private static dbOperationCount = 0; // Track active operations
   
   // Blob URL tracking to prevent garbage collection
   private static activeBlobUrls: Map<string, { url: string; blob: Blob; created: number }> = new Map();
@@ -799,7 +820,12 @@ export class ImageCacheService {
    * Open IndexedDB database with proper initialization (singleton)
    */
   private static async openIndexedDB(): Promise<IDBDatabase> {
-    // Return existing promise if already opening/opened
+    // Return existing instance if available and not closed
+    if (this.dbInstance && this.dbInstance.version > 0) {
+      return this.dbInstance;
+    }
+
+    // Return existing promise if already opening
     if (this.dbPromise) {
       return this.dbPromise;
     }
@@ -809,6 +835,7 @@ export class ImageCacheService {
 
       request.onerror = () => {
         this.dbPromise = null; // Reset promise on error
+        this.dbInstance = null;
         reject(new Error(`IndexedDB error: ${request.error?.message || 'Unknown error'}`));
       };
 
@@ -836,10 +863,30 @@ export class ImageCacheService {
         if (!db.objectStoreNames.contains('images')) {
           db.close();
           this.dbPromise = null;
+          this.dbInstance = null;
           reject(new Error('Object store "images" was not created properly'));
           return;
         }
         
+        // Set up database event handlers
+        db.onclose = () => {
+          console.log('[ImageCache] IndexedDB connection closed');
+          this.dbInstance = null;
+          this.dbPromise = null;
+        };
+
+        db.onerror = (event) => {
+          console.error('[ImageCache] IndexedDB error:', event);
+        };
+
+        db.onversionchange = () => {
+          console.log('[ImageCache] IndexedDB version change detected, closing connection');
+          db.close();
+          this.dbInstance = null;
+          this.dbPromise = null;
+        };
+        
+        this.dbInstance = db;
         console.log('[ImageCache] Successfully opened IndexedDB with object store "images"');
         resolve(db);
       };
@@ -864,10 +911,19 @@ export class ImageCacheService {
     
     try {
       db = await this.openIndexedDB();
+      this.dbOperationCount++; // Track active operation
       
       return new Promise((resolve, reject) => {
         if (!db) {
+          this.dbOperationCount--;
           reject(new Error('Database connection is null'));
+          return;
+        }
+
+        // Check if database is still open
+        if (!db.objectStoreNames || db.objectStoreNames.length === 0) {
+          this.dbOperationCount--;
+          reject(new Error('Database connection is closing or closed'));
           return;
         }
 
@@ -875,6 +931,7 @@ export class ImageCacheService {
         try {
           transaction = db.transaction(['images'], 'readwrite');
         } catch (error) {
+          this.dbOperationCount--;
           reject(new Error(`Failed to create transaction: ${error}`));
           return;
         }
@@ -890,22 +947,27 @@ export class ImageCacheService {
         const putRequest = store.put(data);
         
         putRequest.onsuccess = () => {
-          if (db) db.close();
+          this.dbOperationCount--;
           resolve();
         };
         
         putRequest.onerror = () => {
-          if (db) db.close();
+          this.dbOperationCount--;
           reject(new Error(`Put request failed: ${putRequest.error?.message || 'Unknown error'}`));
         };
 
         transaction.onerror = () => {
-          if (db) db.close();
+          this.dbOperationCount--;
           reject(new Error(`Transaction failed: ${transaction.error?.message || 'Unknown error'}`));
+        };
+
+        transaction.onabort = () => {
+          this.dbOperationCount--;
+          reject(new Error('Transaction was aborted'));
         };
       });
     } catch (error) {
-      if (db) db.close();
+      this.dbOperationCount--;
       throw new Error(`Failed to save to IndexedDB: ${error}`);
     }
   }
@@ -918,10 +980,19 @@ export class ImageCacheService {
     
     try {
       db = await this.openIndexedDB();
+      this.dbOperationCount++; // Track active operation
       
       return new Promise((resolve, reject) => {
         if (!db) {
+          this.dbOperationCount--;
           reject(new Error('Database connection is null'));
+          return;
+        }
+
+        // Check if database is still open
+        if (!db.objectStoreNames || db.objectStoreNames.length === 0) {
+          this.dbOperationCount--;
+          reject(new Error('Database connection is closing or closed'));
           return;
         }
 
@@ -929,6 +1000,7 @@ export class ImageCacheService {
         try {
           transaction = db.transaction(['images'], 'readonly');
         } catch (error) {
+          this.dbOperationCount--;
           reject(new Error(`Failed to create transaction: ${error}`));
           return;
         }
@@ -937,7 +1009,7 @@ export class ImageCacheService {
         const getRequest = store.get(cacheKey);
         
         getRequest.onsuccess = () => {
-          if (db) db.close();
+          this.dbOperationCount--;
           const result = getRequest.result;
           if (result && result.metadata && result.blob) {
             try {
@@ -967,17 +1039,22 @@ export class ImageCacheService {
         };
         
         getRequest.onerror = () => {
-          if (db) db.close();
+          this.dbOperationCount--;
           reject(new Error(`Get request failed: ${getRequest.error?.message || 'Unknown error'}`));
         };
 
         transaction.onerror = () => {
-          if (db) db.close();
+          this.dbOperationCount--;
           reject(new Error(`Transaction failed: ${transaction.error?.message || 'Unknown error'}`));
+        };
+
+        transaction.onabort = () => {
+          this.dbOperationCount--;
+          reject(new Error('Transaction was aborted'));
         };
       });
     } catch (error) {
-      if (db) db.close();
+      this.dbOperationCount--;
       throw new Error(`Failed to get from IndexedDB: ${error}`);
     }
   }
@@ -988,22 +1065,58 @@ export class ImageCacheService {
   private static resetIndexedDBState(): void {
     console.log('[ImageCache] Resetting IndexedDB state for error recovery');
     
-    // Close any existing database connections
-    if (this.dbPromise) {
-      this.dbPromise.then(db => {
-        if (db && typeof db.close === 'function') {
-          try {
-            db.close();
-          } catch (error) {
-            // Ignore errors during cleanup
-          }
-        }
-      }).catch(() => {
+    // Close database if no active operations
+    if (this.dbInstance && this.dbOperationCount === 0) {
+      try {
+        this.dbInstance.close();
+      } catch (error) {
         // Ignore errors during cleanup
-      });
+      }
     }
     
     this.dbPromise = null;
+    this.dbInstance = null;
     this.isIndexedDBSupported = false; // Mark as unsupported until next check
+  }
+
+  /**
+   * Close database connection safely when no operations are active
+   */
+  private static closeDatabase(): void {
+    if (this.dbInstance && this.dbOperationCount === 0) {
+      try {
+        this.dbInstance.close();
+        console.log('[ImageCache] Closed IndexedDB connection');
+      } catch (error) {
+        console.warn('[ImageCache] Error closing database:', error);
+      }
+      this.dbInstance = null;
+      this.dbPromise = null;
+    }
+  }
+
+  /**
+   * Cleanup method to be called on app shutdown or when appropriate
+   */
+  static async cleanup(): Promise<void> {
+    // Wait for active operations to complete
+    let attempts = 0;
+    while (this.dbOperationCount > 0 && attempts < 50) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
+    // Close the database
+    this.closeDatabase();
+    
+    // Clean up blob URLs
+    for (const [key, entry] of this.activeBlobUrls.entries()) {
+      try {
+        URL.revokeObjectURL(entry.url);
+      } catch (error) {
+        console.warn('[ImageCache] Error revoking blob URL during cleanup:', error);
+      }
+    }
+    this.activeBlobUrls.clear();
   }
 }
