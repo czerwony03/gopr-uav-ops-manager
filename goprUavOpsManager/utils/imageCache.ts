@@ -349,7 +349,7 @@ export class ImageCacheService {
         };
       }
 
-      // Try IndexedDB first if supported
+      // Try IndexedDB first if not explicitly disabled
       if (this.isIndexedDBSupported !== false && await this.checkIndexedDBSupport()) {
         try {
           const result = await this.getFromIndexedDB(cacheKey);
@@ -357,9 +357,8 @@ export class ImageCacheService {
             return result;
           }
         } catch (error) {
-          console.warn('Failed to get from IndexedDB, falling back to localStorage:', error);
-          this.isIndexedDBSupported = false; // Mark as unsupported
-          this.dbPromise = null; // Reset promise
+          console.warn('Failed to get from IndexedDB, trying localStorage:', error);
+          // Don't permanently disable IndexedDB - just log the error and continue to localStorage
         }
       }
       
@@ -399,15 +398,15 @@ export class ImageCacheService {
     blob: Blob
   ): Promise<void> {
     try {
-      // Try IndexedDB first if supported
+      // Try IndexedDB first if not explicitly disabled
       if (this.isIndexedDBSupported !== false && await this.checkIndexedDBSupport()) {
         try {
           await this.saveToIndexedDB(cacheKey, metadata, blob);
           console.log(`[ImageCache] Saved to IndexedDB: ${cacheKey}`);
           return;
         } catch (error) {
-          console.warn('Failed to save to IndexedDB, falling back to localStorage:', error);
-          this.resetIndexedDBState(); // Reset state on failure
+          console.warn('Failed to save to IndexedDB, trying localStorage:', error);
+          // Don't permanently disable IndexedDB - just log the error and continue to localStorage
         }
       }
       
@@ -785,6 +784,7 @@ export class ImageCacheService {
    * Check if IndexedDB is supported and working
    */
   private static async checkIndexedDBSupport(): Promise<boolean> {
+    // Only check once per session unless explicitly reset
     if (this.isIndexedDBSupported !== null) {
       return this.isIndexedDBSupported;
     }
@@ -795,19 +795,58 @@ export class ImageCacheService {
         return false;
       }
 
-      // Test if IndexedDB actually works
+      // Test if IndexedDB actually works by opening a simple test database
       const testDB = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open('test', 1);
+        const request = indexedDB.open('test-db-support', 1);
+        
         request.onerror = () => reject(request.error);
+        request.onblocked = () => reject(new Error('Database blocked'));
+        
+        request.onupgradeneeded = () => {
+          // Create a simple object store for testing
+          const db = request.result;
+          if (!db.objectStoreNames.contains('test')) {
+            db.createObjectStore('test');
+          }
+        };
+        
         request.onsuccess = () => resolve(request.result);
       });
       
+      // Test basic operations
+      await new Promise<void>((resolve, reject) => {
+        const transaction = testDB.transaction(['test'], 'readwrite');
+        const store = transaction.objectStore('test');
+        
+        // Test put operation
+        const putRequest = store.put({ id: 'test' }, 'test-key');
+        
+        putRequest.onsuccess = () => {
+          // Test get operation
+          const getRequest = store.get('test-key');
+          getRequest.onsuccess = () => resolve();
+          getRequest.onerror = () => reject(getRequest.error);
+        };
+        
+        putRequest.onerror = () => reject(putRequest.error);
+        transaction.onerror = () => reject(transaction.error);
+        transaction.onabort = () => reject(new Error('Transaction aborted'));
+      });
+      
       testDB.close();
-      indexedDB.deleteDatabase('test');
+      
+      // Clean up test database
+      try {
+        indexedDB.deleteDatabase('test-db-support');
+      } catch (error) {
+        // Ignore cleanup errors
+      }
       
       this.isIndexedDBSupported = true;
+      console.log('[ImageCache] IndexedDB support confirmed');
       return true;
     } catch (error) {
+      console.warn('[ImageCache] IndexedDB not supported or not working:', error);
       this.isIndexedDBSupported = false;
       return false;
     }
@@ -869,7 +908,7 @@ export class ImageCacheService {
   }
 
   /**
-   * Save to IndexedDB - Simplified without complex retry logic
+   * Save to IndexedDB - Enhanced error handling without permanent disabling
    */
   private static async saveToIndexedDB(
     cacheKey: string,
@@ -880,76 +919,84 @@ export class ImageCacheService {
       const db = await this.openIndexedDB();
       
       return new Promise((resolve, reject) => {
-        const transaction = db.transaction(['images'], 'readwrite');
-        const store = transaction.objectStore('images');
+        try {
+          const transaction = db.transaction(['images'], 'readwrite');
+          const store = transaction.objectStore('images');
 
-        const data = {
-          key: cacheKey,
-          metadata,
-          blob,
-        };
+          const data = {
+            key: cacheKey,
+            metadata,
+            blob,
+          };
 
-        const putRequest = store.put(data);
-        
-        putRequest.onsuccess = () => resolve();
-        putRequest.onerror = () => reject(new Error(`Put request failed: ${putRequest.error?.message || 'Unknown error'}`));
-        transaction.onerror = () => reject(new Error(`Transaction failed: ${transaction.error?.message || 'Unknown error'}`));
-        transaction.onabort = () => reject(new Error('Transaction was aborted'));
+          const putRequest = store.put(data);
+          
+          putRequest.onsuccess = () => resolve();
+          putRequest.onerror = () => reject(new Error(`Put request failed: ${putRequest.error?.message || 'Unknown error'}`));
+          transaction.onerror = () => reject(new Error(`Transaction failed: ${transaction.error?.message || 'Unknown error'}`));
+          transaction.onabort = () => reject(new Error('Transaction was aborted'));
+        } catch (transactionError) {
+          reject(new Error(`Failed to create transaction: ${transactionError instanceof Error ? transactionError.message : 'Unknown error'}`));
+        }
       });
     } catch (error) {
-      // Reset promise on error to allow retry
+      // Reset promise on error to allow retry, but don't permanently disable IndexedDB
       this.dbPromise = null;
       throw error;
     }
   }
 
   /**
-   * Get from IndexedDB - Simplified without complex retry logic
+   * Get from IndexedDB - Enhanced error handling without permanent disabling
    */
   private static async getFromIndexedDB(cacheKey: string): Promise<CachedImageMetadata | null> {
     try {
       const db = await this.openIndexedDB();
       
       return new Promise((resolve, reject) => {
-        const transaction = db.transaction(['images'], 'readonly');
-        const store = transaction.objectStore('images');
-        const getRequest = store.get(cacheKey);
-        
-        getRequest.onsuccess = () => {
-          const result = getRequest.result;
-          if (result && result.metadata && result.blob) {
-            try {
-              // Create a fresh blob URL from the stored blob
-              const blobUrl = URL.createObjectURL(result.blob);
-              const metadata = { 
-                ...result.metadata, 
-                uri: blobUrl, 
-                localPath: blobUrl 
-              };
-              
-              // Store a reference to prevent garbage collection
-              this.activeBlobUrls.set(cacheKey, {
-                url: blobUrl,
-                blob: result.blob,
-                created: Date.now()
-              });
-              
-              resolve(metadata);
-            } catch (blobError) {
-              console.error('[ImageCache] Error creating blob URL:', blobError);
+        try {
+          const transaction = db.transaction(['images'], 'readonly');
+          const store = transaction.objectStore('images');
+          const getRequest = store.get(cacheKey);
+          
+          getRequest.onsuccess = () => {
+            const result = getRequest.result;
+            if (result && result.metadata && result.blob) {
+              try {
+                // Create a fresh blob URL from the stored blob
+                const blobUrl = URL.createObjectURL(result.blob);
+                const metadata = { 
+                  ...result.metadata, 
+                  uri: blobUrl, 
+                  localPath: blobUrl 
+                };
+                
+                // Store a reference to prevent garbage collection
+                this.activeBlobUrls.set(cacheKey, {
+                  url: blobUrl,
+                  blob: result.blob,
+                  created: Date.now()
+                });
+                
+                resolve(metadata);
+              } catch (blobError) {
+                console.error('[ImageCache] Error creating blob URL:', blobError);
+                resolve(null);
+              }
+            } else {
               resolve(null);
             }
-          } else {
-            resolve(null);
-          }
-        };
-        
-        getRequest.onerror = () => reject(new Error(`Get request failed: ${getRequest.error?.message || 'Unknown error'}`));
-        transaction.onerror = () => reject(new Error(`Transaction failed: ${transaction.error?.message || 'Unknown error'}`));
-        transaction.onabort = () => reject(new Error('Transaction was aborted'));
+          };
+          
+          getRequest.onerror = () => reject(new Error(`Get request failed: ${getRequest.error?.message || 'Unknown error'}`));
+          transaction.onerror = () => reject(new Error(`Transaction failed: ${transaction.error?.message || 'Unknown error'}`));
+          transaction.onabort = () => reject(new Error('Transaction was aborted'));
+        } catch (transactionError) {
+          reject(new Error(`Failed to create transaction: ${transactionError instanceof Error ? transactionError.message : 'Unknown error'}`));
+        }
       });
     } catch (error) {
-      // Reset promise on error to allow retry
+      // Reset promise on error to allow retry, but don't permanently disable IndexedDB
       this.dbPromise = null;
       console.error('[ImageCache] Error getting from IndexedDB:', error);
       return null; // Return null instead of throwing for get operations
@@ -957,12 +1004,12 @@ export class ImageCacheService {
   }
 
   /**
-   * Reset IndexedDB state (for error recovery) - Simplified
+   * Reset IndexedDB state (for error recovery) - Allows retry of IndexedDB support detection
    */
   private static resetIndexedDBState(): void {
     console.log('[ImageCache] Resetting IndexedDB state for error recovery');
     this.dbPromise = null;
-    this.isIndexedDBSupported = false; // Mark as unsupported until next check
+    this.isIndexedDBSupported = null; // Reset to null to allow re-detection
   }
 
   /**
