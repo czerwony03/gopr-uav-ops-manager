@@ -296,26 +296,26 @@ export default function ProcedureDetailsScreen() {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>{checklist.title}</Text>
-          {checklist.description && (
+          {checklist.description ? (
             <Text style={styles.description}>{checklist.description}</Text>
-          )}
+          ) : null}
           
           <View style={styles.metadata}>
             <Text style={styles.metadataText}>
               {checklist.items.length} {checklist.items.length === 1 ? t('procedures.items') : t('procedures.itemsPlural')}
             </Text>
-            {checklist.createdAt && (
+            {checklist.createdAt ? (
               <Text style={styles.metadataText}>
                 {t('procedures.created')} {checklist.createdAt.toLocaleDateString()} {checklist.createdAt.toLocaleTimeString()}
                 {createdByEmail && ` ${t('procedures.by')} ${createdByEmail}`}
               </Text>
-            )}
-            {checklist.updatedAt && (
+            ) : null}
+            {checklist.updatedAt ? (
               <Text style={styles.metadataText}>
                 {t('procedures.updated')} {checklist.updatedAt.toLocaleDateString()} {checklist.updatedAt.toLocaleTimeString()}
                 {updatedByEmail && ` ${t('procedures.by')} ${updatedByEmail}`}
               </Text>
-            )}
+            ) : null}
           </View>
         </View>
 
