@@ -28,10 +28,23 @@ export class OfflineProcedureChecklistService {
   /**
    * Pre-download and cache all procedures with their images
    * Should be called after successful user login
+   * Only downloads if cache is stale or doesn't exist for the user role
    */
   static async preDownloadProcedures(userRole: UserRole): Promise<void> {
     try {
-      console.log('[OfflineProcedureService] Starting pre-download of procedures for role:', userRole);
+      console.log('[OfflineProcedureService] Starting pre-download check for role:', userRole);
+      
+      // Check if we already have fresh cached data for this user role
+      const metadata = await this.getCacheMetadata();
+      if (metadata && 
+          metadata.userRole === userRole && 
+          metadata.version === this.CACHE_VERSION && 
+          await this.isCacheFresh()) {
+        console.log('[OfflineProcedureService] Cache is fresh, skipping pre-download');
+        return;
+      }
+      
+      console.log('[OfflineProcedureService] Cache is stale or missing, starting pre-download');
       
       // Initialize image cache if not already done
       await ImageCacheService.initialize();
@@ -50,6 +63,69 @@ export class OfflineProcedureChecklistService {
     } catch (error) {
       console.error('[OfflineProcedureService] Error during pre-download:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Force refresh of cached procedures regardless of cache freshness
+   * Useful when user explicitly wants to update procedures
+   */
+  static async forceRefreshProcedures(userRole: UserRole): Promise<void> {
+    try {
+      console.log('[OfflineProcedureService] Force refreshing procedures for role:', userRole);
+      
+      // Initialize image cache if not already done
+      await ImageCacheService.initialize();
+      
+      // Fetch all procedures from Firestore
+      const procedures = await ProcedureChecklistService.getProcedureChecklists(userRole);
+      console.log(`[OfflineProcedureService] Fetched ${procedures.length} procedures`);
+      
+      // Cache procedures data
+      await this.cacheProcedures(procedures, userRole);
+      
+      // Pre-download all images
+      await this.preDownloadProcedureImages(procedures);
+      
+      console.log('[OfflineProcedureService] Force refresh completed successfully');
+    } catch (error) {
+      console.error('[OfflineProcedureService] Error during force refresh:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if procedures need to be updated
+   * Returns true if cache is stale or doesn't exist for the user role
+   */
+  static async needsUpdate(userRole: UserRole): Promise<boolean> {
+    try {
+      const metadata = await this.getCacheMetadata();
+      
+      // No cache exists
+      if (!metadata) {
+        return true;
+      }
+      
+      // Different user role
+      if (metadata.userRole !== userRole) {
+        return true;
+      }
+      
+      // Wrong cache version
+      if (metadata.version !== this.CACHE_VERSION) {
+        return true;
+      }
+      
+      // Cache is stale
+      if (!(await this.isCacheFresh())) {
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('[OfflineProcedureService] Error checking if update needed:', error);
+      return true; // Assume update needed if we can't check
     }
   }
 
