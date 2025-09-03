@@ -10,7 +10,8 @@ import { useTranslation } from 'react-i18next';
 import * as Sentry from '@sentry/react-native';
 import { captureConsoleIntegration } from '@sentry/core';
 import { CrossPlatformAlertProvider } from '@/components/CrossPlatformAlert';
-import '../src/i18n';
+import { useEffect } from 'react';
+import '@/src/i18n';
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_URL,
@@ -174,6 +175,35 @@ function RootLayoutNavigation() {
 }
 
 export default Sentry.wrap(function RootLayout() {
+  const { i18n } = useTranslation();
+
+  // Effect to set and update HTML lang attribute for React Native Web
+  useEffect(() => {
+    // Only run on web platforms where document exists
+    if (typeof document !== 'undefined' && document.documentElement) {
+      // Set initial language
+      const setHtmlLang = () => {
+        const currentLanguage = i18n.language || 'pl';
+        document.documentElement.lang = currentLanguage;
+      };
+
+      // Set initial value
+      setHtmlLang();
+
+      // Listen for language changes using i18next events
+      const handleLanguageChange = () => {
+        setHtmlLang();
+      };
+
+      i18n.on('languageChanged', handleLanguageChange);
+
+      // Cleanup event listener
+      return () => {
+        i18n.off('languageChanged', handleLanguageChange);
+      };
+    }
+  }, [i18n]);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ConsoleProvider>
