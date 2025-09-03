@@ -16,6 +16,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { ProcedureChecklistFormData, ChecklistItemFormData } from '@/types/ProcedureChecklist';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { ImageProcessingService } from '@/utils/imageProcessing';
+import { ImageCacheService } from '@/utils/imageCache';
 
 interface ProcedureFormProps {
   mode: 'create' | 'edit';
@@ -28,6 +29,7 @@ interface ProcedureFormProps {
 export default function ProcedureForm({ mode, initialData, onSave, onCancel, loading = false }: ProcedureFormProps) {
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
+  const [cachedImageUris, setCachedImageUris] = useState<Map<string, string>>(new Map());
 
   // Default form data
   const defaultFormData: ProcedureChecklistFormData = {
@@ -41,10 +43,41 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
+      // Load cached images for existing data
+      loadCachedImages(initialData);
     } else if (mode === 'create') {
       setFormData(defaultFormData);
     }
   }, [initialData, mode]);
+
+  // Load cached images for form data
+  const loadCachedImages = async (data: ProcedureChecklistFormData) => {
+    try {
+      await ImageCacheService.initialize();
+      
+      const newCachedUris = new Map<string, string>();
+      
+      // Load cached images for all items that have images
+      await Promise.all(
+        data.items.map(async (item) => {
+          if (item.image) {
+            try {
+              const cachedUri = await ImageCacheService.getCachedImage(item.image);
+              newCachedUris.set(item.image, cachedUri);
+            } catch (error) {
+              console.error(`Error loading cached image for item ${item.id}:`, error);
+              // Fallback to original URI
+              newCachedUris.set(item.image, item.image);
+            }
+          }
+        })
+      );
+      
+      setCachedImageUris(newCachedUris);
+    } catch (error) {
+      console.error('Error loading cached images:', error);
+    }
+  };
 
   const updateFormData = (field: keyof ProcedureChecklistFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -147,10 +180,30 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
             );
             
             updateItemFormData(itemIndex, 'image', processedImage.uri);
+            
+            // Cache the new image
+            try {
+              await ImageCacheService.initialize();
+              const cachedUri = await ImageCacheService.getCachedImage(processedImage.uri);
+              setCachedImageUris(prev => new Map(prev).set(processedImage.uri, cachedUri));
+            } catch (cacheError) {
+              console.error('Error caching new image:', cacheError);
+              // Continue without caching
+            }
           } catch (error) {
             console.error('Error processing image:', error);
             // Fallback to original image
             updateItemFormData(itemIndex, 'image', result.assets[0].uri);
+            
+            // Try to cache the original image
+            try {
+              await ImageCacheService.initialize();
+              const cachedUri = await ImageCacheService.getCachedImage(result.assets[0].uri);
+              setCachedImageUris(prev => new Map(prev).set(result.assets[0].uri, cachedUri));
+            } catch (cacheError) {
+              console.error('Error caching original image:', cacheError);
+              // Continue without caching
+            }
           }
         }
       }
@@ -293,7 +346,10 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
                 <Text style={styles.label}>{t('procedureForm.image')}</Text>
                 {item.image ? (
                   <View style={styles.imageContainer}>
-                    <Image source={{ uri: item.image }} style={styles.previewImage} />
+                    <Image 
+                      source={{ uri: cachedImageUris.get(item.image) || item.image }} 
+                      style={styles.previewImage} 
+                    />
                     <TouchableOpacity
                       style={styles.changeImageButton}
                       onPress={() => pickImage(item.id)}

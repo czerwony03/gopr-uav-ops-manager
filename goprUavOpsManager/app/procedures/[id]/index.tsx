@@ -22,6 +22,7 @@ import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { UserService } from '@/services/userService';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
+import { ImageCacheService } from '@/utils/imageCache';
 
 export default function ProcedureDetailsScreen() {
   const [checklist, setChecklist] = useState<ProcedureChecklist | null>(null);
@@ -31,6 +32,7 @@ export default function ProcedureDetailsScreen() {
   const [createdByEmail, setCreatedByEmail] = useState<string>('');
   const [updatedByEmail, setUpdatedByEmail] = useState<string>('');
   const [isFromCache, setIsFromCache] = useState(false);
+  const [cachedImageUris, setCachedImageUris] = useState<Map<string, string>>(new Map());
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const { isConnected } = useNetworkStatus();
@@ -48,6 +50,9 @@ export default function ProcedureDetailsScreen() {
       if (procedure) {
         setChecklist(procedure);
         setIsFromCache(fromCache);
+        
+        // Load cached images for all procedure items
+        await loadCachedImages(procedure);
         
         // Fetch user emails for audit trail (only if online and not from cache)
         if (!fromCache && isConnected) {
@@ -68,6 +73,9 @@ export default function ProcedureDetailsScreen() {
             if (freshProcedure) {
               setChecklist(freshProcedure);
               setIsFromCache(false);
+              
+              // Update cached images for fresh data
+              await loadCachedImages(freshProcedure);
               
               // Update user emails for fresh data
               if (freshProcedure.createdBy) {
@@ -102,6 +110,35 @@ export default function ProcedureDetailsScreen() {
       setLoading(false);
     }
   }, [user, id, isConnected, router, t, crossPlatformAlert]);
+
+  // Load cached images for procedure items
+  const loadCachedImages = useCallback(async (procedure: ProcedureChecklist) => {
+    try {
+      await ImageCacheService.initialize();
+      
+      const newCachedUris = new Map<string, string>();
+      
+      // Load cached images for all items that have images
+      await Promise.all(
+        procedure.items.map(async (item) => {
+          if (item.image) {
+            try {
+              const cachedUri = await ImageCacheService.getCachedImage(item.image);
+              newCachedUris.set(item.image, cachedUri);
+            } catch (error) {
+              console.error(`Error loading cached image for item ${item.id}:`, error);
+              // Fallback to original URI
+              newCachedUris.set(item.image, item.image);
+            }
+          }
+        })
+      );
+      
+      setCachedImageUris(newCachedUris);
+    } catch (error) {
+      console.error('Error loading cached images:', error);
+    }
+  }, []);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {
@@ -232,7 +269,10 @@ export default function ProcedureDetailsScreen() {
           onPress={() => handleImagePress(item.image!)}
           activeOpacity={0.9}
         >
-          <Image source={{ uri: item.image }} style={styles.itemImage} />
+          <Image 
+            source={{ uri: cachedImageUris.get(item.image) || item.image }} 
+            style={styles.itemImage} 
+          />
         </TouchableOpacity>
       )}
 

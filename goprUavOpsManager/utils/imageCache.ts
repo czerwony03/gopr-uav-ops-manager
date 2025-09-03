@@ -837,6 +837,65 @@ export class ImageCacheService {
   }
 
   /**
+   * Get from IndexedDB
+   */
+  private static async getFromIndexedDB(cacheKey: string): Promise<CachedImageMetadata | null> {
+    let db: IDBDatabase | null = null;
+    
+    try {
+      db = await this.openIndexedDB();
+      
+      return new Promise((resolve, reject) => {
+        if (!db) {
+          reject(new Error('Database connection is null'));
+          return;
+        }
+
+        let transaction: IDBTransaction;
+        try {
+          transaction = db.transaction(['images'], 'readonly');
+        } catch (error) {
+          reject(new Error(`Failed to create transaction: ${error}`));
+          return;
+        }
+
+        const store = transaction.objectStore('images');
+        const getRequest = store.get(cacheKey);
+        
+        getRequest.onsuccess = () => {
+          if (db) db.close();
+          const result = getRequest.result;
+          if (result && result.metadata) {
+            // Create a blob URL from the stored blob
+            if (result.blob) {
+              const blobUrl = URL.createObjectURL(result.blob);
+              const metadata = { ...result.metadata, uri: blobUrl, localPath: blobUrl };
+              resolve(metadata);
+            } else {
+              resolve(result.metadata);
+            }
+          } else {
+            resolve(null);
+          }
+        };
+        
+        getRequest.onerror = () => {
+          if (db) db.close();
+          reject(new Error(`Get request failed: ${getRequest.error?.message || 'Unknown error'}`));
+        };
+
+        transaction.onerror = () => {
+          if (db) db.close();
+          reject(new Error(`Transaction failed: ${transaction.error?.message || 'Unknown error'}`));
+        };
+      });
+    } catch (error) {
+      if (db) db.close();
+      throw new Error(`Failed to get from IndexedDB: ${error}`);
+    }
+  }
+
+  /**
    * Reset IndexedDB state (for error recovery)
    */
   private static resetIndexedDBState(): void {
