@@ -171,8 +171,13 @@ export class ImageCacheService {
   private static async initializeWebCache(): Promise<void> {
     // Check if IndexedDB is available
     if (typeof window !== 'undefined' && window.indexedDB) {
-      // IndexedDB is available, initialization happens on first use
-      return;
+      try {
+        // Initialize IndexedDB database
+        await this.openIndexedDB();
+        return;
+      } catch (error) {
+        console.warn('Failed to initialize IndexedDB, falling back to localStorage:', error);
+      }
     }
     
     // Fallback to localStorage (limited storage)
@@ -668,16 +673,12 @@ export class ImageCacheService {
     }
   }
 
-  // IndexedDB helper methods (simplified implementation)
+  // IndexedDB helper methods
 
   /**
-   * Save to IndexedDB
+   * Open IndexedDB database with proper initialization
    */
-  private static async saveToIndexedDB(
-    cacheKey: string,
-    metadata: CachedImageMetadata,
-    blob: Blob
-  ): Promise<void> {
+  private static async openIndexedDB(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open('ImageCache', 1);
 
@@ -691,7 +692,23 @@ export class ImageCacheService {
       };
 
       request.onsuccess = () => {
-        const db = request.result;
+        resolve(request.result);
+      };
+    });
+  }
+
+  /**
+   * Save to IndexedDB
+   */
+  private static async saveToIndexedDB(
+    cacheKey: string,
+    metadata: CachedImageMetadata,
+    blob: Blob
+  ): Promise<void> {
+    try {
+      const db = await this.openIndexedDB();
+      
+      return new Promise((resolve, reject) => {
         const transaction = db.transaction(['images'], 'readwrite');
         const store = transaction.objectStore('images');
 
@@ -702,23 +719,28 @@ export class ImageCacheService {
         };
 
         const putRequest = store.put(data);
-        putRequest.onsuccess = () => resolve();
-        putRequest.onerror = () => reject(putRequest.error);
-      };
-    });
+        putRequest.onsuccess = () => {
+          db.close();
+          resolve();
+        };
+        putRequest.onerror = () => {
+          db.close();
+          reject(putRequest.error);
+        };
+      });
+    } catch (error) {
+      throw new Error(`Failed to save to IndexedDB: ${error}`);
+    }
   }
 
   /**
    * Get from IndexedDB
    */
   private static async getFromIndexedDB(cacheKey: string): Promise<CachedImageMetadata | null> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open('ImageCache', 1);
-
-      request.onerror = () => reject(request.error);
-
-      request.onsuccess = () => {
-        const db = request.result;
+    try {
+      const db = await this.openIndexedDB();
+      
+      return new Promise((resolve, reject) => {
         const transaction = db.transaction(['images'], 'readonly');
         const store = transaction.objectStore('images');
 
@@ -726,6 +748,8 @@ export class ImageCacheService {
         
         getRequest.onsuccess = () => {
           const result = getRequest.result;
+          db.close();
+          
           if (result) {
             // Create new blob URL
             const blobUrl = URL.createObjectURL(result.blob);
@@ -739,8 +763,15 @@ export class ImageCacheService {
           }
         };
         
-        getRequest.onerror = () => reject(getRequest.error);
-      };
-    });
+        getRequest.onerror = () => {
+          db.close();
+          reject(getRequest.error);
+        };
+      });
+    } catch (error) {
+      // If IndexedDB fails, return null to fall back to other storage
+      console.warn('Failed to get from IndexedDB:', error);
+      return null;
+    }
   }
 }
