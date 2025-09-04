@@ -73,6 +73,12 @@ export class ImageCacheService {
         return imageUrl;
       }
 
+      // Prevent data URIs from being processed (they're already local and don't need caching)
+      if (imageUrl.startsWith('data:')) {
+        console.log('[ImageCache] Data URI detected, returning as-is (no caching needed):', imageUrl.substring(0, 50) + '...');
+        return imageUrl;
+      }
+
       // Check if image is already cached
       const cachedImage = await this.getCachedImageMetadata(imageUrl);
       
@@ -101,6 +107,12 @@ export class ImageCacheService {
       // Skip blob URLs - they can't be downloaded and shouldn't be in procedure data
       if (imageUrl.startsWith('blob:')) {
         console.warn('[ImageCache] Skipping preload of blob URL (this indicates a data integrity issue):', imageUrl);
+        return;
+      }
+
+      // Skip data URIs - they're already local and don't need preloading
+      if (imageUrl.startsWith('data:')) {
+        console.log('[ImageCache] Skipping preload of data URI (already local):', imageUrl.substring(0, 50) + '...');
         return;
       }
 

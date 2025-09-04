@@ -201,15 +201,7 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
               return updated;
             });
             
-            // Cache the new image for display
-            try {
-              await ImageCacheService.initialize();
-              const cachedUri = await ImageCacheService.getCachedImage(processedImage.uri);
-              setCachedImageUris(prev => new Map(prev).set(processedImage.uri, cachedUri));
-            } catch (cacheError) {
-              console.error('Error caching new image:', cacheError);
-              // Continue without caching
-            }
+            // No need to cache data URIs - they're already local and will be displayed directly
           } catch (error) {
             console.error('Error processing image:', error);
             // Fallback to original image
@@ -220,15 +212,7 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
               return updated;
             });
             
-            // Try to cache the original image
-            try {
-              await ImageCacheService.initialize();
-              const cachedUri = await ImageCacheService.getCachedImage(result.assets[0].uri);
-              setCachedImageUris(prev => new Map(prev).set(result.assets[0].uri, cachedUri));
-            } catch (cacheError) {
-              console.error('Error caching original image:', cacheError);
-              // Continue without caching
-            }
+            // No need to cache local file URIs - they're already local and will be displayed directly
           }
         }
       }
