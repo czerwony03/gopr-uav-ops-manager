@@ -267,9 +267,13 @@ export class ProcedureChecklistService {
           console.error('Error uploading image for item:', item.id, error);
           // Continue without image if upload fails
         }
-      } else if (item.image && item.image.trim()) {
-        // Existing image URL - only include if it has a value
+      } else if (item.image && item.image.trim() && !item.image.startsWith('blob:')) {
+        // Existing image URL - only include if it has a value and is not a blob URL
         processedItem.image = item.image;
+      } else if (item.image && item.image.startsWith('blob:')) {
+        // Log warning if blob URL detected (this indicates a bug in the UI layer)
+        console.warn('Blob URL detected in procedure form data, skipping:', item.image);
+        // Don't include blob URLs in the saved data
       }
 
       processedItems.push(processedItem);

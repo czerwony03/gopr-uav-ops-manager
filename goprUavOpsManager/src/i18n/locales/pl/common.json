@@ -631,5 +631,9 @@
     "appTitle": "GOPR UAV Ops Manager",
     "editProfile": "Edytuj profil",
     "signOut": "Wyloguj się"
+  },
+  "offline": {
+    "noConnection": "Brak połączenia z internetem - wyświetlanie danych z pamięci podręcznej",
+    "viewingCachedData": "Wyświetlanie danych z pamięci podręcznej"
   }
 }

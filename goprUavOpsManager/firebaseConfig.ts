@@ -9,7 +9,7 @@ if (Platform.OS === 'web') {
   // Web platform: Use Firebase JS SDK
   const { initializeApp } = require('firebase/app');
   const { getAuth, setPersistence, browserLocalPersistence } = require('firebase/auth');
-  const { getFirestore } = require('firebase/firestore');
+  const { getFirestore, enableIndexedDbPersistence } = require('firebase/firestore');
   const { getStorage } = require('firebase/storage');
 
   // Firebase configuration
@@ -29,12 +29,37 @@ if (Platform.OS === 'web') {
   firestore = getFirestore(app);
   storage = getStorage(app);
 
-  // Configure persistence for web
+  // Configure auth persistence for web
   setPersistence(auth, browserLocalPersistence).catch((error: any) => {
     console.error('[FirebaseConfig] Failed to set auth persistence:', error);
   });
 
-  console.log('[FirebaseConfig] Web Firebase initialized with local persistence');
+  // Enable Firestore offline persistence for web with timeout
+  const enablePersistence = async () => {
+    try {
+      await Promise.race([
+        enableIndexedDbPersistence(firestore),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Persistence setup timeout')), 5000)
+        )
+      ]);
+      console.log('[FirebaseConfig] Web Firebase initialized with local persistence and offline support');
+    } catch (error: any) {
+      if (error.code === 'failed-precondition') {
+        console.warn('[FirebaseConfig] Firestore persistence failed: Multiple tabs open, persistence enabled only in first tab');
+      } else if (error.code === 'unimplemented') {
+        console.warn('[FirebaseConfig] Firestore persistence not available in this browser');
+      } else if (error.message === 'Persistence setup timeout') {
+        console.warn('[FirebaseConfig] Firestore persistence setup timed out, continuing without offline persistence');
+      } else {
+        console.error('[FirebaseConfig] Failed to enable Firestore persistence:', error);
+      }
+      console.log('[FirebaseConfig] Web Firebase initialized without offline persistence');
+    }
+  };
+
+  // Enable persistence in background to not block app startup
+  enablePersistence();
 } else {
   // React Native (Android/iOS): Use React Native Firebase SDK for proper native persistence
   const rnFirebaseApp = require('@react-native-firebase/app').default;
@@ -50,7 +75,18 @@ if (Platform.OS === 'web') {
   firestore = rnFirebaseFirestore();
   storage = rnFirebaseStorage();
 
-  console.log('[FirebaseConfig] React Native Firebase initialized with native persistence');
+  // Enable Firestore offline persistence for React Native
+  // This is enabled by default in React Native Firebase, but we can configure it
+  try {
+    firestore.settings({
+      persistence: true,
+      cacheSizeBytes: 100 * 1024 * 1024, // 100MB cache
+    });
+    console.log('[FirebaseConfig] React Native Firebase initialized with native persistence and offline support');
+  } catch (error) {
+    console.warn('[FirebaseConfig] Firestore settings already configured:', error);
+    console.log('[FirebaseConfig] React Native Firebase initialized with native persistence');
+  }
 }
 
 // Alias for compatibility with existing code

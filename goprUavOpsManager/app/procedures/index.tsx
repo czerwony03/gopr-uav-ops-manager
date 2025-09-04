@@ -15,13 +15,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { ProcedureChecklist } from '@/types/ProcedureChecklist';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
+import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
+import { useNetworkStatus } from '@/utils/useNetworkStatus';
+import OfflineInfoBar from '@/components/OfflineInfoBar';
 
 export default function ProceduresListScreen() {
   const [checklists, setChecklists] = useState<ProcedureChecklist[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isFromCache, setIsFromCache] = useState(false);
   const { user } = useAuth();
+  const { isConnected } = useNetworkStatus();
   const router = useRouter();
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
@@ -30,8 +35,27 @@ export default function ProceduresListScreen() {
     if (!user) return;
     
     try {
-      const checklistsList = await ProcedureChecklistService.getProcedureChecklists(user.role);
-      setChecklists(checklistsList);
+      // Try to get procedures from offline service first
+      const { procedures, isFromCache: fromCache } = await OfflineProcedureChecklistService.getProcedureChecklists(user.role);
+      setChecklists(procedures);
+      setIsFromCache(fromCache);
+      
+      // If we got cached data and we're online, try to get fresh data in background
+      if (fromCache && isConnected) {
+        try {
+          const freshProcedures = await ProcedureChecklistService.getProcedureChecklists(user.role);
+          setChecklists(freshProcedures);
+          setIsFromCache(false);
+          
+          // Update cache with fresh data
+          OfflineProcedureChecklistService.preDownloadProcedures(user.role).catch(error => {
+            console.error('Error updating cache with fresh data:', error);
+          });
+        } catch (error) {
+          console.log('Failed to fetch fresh data, keeping cached data:', error);
+          // Keep using cached data if fresh fetch fails
+        }
+      }
     } catch (error) {
       console.error('Error fetching procedures/checklists:', error);
       crossPlatformAlert.showAlert({
@@ -42,7 +66,7 @@ export default function ProceduresListScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user, t]);
+  }, [user, isConnected, t, crossPlatformAlert]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {
@@ -200,6 +224,12 @@ export default function ProceduresListScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Offline info bar */}
+      <OfflineInfoBar 
+        visible={!isConnected || isFromCache} 
+        message={!isConnected ? t('offline.noConnection') : t('offline.viewingCachedData')}
+      />
+      
       <View style={styles.header}>
         <Text style={styles.title}>{t('procedures.title')}</Text>
         

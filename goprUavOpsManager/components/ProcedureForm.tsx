@@ -15,7 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { ProcedureChecklistFormData, ChecklistItemFormData } from '@/types/ProcedureChecklist';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
-import { ImageProcessingService } from '@/utils/imageProcessing';
 
 interface ProcedureFormProps {
   mode: 'create' | 'edit';
@@ -134,24 +133,11 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
       if (!result.canceled && result.assets[0]) {
         const itemIndex = formData.items.findIndex(item => item.id === itemId);
         if (itemIndex !== -1) {
-          try {
-            // Process the image for preview (lighter processing than upload)
-            const processedImage = await ImageProcessingService.processImageForUpload(
-              result.assets[0].uri,
-              {
-                maxWidth: 800, // Smaller for preview
-                maxHeight: 600,
-                quality: 0.7,
-                format: 'jpeg'
-              }
-            );
-            
-            updateItemFormData(itemIndex, 'image', processedImage.uri);
-          } catch (error) {
-            console.error('Error processing image:', error);
-            // Fallback to original image
-            updateItemFormData(itemIndex, 'image', result.assets[0].uri);
-          }
+          // Use the original image URI directly - no processing or blob conversion for form display
+          const originalUri = result.assets[0].uri;
+          console.log(`[ProcedureForm] New image picked for item ${itemId}: ${originalUri.substring(0, 50)}...`);
+          
+          updateItemFormData(itemIndex, 'image', originalUri);
         }
       }
     } catch (error) {
@@ -205,6 +191,8 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
     if (!validateForm()) return;
 
     try {
+      // Form data is already clean - no need for sanitization since we're not using caching
+      console.log('[ProcedureForm] Saving form data', formData);
       await onSave(formData);
     } catch (error) {
       // Error handling is done by the parent component
@@ -293,7 +281,10 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
                 <Text style={styles.label}>{t('procedureForm.image')}</Text>
                 {item.image ? (
                   <View style={styles.imageContainer}>
-                    <Image source={{ uri: item.image }} style={styles.previewImage} />
+                    <Image 
+                      source={{ uri: item.image }} 
+                      style={styles.previewImage} 
+                    />
                     <TouchableOpacity
                       style={styles.changeImageButton}
                       onPress={() => pickImage(item.id)}
@@ -302,7 +293,9 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.removeImageButton}
-                      onPress={() => updateItemFormData(index, 'image', undefined)}
+                      onPress={() => {
+                        updateItemFormData(index, 'image', undefined);
+                      }}
                     >
                       <Text style={styles.removeImageText}>{t('procedureForm.removeImage')}</Text>
                     </TouchableOpacity>

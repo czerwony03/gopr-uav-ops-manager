@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { DocumentReference, CollectionReference, QuerySnapshot } from 'firebase/firestore';
 
 /**
  * Check if the current platform is web
@@ -100,21 +101,21 @@ if (isWeb()) {
 /**
  * Get a collection reference
  */
-export const getCollection = (collectionName: string) => {
+export const getCollection = (collectionName: string): CollectionReference => {
   return firestoreFunctions.collection(firestore, collectionName);
 };
 
 /**
  * Get a document reference
  */
-export const getDocument = (collectionName: string, docId: string) => {
+export const getDocument = (collectionName: string, docId: string): DocumentReference => {
   return firestoreFunctions.doc(firestore, collectionName, docId);
 };
 
 /**
  * Get document data with retry logic
  */
-export const getDocumentData = async (docRef: any) => {
+export const getDocumentData = async (docRef: any): Promise<{ exists: boolean; data: any }> => {
   return withRetry(
     async () => {
       const docSnap = await firestoreFunctions.getDoc(docRef);
@@ -127,7 +128,7 @@ export const getDocumentData = async (docRef: any) => {
 /**
  * Add a new document to a collection with retry logic
  */
-export const addDocument = async (collectionRef: any, data: any) => {
+export const addDocument = async (collectionRef: any, data: any): Promise<DocumentReference> => {
   return withRetry(
     () => firestoreFunctions.addDoc(collectionRef, data),
     'addDocument'
@@ -275,7 +276,7 @@ export const createQuery = (collectionRef: any, ...constraints: any[]) => {
 /**
  * Get documents from a query with retry logic
  */
-export const getDocs = async (query: any) => {
+export const getDocs = async (query: any): Promise<QuerySnapshot> => {
   return withRetry(
     () => firestoreFunctions.getDocs(query),
     'getDocs'

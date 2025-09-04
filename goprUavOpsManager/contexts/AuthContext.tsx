@@ -10,6 +10,7 @@ import {
   onAuthStateChanged,
   getCurrentUser
 } from '@/utils/firebaseUtils';
+import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
 
 /**
  * AuthContext - Firebase Authentication State Management
@@ -90,13 +91,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
 
-      // Update last login timestamp
-      try {
-        await UserService.updateLastLogin(firebaseUser.uid);
-        console.log('[AuthContext] Successfully updated last login timestamp');
-      } catch (error) {
+      // Update last login timestamp in background (don't wait for it)
+      UserService.updateLastLogin(firebaseUser.uid).catch(error => {
         console.warn('Could not update last login timestamp:', error);
-      }
+      });
 
       // Now fetch the full user data using UserService
       try {
@@ -105,14 +103,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (fullUserData) {
           console.log('[AuthContext] Successfully loaded full user data');
           
-          // Apply user's language preference if set
+          // Apply user's language preference if set (in background)
           if (fullUserData.language && (fullUserData.language === 'pl' || fullUserData.language === 'en')) {
             console.log('[AuthContext] Applying user language preference:', fullUserData.language);
-            try {
-              await changeLanguage(fullUserData.language);
-            } catch (languageError) {
+            changeLanguage(fullUserData.language).catch(languageError => {
               console.warn('[AuthContext] Failed to change language:', languageError);
-            }
+            });
           }
           
           return fullUserData as UserData;
@@ -181,16 +177,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (userData) {
             console.log('[AuthContext] ✅ Successfully restored user session with full data:', userData?.uid);
             setUser(userData);
+            
+            // Defer pre-download of procedures to not block login flow
+            setTimeout(() => {
+              OfflineProcedureChecklistService.preDownloadProcedures(userData.role).catch(error => {
+                console.error('[AuthContext] Error pre-downloading procedures:', error);
+                // Don't block login process if pre-download fails
+              });
+            }, 100); // Defer by 100ms to let UI render first
           }
         } catch (error) {
           console.error('[AuthContext] ❌ Error loading user data in auth state change:', error);
           console.log('[AuthContext] Falling back to basic user data for session restoration');
           // Set basic user data if full loading fails
-          setUser({
+          const fallbackUserData = {
             uid: firebaseUser.uid,
             email: firebaseUser.email || '',
             role: 'user',
-          } as UserData);
+          } as UserData;
+          setUser(fallbackUserData);
+          
+          // Defer pre-download of procedures to not block login flow
+          setTimeout(() => {
+            OfflineProcedureChecklistService.preDownloadProcedures(fallbackUserData.role).catch(error => {
+              console.error('[AuthContext] Error pre-downloading procedures with fallback user:', error);
+            });
+          }, 100); // Defer by 100ms to let UI render first
         }
       } else {
         console.log('[AuthContext] ❌ No user session found - user is not authenticated');

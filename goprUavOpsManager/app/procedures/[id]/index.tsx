@@ -17,8 +17,12 @@ import ImageViewer from '../../../components/ImageViewer';
 import { ProcedureChecklist, ChecklistItem } from '@/types/ProcedureChecklist';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
+import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { UserService } from '@/services/userService';
+import { useNetworkStatus } from '@/utils/useNetworkStatus';
+import OfflineInfoBar from '@/components/OfflineInfoBar';
+import { ImageCacheService } from '@/utils/imageCache';
 
 export default function ProcedureDetailsScreen() {
   const [checklist, setChecklist] = useState<ProcedureChecklist | null>(null);
@@ -27,8 +31,11 @@ export default function ProcedureDetailsScreen() {
   const [imageIndex, setImageIndex] = useState(0);
   const [createdByEmail, setCreatedByEmail] = useState<string>('');
   const [updatedByEmail, setUpdatedByEmail] = useState<string>('');
+  const [isFromCache, setIsFromCache] = useState(false);
+  const [cachedImageUris, setCachedImageUris] = useState<Map<string, string>>(new Map());
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+  const { isConnected } = useNetworkStatus();
   const { t } = useTranslation('common');
   const router = useRouter();
   const crossPlatformAlert = useCrossPlatformAlert();
@@ -37,17 +44,60 @@ export default function ProcedureDetailsScreen() {
     if (!user || !id) return;
     
     try {
-      const checklistData = await ProcedureChecklistService.getProcedureChecklist(id, user.role);
-      setChecklist(checklistData);
+      // Try to get procedure from offline service first
+      const { procedure, isFromCache: fromCache } = await OfflineProcedureChecklistService.getProcedureChecklist(id, user.role);
       
-      // Fetch user emails for audit trail
-      if (checklistData?.createdBy) {
-        const createdEmail = await UserService.getUserEmail(checklistData.createdBy);
-        setCreatedByEmail(createdEmail);
-      }
-      if (checklistData?.updatedBy) {
-        const updatedEmail = await UserService.getUserEmail(checklistData.updatedBy);
-        setUpdatedByEmail(updatedEmail);
+      if (procedure) {
+        setChecklist(procedure);
+        setIsFromCache(fromCache);
+        
+        // Load cached images for all procedure items
+        await loadCachedImages(procedure);
+        
+        // Fetch user emails for audit trail (only if online and not from cache)
+        if (!fromCache && isConnected) {
+          if (procedure.createdBy) {
+            const createdEmail = await UserService.getUserEmail(procedure.createdBy).catch(() => '');
+            setCreatedByEmail(createdEmail);
+          }
+          if (procedure.updatedBy) {
+            const updatedEmail = await UserService.getUserEmail(procedure.updatedBy).catch(() => '');
+            setUpdatedByEmail(updatedEmail);
+          }
+        }
+        
+        // If we got cached data and we're online, try to get fresh data in background
+        if (fromCache && isConnected) {
+          try {
+            const freshProcedure = await ProcedureChecklistService.getProcedureChecklist(id, user.role);
+            if (freshProcedure) {
+              setChecklist(freshProcedure);
+              setIsFromCache(false);
+              
+              // Update cached images for fresh data
+              await loadCachedImages(freshProcedure);
+              
+              // Update user emails for fresh data
+              if (freshProcedure.createdBy) {
+                const createdEmail = await UserService.getUserEmail(freshProcedure.createdBy).catch(() => '');
+                setCreatedByEmail(createdEmail);
+              }
+              if (freshProcedure.updatedBy) {
+                const updatedEmail = await UserService.getUserEmail(freshProcedure.updatedBy).catch(() => '');
+                setUpdatedByEmail(updatedEmail);
+              }
+            }
+          } catch (error) {
+            console.log('Failed to fetch fresh procedure data, keeping cached data:', error);
+          }
+        }
+      } else {
+        // Procedure not found
+        crossPlatformAlert.showAlert({
+          title: t('procedures.error'), 
+          message: t('procedures.failedToLoad'),
+          buttons: [{ text: 'OK', onPress: () => router.back() }]
+        });
       }
     } catch (error) {
       console.error('Error fetching procedure/checklist:', error);
@@ -59,7 +109,36 @@ export default function ProcedureDetailsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [user, id, router, t]);
+  }, [user, id, isConnected, router, t, crossPlatformAlert]);
+
+  // Load cached images for procedure items
+  const loadCachedImages = useCallback(async (procedure: ProcedureChecklist) => {
+    try {
+      await ImageCacheService.initialize();
+      
+      const newCachedUris = new Map<string, string>();
+      
+      // Load cached images for all items that have images
+      await Promise.all(
+        procedure.items.map(async (item) => {
+          if (item.image) {
+            try {
+              const cachedUri = await ImageCacheService.getCachedImage(item.image);
+              newCachedUris.set(item.image, cachedUri);
+            } catch (error) {
+              console.error(`Error loading cached image for item ${item.id}:`, error);
+              // Fallback to original URI
+              newCachedUris.set(item.image, item.image);
+            }
+          }
+        })
+      );
+      
+      setCachedImageUris(newCachedUris);
+    } catch (error) {
+      console.error('Error loading cached images:', error);
+    }
+  }, []);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {
@@ -190,7 +269,10 @@ export default function ProcedureDetailsScreen() {
           onPress={() => handleImagePress(item.image!)}
           activeOpacity={0.9}
         >
-          <Image source={{ uri: item.image }} style={styles.itemImage} />
+          <Image 
+            source={{ uri: cachedImageUris.get(item.image) || item.image }} 
+            style={styles.itemImage} 
+          />
         </TouchableOpacity>
       )}
 
@@ -244,30 +326,36 @@ export default function ProcedureDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Offline info bar */}
+      <OfflineInfoBar 
+        visible={!isConnected || isFromCache} 
+        message={!isConnected ? t('offline.noConnection') : t('offline.viewingCachedData')}
+      />
+      
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>{checklist.title}</Text>
-          {checklist.description && (
+          {checklist.description ? (
             <Text style={styles.description}>{checklist.description}</Text>
-          )}
+          ) : null}
           
           <View style={styles.metadata}>
             <Text style={styles.metadataText}>
               {checklist.items.length} {checklist.items.length === 1 ? t('procedures.items') : t('procedures.itemsPlural')}
             </Text>
-            {checklist.createdAt && (
+            {checklist.createdAt ? (
               <Text style={styles.metadataText}>
                 {t('procedures.created')} {checklist.createdAt.toLocaleDateString()} {checklist.createdAt.toLocaleTimeString()}
                 {createdByEmail && ` ${t('procedures.by')} ${createdByEmail}`}
               </Text>
-            )}
-            {checklist.updatedAt && (
+            ) : null}
+            {checklist.updatedAt ? (
               <Text style={styles.metadataText}>
                 {t('procedures.updated')} {checklist.updatedAt.toLocaleDateString()} {checklist.updatedAt.toLocaleTimeString()}
                 {updatedByEmail && ` ${t('procedures.by')} ${updatedByEmail}`}
               </Text>
-            )}
+            ) : null}
           </View>
         </View>
 
