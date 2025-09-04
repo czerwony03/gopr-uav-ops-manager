@@ -15,7 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { ProcedureChecklistFormData, ChecklistItemFormData } from '@/types/ProcedureChecklist';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
-import { ImageProcessingService } from '@/utils/imageProcessing';
 
 interface ProcedureFormProps {
   mode: 'create' | 'edit';
@@ -134,31 +133,11 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
       if (!result.canceled && result.assets[0]) {
         const itemIndex = formData.items.findIndex(item => item.id === itemId);
         if (itemIndex !== -1) {
-          try {
-            // Process the image for preview (lighter processing than upload)
-            const processedImage = await ImageProcessingService.processImageForUpload(
-              result.assets[0].uri,
-              {
-                maxWidth: 800, // Smaller for preview
-                maxHeight: 600,
-                quality: 0.7,
-                format: 'jpeg'
-              }
-            );
-            
-            console.log(`[ProcedureForm] New image picked for item ${itemId}: ${processedImage.uri.substring(0, 50)}...`);
-            
-            // Store the new image URI for upload
-            updateItemFormData(itemIndex, 'image', processedImage.uri);
-            
-          } catch (error) {
-            console.error('Error processing image:', error);
-            // Fallback to original image
-            const originalUri = result.assets[0].uri;
-            console.log(`[ProcedureForm] Fallback to original image for item ${itemId}: ${originalUri}`);
-            
-            updateItemFormData(itemIndex, 'image', originalUri);
-          }
+          // Use the original image URI directly - no processing or blob conversion for form display
+          const originalUri = result.assets[0].uri;
+          console.log(`[ProcedureForm] New image picked for item ${itemId}: ${originalUri.substring(0, 50)}...`);
+          
+          updateItemFormData(itemIndex, 'image', originalUri);
         }
       }
     } catch (error) {
