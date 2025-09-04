@@ -139,25 +139,44 @@ export class ImageProcessingService {
             const hasTransparency = isPNG && this.checkCanvasTransparency(ctx, width, height);
             const targetFormat = hasTransparency ? 'png' : config.format;
 
-            // Convert to blob
-            canvas.toBlob(
-              (blob) => {
-                if (!blob) {
-                  reject(new Error('Failed to create blob'));
-                  return;
-                }
+            // Convert to data URI instead of blob URL to ensure proper upload handling
+            try {
+              const dataUri = canvas.toDataURL(
+                targetFormat === 'jpeg' ? 'image/jpeg' : 'image/png',
+                targetFormat === 'jpeg' ? config.quality : undefined
+              );
+              
+              // Calculate approximate size from data URI
+              const sizeEstimate = Math.round((dataUri.length - dataUri.indexOf(',') - 1) * 0.75);
+              
+              resolve({
+                uri: dataUri,
+                width,
+                height,
+                size: sizeEstimate,
+              });
+            } catch (dataUriError) {
+              // Fallback to blob URL if data URI fails (shouldn't happen normally)
+              console.warn('Failed to create data URI, falling back to blob URL:', dataUriError);
+              canvas.toBlob(
+                (blob) => {
+                  if (!blob) {
+                    reject(new Error('Failed to create blob'));
+                    return;
+                  }
 
-                const url = URL.createObjectURL(blob);
-                resolve({
-                  uri: url,
-                  width,
-                  height,
-                  size: blob.size,
-                });
-              },
-              targetFormat === 'jpeg' ? 'image/jpeg' : 'image/png',
-              targetFormat === 'jpeg' ? config.quality : undefined
-            );
+                  const url = URL.createObjectURL(blob);
+                  resolve({
+                    uri: url,
+                    width,
+                    height,
+                    size: blob.size,
+                  });
+                },
+                targetFormat === 'jpeg' ? 'image/jpeg' : 'image/png',
+                targetFormat === 'jpeg' ? config.quality : undefined
+              );
+            }
           } catch (error) {
             reject(error);
           }
