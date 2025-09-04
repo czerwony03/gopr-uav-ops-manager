@@ -50,10 +50,14 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
       const originalUrls = new Map<string, string>();
       initialData.items.forEach(item => {
         if (item.image && !item.image.startsWith('blob:') && !item.image.startsWith('data:') && !item.image.startsWith('file:')) {
+          console.log(`[ProcedureForm] Storing original image URL for item ${item.id}:`, item.image);
           originalUrls.set(item.id, item.image);
+        } else if (item.image) {
+          console.log(`[ProcedureForm] Skipping non-standard image URL for item ${item.id}:`, item.image);
         }
       });
       setOriginalImageUrls(originalUrls);
+      console.log(`[ProcedureForm] Stored ${originalUrls.size} original image URLs`);
     } else if (mode === 'create') {
       setFormData(defaultFormData);
       setOriginalImageUrls(new Map());
@@ -285,16 +289,33 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
         items: formData.items.map(item => {
           // For existing images, use the original Firebase URL, not the cached blob URL
           const originalUrl = originalImageUrls.get(item.id);
-          if (originalUrl && item.image && !item.image.startsWith('data:') && !item.image.startsWith('file:')) {
+          
+          // If we have an original URL and the current image is a blob URL, use the original
+          if (originalUrl && item.image && item.image.startsWith('blob:')) {
+            console.log(`[ProcedureForm] Replacing blob URL with original URL for item ${item.id}:`, originalUrl);
             return {
               ...item,
               image: originalUrl
             };
           }
+          
+          // For existing images with non-blob URLs, use original URL if available
+          if (originalUrl && item.image && 
+              !item.image.startsWith('data:') && 
+              !item.image.startsWith('file:') && 
+              !item.image.startsWith('blob:')) {
+            return {
+              ...item,
+              image: originalUrl
+            };
+          }
+          
+          // For new images (data: or file:) or no image, keep as is
           return item;
         })
       };
 
+      console.log('[ProcedureForm] Saving sanitized form data', sanitizedFormData);
       await onSave(sanitizedFormData);
     } catch (error) {
       // Error handling is done by the parent component
