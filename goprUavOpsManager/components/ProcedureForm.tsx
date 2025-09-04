@@ -71,16 +71,24 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
       
       const newCachedUris = new Map<string, string>();
       
-      // Load cached images for all items that have images
+      // Load cached images only for Firebase URLs (http/https), not for local files or data URIs
       await Promise.all(
         data.items.map(async (item) => {
           if (item.image) {
-            try {
-              const cachedUri = await ImageCacheService.getCachedImage(item.image);
-              newCachedUris.set(item.image, cachedUri);
-            } catch (error) {
-              console.error(`Error loading cached image for item ${item.id}:`, error);
-              // Fallback to original URI
+            // Only cache remote Firebase URLs, not local files or data URIs
+            if (item.image.startsWith('http://') || item.image.startsWith('https://')) {
+              try {
+                console.log(`[ProcedureForm] Loading cached image for Firebase URL: ${item.image}`);
+                const cachedUri = await ImageCacheService.getCachedImage(item.image);
+                newCachedUris.set(item.image, cachedUri);
+              } catch (error) {
+                console.error(`Error loading cached image for item ${item.id}:`, error);
+                // Fallback to original URI
+                newCachedUris.set(item.image, item.image);
+              }
+            } else {
+              // For local files (data:, file:, blob:), use as-is without caching
+              console.log(`[ProcedureForm] Using local image as-is (no caching): ${item.image.substring(0, 50)}...`);
               newCachedUris.set(item.image, item.image);
             }
           }
@@ -193,6 +201,8 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
               }
             );
             
+            console.log(`[ProcedureForm] New image picked for item ${itemId}: ${processedImage.uri.substring(0, 50)}...`);
+            
             // Store the new image URI for upload but remove from original URLs since it's a new image
             updateItemFormData(itemIndex, 'image', processedImage.uri);
             setOriginalImageUrls(prev => {
@@ -201,18 +211,32 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
               return updated;
             });
             
-            // No need to cache data URIs - they're already local and will be displayed directly
+            // Update cached URIs to use the new data URI directly (no caching needed for data URIs)
+            setCachedImageUris(prev => {
+              const updated = new Map(prev);
+              updated.set(processedImage.uri, processedImage.uri);
+              return updated;
+            });
+            
           } catch (error) {
             console.error('Error processing image:', error);
             // Fallback to original image
-            updateItemFormData(itemIndex, 'image', result.assets[0].uri);
+            const originalUri = result.assets[0].uri;
+            console.log(`[ProcedureForm] Fallback to original image for item ${itemId}: ${originalUri}`);
+            
+            updateItemFormData(itemIndex, 'image', originalUri);
             setOriginalImageUrls(prev => {
               const updated = new Map(prev);
               updated.delete(formData.items[itemIndex].id);
               return updated;
             });
             
-            // No need to cache local file URIs - they're already local and will be displayed directly
+            // Update cached URIs to use the original file URI directly (no caching needed for file URIs)
+            setCachedImageUris(prev => {
+              const updated = new Map(prev);
+              updated.set(originalUri, originalUri);
+              return updated;
+            });
           }
         }
       }
