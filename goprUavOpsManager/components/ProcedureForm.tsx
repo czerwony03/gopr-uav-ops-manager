@@ -30,6 +30,7 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
   const [cachedImageUris, setCachedImageUris] = useState<Map<string, string>>(new Map());
+  const [originalImageUrls, setOriginalImageUrls] = useState<Map<string, string>>(new Map()); // Track original Firebase URLs
 
   // Default form data
   const defaultFormData: ProcedureChecklistFormData = {
@@ -45,8 +46,17 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
       setFormData(initialData);
       // Load cached images for existing data
       loadCachedImages(initialData);
+      // Store original image URLs for existing items
+      const originalUrls = new Map<string, string>();
+      initialData.items.forEach(item => {
+        if (item.image && !item.image.startsWith('blob:') && !item.image.startsWith('data:') && !item.image.startsWith('file:')) {
+          originalUrls.set(item.id, item.image);
+        }
+      });
+      setOriginalImageUrls(originalUrls);
     } else if (mode === 'create') {
       setFormData(defaultFormData);
+      setOriginalImageUrls(new Map());
     }
   }, [initialData, mode]);
 
@@ -179,9 +189,15 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
               }
             );
             
+            // Store the new image URI for upload but remove from original URLs since it's a new image
             updateItemFormData(itemIndex, 'image', processedImage.uri);
+            setOriginalImageUrls(prev => {
+              const updated = new Map(prev);
+              updated.delete(formData.items[itemIndex].id);
+              return updated;
+            });
             
-            // Cache the new image
+            // Cache the new image for display
             try {
               await ImageCacheService.initialize();
               const cachedUri = await ImageCacheService.getCachedImage(processedImage.uri);
@@ -194,6 +210,11 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
             console.error('Error processing image:', error);
             // Fallback to original image
             updateItemFormData(itemIndex, 'image', result.assets[0].uri);
+            setOriginalImageUrls(prev => {
+              const updated = new Map(prev);
+              updated.delete(formData.items[itemIndex].id);
+              return updated;
+            });
             
             // Try to cache the original image
             try {
@@ -258,7 +279,23 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
     if (!validateForm()) return;
 
     try {
-      await onSave(formData);
+      // Prepare form data with proper image URLs
+      const sanitizedFormData = {
+        ...formData,
+        items: formData.items.map(item => {
+          // For existing images, use the original Firebase URL, not the cached blob URL
+          const originalUrl = originalImageUrls.get(item.id);
+          if (originalUrl && item.image && !item.image.startsWith('data:') && !item.image.startsWith('file:')) {
+            return {
+              ...item,
+              image: originalUrl
+            };
+          }
+          return item;
+        })
+      };
+
+      await onSave(sanitizedFormData);
     } catch (error) {
       // Error handling is done by the parent component
       throw error;
@@ -358,7 +395,15 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.removeImageButton}
-                      onPress={() => updateItemFormData(index, 'image', undefined)}
+                      onPress={() => {
+                        updateItemFormData(index, 'image', undefined);
+                        // Remove from original URLs when image is removed
+                        setOriginalImageUrls(prev => {
+                          const updated = new Map(prev);
+                          updated.delete(item.id);
+                          return updated;
+                        });
+                      }}
                     >
                       <Text style={styles.removeImageText}>{t('procedureForm.removeImage')}</Text>
                     </TouchableOpacity>
