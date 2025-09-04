@@ -49,9 +49,11 @@ EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=your_oauth_client_id
 ### Commands That Require Additional Setup
 - `npm run export:web` - **Time: ~1-2 minutes** - WILL FAIL at 99% without Firebase config. NEVER CANCEL.
 - `npm run web` - **Time: ~10 seconds to start** - Starts but returns HTTP 500 without Firebase config.
-- `npx expo prebuild --platform android` - **Time: ~3 seconds to fail** - Requires `google-services.json`.
+- `npx expo prebuild --platform android` - **Time: ~3 seconds to fail** - Requires `google-services.json`. Creates android/ directory.
 - `npm run android` - Requires Android SDK setup and Firebase configuration.
 - `npm run ios` - Requires iOS development setup and Firebase configuration.
+
+**Note**: `npx expo prebuild` generates native build directories (android/, ios/) which should not be committed to git unless specifically needed for CI/CD.
 
 ### No Test Suite
 **IMPORTANT**: This repository does not contain any test files or test commands. Do not attempt to run tests.
