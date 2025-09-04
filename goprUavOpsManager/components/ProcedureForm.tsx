@@ -16,7 +16,6 @@ import * as ImagePicker from 'expo-image-picker';
 import { ProcedureChecklistFormData, ChecklistItemFormData } from '@/types/ProcedureChecklist';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { ImageProcessingService } from '@/utils/imageProcessing';
-import { ImageCacheService } from '@/utils/imageCache';
 
 interface ProcedureFormProps {
   mode: 'create' | 'edit';
@@ -29,8 +28,6 @@ interface ProcedureFormProps {
 export default function ProcedureForm({ mode, initialData, onSave, onCancel, loading = false }: ProcedureFormProps) {
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
-  const [cachedImageUris, setCachedImageUris] = useState<Map<string, string>>(new Map());
-  const [originalImageUrls, setOriginalImageUrls] = useState<Map<string, string>>(new Map()); // Track original Firebase URLs
 
   // Default form data
   const defaultFormData: ProcedureChecklistFormData = {
@@ -44,62 +41,10 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
-      // Load cached images for existing data
-      loadCachedImages(initialData);
-      // Store original image URLs for existing items
-      const originalUrls = new Map<string, string>();
-      initialData.items.forEach(item => {
-        if (item.image && !item.image.startsWith('blob:') && !item.image.startsWith('data:') && !item.image.startsWith('file:')) {
-          console.log(`[ProcedureForm] Storing original image URL for item ${item.id}:`, item.image);
-          originalUrls.set(item.id, item.image);
-        } else if (item.image) {
-          console.log(`[ProcedureForm] Skipping non-standard image URL for item ${item.id}:`, item.image);
-        }
-      });
-      setOriginalImageUrls(originalUrls);
-      console.log(`[ProcedureForm] Stored ${originalUrls.size} original image URLs`);
     } else if (mode === 'create') {
       setFormData(defaultFormData);
-      setOriginalImageUrls(new Map());
     }
   }, [initialData, mode]);
-
-  // Load cached images for form data
-  const loadCachedImages = async (data: ProcedureChecklistFormData) => {
-    try {
-      await ImageCacheService.initialize();
-      
-      const newCachedUris = new Map<string, string>();
-      
-      // Load cached images only for Firebase URLs (http/https), not for local files or data URIs
-      await Promise.all(
-        data.items.map(async (item) => {
-          if (item.image) {
-            // Only cache remote Firebase URLs, not local files or data URIs
-            if (item.image.startsWith('http://') || item.image.startsWith('https://')) {
-              try {
-                console.log(`[ProcedureForm] Loading cached image for Firebase URL: ${item.image}`);
-                const cachedUri = await ImageCacheService.getCachedImage(item.image);
-                newCachedUris.set(item.image, cachedUri);
-              } catch (error) {
-                console.error(`Error loading cached image for item ${item.id}:`, error);
-                // Fallback to original URI
-                newCachedUris.set(item.image, item.image);
-              }
-            } else {
-              // For local files (data:, file:, blob:), use as-is without caching
-              console.log(`[ProcedureForm] Using local image as-is (no caching): ${item.image.substring(0, 50)}...`);
-              newCachedUris.set(item.image, item.image);
-            }
-          }
-        })
-      );
-      
-      setCachedImageUris(newCachedUris);
-    } catch (error) {
-      console.error('Error loading cached images:', error);
-    }
-  };
 
   const updateFormData = (field: keyof ProcedureChecklistFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -203,20 +148,8 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
             
             console.log(`[ProcedureForm] New image picked for item ${itemId}: ${processedImage.uri.substring(0, 50)}...`);
             
-            // Store the new image URI for upload but remove from original URLs since it's a new image
+            // Store the new image URI for upload
             updateItemFormData(itemIndex, 'image', processedImage.uri);
-            setOriginalImageUrls(prev => {
-              const updated = new Map(prev);
-              updated.delete(formData.items[itemIndex].id);
-              return updated;
-            });
-            
-            // Update cached URIs to use the new data URI directly (no caching needed for data URIs)
-            setCachedImageUris(prev => {
-              const updated = new Map(prev);
-              updated.set(processedImage.uri, processedImage.uri);
-              return updated;
-            });
             
           } catch (error) {
             console.error('Error processing image:', error);
@@ -225,18 +158,6 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
             console.log(`[ProcedureForm] Fallback to original image for item ${itemId}: ${originalUri}`);
             
             updateItemFormData(itemIndex, 'image', originalUri);
-            setOriginalImageUrls(prev => {
-              const updated = new Map(prev);
-              updated.delete(formData.items[itemIndex].id);
-              return updated;
-            });
-            
-            // Update cached URIs to use the original file URI directly (no caching needed for file URIs)
-            setCachedImageUris(prev => {
-              const updated = new Map(prev);
-              updated.set(originalUri, originalUri);
-              return updated;
-            });
           }
         }
       }
@@ -291,40 +212,9 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
     if (!validateForm()) return;
 
     try {
-      // Prepare form data with proper image URLs
-      const sanitizedFormData = {
-        ...formData,
-        items: formData.items.map(item => {
-          // For existing images, use the original Firebase URL, not the cached blob URL
-          const originalUrl = originalImageUrls.get(item.id);
-          
-          // If we have an original URL and the current image is a blob URL, use the original
-          if (originalUrl && item.image && item.image.startsWith('blob:')) {
-            console.log(`[ProcedureForm] Replacing blob URL with original URL for item ${item.id}:`, originalUrl);
-            return {
-              ...item,
-              image: originalUrl
-            };
-          }
-          
-          // For existing images with non-blob URLs, use original URL if available
-          if (originalUrl && item.image && 
-              !item.image.startsWith('data:') && 
-              !item.image.startsWith('file:') && 
-              !item.image.startsWith('blob:')) {
-            return {
-              ...item,
-              image: originalUrl
-            };
-          }
-          
-          // For new images (data: or file:) or no image, keep as is
-          return item;
-        })
-      };
-
-      console.log('[ProcedureForm] Saving sanitized form data', sanitizedFormData);
-      await onSave(sanitizedFormData);
+      // Form data is already clean - no need for sanitization since we're not using caching
+      console.log('[ProcedureForm] Saving form data', formData);
+      await onSave(formData);
     } catch (error) {
       // Error handling is done by the parent component
       throw error;
@@ -413,7 +303,7 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
                 {item.image ? (
                   <View style={styles.imageContainer}>
                     <Image 
-                      source={{ uri: cachedImageUris.get(item.image) || item.image }} 
+                      source={{ uri: item.image }} 
                       style={styles.previewImage} 
                     />
                     <TouchableOpacity
@@ -426,12 +316,6 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
                       style={styles.removeImageButton}
                       onPress={() => {
                         updateItemFormData(index, 'image', undefined);
-                        // Remove from original URLs when image is removed
-                        setOriginalImageUrls(prev => {
-                          const updated = new Map(prev);
-                          updated.delete(item.id);
-                          return updated;
-                        });
                       }}
                     >
                       <Text style={styles.removeImageText}>{t('procedureForm.removeImage')}</Text>
