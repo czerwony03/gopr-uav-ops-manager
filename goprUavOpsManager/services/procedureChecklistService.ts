@@ -225,30 +225,20 @@ export class ProcedureChecklistService {
           const response = await fetch(processedImage.uri);
           blob = await response.blob();
         } else {
-          // Mobile: Read file as base64 and convert to blob
+          // Mobile: Read file as base64 and convert to data URI, then fetch
           const base64 = await FileSystem.readAsStringAsync(processedImage.uri, {
             encoding: FileSystem.EncodingType.Base64,
           });
           
-          // Convert base64 to blob
-          const binaryString = atob(base64);
-          const bytes = new Uint8Array(binaryString.length);
-          for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-          }
-          blob = new Blob([bytes], { type: 'image/jpeg' });
+          // Create data URI and use fetch to convert to blob (avoids ArrayBuffer issues)
+          const dataUri = `data:image/jpeg;base64,${base64}`;
+          const response = await fetch(dataUri);
+          blob = await response.blob();
         }
       } else if (processedImage.uri.startsWith('data:')) {
-        // Base64 data URI - parse and convert to blob
-        const [header, base64Data] = processedImage.uri.split(',');
-        const mimeType = header.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
-        
-        const binaryString = atob(base64Data);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        blob = new Blob([bytes], { type: mimeType });
+        // Base64 data URI - use fetch to convert to blob (avoids ArrayBuffer issues)
+        const response = await fetch(processedImage.uri);
+        blob = await response.blob();
       } else {
         // Blob URL or HTTP URL - use fetch (existing behavior)
         const response = await fetch(processedImage.uri);
