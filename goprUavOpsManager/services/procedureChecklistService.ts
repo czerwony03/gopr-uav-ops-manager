@@ -6,6 +6,8 @@ import {UserService} from './userService';
 import {UserRole} from "@/types/UserRole";
 import {ImageProcessingService} from '@/utils/imageProcessing';
 import {ProcedureChecklistRepository} from '@/repositories/ProcedureChecklistRepository';
+import { Platform } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 
 export class ProcedureChecklistService {
   // Get all procedures/checklists based on user role
@@ -195,6 +197,11 @@ export class ProcedureChecklistService {
   // Upload image to Firebase Storage
   static async uploadImage(imageUri: string, fileName: string): Promise<string> {
     try {
+      // Defensive checks
+      if (!fileName || !fileName.trim()) {
+        throw new Error('fileName is required');
+      }
+
       // Process the image before upload (resize, compress, convert format)
       const processedImage = await ImageProcessingService.processImageForUpload(imageUri, {
         maxWidth: 1200,
@@ -203,8 +210,50 @@ export class ProcedureChecklistService {
         format: 'jpeg'
       });
 
-      const response = await fetch(processedImage.uri);
-      const blob = await response.blob();
+      // Defensive check for processed image
+      if (!processedImage || !processedImage.uri) {
+        throw new Error('Failed to process image');
+      }
+
+      // Create blob based on URI type to handle Android file:// URI issues
+      let blob: Blob;
+
+      if (processedImage.uri.startsWith('file://')) {
+        // Android/mobile file URI - use expo-file-system
+        if (Platform.OS === 'web') {
+          // Fallback for web (shouldn't happen but defensive)
+          const response = await fetch(processedImage.uri);
+          blob = await response.blob();
+        } else {
+          // Mobile: Read file as base64 and convert to blob
+          const base64 = await FileSystem.readAsStringAsync(processedImage.uri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          
+          // Convert base64 to blob
+          const binaryString = atob(base64);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          blob = new Blob([bytes], { type: 'image/jpeg' });
+        }
+      } else if (processedImage.uri.startsWith('data:')) {
+        // Base64 data URI - parse and convert to blob
+        const [header, base64Data] = processedImage.uri.split(',');
+        const mimeType = header.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
+        
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        blob = new Blob([bytes], { type: mimeType });
+      } else {
+        // Blob URL or HTTP URL - use fetch (existing behavior)
+        const response = await fetch(processedImage.uri);
+        blob = await response.blob();
+      }
       
       const imageRef = ref(storage, `procedures_checklists/images/${fileName}`);
       await uploadBytes(imageRef, blob, {
