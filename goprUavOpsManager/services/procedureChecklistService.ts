@@ -215,30 +215,74 @@ export class ProcedureChecklistService {
         throw new Error('Failed to process image');
       }
 
-      // Create blob based on URI type to handle Android file:// URI issues
+      // Create blob based on URI type to handle different platforms and URI formats
       let blob: Blob;
 
       if (processedImage.uri.startsWith('file://')) {
-        // Android/mobile file URI - use expo-file-system
+        // File URI - handle platform differences
         if (Platform.OS === 'web') {
-          // Fallback for web (shouldn't happen but defensive)
+          // Web: file:// URIs should work with fetch
           const response = await fetch(processedImage.uri);
           blob = await response.blob();
         } else {
-          // Mobile: Read file as base64 and convert to data URI, then fetch
-          const base64 = await FileSystem.readAsStringAsync(processedImage.uri, {
+          // Mobile: file:// URIs may not work with fetch on all platforms
+          // Use expo-file-system to read the file and create blob
+          try {
+            // Try fetch first (might work on some platforms)
+            const response = await fetch(processedImage.uri);
+            blob = await response.blob();
+          } catch (fetchError) {
+            console.log('[ProcedureChecklistService] fetch failed for file URI, using FileSystem fallback');
+            // Fallback: read file as base64 and write to temp file
+            const base64 = await FileSystem.readAsStringAsync(processedImage.uri, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+            
+            const tempDir = FileSystem.cacheDirectory;
+            if (!tempDir) {
+              throw new Error('Cache directory not available');
+            }
+            
+            const tempFilePath = `${tempDir}temp_upload_${Date.now()}.jpg`;
+            await FileSystem.writeAsStringAsync(tempFilePath, base64, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+            
+            // Read the temporary file as blob using file:// path that works
+            const response = await fetch(tempFilePath);
+            blob = await response.blob();
+            
+            // Clean up temporary file
+            await FileSystem.deleteAsync(tempFilePath, { idempotent: true });
+          }
+        }
+      } else if (processedImage.uri.startsWith('data:')) {
+        // Base64 data URI - handle length limitations on mobile
+        if (Platform.OS === 'web') {
+          // Web: fetch should work fine for data URIs
+          const response = await fetch(processedImage.uri);
+          blob = await response.blob();
+        } else {
+          // Mobile: avoid fetch with long data URIs, write to temp file instead
+          const [header, base64Data] = processedImage.uri.split(',');
+          
+          const tempDir = FileSystem.cacheDirectory;
+          if (!tempDir) {
+            throw new Error('Cache directory not available');
+          }
+          
+          const tempFilePath = `${tempDir}temp_upload_${Date.now()}.jpg`;
+          await FileSystem.writeAsStringAsync(tempFilePath, base64Data, {
             encoding: FileSystem.EncodingType.Base64,
           });
           
-          // Create data URI and use fetch to convert to blob (avoids ArrayBuffer issues)
-          const dataUri = `data:image/jpeg;base64,${base64}`;
-          const response = await fetch(dataUri);
+          // Read the temporary file as blob
+          const response = await fetch(tempFilePath);
           blob = await response.blob();
+          
+          // Clean up temporary file
+          await FileSystem.deleteAsync(tempFilePath, { idempotent: true });
         }
-      } else if (processedImage.uri.startsWith('data:')) {
-        // Base64 data URI - use fetch to convert to blob (avoids ArrayBuffer issues)
-        const response = await fetch(processedImage.uri);
-        blob = await response.blob();
       } else {
         // Blob URL or HTTP URL - use fetch (existing behavior)
         const response = await fetch(processedImage.uri);
