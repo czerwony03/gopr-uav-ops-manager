@@ -272,8 +272,20 @@ export class OfflineProcedureChecklistService {
    */
   private static async cacheProcedures(procedures: ProcedureChecklist[], userRole: UserRole): Promise<void> {
     try {
+      // Validate and sanitize procedures before caching
+      const sanitizedProcedures = procedures.map(proc => ({
+        ...proc,
+        items: proc.items.map(item => ({
+          ...item,
+          // Ensure image URLs are Firebase URLs, not blob URLs
+          image: item.image && item.image.startsWith('blob:') 
+            ? undefined // Remove blob URLs from cached data
+            : item.image
+        }))
+      }));
+
       // Serialize procedures with Date objects converted to ISO strings
-      const serializedProcedures = procedures.map(proc => ({
+      const serializedProcedures = sanitizedProcedures.map(proc => ({
         ...proc,
         createdAt: proc.createdAt?.toISOString(),
         updatedAt: proc.updatedAt?.toISOString(),
@@ -374,8 +386,11 @@ export class OfflineProcedureChecklistService {
       // Collect all image URLs from procedure items
       procedures.forEach(procedure => {
         procedure.items.forEach(item => {
-          if (item.image) {
+          if (item.image && !item.image.startsWith('blob:')) {
+            // Only include Firebase storage URLs, skip blob URLs
             imageUrls.push(item.image);
+          } else if (item.image && item.image.startsWith('blob:')) {
+            console.warn('[OfflineProcedureService] Found blob URL in procedure data, skipping:', item.image);
           }
         });
       });

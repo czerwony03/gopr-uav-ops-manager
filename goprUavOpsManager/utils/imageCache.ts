@@ -67,6 +67,12 @@ export class ImageCacheService {
     }
 
     try {
+      // Prevent blob URLs from being processed (they can't be downloaded)
+      if (imageUrl.startsWith('blob:')) {
+        console.warn('[ImageCache] Attempting to cache blob URL, returning as-is:', imageUrl);
+        return imageUrl;
+      }
+
       // Check if image is already cached
       const cachedImage = await this.getCachedImageMetadata(imageUrl);
       
@@ -92,6 +98,12 @@ export class ImageCacheService {
    */
   static async preloadImage(imageUrl: string): Promise<void> {
     try {
+      // Skip blob URLs - they can't be downloaded and shouldn't be in procedure data
+      if (imageUrl.startsWith('blob:')) {
+        console.warn('[ImageCache] Skipping preload of blob URL (this indicates a data integrity issue):', imageUrl);
+        return;
+      }
+
       await this.getCachedImage(imageUrl);
     } catch (error) {
       console.error('Error preloading image:', error);
@@ -398,10 +410,19 @@ export class ImageCacheService {
     blob: Blob
   ): Promise<void> {
     try {
+      // IMPORTANT: Always ensure we store the original URL, not the blob URL
+      // This prevents blob URLs from contaminating the procedure data
+      const safeMetadata = {
+        ...metadata,
+        // Ensure uri and localPath contain blob URLs only for display
+        // but originalUrl contains the actual Firebase URL for cache lookup
+        originalUrl: metadata.originalUrl || metadata.uri.startsWith('blob:') ? metadata.originalUrl : metadata.uri
+      };
+
       // Try IndexedDB first if not explicitly disabled
       if (this.isIndexedDBSupported !== false && await this.checkIndexedDBSupport()) {
         try {
-          await this.saveToIndexedDB(cacheKey, metadata, blob);
+          await this.saveToIndexedDB(cacheKey, safeMetadata, blob);
           console.log(`[ImageCache] Saved to IndexedDB: ${cacheKey}`);
           return;
         } catch (error) {
@@ -412,7 +433,7 @@ export class ImageCacheService {
       
       // Fallback to localStorage (without blob data)
       if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem(`ImageCache_${cacheKey}`, JSON.stringify(metadata));
+        localStorage.setItem(`ImageCache_${cacheKey}`, JSON.stringify(safeMetadata));
         console.log(`[ImageCache] Saved to localStorage: ${cacheKey}`);
       }
     } catch (error) {
