@@ -217,22 +217,8 @@ export class ProcedureChecklistService {
       const imageRef = getStorageRef(`procedures_checklists/images/${fileName}`);
 
       if (Platform.OS === 'web') {
-        // Web platform: Create blob and use uploadFile
-        let blob: Blob;
-
-        if (processedImage.uri.startsWith('file://')) {
-          // File URI
-          const response = await fetch(processedImage.uri);
-          blob = await response.blob();
-        } else if (processedImage.uri.startsWith('data:')) {
-          // Base64 data URI
-          const response = await fetch(processedImage.uri);
-          blob = await response.blob();
-        } else {
-          // Blob URL or HTTP URL
-          const response = await fetch(processedImage.uri);
-          blob = await response.blob();
-        }
+        const response = await fetch(processedImage.uri);
+        const blob = await response.blob();
 
         await uploadFile(imageRef, blob, {
           cacheControl: 'public,max-age=31536000' // Cache for 1 year
