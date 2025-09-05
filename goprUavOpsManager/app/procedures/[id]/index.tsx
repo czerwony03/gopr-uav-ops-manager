@@ -86,6 +86,15 @@ export default function ProcedureDetailsScreen() {
                 const updatedEmail = await UserService.getUserEmail(freshProcedure.updatedBy).catch(() => '');
                 setUpdatedByEmail(updatedEmail);
               }
+              
+              // Force refresh cache to ensure fresh data is available offline
+              try {
+                await OfflineProcedureChecklistService.forceRefreshProcedures(user.role);
+                console.log('[ProcedureDetails] Cache refreshed successfully after getting fresh procedure data');
+              } catch (cacheError) {
+                console.warn('[ProcedureDetails] Failed to refresh cache after getting fresh data:', cacheError);
+                // Don't fail the operation if cache refresh fails
+              }
             }
           } catch (error) {
             console.log('Failed to fetch fresh procedure data, keeping cached data:', error);
