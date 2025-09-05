@@ -9,7 +9,7 @@ if (Platform.OS === 'web') {
   // Web platform: Use Firebase JS SDK
   const { initializeApp } = require('firebase/app');
   const { getAuth, setPersistence, browserLocalPersistence } = require('firebase/auth');
-  const { getFirestore, enableIndexedDbPersistence } = require('firebase/firestore');
+  const { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } = require('firebase/firestore');
   const { getStorage } = require('firebase/storage');
 
   // Firebase configuration
@@ -26,7 +26,6 @@ if (Platform.OS === 'web') {
   // Initialize Firebase for web
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
-  firestore = getFirestore(app);
   storage = getStorage(app);
 
   // Configure auth persistence for web
@@ -35,15 +34,15 @@ if (Platform.OS === 'web') {
   });
 
   // Enable Firestore offline persistence for web with timeout
-  const enablePersistence = async () => {
+  const enablePersistence = () => {
     try {
-      await Promise.race([
-        enableIndexedDbPersistence(firestore),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Persistence setup timeout')), 5000)
-        )
-      ]);
+      const initialization = initializeFirestore(app, {
+        cache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager(),
+        }),
+      });
       console.log('[FirebaseConfig] Web Firebase initialized with local persistence and offline support');
+      return initialization;
     } catch (error: any) {
       if (error.code === 'failed-precondition') {
         console.warn('[FirebaseConfig] Firestore persistence failed: Multiple tabs open, persistence enabled only in first tab');
@@ -54,12 +53,11 @@ if (Platform.OS === 'web') {
       } else {
         console.error('[FirebaseConfig] Failed to enable Firestore persistence:', error);
       }
-      console.log('[FirebaseConfig] Web Firebase initialized without offline persistence');
+      console.log('[FirebaseConfig] Web Firebase initialized without offline persistence', error);
     }
   };
 
-  // Enable persistence in background to not block app startup
-  enablePersistence();
+  firestore = enablePersistence();
 } else {
   // React Native (Android/iOS): Use React Native Firebase SDK for proper native persistence
   const rnFirebaseApp = require('@react-native-firebase/app').default;
