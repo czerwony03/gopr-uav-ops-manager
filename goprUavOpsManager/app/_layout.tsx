@@ -43,6 +43,28 @@ function RootLayoutNavigation() {
   const { user, loading } = useAuth();
   const { t } = useTranslation('common');
 
+  // Update Sentry user context when authentication state changes
+  useEffect(() => {
+    // Only update Sentry context after authentication state is resolved
+    if (!loading) {
+      if (user) {
+        // Set user context for authenticated users
+        Sentry.setUser({
+          id: user.uid,
+          email: user.email,
+          role: user.role,
+        });
+        console.log('[Sentry] User context set for authenticated user:', user.uid);
+      } else {
+        // Set guest context for non-authenticated users
+        Sentry.setUser({
+          id: 'guest',
+        });
+        console.log('[Sentry] User context set to guest');
+      }
+    }
+  }, [user, loading]); // Re-run when user or loading state changes
+
   // Show nothing while loading authentication state
   if (loading) {
     return null;
