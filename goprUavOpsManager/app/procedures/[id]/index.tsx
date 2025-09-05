@@ -181,6 +181,16 @@ export default function ProcedureDetailsScreen() {
           onPress: async () => {
             try {
               await ProcedureChecklistService.softDeleteProcedureChecklist(checklist.id, user.role, user.uid);
+              
+              // Force refresh cache to reflect deletion
+              try {
+                await OfflineProcedureChecklistService.forceRefreshProcedures(user.role);
+                console.log('[ProcedureDetails] Cache refreshed successfully after procedure deletion');
+              } catch (cacheError) {
+                console.warn('[ProcedureDetails] Failed to refresh cache after procedure deletion:', cacheError);
+                // Don't fail the operation if cache refresh fails
+              }
+              
               crossPlatformAlert.showAlert({ 
                 title: t('common.success'), 
                 message: t('procedures.deleteSuccess'),
@@ -203,6 +213,16 @@ export default function ProcedureDetailsScreen() {
 
     try {
       await ProcedureChecklistService.restoreProcedureChecklist(checklist.id, user.role, user.uid);
+      
+      // Force refresh cache to reflect restoration
+      try {
+        await OfflineProcedureChecklistService.forceRefreshProcedures(user.role);
+        console.log('[ProcedureDetails] Cache refreshed successfully after procedure restoration');
+      } catch (cacheError) {
+        console.warn('[ProcedureDetails] Failed to refresh cache after procedure restoration:', cacheError);
+        // Don't fail the operation if cache refresh fails
+      }
+      
       await fetchChecklist(); // Refresh the data
       crossPlatformAlert.showAlert({ title: t('common.success'), message: t('procedures.restoreSuccess') });
     } catch (error) {
