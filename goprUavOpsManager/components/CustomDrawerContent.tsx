@@ -5,8 +5,7 @@ import { DrawerActions } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/firebaseConfig';
+import { signOut } from '@/utils/firebaseUtils';
 import { useTranslation } from 'react-i18next';
 
 export function CustomDrawerContent(props: any) {
@@ -17,7 +16,7 @@ export function CustomDrawerContent(props: any) {
   const handleLogout = async () => {
     try {
       props.navigation.dispatch(DrawerActions.closeDrawer());
-      await signOut(auth);
+      await signOut();
       router.replace('/');
     } catch (error) {
       console.error('Logout error:', error);
