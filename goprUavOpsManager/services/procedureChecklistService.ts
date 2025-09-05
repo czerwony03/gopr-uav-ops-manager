@@ -1,5 +1,4 @@
-import {deleteObject, getDownloadURL, ref, uploadBytes} from 'firebase/storage';
-import {storage} from '@/firebaseConfig';
+import {getStorageRef, uploadBytes, getDownloadURL, deleteObject} from '@/utils/firebaseUtils';
 import {ChecklistItemFormData, ProcedureChecklist, ProcedureChecklistFormData} from '@/types/ProcedureChecklist';
 import {AuditLogService} from './auditLogService';
 import {UserService} from './userService';
@@ -289,7 +288,7 @@ export class ProcedureChecklistService {
         blob = await response.blob();
       }
       
-      const imageRef = ref(storage, `procedures_checklists/images/${fileName}`);
+      const imageRef = getStorageRef(`procedures_checklists/images/${fileName}`);
       await uploadBytes(imageRef, blob, {
         cacheControl: 'public,max-age=31536000' // Cache for 1 year
       });
@@ -311,7 +310,7 @@ export class ProcedureChecklistService {
   // Delete image from Firebase Storage
   static async deleteImage(imageUrl: string): Promise<void> {
     try {
-      const imageRef = ref(storage, imageUrl);
+      const imageRef = getStorageRef(imageUrl);
       await deleteObject(imageRef);
     } catch (error) {
       console.error('Error deleting image:', error);

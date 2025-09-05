@@ -21,17 +21,19 @@ export const isWeb = () => Platform.OS === 'web';
  */
 
 // Import Firebase instances from config
-import { auth, firestore } from '@/firebaseConfig';
+import { auth, firestore, storage } from '@/firebaseConfig';
 
 // Platform-aware function imports - all differences handled here
 let firestoreFunctions: any;
 let authFunctions: any;
+let storageFunctions: any;
 let Timestamp: any;
 
 if (isWeb()) {
   // Web Firebase SDK
   const webFirestore = require('firebase/firestore');
   const webAuth = require('firebase/auth');
+  const webStorage = require('firebase/storage');
   
   firestoreFunctions = {
     collection: webFirestore.collection,
@@ -59,11 +61,19 @@ if (isWeb()) {
     GoogleAuthProvider: webAuth.GoogleAuthProvider,
   };
   
+  storageFunctions = {
+    ref: webStorage.ref,
+    uploadBytes: webStorage.uploadBytes,
+    getDownloadURL: webStorage.getDownloadURL,
+    deleteObject: webStorage.deleteObject,
+  };
+  
   Timestamp = webFirestore.Timestamp;
 } else {
   // React Native Firebase SDK - modular imports for v22+
   const rnFirestore = require('@react-native-firebase/firestore');
   const rnAuth = require('@react-native-firebase/auth');
+  const rnStorage = require('@react-native-firebase/storage');
   
   firestoreFunctions = {
     collection: rnFirestore.collection,
@@ -89,6 +99,13 @@ if (isWeb()) {
     signOut: rnAuth.signOut,
     onAuthStateChanged: rnAuth.onAuthStateChanged,
     GoogleAuthProvider: rnAuth.GoogleAuthProvider,
+  };
+  
+  storageFunctions = {
+    ref: rnStorage.ref,
+    uploadBytes: rnStorage.uploadBytes,
+    getDownloadURL: rnStorage.getDownloadURL,
+    deleteObject: rnStorage.deleteObject,
   };
   
   Timestamp = rnFirestore.Timestamp;
@@ -162,6 +179,47 @@ export const deleteDocument = async (docRef: any) => {
   return withRetry(
     () => firestoreFunctions.deleteDoc(docRef),
     'deleteDocument'
+  );
+};
+
+// ============================================================================
+// STORAGE UTILITIES
+// ============================================================================
+
+/**
+ * Create a storage reference
+ */
+export const getStorageRef = (path: string) => {
+  return storageFunctions.ref(storage, path);
+};
+
+/**
+ * Upload bytes to storage with retry logic
+ */
+export const uploadBytes = async (storageRef: any, blob: Blob, metadata?: any) => {
+  return withRetry(
+    () => storageFunctions.uploadBytes(storageRef, blob, metadata),
+    'uploadBytes'
+  );
+};
+
+/**
+ * Get download URL from storage reference with retry logic
+ */
+export const getDownloadURL = async (storageRef: any): Promise<string> => {
+  return withRetry(
+    () => storageFunctions.getDownloadURL(storageRef),
+    'getDownloadURL'
+  );
+};
+
+/**
+ * Delete object from storage with retry logic
+ */
+export const deleteObject = async (storageRef: any) => {
+  return withRetry(
+    () => storageFunctions.deleteObject(storageRef),
+    'deleteObject'
   );
 };
 
