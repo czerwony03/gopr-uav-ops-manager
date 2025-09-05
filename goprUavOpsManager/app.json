@@ -39,7 +39,11 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "serviceWorker": {
+        "source": "./public/service-worker.js"
+      },
+      "manifest": "./public/manifest.json"
     },
     "plugins": [
       "expo-router",

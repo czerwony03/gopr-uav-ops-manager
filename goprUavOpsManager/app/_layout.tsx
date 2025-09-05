@@ -5,12 +5,14 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ConsoleProvider } from "@/contexts/ConsoleContext";
 import { CustomDrawerContent } from "@/components/CustomDrawerContent";
 import ConsoleModal from "@/components/ConsoleModal";
+import { PWAHead } from "@/components/PWAHead";
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import * as Sentry from '@sentry/react-native';
 import { captureConsoleIntegration } from '@sentry/core';
 import { CrossPlatformAlertProvider } from '@/components/CrossPlatformAlert';
 import { useEffect } from 'react';
+import { registerServiceWorker } from '@/utils/pwaUtils';
 import '@/src/i18n';
 
 Sentry.init({
@@ -199,7 +201,7 @@ function RootLayoutNavigation() {
 export default Sentry.wrap(function RootLayout() {
   const { i18n } = useTranslation();
 
-  // Effect to set and update HTML lang attribute for React Native Web
+  // Effect to set and update HTML lang attribute for React Native Web and initialize PWA
   useEffect(() => {
     // Only run on web platforms where document exists
     if (typeof document !== 'undefined' && document.documentElement) {
@@ -219,6 +221,11 @@ export default Sentry.wrap(function RootLayout() {
 
       i18n.on('languageChanged', handleLanguageChange);
 
+      // Initialize PWA features
+      registerServiceWorker().catch(error => {
+        console.error('[PWA] Failed to register service worker:', error);
+      });
+
       // Cleanup event listener
       return () => {
         i18n.off('languageChanged', handleLanguageChange);
@@ -228,6 +235,7 @@ export default Sentry.wrap(function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <PWAHead />
       <ConsoleProvider>
         <AuthProvider>
           <CrossPlatformAlertProvider>
