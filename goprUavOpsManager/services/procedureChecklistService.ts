@@ -1,4 +1,4 @@
-import {getStorageRef, uploadBytes, getDownloadURL, deleteObject} from '@/utils/firebaseUtils';
+import {getStorageRef, uploadFile, getDownloadURL, deleteObject} from '@/utils/firebaseUtils';
 import {ChecklistItemFormData, ProcedureChecklist, ProcedureChecklistFormData} from '@/types/ProcedureChecklist';
 import {AuditLogService} from './auditLogService';
 import {UserService} from './userService';
@@ -214,55 +214,35 @@ export class ProcedureChecklistService {
         throw new Error('Failed to process image');
       }
 
-      // Create blob based on URI type to handle different platforms and URI formats
-      let blob: Blob;
+      const imageRef = getStorageRef(`procedures_checklists/images/${fileName}`);
 
-      if (processedImage.uri.startsWith('file://')) {
-        // File URI - handle platform differences
-        if (Platform.OS === 'web') {
-          // Web: file:// URIs should work with fetch
+      if (Platform.OS === 'web') {
+        // Web platform: Create blob and use uploadFile
+        let blob: Blob;
+
+        if (processedImage.uri.startsWith('file://')) {
+          // File URI
+          const response = await fetch(processedImage.uri);
+          blob = await response.blob();
+        } else if (processedImage.uri.startsWith('data:')) {
+          // Base64 data URI
           const response = await fetch(processedImage.uri);
           blob = await response.blob();
         } else {
-          // Mobile: file:// URIs may not work with fetch on all platforms
-          // Use expo-file-system to read the file and create blob
-          try {
-            // Try fetch first (might work on some platforms)
-            const response = await fetch(processedImage.uri);
-            blob = await response.blob();
-          } catch (fetchError) {
-            console.log('[ProcedureChecklistService] fetch failed for file URI, using FileSystem fallback');
-            // Fallback: read file as base64 and write to temp file
-            const base64 = await FileSystem.readAsStringAsync(processedImage.uri, {
-              encoding: FileSystem.EncodingType.Base64,
-            });
-            
-            const tempDir = FileSystem.cacheDirectory;
-            if (!tempDir) {
-              throw new Error('Cache directory not available');
-            }
-            
-            const tempFilePath = `${tempDir}temp_upload_${Date.now()}.jpg`;
-            await FileSystem.writeAsStringAsync(tempFilePath, base64, {
-              encoding: FileSystem.EncodingType.Base64,
-            });
-            
-            // Read the temporary file as blob using file:// path that works
-            const response = await fetch(tempFilePath);
-            blob = await response.blob();
-            
-            // Clean up temporary file
-            await FileSystem.deleteAsync(tempFilePath, { idempotent: true });
-          }
+          // Blob URL or HTTP URL
+          const response = await fetch(processedImage.uri);
+          blob = await response.blob();
         }
-      } else if (processedImage.uri.startsWith('data:')) {
-        // Base64 data URI - handle length limitations on mobile
-        if (Platform.OS === 'web') {
-          // Web: fetch should work fine for data URIs
-          const response = await fetch(processedImage.uri);
-          blob = await response.blob();
-        } else {
-          // Mobile: avoid fetch with long data URIs, write to temp file instead
+
+        await uploadFile(imageRef, blob, {
+          cacheControl: 'public,max-age=31536000' // Cache for 1 year
+        });
+      } else {
+        // React Native platform: Use file path directly with putFile
+        let filePath = processedImage.uri;
+
+        if (processedImage.uri.startsWith('data:')) {
+          // Base64 data URI - write to temp file
           const [header, base64Data] = processedImage.uri.split(',');
           
           const tempDir = FileSystem.cacheDirectory;
@@ -275,23 +255,31 @@ export class ProcedureChecklistService {
             encoding: FileSystem.EncodingType.Base64,
           });
           
-          // Read the temporary file as blob
-          const response = await fetch(tempFilePath);
-          blob = await response.blob();
+          filePath = tempFilePath;
+        } else if (processedImage.uri.startsWith('file://')) {
+          // File URI - use as is
+          filePath = processedImage.uri;
+        } else {
+          // Other URI types - download to temp file
+          const tempDir = FileSystem.cacheDirectory;
+          if (!tempDir) {
+            throw new Error('Cache directory not available');
+          }
           
-          // Clean up temporary file
-          await FileSystem.deleteAsync(tempFilePath, { idempotent: true });
+          const tempFilePath = `${tempDir}temp_upload_${Date.now()}.jpg`;
+          await FileSystem.downloadAsync(processedImage.uri, tempFilePath);
+          filePath = tempFilePath;
         }
-      } else {
-        // Blob URL or HTTP URL - use fetch (existing behavior)
-        const response = await fetch(processedImage.uri);
-        blob = await response.blob();
+
+        await uploadFile(imageRef, filePath, {
+          cacheControl: 'public,max-age=31536000' // Cache for 1 year
+        });
+
+        // Clean up temporary file if we created one
+        if (filePath !== processedImage.uri && filePath.includes('temp_upload_')) {
+          await FileSystem.deleteAsync(filePath, { idempotent: true });
+        }
       }
-      
-      const imageRef = getStorageRef(`procedures_checklists/images/${fileName}`);
-      await uploadBytes(imageRef, blob, {
-        cacheControl: 'public,max-age=31536000' // Cache for 1 year
-      });
       
       const downloadUrl = await getDownloadURL(imageRef);
       

@@ -103,7 +103,7 @@ if (isWeb()) {
   
   storageFunctions = {
     ref: rnStorage.ref,
-    uploadBytes: rnStorage.uploadBytes,
+    putFile: rnStorage.putFile,
     getDownloadURL: rnStorage.getDownloadURL,
     deleteObject: rnStorage.deleteObject,
   };
@@ -194,14 +194,30 @@ export const getStorageRef = (path: string) => {
 };
 
 /**
- * Upload bytes to storage with retry logic
+ * Upload file to storage with retry logic - platform-aware
+ * @param storageRef Storage reference
+ * @param data Blob for web, file path for React Native
+ * @param metadata Optional metadata
  */
-export const uploadBytes = async (storageRef: any, blob: Blob, metadata?: any) => {
+export const uploadFile = async (storageRef: any, data: Blob | string, metadata?: any) => {
   return withRetry(
-    () => storageFunctions.uploadBytes(storageRef, blob, metadata),
-    'uploadBytes'
+    () => {
+      if (isWeb()) {
+        // Web: use uploadBytes with Blob
+        return storageFunctions.uploadBytes(storageRef, data as Blob, metadata);
+      } else {
+        // React Native: use putFile with file path
+        return storageFunctions.putFile(storageRef, data as string, metadata);
+      }
+    },
+    'uploadFile'
   );
 };
+
+/**
+ * @deprecated Use uploadFile instead for platform compatibility
+ */
+export const uploadBytes = uploadFile;
 
 /**
  * Get download URL from storage reference with retry logic
