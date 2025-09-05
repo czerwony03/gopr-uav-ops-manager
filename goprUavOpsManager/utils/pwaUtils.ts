@@ -2,6 +2,7 @@
 // This should be called early in the app lifecycle on web platform
 
 import { Platform } from 'react-native';
+import { injectPWAMetaTags } from './pwaMetaInjection';
 
 /**
  * Register the service worker for PWA functionality
@@ -17,6 +18,9 @@ export const registerServiceWorker = async (): Promise<void> => {
     console.log('[PWA] Service workers not supported');
     return;
   }
+
+  // Inject PWA meta tags first
+  injectPWAMetaTags();
 
   try {
     console.log('[PWA] Registering service worker...');
