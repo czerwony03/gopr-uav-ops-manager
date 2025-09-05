@@ -1,11 +1,12 @@
-import {deleteObject, getDownloadURL, ref, uploadBytes} from 'firebase/storage';
-import {storage} from '@/firebaseConfig';
+import {getStorageRef, uploadFile, getDownloadURL, deleteObject} from '@/utils/firebaseUtils';
 import {ChecklistItemFormData, ProcedureChecklist, ProcedureChecklistFormData} from '@/types/ProcedureChecklist';
 import {AuditLogService} from './auditLogService';
 import {UserService} from './userService';
 import {UserRole} from "@/types/UserRole";
 import {ImageProcessingService} from '@/utils/imageProcessing';
 import {ProcedureChecklistRepository} from '@/repositories/ProcedureChecklistRepository';
+import { Platform } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 
 export class ProcedureChecklistService {
   // Get all procedures/checklists based on user role
@@ -195,6 +196,11 @@ export class ProcedureChecklistService {
   // Upload image to Firebase Storage
   static async uploadImage(imageUri: string, fileName: string): Promise<string> {
     try {
+      // Defensive checks
+      if (!fileName || !fileName.trim()) {
+        throw new Error('fileName is required');
+      }
+
       // Process the image before upload (resize, compress, convert format)
       const processedImage = await ImageProcessingService.processImageForUpload(imageUri, {
         maxWidth: 1200,
@@ -203,13 +209,63 @@ export class ProcedureChecklistService {
         format: 'jpeg'
       });
 
-      const response = await fetch(processedImage.uri);
-      const blob = await response.blob();
-      
-      const imageRef = ref(storage, `procedures_checklists/images/${fileName}`);
-      await uploadBytes(imageRef, blob, {
-        cacheControl: 'public,max-age=31536000' // Cache for 1 year
-      });
+      // Defensive check for processed image
+      if (!processedImage || !processedImage.uri) {
+        throw new Error('Failed to process image');
+      }
+
+      const imageRef = getStorageRef(`procedures_checklists/images/${fileName}`);
+
+      if (Platform.OS === 'web') {
+        const response = await fetch(processedImage.uri);
+        const blob = await response.blob();
+
+        await uploadFile(imageRef, blob, {
+          cacheControl: 'public,max-age=31536000' // Cache for 1 year
+        });
+      } else {
+        // React Native platform: Use file path directly with putFile
+        let filePath = processedImage.uri;
+
+        if (processedImage.uri.startsWith('data:')) {
+          // Base64 data URI - write to temp file
+          const [header, base64Data] = processedImage.uri.split(',');
+          
+          const tempDir = FileSystem.cacheDirectory;
+          if (!tempDir) {
+            throw new Error('Cache directory not available');
+          }
+          
+          const tempFilePath = `${tempDir}temp_upload_${Date.now()}.jpg`;
+          await FileSystem.writeAsStringAsync(tempFilePath, base64Data, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          
+          filePath = tempFilePath;
+        } else if (processedImage.uri.startsWith('file://')) {
+          // File URI - use as is
+          filePath = processedImage.uri;
+        } else {
+          // Other URI types - download to temp file
+          const tempDir = FileSystem.cacheDirectory;
+          if (!tempDir) {
+            throw new Error('Cache directory not available');
+          }
+          
+          const tempFilePath = `${tempDir}temp_upload_${Date.now()}.jpg`;
+          await FileSystem.downloadAsync(processedImage.uri, tempFilePath);
+          filePath = tempFilePath;
+        }
+
+        await uploadFile(imageRef, filePath, {
+          cacheControl: 'public,max-age=31536000' // Cache for 1 year
+        });
+
+        // Clean up temporary file if we created one
+        if (filePath !== processedImage.uri && filePath.includes('temp_upload_')) {
+          await FileSystem.deleteAsync(filePath, { idempotent: true });
+        }
+      }
       
       const downloadUrl = await getDownloadURL(imageRef);
       
@@ -228,7 +284,7 @@ export class ProcedureChecklistService {
   // Delete image from Firebase Storage
   static async deleteImage(imageUrl: string): Promise<void> {
     try {
-      const imageRef = ref(storage, imageUrl);
+      const imageRef = getStorageRef(imageUrl);
       await deleteObject(imageRef);
     } catch (error) {
       console.error('Error deleting image:', error);
