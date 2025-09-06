@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
+import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
 import ProcedureForm from '@/components/ProcedureForm';
 import { ProcedureChecklistFormData } from '@/types/ProcedureChecklist';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
@@ -40,6 +41,16 @@ export default function CreateProcedureScreen() {
     setLoading(true);
     try {
       await ProcedureChecklistService.createProcedureChecklist(formData, user.role, user.uid);
+      
+      // Force refresh cache to include new procedure data and images
+      try {
+        await OfflineProcedureChecklistService.forceRefreshProcedures(user.role);
+        console.log('[CreateProcedure] Cache refreshed successfully after procedure creation');
+      } catch (cacheError) {
+        console.warn('[CreateProcedure] Failed to refresh cache after procedure creation:', cacheError);
+        // Don't fail the operation if cache refresh fails
+      }
+      
       router.back();
       crossPlatformAlert.showAlert({ title: t('procedureForm.success'), message: t('procedureForm.procedureCreated') });
     } catch (error) {

@@ -47,8 +47,9 @@ export default function ProceduresListScreen() {
           setChecklists(freshProcedures);
           setIsFromCache(false);
           
-          // Update cache with fresh data
-          OfflineProcedureChecklistService.preDownloadProcedures(user.role).catch(error => {
+          // Always refresh cache with fresh data when online
+          console.log('[ProceduresList] Refreshing cache with fresh data');
+          OfflineProcedureChecklistService.forceRefreshProcedures(user.role, freshProcedures).catch(error => {
             console.error('Error updating cache with fresh data:', error);
           });
         } catch (error) {

@@ -69,23 +69,32 @@ export class OfflineProcedureChecklistService {
   /**
    * Force refresh of cached procedures regardless of cache freshness
    * Useful when user explicitly wants to update procedures
+   * @param userRole - The user role to refresh procedures for
+   * @param procedures - Optional pre-fetched procedures to avoid double download
    */
-  static async forceRefreshProcedures(userRole: UserRole): Promise<void> {
+  static async forceRefreshProcedures(userRole: UserRole, procedures?: ProcedureChecklist[]): Promise<void> {
     try {
       console.log('[OfflineProcedureService] Force refreshing procedures for role:', userRole);
       
       // Initialize image cache if not already done
       await ImageCacheService.initialize();
       
-      // Fetch all procedures from Firestore
-      const procedures = await ProcedureChecklistService.getProcedureChecklists(userRole);
-      console.log(`[OfflineProcedureService] Fetched ${procedures.length} procedures`);
+      // Use provided procedures or fetch from Firestore
+      let proceduresToCache: ProcedureChecklist[];
+      if (procedures) {
+        console.log(`[OfflineProcedureService] Using provided ${procedures.length} procedures`);
+        proceduresToCache = procedures;
+      } else {
+        console.log('[OfflineProcedureService] Fetching procedures from Firestore');
+        proceduresToCache = await ProcedureChecklistService.getProcedureChecklists(userRole);
+        console.log(`[OfflineProcedureService] Fetched ${proceduresToCache.length} procedures`);
+      }
       
       // Cache procedures data
-      await this.cacheProcedures(procedures, userRole);
+      await this.cacheProcedures(proceduresToCache, userRole);
       
       // Pre-download all images
-      await this.preDownloadProcedureImages(procedures);
+      await this.preDownloadProcedureImages(proceduresToCache);
       
       console.log('[OfflineProcedureService] Force refresh completed successfully');
     } catch (error) {
