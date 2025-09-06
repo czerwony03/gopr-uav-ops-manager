@@ -47,17 +47,11 @@ export default function ProceduresListScreen() {
           setChecklists(freshProcedures);
           setIsFromCache(false);
           
-          // Check if content actually changed before forcing cache refresh
-          const contentChanged = await OfflineProcedureChecklistService.hasContentChanged(freshProcedures, user.role);
-          if (contentChanged) {
-            console.log('[ProceduresList] Content changed, refreshing cache');
-            // Force refresh cache with fresh data to ensure all procedure changes are captured
-            OfflineProcedureChecklistService.forceRefreshProcedures(user.role).catch(error => {
-              console.error('Error updating cache with fresh data:', error);
-            });
-          } else {
-            console.log('[ProceduresList] Content unchanged, cache is current');
-          }
+          // Always refresh cache with fresh data when online
+          console.log('[ProceduresList] Refreshing cache with fresh data');
+          OfflineProcedureChecklistService.forceRefreshProcedures(user.role, freshProcedures).catch(error => {
+            console.error('Error updating cache with fresh data:', error);
+          });
         } catch (error) {
           console.log('Failed to fetch fresh data, keeping cached data:', error);
           // Keep using cached data if fresh fetch fails
