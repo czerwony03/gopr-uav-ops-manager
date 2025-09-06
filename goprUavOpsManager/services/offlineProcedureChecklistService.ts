@@ -13,6 +13,7 @@ interface CacheMetadata {
   lastUpdated: number;
   userRole: UserRole;
   procedureCount: number;
+  dataHash?: string; // Simple hash to detect content changes
 }
 
 /**
@@ -294,12 +295,14 @@ export class OfflineProcedureChecklistService {
       
       await AsyncStorage.setItem(this.CACHE_KEY, JSON.stringify(serializedProcedures));
       
-      // Save metadata
+      // Save metadata with content hash
+      const dataHash = this.generateProceduresHash(procedures);
       const metadata: CacheMetadata = {
         version: this.CACHE_VERSION,
         lastUpdated: Date.now(),
         userRole,
         procedureCount: procedures.length,
+        dataHash,
       };
       
       await AsyncStorage.setItem(this.CACHE_METADATA_KEY, JSON.stringify(metadata));
@@ -414,6 +417,74 @@ export class OfflineProcedureChecklistService {
     } catch (error) {
       console.error('[OfflineProcedureService] Error pre-downloading images:', error);
       // Don't throw - image pre-download is optional
+    }
+  }
+
+  /**
+   * Generate a simple hash of procedure data to detect changes
+   * This helps determine if cache needs updating even if cache is considered "fresh"
+   */
+  private static generateProceduresHash(procedures: ProcedureChecklist[]): string {
+    try {
+      // Create a simplified representation of procedures for hashing
+      const simplifiedData = procedures.map(proc => ({
+        id: proc.id,
+        title: proc.title,
+        description: proc.description,
+        itemCount: proc.items.length,
+        updatedAt: proc.updatedAt?.getTime() || 0,
+        isDeleted: proc.isDeleted,
+        // Include a simple representation of items
+        items: proc.items.map(item => ({
+          id: item.id,
+          topic: item.topic,
+          content: item.content.substring(0, 50), // Just first 50 chars for hash
+          hasImage: !!item.image,
+          hasLink: !!item.link,
+          hasFile: !!item.file
+        }))
+      }));
+
+      // Simple hash function - convert to string and create a basic hash
+      const dataString = JSON.stringify(simplifiedData);
+      let hash = 0;
+      for (let i = 0; i < dataString.length; i++) {
+        const char = dataString.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32-bit integer
+      }
+      return hash.toString(36);
+    } catch (error) {
+      console.error('[OfflineProcedureService] Error generating procedures hash:', error);
+      return Date.now().toString(); // Fallback to timestamp
+    }
+  }
+
+  /**
+   * Check if cached procedures differ from fresh procedures
+   * Returns true if content has changed
+   */
+  static async hasContentChanged(freshProcedures: ProcedureChecklist[], userRole: UserRole): Promise<boolean> {
+    try {
+      const metadata = await this.getCacheMetadata();
+      if (!metadata || metadata.userRole !== userRole) {
+        return true; // No cache or different role means content has "changed"
+      }
+
+      const freshHash = this.generateProceduresHash(freshProcedures);
+      const cachedHash = metadata.dataHash;
+      
+      const hasChanged = freshHash !== cachedHash;
+      if (hasChanged) {
+        console.log('[OfflineProcedureService] Content hash changed, cache needs update');
+      } else {
+        console.log('[OfflineProcedureService] Content hash unchanged, cache is current');
+      }
+      
+      return hasChanged;
+    } catch (error) {
+      console.error('[OfflineProcedureService] Error checking content changes:', error);
+      return true; // Assume changed if we can't check
     }
   }
 }
