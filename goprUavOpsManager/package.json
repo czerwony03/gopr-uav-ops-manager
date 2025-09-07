@@ -8,8 +8,8 @@
     "ios": "npx expo run:ios",
     "web": "npx expo start --web",
     "lint": "npx expo lint",
-    "export:web": "npx expo export --platform web",
-    "export:web:sourcemaps": "npx expo export --platform web --source-maps",
+    "export:web": "npx expo export --platform web && npx workbox-cli generateSW workbox-config.js",
+    "export:web:sourcemaps": "npx expo export --platform web --source-maps && npx workbox-cli generateSW workbox-config.js",
     "eas-build-post-install": "bash ./scripts/expo/post-install"
   },
   "dependencies": {
@@ -73,7 +73,8 @@
     "eas-cli": "^16.17.4",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "workbox-cli": "^7.3.0"
   },
   "private": true
 }
