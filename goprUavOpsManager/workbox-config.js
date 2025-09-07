@@ -8,5 +8,6 @@ module.exports = {
 		/^utm_/,
 		/^fbclid$/
 	],
-	maximumFileSizeToCacheInBytes: 10 * 1024 ** 2
+	maximumFileSizeToCacheInBytes: 10 * 1024 ** 2,
+	sourcemap: true,
 };
