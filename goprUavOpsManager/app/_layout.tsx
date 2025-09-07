@@ -1,6 +1,5 @@
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
-import Head from 'expo-router/head';
 import { Stack } from 'expo-router';
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ConsoleProvider } from "@/contexts/ConsoleContext";
@@ -227,25 +226,8 @@ export default Sentry.wrap(function RootLayout() {
     }
   }, [i18n]);
 
-
-  const sw = `
-  if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').then(registration => {
-              console.log('Service Worker registered with scope:', registration.scope);
-          }).catch(error => {
-              console.error('Service Worker registration failed:', error);
-          });
-      });
-  }
-  `;
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Head>
-        <script dangerouslySetInnerHTML={{__html: sw}}/>
-        <meta name="google" content="notranslate"/>
-      </Head>
       <ConsoleProvider>
         <AuthProvider>
           <CrossPlatformAlertProvider>
