@@ -243,7 +243,8 @@ export default Sentry.wrap(function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Head>
-        <script dangerouslySetInnerHTML={{ __html: sw }} />
+        <script dangerouslySetInnerHTML={{__html: sw}}/>
+        <meta name="google" content="notranslate"/>
       </Head>
       <ConsoleProvider>
         <AuthProvider>
