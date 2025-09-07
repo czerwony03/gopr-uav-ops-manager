@@ -31,23 +31,23 @@ export function PWAHead() {
       <link rel="manifest" href="/manifest.json" />
       
       {/* Icons */}
-      <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicon.png" />
-      <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icon.png" />
-      <link rel="icon" type="image/png" sizes="512x512" href="/assets/images/icon.png" />
-      <link rel="apple-touch-icon" href="/assets/images/icon.png" />
+      <link rel="icon" type="image/png" sizes="16x16" href="/assets/assets/images/favicon.png" />
+      <link rel="icon" type="image/png" sizes="192x192" href="/assets/assets/images/icon.png" />
+      <link rel="icon" type="image/png" sizes="512x512" href="/assets/assets/images/icon.png" />
+      <link rel="apple-touch-icon" href="/assets/assets/images/icon.png" />
       
       {/* Splash Screen for iOS */}
-      <link rel="apple-touch-startup-image" href="/assets/images/splash-icon.png" />
+      <link rel="apple-touch-startup-image" href="/assets/assets/images/splash-icon.png" />
       
       {/* Additional meta tags for SEO and social sharing */}
       <meta property="og:title" content="GOPR UAV Ops Manager" />
       <meta property="og:description" content="Comprehensive UAV operations management system for GOPR Bieszczady" />
-      <meta property="og:image" content="/assets/images/icon.png" />
+      <meta property="og:image" content="/assets/assets/images/icon.png" />
       <meta property="og:type" content="website" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content="GOPR UAV Ops Manager" />
       <meta name="twitter:description" content="Comprehensive UAV operations management system for GOPR Bieszczady" />
-      <meta name="twitter:image" content="/assets/images/icon.png" />
+      <meta name="twitter:image" content="/assets/assets/images/icon.png" />
       
       {/* Keywords for search engines */}
       <meta name="keywords" content="UAV, drone, operations, management, GOPR, Bieszczady, search, rescue" />

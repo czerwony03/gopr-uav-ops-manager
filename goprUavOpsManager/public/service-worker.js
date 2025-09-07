@@ -10,9 +10,9 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/assets/images/icon.png',
-  '/assets/images/favicon.png',
-  '/assets/images/splash-icon.png',
+  '/assets/assets/images/icon.png',
+  '/assets/assets/images/favicon.png',
+  '/assets/assets/images/splash-icon.png',
   // Note: JS bundle will be cached dynamically when first requested
 ];
 
@@ -73,10 +73,11 @@ self.addEventListener('fetch', event => {
     return;
   }
   
-  // Handle Firebase/Firestore requests (network-first for real-time data)
+  // Handle Firebase/Firestore requests (network-only for security)
   if (url.hostname.includes('firestore.googleapis.com') || 
-      url.hostname.includes('firebase.googleapis.com')) {
-    event.respondWith(networkFirstStrategy(request));
+      url.hostname.includes('firebase.googleapis.com') ||
+      url.hostname.includes('googleapis.com')) {
+    event.respondWith(secureNetworkOnlyStrategy(request));
     return;
   }
   
@@ -125,6 +126,23 @@ async function cacheFirstStrategy(request) {
   }
 }
 
+// Secure network-only strategy for Firebase/sensitive requests
+async function secureNetworkOnlyStrategy(request) {
+  try {
+    // Always fetch from network, never use cache for security reasons
+    const networkResponse = await fetch(request);
+    
+    // Never cache Firebase/Firestore responses as they contain sensitive data
+    return networkResponse;
+  } catch (error) {
+    console.error('[SW] Secure network request failed:', error);
+    
+    // For sensitive requests, fail immediately without fallback to cache
+    // This prevents potential data leaks from cached sensitive information
+    throw new Error('Network request required for security reasons');
+  }
+}
+
 // Network-first strategy for dynamic content
 async function networkFirstStrategy(request) {
   try {
@@ -167,10 +185,13 @@ function isStaticAsset(pathname) {
 
 // Helper function to identify dynamic content worth caching
 function isDynamicContent(url) {
+  // Never cache Firebase/Firestore responses for security
+  if (url.includes('firebase') || url.includes('firestore') || url.includes('googleapis.com')) {
+    return false;
+  }
+  
   // Cache API responses that might be useful offline
-  return url.includes('/api/') || 
-         url.includes('firestore') ||
-         url.includes('firebase');
+  return url.includes('/api/');
 }
 
 // Background sync for offline actions (when supported)
@@ -200,8 +221,8 @@ self.addEventListener('push', event => {
     event.waitUntil(
       self.registration.showNotification(data.title, {
         body: data.body,
-        icon: '/assets/images/icon.png',
-        badge: '/assets/images/favicon.png',
+        icon: '/assets/assets/images/icon.png',
+        badge: '/assets/assets/images/favicon.png',
         tag: 'gopr-uav-notification'
       })
     );

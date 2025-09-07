@@ -28,22 +28,22 @@ export const injectPWAMetaTags = () => {
     // Open Graph tags
     { property: 'og:title', content: 'GOPR UAV Ops Manager' },
     { property: 'og:description', content: 'Comprehensive UAV operations management system for GOPR Bieszczady' },
-    { property: 'og:image', content: '/assets/images/icon.png' },
+    { property: 'og:image', content: '/assets/assets/images/icon.png' },
     { property: 'og:type', content: 'website' },
     // Twitter tags
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'GOPR UAV Ops Manager' },
     { name: 'twitter:description', content: 'Comprehensive UAV operations management system for GOPR Bieszczady' },
-    { name: 'twitter:image', content: '/assets/images/icon.png' },
+    { name: 'twitter:image', content: '/assets/assets/images/icon.png' },
   ];
 
   const linkTags = [
     { rel: 'manifest', href: '/manifest.json' },
-    { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/assets/images/favicon.png' },
-    { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/assets/images/icon.png' },
-    { rel: 'icon', type: 'image/png', sizes: '512x512', href: '/assets/images/icon.png' },
-    { rel: 'apple-touch-icon', href: '/assets/images/icon.png' },
-    { rel: 'apple-touch-startup-image', href: '/assets/images/splash-icon.png' },
+    { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/assets/assets/images/favicon.png' },
+    { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/assets/assets/images/icon.png' },
+    { rel: 'icon', type: 'image/png', sizes: '512x512', href: '/assets/assets/images/icon.png' },
+    { rel: 'apple-touch-icon', href: '/assets/assets/images/icon.png' },
+    { rel: 'apple-touch-startup-image', href: '/assets/assets/images/splash-icon.png' },
   ];
 
   // Function to check if a meta/link tag already exists
