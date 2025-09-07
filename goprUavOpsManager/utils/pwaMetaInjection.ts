@@ -73,6 +73,7 @@ export const injectPWAMetaTags = () => {
     if (!tagExists('link', 'rel', tag.rel)) {
       const linkElement = document.createElement('link');
       Object.keys(tag).forEach(attr => {
+        // @ts-ignore
         linkElement.setAttribute(attr, tag[attr as keyof typeof tag]);
       });
       head.appendChild(linkElement);

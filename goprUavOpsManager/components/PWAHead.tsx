@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import { Head } from 'expo-router';
+import Head from 'expo-router/head';
 
 /**
  * PWA Head component that adds necessary meta tags for Progressive Web App functionality
