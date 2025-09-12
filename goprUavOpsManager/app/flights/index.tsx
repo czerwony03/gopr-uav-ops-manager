@@ -23,6 +23,8 @@ import { Drone } from '@/types/Drone';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { formatFlightDurationCompact } from '@/src/utils/flightUtils';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import { useNetworkStatus } from '@/utils/useNetworkStatus';
+import OfflineInfoBar from '@/components/OfflineInfoBar';
 
 export default function FlightsListScreen() {
   const { user } = useAuth();
@@ -30,6 +32,7 @@ export default function FlightsListScreen() {
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
+  const { isConnected } = useNetworkStatus();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -534,6 +537,12 @@ export default function FlightsListScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Offline info bar */}
+      <OfflineInfoBar 
+        visible={!isConnected} 
+        message={t('offline.noConnection')}
+      />
+      
       <ScrollView>
         <View style={styles.header}>
           <TouchableOpacity 

@@ -7,11 +7,13 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { signOut } from '@/utils/firebaseUtils';
 import { useTranslation } from 'react-i18next';
+import { useOfflineButtons } from '@/utils/useOfflineButtons';
 
 export function CustomDrawerContent(props: any) {
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
+  const { isNavigationDisabled, getDisabledStyle } = useOfflineButtons();
 
   const handleLogout = async () => {
     try {
@@ -24,7 +26,9 @@ export function CustomDrawerContent(props: any) {
   };
 
   const handleNavigation = (route: string) => {
-    router.push(route as any);
+    if (!isNavigationDisabled(route)) {
+      router.push(route as any);
+    }
   };
 
   const getRoleColor = (role: string) => {
@@ -54,11 +58,14 @@ export function CustomDrawerContent(props: any) {
           <View style={styles.headerTop}>
             <Text style={styles.appTitle}>{t('drawer.appTitle')}</Text>
             <TouchableOpacity 
-              style={styles.profileButton}
+              style={[styles.profileButton, getDisabledStyle(!isNavigationDisabled(`/users/${user.uid}/edit`))]}
               onPress={() => handleNavigation(`/users/${user.uid}/edit`)}
+              disabled={isNavigationDisabled(`/users/${user.uid}/edit`)}
             >
-              <Ionicons name="person-outline" size={14} color="#0066CC" />
-              <Text style={styles.profileButtonText}>{t('drawer.editProfile')}</Text>
+              <Ionicons name="person-outline" size={14} color={isNavigationDisabled(`/users/${user.uid}/edit`) ? "#999" : "#0066CC"} />
+              <Text style={[styles.profileButtonText, isNavigationDisabled(`/users/${user.uid}/edit`) && { color: '#999' }]}>
+                {t('drawer.editProfile')}
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -77,30 +84,30 @@ export function CustomDrawerContent(props: any) {
             label={t('nav.home')}
             onPress={() => handleNavigation('/')}
             icon={({color, size}) => (
-              <Ionicons name="home-outline" size={size} color={color}/>
+              <Ionicons name="home-outline" size={size} color={isNavigationDisabled('/') ? "#999" : color}/>
             )}
-            labelStyle={styles.drawerLabel}
-            style={styles.drawerItem}
+            labelStyle={[styles.drawerLabel, isNavigationDisabled('/') && { color: '#999' }]}
+            style={[styles.drawerItem, getDisabledStyle(!isNavigationDisabled('/'))]}
           />
 
           <DrawerItem
             label={t('nav.flights')}
             onPress={() => handleNavigation('/flights')}
             icon={({color, size}) => (
-              <Ionicons name="airplane-outline" size={size} color={color}/>
+              <Ionicons name="airplane-outline" size={size} color={isNavigationDisabled('/flights') ? "#999" : color}/>
             )}
-            labelStyle={styles.drawerLabel}
-            style={styles.drawerItem}
+            labelStyle={[styles.drawerLabel, isNavigationDisabled('/flights') && { color: '#999' }]}
+            style={[styles.drawerItem, getDisabledStyle(!isNavigationDisabled('/flights'))]}
           />
 
           <DrawerItem
             label={t('nav.drones')}
             onPress={() => handleNavigation('/drones')}
             icon={({color, size}) => (
-              <Ionicons name="hardware-chip-outline" size={size} color={color}/>
+              <Ionicons name="hardware-chip-outline" size={size} color={isNavigationDisabled('/drones') ? "#999" : color}/>
             )}
-            labelStyle={styles.drawerLabel}
-            style={styles.drawerItem}
+            labelStyle={[styles.drawerLabel, isNavigationDisabled('/drones') && { color: '#999' }]}
+            style={[styles.drawerItem, getDisabledStyle(!isNavigationDisabled('/drones'))]}
           />
 
           <DrawerItem
@@ -119,10 +126,10 @@ export function CustomDrawerContent(props: any) {
               label={t('nav.users')}
               onPress={() => handleNavigation('/users')}
               icon={({color, size}) => (
-                <Ionicons name="people-outline" size={size} color={color}/>
+                <Ionicons name="people-outline" size={size} color={isNavigationDisabled('/users') ? "#999" : color}/>
               )}
-              labelStyle={styles.drawerLabel}
-              style={styles.drawerItem}
+              labelStyle={[styles.drawerLabel, isNavigationDisabled('/users') && { color: '#999' }]}
+              style={[styles.drawerItem, getDisabledStyle(!isNavigationDisabled('/users'))]}
             />
           )}
 
@@ -132,10 +139,10 @@ export function CustomDrawerContent(props: any) {
               label={t('nav.auditLogs')}
               onPress={() => handleNavigation('/audit-logs')}
               icon={({color, size}) => (
-                <Ionicons name="document-text-outline" size={size} color={color}/>
+                <Ionicons name="document-text-outline" size={size} color={isNavigationDisabled('/audit-logs') ? "#999" : color}/>
               )}
-              labelStyle={styles.drawerLabel}
-              style={styles.drawerItem}
+              labelStyle={[styles.drawerLabel, isNavigationDisabled('/audit-logs') && { color: '#999' }]}
+              style={[styles.drawerItem, getDisabledStyle(!isNavigationDisabled('/audit-logs'))]}
             />
           )}
         </View>
@@ -147,10 +154,10 @@ export function CustomDrawerContent(props: any) {
           label={t('nav.info')}
           onPress={() => handleNavigation('/info-contact')}
           icon={({color, size}) => (
-            <Ionicons name="information-circle-outline" size={size} color={color}/>
+            <Ionicons name="information-circle-outline" size={size} color={isNavigationDisabled('/info-contact') ? "#999" : color}/>
           )}
-          labelStyle={styles.drawerLabel}
-          style={styles.drawerItem}
+          labelStyle={[styles.drawerLabel, isNavigationDisabled('/info-contact') && { color: '#999' }]}
+          style={[styles.drawerItem, getDisabledStyle(!isNavigationDisabled('/info-contact'))]}
         />
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>

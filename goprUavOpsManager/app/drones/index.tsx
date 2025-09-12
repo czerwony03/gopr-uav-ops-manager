@@ -16,6 +16,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DroneService } from '@/services/droneService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import { useNetworkStatus } from '@/utils/useNetworkStatus';
+import OfflineInfoBar from '@/components/OfflineInfoBar';
 
 export default function DronesListScreen() {
   const [drones, setDrones] = useState<Drone[]>([]);
@@ -26,6 +28,7 @@ export default function DronesListScreen() {
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
+  const { isConnected } = useNetworkStatus();
 
   const fetchDrones = useCallback(async () => {
     if (!user) return;
@@ -219,6 +222,12 @@ export default function DronesListScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Offline info bar */}
+      <OfflineInfoBar 
+        visible={!isConnected} 
+        message={t('offline.noConnection')}
+      />
+      
       <View style={styles.header}>
         <Text style={styles.title}>{t('drones.title')}</Text>
         {canCreateDrones && (
