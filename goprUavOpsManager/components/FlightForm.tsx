@@ -18,6 +18,7 @@ import { DroneService } from '@/services/droneService';
 import { Drone } from '@/types/Drone';
 import { useCrossPlatformAlert } from './CrossPlatformAlert';
 import WebCompatibleDatePicker from './WebCompatibleDatePicker';
+import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import TimePicker from './TimePicker';
 import { 
   FlightCategory, 
@@ -52,6 +53,7 @@ interface FlightFormProps {
 export default function FlightForm({ mode, initialData, onSave, onCancel, loading = false }: FlightFormProps) {
   const { user } = useAuth();
   const { t } = useTranslation('common');
+  const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const crossPlatformAlert = useCrossPlatformAlert();
 
   const [dronesLoading, setDronesLoading] = useState(true);
@@ -225,7 +227,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
   };
 
   const handleSave = async () => {
-    if (!validateForm()) return;
+    if (!validateForm() || isButtonDisabled()) return;
 
     try {
       await onSave(formData);
@@ -389,9 +391,9 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
             </TouchableOpacity>
             
             <TouchableOpacity
-              style={[styles.submitButton, loading && styles.disabledButton]}
+              style={[styles.submitButton, (loading || isButtonDisabled()) && styles.disabledButton, getDisabledStyle()]}
               onPress={handleSave}
-              disabled={loading}
+              disabled={loading || isButtonDisabled()}
             >
               {loading ? (
                 <ActivityIndicator color="#fff" />

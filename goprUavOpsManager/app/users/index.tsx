@@ -17,6 +17,9 @@ import {UserRole} from "@/types/UserRole";
 import UserComponent from '@/components/UserComponent';
 import CrossPlatformAlert from '@/components/CrossPlatformAlert';
 import { getDocument, updateDocument } from '@/utils/firebaseUtils';
+import { useNetworkStatus } from '@/utils/useNetworkStatus';
+import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import OfflineInfoBar from '@/components/OfflineInfoBar';
 
 interface UserData {
   id: string;
@@ -30,6 +33,8 @@ export default function UsersListScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
+  const { isConnected } = useNetworkStatus();
+  const { isButtonDisabled } = useOfflineButtons();
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -101,6 +106,8 @@ export default function UsersListScreen() {
   }
 
   const updateUserRole = async (userId: string, newRole: UserRole) => {
+    if (isButtonDisabled()) return;
+    
     try {
       const userDoc = getDocument('users', userId);
       await updateDocument(userDoc, { role: newRole });
@@ -120,6 +127,8 @@ export default function UsersListScreen() {
   };
 
   const showRoleUpdateDialog = (userId: string, _currentRole: UserRole) => {
+    if (isButtonDisabled()) return;
+    
     CrossPlatformAlert.alert(
       t('users.updateRole'),
       t('users.selectNewRole'),
@@ -167,6 +176,12 @@ export default function UsersListScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Offline info bar */}
+      <OfflineInfoBar 
+        visible={!isConnected} 
+        message={t('offline.noConnection')}
+      />
+      
       <View style={styles.header}>
         <Text style={styles.title}>{t('users.management')}</Text>
         <Text style={styles.subtitle}>{t('users.manageRolesPermissions')}</Text>

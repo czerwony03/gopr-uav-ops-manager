@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { formatDate, formatLastLogin } from '@/utils/dateUtils';
 import { UserRole } from '@/types/UserRole';
+import { useOfflineButtons } from '@/utils/useOfflineButtons';
 
 interface UserData {
   id?: string;
@@ -49,7 +50,18 @@ export default function UserComponent({
 }: UserComponentProps) {
   const { t } = useTranslation('common');
   const router = useRouter();
+  const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const userId = user.id || user.uid || '';
+
+  const handleViewUser = () => {
+    router.push(`/users/${userId}`);
+  };
+
+  const handleEditUser = () => {
+    if (!isButtonDisabled()) {
+      router.push(`/users/${userId}/edit`);
+    }
+  };
 
   const getRoleColor = (role: UserRole) => {
     switch (role) {
@@ -88,22 +100,28 @@ export default function UserComponent({
           <View style={styles.actionButtons}>
             <TouchableOpacity
               style={styles.viewButton}
-              onPress={() => router.push(`/users/${userId}`)}
+              onPress={handleViewUser}
             >
               <Text style={styles.viewButtonText}>{t('users.viewDetails')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => router.push(`/users/${userId}/edit`)}
+              style={[styles.editButton, getDisabledStyle()]}
+              onPress={handleEditUser}
+              disabled={isButtonDisabled()}
             >
-              <Text style={styles.editButtonText}>{t('common.edit')}</Text>
+              <Text style={[styles.editButtonText, isButtonDisabled() && { color: '#999' }]}>
+                {t('common.edit')}
+              </Text>
             </TouchableOpacity>
             {currentUserRole === UserRole.ADMIN && onRoleUpdate && (
               <TouchableOpacity
-                style={styles.roleButton}
-                onPress={() => onRoleUpdate(userId, user.role)}
+                style={[styles.roleButton, getDisabledStyle()]}
+                onPress={() => !isButtonDisabled() && onRoleUpdate(userId, user.role)}
+                disabled={isButtonDisabled()}
               >
-                <Text style={styles.roleButtonText}>{t('users.role')}</Text>
+                <Text style={[styles.roleButtonText, isButtonDisabled() && { color: '#999' }]}>
+                  {t('users.role')}
+                </Text>
               </TouchableOpacity>
             )}
           </View>
@@ -230,12 +248,15 @@ export default function UserComponent({
       {showDetailActions && (
         <View style={styles.detailActionButtons}>
           <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => router.push(`/users/${userId}/edit`)}
+            style={[styles.editButton, getDisabledStyle()]}
+            onPress={handleEditUser}
+            disabled={isButtonDisabled()}
           >
-            <Text style={styles.editButtonText}>{t('userDetails.editButton')}</Text>
+            <Text style={[styles.editButtonText, isButtonDisabled() && { color: '#999' }]}>
+              {t('userDetails.editButton')}
+            </Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}

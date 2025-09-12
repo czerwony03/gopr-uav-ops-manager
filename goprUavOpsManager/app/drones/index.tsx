@@ -15,6 +15,9 @@ import { Drone } from '@/types/Drone';
 import { useAuth } from '@/contexts/AuthContext';
 import { DroneService } from '@/services/droneService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
+import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import { useNetworkStatus } from '@/utils/useNetworkStatus';
+import OfflineInfoBar from '@/components/OfflineInfoBar';
 
 export default function DronesListScreen() {
   const [drones, setDrones] = useState<Drone[]>([]);
@@ -24,6 +27,8 @@ export default function DronesListScreen() {
   const router = useRouter();
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
+  const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
+  const { isConnected } = useNetworkStatus();
 
   const fetchDrones = useCallback(async () => {
     if (!user) return;
@@ -70,15 +75,19 @@ export default function DronesListScreen() {
   };
 
   const handleCreateDrone = () => {
-    router.push('/drones/create');
+    if (!isButtonDisabled()) {
+      router.push('/drones/create');
+    }
   };
 
   const handleEditDrone = (drone: Drone) => {
-    router.push(`/drones/${drone.id}/edit`);
+    if (!isButtonDisabled()) {
+      router.push(`/drones/${drone.id}/edit`);
+    }
   };
 
   const handleDeleteDrone = async (drone: Drone) => {
-    if (!user) return;
+    if (!user || isButtonDisabled()) return;
 
     crossPlatformAlert.showAlert({
       title: t('drones.deleteTitle'),
@@ -104,7 +113,7 @@ export default function DronesListScreen() {
   };
 
   const handleRestoreDrone = async (drone: Drone) => {
-    if (!user) return;
+    if (!user || isButtonDisabled()) return;
 
     crossPlatformAlert.showAlert({
       title: t('drones.restoreTitle'),
@@ -164,18 +173,36 @@ export default function DronesListScreen() {
 
         {user && (user.role === 'manager' || user.role === 'admin') && !item.isDeleted && (
           <>
-            <TouchableOpacity style={styles.editButton} onPress={() => handleEditDrone(item)}>
-              <Text style={styles.editButtonText}>{t('common.edit')}</Text>
+            <TouchableOpacity 
+              style={[styles.editButton, getDisabledStyle()]} 
+              onPress={() => handleEditDrone(item)}
+              disabled={isButtonDisabled()}
+            >
+              <Text style={[styles.editButtonText, isButtonDisabled() && { color: '#999' }]}>
+                {t('common.edit')}
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteDrone(item)}>
-              <Text style={styles.deleteButtonText}>{t('common.delete')}</Text>
+            <TouchableOpacity 
+              style={[styles.deleteButton, getDisabledStyle()]} 
+              onPress={() => handleDeleteDrone(item)}
+              disabled={isButtonDisabled()}
+            >
+              <Text style={[styles.deleteButtonText, isButtonDisabled() && { color: '#999' }]}>
+                {t('common.delete')}
+              </Text>
             </TouchableOpacity>
           </>
         )}
 
         {user?.role === 'admin' && item.isDeleted && (
-          <TouchableOpacity style={styles.restoreButton} onPress={() => handleRestoreDrone(item)}>
-            <Text style={styles.restoreButtonText}>{t('drones.restore')}</Text>
+          <TouchableOpacity 
+            style={[styles.restoreButton, getDisabledStyle()]} 
+            onPress={() => handleRestoreDrone(item)}
+            disabled={isButtonDisabled()}
+          >
+            <Text style={[styles.restoreButtonText, isButtonDisabled() && { color: '#999' }]}>
+              {t('drones.restore')}
+            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -195,11 +222,23 @@ export default function DronesListScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Offline info bar */}
+      <OfflineInfoBar 
+        visible={!isConnected} 
+        message={t('offline.noConnection')}
+      />
+      
       <View style={styles.header}>
         <Text style={styles.title}>{t('drones.title')}</Text>
         {canCreateDrones && (
-          <TouchableOpacity style={styles.createButton} onPress={handleCreateDrone}>
-            <Text style={styles.createButtonText}>+ {t('drones.add')}</Text>
+          <TouchableOpacity 
+            style={[styles.createButton, getDisabledStyle()]} 
+            onPress={handleCreateDrone}
+            disabled={isButtonDisabled()}
+          >
+            <Text style={[styles.createButtonText, isButtonDisabled() && { color: '#999' }]}>
+              + {t('drones.add')}
+            </Text>
           </TouchableOpacity>
         )}
       </View>

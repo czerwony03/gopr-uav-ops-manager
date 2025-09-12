@@ -23,6 +23,7 @@ import { UserService } from '@/services/userService';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
 import { ImageCacheService } from '@/utils/imageCache';
+import { useOfflineButtons } from '@/utils/useOfflineButtons';
 
 export default function ProcedureDetailsScreen() {
   const [checklist, setChecklist] = useState<ProcedureChecklist | null>(null);
@@ -36,6 +37,7 @@ export default function ProcedureDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const { isConnected } = useNetworkStatus();
+  const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const { t } = useTranslation('common');
   const router = useRouter();
   const crossPlatformAlert = useCrossPlatformAlert();
@@ -171,13 +173,13 @@ export default function ProcedureDetailsScreen() {
   );
 
   const handleEdit = () => {
-    if (checklist) {
+    if (checklist && !isButtonDisabled()) {
       router.push(`/procedures/${checklist.id}/edit`);
     }
   };
 
   const handleDelete = async () => {
-    if (!user || !checklist) return;
+    if (!user || !checklist || isButtonDisabled()) return;
 
     crossPlatformAlert.showAlert({
       title: t('procedures.deleteTitle'),
@@ -218,7 +220,7 @@ export default function ProcedureDetailsScreen() {
   };
 
   const handleRestore = async () => {
-    if (!user || !checklist) return;
+    if (!user || !checklist || isButtonDisabled()) return;
 
     try {
       await ProcedureChecklistService.restoreProcedureChecklist(checklist.id, user.role, user.uid);
@@ -401,22 +403,40 @@ export default function ProcedureDetailsScreen() {
         <View style={styles.actionButtons}>
           {!checklist.isDeleted && (
             <>
-              <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-                <Ionicons name="create-outline" size={20} color="#fff" />
-                <Text style={styles.editButtonText}>{t('procedures.edit')}</Text>
+              <TouchableOpacity 
+                style={[styles.editButton, getDisabledStyle()]} 
+                onPress={handleEdit}
+                disabled={isButtonDisabled()}
+              >
+                <Ionicons name="create-outline" size={20} color={isButtonDisabled() ? "#999" : "#fff"} />
+                <Text style={[styles.editButtonText, isButtonDisabled() && { color: '#999' }]}>
+                  {t('procedures.edit')}
+                </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-                <Ionicons name="trash-outline" size={20} color="#fff" />
-                <Text style={styles.deleteButtonText}>{t('procedures.delete.button')}</Text>
+              <TouchableOpacity 
+                style={[styles.deleteButton, getDisabledStyle()]} 
+                onPress={handleDelete}
+                disabled={isButtonDisabled()}
+              >
+                <Ionicons name="trash-outline" size={20} color={isButtonDisabled() ? "#999" : "#fff"} />
+                <Text style={[styles.deleteButtonText, isButtonDisabled() && { color: '#999' }]}>
+                  {t('procedures.delete.button')}
+                </Text>
               </TouchableOpacity>
             </>
           )}
 
           {user?.role === 'admin' && checklist.isDeleted && (
-            <TouchableOpacity style={styles.restoreButton} onPress={handleRestore}>
-              <Ionicons name="refresh-outline" size={20} color="#fff" />
-              <Text style={styles.restoreButtonText}>{t('procedures.restore.button')}</Text>
+            <TouchableOpacity 
+              style={[styles.restoreButton, getDisabledStyle()]} 
+              onPress={handleRestore}
+              disabled={isButtonDisabled()}
+            >
+              <Ionicons name="refresh-outline" size={20} color={isButtonDisabled() ? "#999" : "#fff"} />
+              <Text style={[styles.restoreButtonText, isButtonDisabled() && { color: '#999' }]}>
+                {t('procedures.restore.button')}
+              </Text>
             </TouchableOpacity>
           )}
         </View>

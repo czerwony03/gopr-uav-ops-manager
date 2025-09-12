@@ -7,6 +7,7 @@ import {AVAILABLE_QUALIFICATIONS, Qualification, UserFormData} from '@/types/Use
 import {UserRole} from "@/types/UserRole";
 import WebCompatibleDatePicker from './WebCompatibleDatePicker';
 import {getAvailableLanguages} from '@/src/i18n';
+import { useOfflineButtons } from '@/utils/useOfflineButtons';
 
 interface UserFormProps {
   mode: 'create' | 'edit';
@@ -19,6 +20,7 @@ interface UserFormProps {
 
 export default function UserForm({ mode, initialData, onSave, onCancel, loading = false, currentUserRole }: UserFormProps) {
   const { t } = useTranslation('common');
+  const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
 
   // Default form data
   const defaultFormData: UserFormData = {
@@ -127,7 +129,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
   };
 
   const handleSave = async () => {
-    if (!validateForm()) return;
+    if (!validateForm() || isButtonDisabled()) return;
 
     try {
       // Remove role from form data if current user is not admin
@@ -347,9 +349,9 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
             </TouchableOpacity>
             
             <TouchableOpacity
-              style={[styles.submitButton, loading && styles.disabledButton]}
+              style={[styles.submitButton, (loading || isButtonDisabled()) && styles.disabledButton, getDisabledStyle()]}
               onPress={handleSave}
-              disabled={loading}
+              disabled={loading || isButtonDisabled()}
             >
               {loading ? (
                 <ActivityIndicator color="#fff" />

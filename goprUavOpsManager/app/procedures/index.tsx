@@ -19,6 +19,7 @@ import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChe
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
+import { useOfflineButtons } from '@/utils/useOfflineButtons';
 
 export default function ProceduresListScreen() {
   const [checklists, setChecklists] = useState<ProcedureChecklist[]>([]);
@@ -27,6 +28,7 @@ export default function ProceduresListScreen() {
   const [isFromCache, setIsFromCache] = useState(false);
   const { user } = useAuth();
   const { isConnected } = useNetworkStatus();
+  const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const router = useRouter();
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
@@ -96,11 +98,15 @@ export default function ProceduresListScreen() {
   };
 
   const handleCreateChecklist = () => {
-    router.push('/procedures/create');
+    if (!isButtonDisabled()) {
+      router.push('/procedures/create');
+    }
   };
 
   const handleEditChecklist = (checklist: ProcedureChecklist) => {
-    router.push(`/procedures/${checklist.id}/edit`);
+    if (!isButtonDisabled()) {
+      router.push(`/procedures/${checklist.id}/edit`);
+    }
   };
 
   const handleViewDetails = (checklist: ProcedureChecklist) => {
@@ -108,7 +114,7 @@ export default function ProceduresListScreen() {
   };
 
   const handleDeleteChecklist = async (checklist: ProcedureChecklist) => {
-    if (!user) return;
+    if (!user || isButtonDisabled()) return;
 
     crossPlatformAlert.showAlert({
       title: t('procedures.delete.title'),
@@ -134,7 +140,7 @@ export default function ProceduresListScreen() {
   };
 
   const handleRestoreChecklist = async (checklist: ProcedureChecklist) => {
-    if (!user) return;
+    if (!user || isButtonDisabled()) return;
 
     try {
       await ProcedureChecklistService.restoreProcedureChecklist(checklist.id, user.role, user.uid);
@@ -184,30 +190,33 @@ export default function ProceduresListScreen() {
         {canModifyChecklists && !item.isDeleted && (
           <>
             <TouchableOpacity 
-              style={styles.actionButton} 
+              style={[styles.actionButton, getDisabledStyle()]} 
               onPress={() => handleEditChecklist(item)}
+              disabled={isButtonDisabled()}
             >
-              <Ionicons name="create-outline" size={20} color="#4CAF50" />
-              <Text style={styles.actionButtonText}>{t('common.edit')}</Text>
+              <Ionicons name="create-outline" size={20} color={isButtonDisabled() ? "#999" : "#4CAF50"} />
+              <Text style={[styles.actionButtonText, isButtonDisabled() && { color: '#999' }]}>{t('common.edit')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.actionButton} 
+              style={[styles.actionButton, getDisabledStyle()]} 
               onPress={() => handleDeleteChecklist(item)}
+              disabled={isButtonDisabled()}
             >
-              <Ionicons name="trash-outline" size={20} color="#F44336" />
-              <Text style={styles.actionButtonText}>{t('common.delete')}</Text>
+              <Ionicons name="trash-outline" size={20} color={isButtonDisabled() ? "#999" : "#F44336"} />
+              <Text style={[styles.actionButtonText, isButtonDisabled() && { color: '#999' }]}>{t('common.delete')}</Text>
             </TouchableOpacity>
           </>
         )}
 
         {user?.role === 'admin' && item.isDeleted && (
           <TouchableOpacity 
-            style={styles.actionButton} 
+            style={[styles.actionButton, getDisabledStyle()]} 
             onPress={() => handleRestoreChecklist(item)}
+            disabled={isButtonDisabled()}
           >
-            <Ionicons name="refresh-outline" size={20} color="#FF9800" />
-            <Text style={styles.actionButtonText}>{t('procedures.restore.button')}</Text>
+            <Ionicons name="refresh-outline" size={20} color={isButtonDisabled() ? "#999" : "#FF9800"} />
+            <Text style={[styles.actionButtonText, isButtonDisabled() && { color: '#999' }]}>{t('procedures.restore.button')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -235,9 +244,15 @@ export default function ProceduresListScreen() {
         <Text style={styles.title}>{t('procedures.title')}</Text>
         
         {canModifyChecklists && (
-          <TouchableOpacity style={styles.addButton} onPress={handleCreateChecklist}>
-            <Ionicons name="add" size={24} color="#fff" />
-            <Text style={styles.addButtonText}>{t('procedures.addNew')}</Text>
+          <TouchableOpacity 
+            style={[styles.addButton, getDisabledStyle()]} 
+            onPress={handleCreateChecklist}
+            disabled={isButtonDisabled()}
+          >
+            <Ionicons name="add" size={24} color={isButtonDisabled() ? "#999" : "#fff"} />
+            <Text style={[styles.addButtonText, isButtonDisabled() && { color: '#999' }]}>
+              {t('procedures.addNew')}
+            </Text>
           </TouchableOpacity>
         )}
       </View>
