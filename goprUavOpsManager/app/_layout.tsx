@@ -1,5 +1,6 @@
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
+import Head from 'expo-router/head';
 import { Stack } from 'expo-router';
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ConsoleProvider } from "@/contexts/ConsoleContext";
@@ -228,6 +229,9 @@ export default Sentry.wrap(function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <Head>
+        <meta name="google" content="notranslate"/>
+      </Head>
       <ConsoleProvider>
         <AuthProvider>
           <CrossPlatformAlertProvider>
