@@ -86,6 +86,15 @@ export default function ProcedureDetailsScreen() {
                 const updatedEmail = await UserService.getUserEmail(freshProcedure.updatedBy).catch(() => '');
                 setUpdatedByEmail(updatedEmail);
               }
+              
+              // Force refresh cache to ensure fresh data is available offline
+              try {
+                await OfflineProcedureChecklistService.forceRefreshProcedures(user.role);
+                console.log('[ProcedureDetails] Cache refreshed successfully after getting fresh procedure data');
+              } catch (cacheError) {
+                console.warn('[ProcedureDetails] Failed to refresh cache after getting fresh data:', cacheError);
+                // Don't fail the operation if cache refresh fails
+              }
             }
           } catch (error) {
             console.log('Failed to fetch fresh procedure data, keeping cached data:', error);
@@ -181,6 +190,16 @@ export default function ProcedureDetailsScreen() {
           onPress: async () => {
             try {
               await ProcedureChecklistService.softDeleteProcedureChecklist(checklist.id, user.role, user.uid);
+              
+              // Force refresh cache to reflect deletion
+              try {
+                await OfflineProcedureChecklistService.forceRefreshProcedures(user.role);
+                console.log('[ProcedureDetails] Cache refreshed successfully after procedure deletion');
+              } catch (cacheError) {
+                console.warn('[ProcedureDetails] Failed to refresh cache after procedure deletion:', cacheError);
+                // Don't fail the operation if cache refresh fails
+              }
+              
               crossPlatformAlert.showAlert({ 
                 title: t('common.success'), 
                 message: t('procedures.deleteSuccess'),
@@ -203,6 +222,16 @@ export default function ProcedureDetailsScreen() {
 
     try {
       await ProcedureChecklistService.restoreProcedureChecklist(checklist.id, user.role, user.uid);
+      
+      // Force refresh cache to reflect restoration
+      try {
+        await OfflineProcedureChecklistService.forceRefreshProcedures(user.role);
+        console.log('[ProcedureDetails] Cache refreshed successfully after procedure restoration');
+      } catch (cacheError) {
+        console.warn('[ProcedureDetails] Failed to refresh cache after procedure restoration:', cacheError);
+        // Don't fail the operation if cache refresh fails
+      }
+      
       await fetchChecklist(); // Refresh the data
       crossPlatformAlert.showAlert({ title: t('common.success'), message: t('procedures.restoreSuccess') });
     } catch (error) {
