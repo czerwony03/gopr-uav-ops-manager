@@ -19,6 +19,7 @@ import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChe
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
+import { useOfflineButtons } from '@/utils/useOfflineButtons';
 
 export default function ProceduresListScreen() {
   const [checklists, setChecklists] = useState<ProcedureChecklist[]>([]);
@@ -27,6 +28,7 @@ export default function ProceduresListScreen() {
   const [isFromCache, setIsFromCache] = useState(false);
   const { user } = useAuth();
   const { isConnected } = useNetworkStatus();
+  const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const router = useRouter();
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
@@ -96,7 +98,9 @@ export default function ProceduresListScreen() {
   };
 
   const handleCreateChecklist = () => {
-    router.push('/procedures/create');
+    if (!isButtonDisabled()) {
+      router.push('/procedures/create');
+    }
   };
 
   const handleEditChecklist = (checklist: ProcedureChecklist) => {
@@ -235,9 +239,15 @@ export default function ProceduresListScreen() {
         <Text style={styles.title}>{t('procedures.title')}</Text>
         
         {canModifyChecklists && (
-          <TouchableOpacity style={styles.addButton} onPress={handleCreateChecklist}>
-            <Ionicons name="add" size={24} color="#fff" />
-            <Text style={styles.addButtonText}>{t('procedures.addNew')}</Text>
+          <TouchableOpacity 
+            style={[styles.addButton, getDisabledStyle()]} 
+            onPress={handleCreateChecklist}
+            disabled={isButtonDisabled()}
+          >
+            <Ionicons name="add" size={24} color={isButtonDisabled() ? "#999" : "#fff"} />
+            <Text style={[styles.addButtonText, isButtonDisabled() && { color: '#999' }]}>
+              {t('procedures.addNew')}
+            </Text>
           </TouchableOpacity>
         )}
       </View>

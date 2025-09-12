@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Drone } from '@/types/Drone';
 import { useCrossPlatformAlert } from './CrossPlatformAlert';
+import { useOfflineButtons } from '@/utils/useOfflineButtons';
 
 export type DroneFormData = Omit<Drone, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'isDeleted' | 'createdBy' | 'updatedBy'>;
 
@@ -25,6 +26,7 @@ interface DroneFormProps {
 
 export default function DroneForm({ mode, initialData, onSave, onCancel, loading = false }: DroneFormProps) {
   const { t } = useTranslation('common');
+  const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const crossPlatformAlert = useCrossPlatformAlert();
 
   // Default form data
@@ -103,7 +105,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
   };
 
   const handleSave = async () => {
-    if (!validateForm()) return;
+    if (!validateForm() || isButtonDisabled()) return;
 
     try {
       await onSave(formData);
@@ -336,9 +338,9 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
             </TouchableOpacity>
             
             <TouchableOpacity
-              style={[styles.submitButton, loading && styles.disabledButton]}
+              style={[styles.submitButton, (loading || isButtonDisabled()) && styles.disabledButton, getDisabledStyle()]}
               onPress={handleSave}
-              disabled={loading}
+              disabled={loading || isButtonDisabled()}
             >
               {loading ? (
                 <ActivityIndicator color="#fff" />

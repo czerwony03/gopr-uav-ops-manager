@@ -8,12 +8,14 @@ import { Footer } from "@/components/Footer";
 import { UserRole } from "@/types/UserRole";
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useOfflineButtons } from "@/utils/useOfflineButtons";
 
 export default function Index() {
   const { user, loading } = useAuth();
   const { t } = useTranslation('common');
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { isNavigationDisabled, getDisabledStyle } = useOfflineButtons();
 
   console.log('[Index] Component render - user:', user?.uid, 'loading:', loading);
 
@@ -90,7 +92,10 @@ export default function Index() {
   ].filter(button => button.show);
 
   const handleNavigation = (route: string) => {
-    router.push(route as any);
+    // Only navigate if not disabled
+    if (!isNavigationDisabled(route)) {
+      router.push(route as any);
+    }
   };
 
   return (
@@ -107,24 +112,37 @@ export default function Index() {
 
         {/* Navigation Grid */}
         <View style={styles.navigationGrid}>
-          {navigationButtons.map((button) => (
-            <TouchableOpacity
-              key={button.key}
-              style={[styles.navigationButton, { backgroundColor: button.color }]}
-              onPress={() => handleNavigation(button.route)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.buttonContent}>
-                <Ionicons 
-                  name={button.icon as any} 
-                  size={48} 
-                  color="#FFFFFF" 
-                  style={styles.buttonIcon}
-                />
-                <Text style={styles.buttonText}>{button.title}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+          {navigationButtons.map((button) => {
+            const isProceduresRoute = button.route.startsWith('/procedures');
+            const disabled = isNavigationDisabled(button.route);
+            
+            return (
+              <TouchableOpacity
+                key={button.key}
+                style={[
+                  styles.navigationButton, 
+                  { backgroundColor: button.color },
+                  getDisabledStyle(isProceduresRoute)
+                ]}
+                onPress={() => handleNavigation(button.route)}
+                activeOpacity={disabled ? 1 : 0.7}
+                disabled={disabled}
+              >
+                <View style={styles.buttonContent}>
+                  <Ionicons 
+                    name={button.icon as any} 
+                    size={48} 
+                    color={disabled ? "#999" : "#FFFFFF"} 
+                    style={styles.buttonIcon}
+                  />
+                  <Text style={[
+                    styles.buttonText, 
+                    disabled && { color: '#999' }
+                  ]}>{button.title}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </ScrollView>
       

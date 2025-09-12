@@ -22,12 +22,14 @@ import { Flight, FlightQuery, PaginatedFlightResponse, AVAILABLE_FLIGHT_CATEGORI
 import { Drone } from '@/types/Drone';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { formatFlightDurationCompact } from '@/src/utils/flightUtils';
+import { useOfflineButtons } from '@/utils/useOfflineButtons';
 
 export default function FlightsListScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
+  const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -217,7 +219,9 @@ export default function FlightsListScreen() {
   };
 
   const handleEditFlight = (flightId: string) => {
-    router.push(`/flights/${flightId}/edit`);
+    if (!isButtonDisabled()) {
+      router.push(`/flights/${flightId}/edit`);
+    }
   };
 
   const handleViewFlight = (flightId: string) => {
@@ -225,7 +229,9 @@ export default function FlightsListScreen() {
   };
 
   const handleAddFlight = () => {
-    router.push('/flights/create');
+    if (!isButtonDisabled()) {
+      router.push('/flights/create');
+    }
   };
 
   const renderFlightItem = ({ item }: { item: Flight }) => {
@@ -294,10 +300,13 @@ export default function FlightsListScreen() {
         
         {canEditFlight(item) ? (
           <TouchableOpacity
-            style={styles.editButton}
+            style={[styles.editButton, getDisabledStyle()]}
             onPress={() => handleEditFlight(item.id)}
+            disabled={isButtonDisabled()}
           >
-            <Text style={styles.editButtonText}>{t('common.edit')}</Text>
+            <Text style={[styles.editButtonText, isButtonDisabled() && { color: '#999' }]}>
+              {t('common.edit')}
+            </Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -527,8 +536,14 @@ export default function FlightsListScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.addButton} onPress={handleAddFlight}>
-            <Text style={styles.addButtonText}>+ {t('flights.add')}</Text>
+          <TouchableOpacity 
+            style={[styles.addButton, getDisabledStyle()]} 
+            onPress={handleAddFlight}
+            disabled={isButtonDisabled()}
+          >
+            <Text style={[styles.addButtonText, isButtonDisabled() && { color: '#999' }]}>
+              + {t('flights.add')}
+            </Text>
           </TouchableOpacity>
         </View>
 

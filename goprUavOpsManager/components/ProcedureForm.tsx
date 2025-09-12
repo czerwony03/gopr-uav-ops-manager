@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { ProcedureChecklistFormData, ChecklistItemFormData } from '@/types/ProcedureChecklist';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
+import { useOfflineButtons } from '@/utils/useOfflineButtons';
 
 interface ProcedureFormProps {
   mode: 'create' | 'edit';
@@ -26,6 +27,7 @@ interface ProcedureFormProps {
 
 export default function ProcedureForm({ mode, initialData, onSave, onCancel, loading = false }: ProcedureFormProps) {
   const { t } = useTranslation('common');
+  const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const crossPlatformAlert = useCrossPlatformAlert();
 
   // Default form data
@@ -188,7 +190,7 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
   };
 
   const handleSave = async () => {
-    if (!validateForm()) return;
+    if (!validateForm() || isButtonDisabled()) return;
 
     try {
       // Form data is already clean - no need for sanitization since we're not using caching
@@ -340,9 +342,9 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
             </TouchableOpacity>
             
             <TouchableOpacity
-              style={[styles.submitButton, loading && styles.disabledButton]}
+              style={[styles.submitButton, (loading || isButtonDisabled()) && styles.disabledButton, getDisabledStyle()]}
               onPress={handleSave}
-              disabled={loading}
+              disabled={loading || isButtonDisabled()}
             >
               {loading ? (
                 <ActivityIndicator color="#fff" />
