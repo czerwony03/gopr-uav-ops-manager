@@ -84,10 +84,10 @@ export function CustomDrawerContent(props: any) {
             label={t('nav.home')}
             onPress={() => handleNavigation('/')}
             icon={({color, size}) => (
-              <Ionicons name="home-outline" size={size} color={isNavigationDisabled('/') ? "#999" : color}/>
+              <Ionicons name="home-outline" size={size} color={color}/>
             )}
-            labelStyle={[styles.drawerLabel, isNavigationDisabled('/') && { color: '#999' }]}
-            style={[styles.drawerItem, getDisabledStyle(!isNavigationDisabled('/'))]}
+            labelStyle={styles.drawerLabel}
+            style={styles.drawerItem}
           />
 
           <DrawerItem
@@ -154,10 +154,10 @@ export function CustomDrawerContent(props: any) {
           label={t('nav.info')}
           onPress={() => handleNavigation('/info-contact')}
           icon={({color, size}) => (
-            <Ionicons name="information-circle-outline" size={size} color={isNavigationDisabled('/info-contact') ? "#999" : color}/>
+            <Ionicons name="information-circle-outline" size={size} color={color}/>
           )}
-          labelStyle={[styles.drawerLabel, isNavigationDisabled('/info-contact') && { color: '#999' }]}
-          style={[styles.drawerItem, getDisabledStyle(!isNavigationDisabled('/info-contact'))]}
+          labelStyle={styles.drawerLabel}
+          style={styles.drawerItem}
         />
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>

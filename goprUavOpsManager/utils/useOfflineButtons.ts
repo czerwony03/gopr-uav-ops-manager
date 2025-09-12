@@ -23,12 +23,12 @@ export function useOfflineButtons() {
    */
   const isNavigationDisabled = (route: string): boolean => {
     // Only procedures routes are allowed offline
-    const proceduresRoutes = ['/procedures'];
-    const isProceduresRoute = proceduresRoutes.some(allowedRoute => 
-      route.startsWith(allowedRoute)
+    const offlineRoutes = ['/procedures', '/info-contact'];
+    const isOfflineRoute = offlineRoutes.some(allowedRoute =>
+      route.startsWith(allowedRoute) || route === '/'
     );
     
-    return isOffline && !isProceduresRoute;
+    return isOffline && !isOfflineRoute;
   };
 
   /**
