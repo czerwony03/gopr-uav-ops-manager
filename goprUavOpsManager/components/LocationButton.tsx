@@ -64,31 +64,64 @@ const LocationButton: React.FC<LocationButtonProps> = ({
     try {
       const { latitude, longitude } = coordinates;
       
+      console.log('LocationButton: Starting reverse geocoding for coordinates:', { latitude, longitude });
+      
       // Try Expo's built-in reverse geocoding first
       const reverseGeocodedAddress = await Location.reverseGeocodeAsync({
         latitude,
         longitude,
       });
 
+      console.log('LocationButton: Reverse geocoding response:', reverseGeocodedAddress);
+
       if (reverseGeocodedAddress && reverseGeocodedAddress.length > 0) {
         const address = reverseGeocodedAddress[0];
         
-        // Format a readable location string
+        console.log('LocationButton: Processing address object:', address);
+        
+        // Format a readable location string - check all possible fields
         const parts: string[] = [];
         
+        // Add more comprehensive field mapping
         if (address.name) parts.push(address.name);
+        if (address.streetNumber) parts.push(address.streetNumber);
         if (address.street) parts.push(address.street);
+        if (address.district) parts.push(address.district);
         if (address.city) parts.push(address.city);
-        if (address.region && address.region !== address.city) parts.push(address.region);
+        if (address.subregion && address.subregion !== address.city) parts.push(address.subregion);
+        if (address.region && address.region !== address.city && address.region !== address.subregion) parts.push(address.region);
         if (address.country && address.country !== address.region) parts.push(address.country);
+        if (address.postalCode) parts.push(address.postalCode);
         
-        return parts.length > 0 ? parts.join(', ') : `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+        const formattedAddress = parts.length > 0 ? parts.join(', ') : `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+        console.log('LocationButton: Formatted address:', formattedAddress);
+        console.log('LocationButton: Address parts found:', parts);
+        console.log('LocationButton: All address fields:', {
+          name: address.name,
+          streetNumber: address.streetNumber,
+          street: address.street,
+          district: address.district,
+          city: address.city,
+          subregion: address.subregion,
+          region: address.region,
+          country: address.country,
+          postalCode: address.postalCode,
+          timezone: address.timezone,
+          isoCountryCode: address.isoCountryCode,
+        });
+        
+        return formattedAddress;
       }
       
+      console.log('LocationButton: No reverse geocoding results, returning coordinates');
       // Fallback: return coordinates if geocoding fails
       return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
     } catch (error) {
-      console.warn('Reverse geocoding failed:', error);
+      console.error('LocationButton: Reverse geocoding failed with error:', error);
+      console.error('LocationButton: Error type:', typeof error);
+      console.error('LocationButton: Error name:', error?.constructor?.name);
+      console.error('LocationButton: Error message:', error instanceof Error ? error.message : 'Unknown error');
+      
       // Return coordinates as fallback
       return `${coordinates.latitude.toFixed(6)}, ${coordinates.longitude.toFixed(6)}`;
     }
@@ -115,13 +148,20 @@ const LocationButton: React.FC<LocationButtonProps> = ({
   const handleLocationPress = async () => {
     if (disabled || loading) return;
 
+    console.log('LocationButton: Starting location request');
     setLoading(true);
     try {
+      console.log('LocationButton: Getting current coordinates...');
       const coordinates = await getCurrentLocation();
+      console.log('LocationButton: Got coordinates:', coordinates);
+      
+      console.log('LocationButton: Starting reverse geocoding...');
       const locationString = await reverseGeocode(coordinates);
+      console.log('LocationButton: Final location string:', locationString);
+      
       onLocationReceived(locationString);
     } catch (error) {
-      console.error('Error getting location:', error);
+      console.error('LocationButton: Error getting location:', error);
       
       let errorMessage = t('location.error');
       if (error instanceof Error) {
