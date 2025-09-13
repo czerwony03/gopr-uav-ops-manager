@@ -1,3 +1,35 @@
+/**
+ * LocationButton Component
+ * 
+ * A cross-platform GPS location button for automatically filling location fields.
+ * Works on both Web and React Native (Android/iOS) platforms.
+ * 
+ * Features:
+ * - Requests location permissions automatically
+ * - Gets current GPS coordinates using expo-location
+ * - Performs reverse geocoding to convert coordinates to readable addresses
+ * - Provides fallback to raw coordinates if geocoding fails
+ * - Shows loading states during location retrieval
+ * - Handles errors gracefully with user-friendly messages
+ * - Supports internationalization (i18n)
+ * 
+ * Platform Support:
+ * - Web: Uses browser's Geolocation API via expo-location
+ * - Android: Uses native Android location services
+ * - iOS: Uses native iOS Core Location services
+ * 
+ * Usage:
+ * ```tsx
+ * <LocationButton
+ *   onLocationReceived={(location) => setLocationField(location)}
+ *   disabled={isFormDisabled}
+ * />
+ * ```
+ * 
+ * @param onLocationReceived - Callback function called with the location string
+ * @param disabled - Whether the button should be disabled
+ * @param style - Optional style object for the button
+ */
 import React, { useState } from 'react';
 import {
   TouchableOpacity,
