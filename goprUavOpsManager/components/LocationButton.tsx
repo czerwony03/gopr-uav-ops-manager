@@ -60,6 +60,51 @@ const LocationButton: React.FC<LocationButtonProps> = ({
   const { t } = useTranslation('common');
   const [loading, setLoading] = useState(false);
 
+  const fallbackReverseGeocode = async (coordinates: LocationCoordinates): Promise<string | null> => {
+    try {
+      const { latitude, longitude } = coordinates;
+      
+      console.log('LocationButton: Trying fallback geocoding with Nominatim...');
+      
+      // Use OpenStreetMap Nominatim (free, no API key required)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'GOPRUAVOpsManager/1.0'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('LocationButton: Nominatim response:', data);
+      
+      if (data && data.display_name) {
+        // Clean up and format the display name
+        let address = data.display_name;
+        
+        // Remove postal codes and coordinates from the display name
+        address = address.replace(/\d{2}-\d{3}/g, ''); // Remove Polish postal codes
+        address = address.replace(/\b\d{5}\b/g, ''); // Remove US postal codes
+        address = address.replace(/,\s*,/g, ','); // Remove double commas
+        address = address.replace(/^,\s*|,\s*$/g, ''); // Remove leading/trailing commas
+        address = address.trim();
+        
+        console.log('LocationButton: Formatted Nominatim address:', address);
+        return address;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('LocationButton: Fallback geocoding failed:', error);
+      return null;
+    }
+  };
+
   const reverseGeocode = async (coordinates: LocationCoordinates): Promise<string> => {
     try {
       const { latitude, longitude } = coordinates;
@@ -93,8 +138,6 @@ const LocationButton: React.FC<LocationButtonProps> = ({
         if (address.country && address.country !== address.region) parts.push(address.country);
         if (address.postalCode) parts.push(address.postalCode);
         
-        const formattedAddress = parts.length > 0 ? parts.join(', ') : `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-        console.log('LocationButton: Formatted address:', formattedAddress);
         console.log('LocationButton: Address parts found:', parts);
         console.log('LocationButton: All address fields:', {
           name: address.name,
@@ -110,11 +153,24 @@ const LocationButton: React.FC<LocationButtonProps> = ({
           isoCountryCode: address.isoCountryCode,
         });
         
-        return formattedAddress;
+        if (parts.length > 0) {
+          const formattedAddress = parts.join(', ');
+          console.log('LocationButton: Formatted Expo address:', formattedAddress);
+          return formattedAddress;
+        }
       }
       
-      console.log('LocationButton: No reverse geocoding results, returning coordinates');
-      // Fallback: return coordinates if geocoding fails
+      console.log('LocationButton: Expo geocoding failed or returned no useful data, trying fallback...');
+      
+      // Try fallback geocoding
+      const fallbackAddress = await fallbackReverseGeocode(coordinates);
+      if (fallbackAddress) {
+        console.log('LocationButton: Fallback geocoding succeeded:', fallbackAddress);
+        return fallbackAddress;
+      }
+      
+      console.log('LocationButton: All geocoding methods failed, returning coordinates');
+      // Final fallback: return coordinates
       return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
     } catch (error) {
       console.error('LocationButton: Reverse geocoding failed with error:', error);
@@ -158,6 +214,15 @@ const LocationButton: React.FC<LocationButtonProps> = ({
       console.log('LocationButton: Starting reverse geocoding...');
       const locationString = await reverseGeocode(coordinates);
       console.log('LocationButton: Final location string:', locationString);
+      
+      // Check if we only got coordinates back (indicating all geocoding failed)
+      const coordinatePattern = /^-?\d+\.\d+,\s*-?\d+\.\d+$/;
+      if (coordinatePattern.test(locationString.trim())) {
+        console.log('LocationButton: Only coordinates returned, all geocoding methods failed');
+        console.log('LocationButton: User will see coordinates instead of address');
+      } else {
+        console.log('LocationButton: Successfully got readable address:', locationString);
+      }
       
       onLocationReceived(locationString);
     } catch (error) {

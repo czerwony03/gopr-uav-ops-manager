@@ -642,6 +642,7 @@
     "permissionDenied": "Brak uprawnień do lokalizacji. Włącz dostęp do lokalizacji w ustawieniach.",
     "timeout": "Żądanie lokalizacji przekroczyło limit czasu. Spróbuj ponownie.",
     "networkError": "Wystąpił błąd sieci podczas pobierania lokalizacji.",
-    "getCurrentLocation": "Pobierz bieżącą lokalizację"
+    "getCurrentLocation": "Pobierz bieżącą lokalizację",
+    "geocodingFallback": "Znaleziono lokalizację GPS, ale nie można było przekonwertować jej na czytelny adres. Używanie współrzędnych."
   }
 }
