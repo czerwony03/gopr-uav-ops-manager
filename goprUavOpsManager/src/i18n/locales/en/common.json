@@ -635,5 +635,13 @@
   "offline": {
     "noConnection": "No internet connection - viewing cached data",
     "viewingCachedData": "Viewing cached data from offline storage"
+  },
+  "location": {
+    "error": "Unable to get location. Please try again.",
+    "errorTitle": "Location Error",
+    "permissionDenied": "Location permission denied. Please enable location access in settings.",
+    "timeout": "Location request timed out. Please try again.",
+    "networkError": "Network error occurred while getting location.",
+    "getCurrentLocation": "Get current location"
   }
 }

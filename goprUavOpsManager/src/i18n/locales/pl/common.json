@@ -635,5 +635,13 @@
   "offline": {
     "noConnection": "Brak połączenia z internetem - wyświetlanie danych z pamięci podręcznej",
     "viewingCachedData": "Wyświetlanie danych z pamięci podręcznej"
+  },
+  "location": {
+    "error": "Nie można pobrać lokalizacji. Spróbuj ponownie.",
+    "errorTitle": "Błąd lokalizacji",
+    "permissionDenied": "Brak uprawnień do lokalizacji. Włącz dostęp do lokalizacji w ustawieniach.",
+    "timeout": "Żądanie lokalizacji przekroczyło limit czasu. Spróbuj ponownie.",
+    "networkError": "Wystąpił błąd sieci podczas pobierania lokalizacji.",
+    "getCurrentLocation": "Pobierz bieżącą lokalizację"
   }
 }

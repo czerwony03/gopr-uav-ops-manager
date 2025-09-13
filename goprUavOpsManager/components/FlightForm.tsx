@@ -20,6 +20,7 @@ import { useCrossPlatformAlert } from './CrossPlatformAlert';
 import WebCompatibleDatePicker from './WebCompatibleDatePicker';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import TimePicker from './TimePicker';
+import LocationButton from './LocationButton';
 import { 
   FlightCategory, 
   OperationType, 
@@ -108,6 +109,10 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
 
   const updateFormData = (field: keyof FlightFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleLocationReceived = (location: string) => {
+    updateFormData('location', location);
   };
 
   // Calculate flight duration for display
@@ -257,12 +262,19 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
             <Text style={styles.sectionTitle}>{t('flightForm.basicInfo')}</Text>
             
             <Text style={styles.label}>{t('flightForm.location')} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.location}
-              onChangeText={(value) => updateFormData('location', value)}
-              placeholder={t('flightForm.locationPlaceholder')}
-            />
+            <View style={styles.locationContainer}>
+              <TextInput
+                style={[styles.input, styles.locationInput]}
+                value={formData.location}
+                onChangeText={(value) => updateFormData('location', value)}
+                placeholder={t('flightForm.locationPlaceholder')}
+              />
+              <LocationButton
+                onLocationReceived={handleLocationReceived}
+                disabled={loading}
+                style={styles.locationButton}
+              />
+            </View>
 
             <Text style={styles.label}>{t('flightForm.category')} *</Text>
             <View style={styles.pickerContainer}>
@@ -467,6 +479,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#fff',
     marginBottom: 16,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    marginBottom: 16,
+    gap: 8,
+  },
+  locationInput: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  locationButton: {
+    alignSelf: 'flex-start',
   },
   textArea: {
     height: 80,
