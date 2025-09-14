@@ -18,6 +18,7 @@ import { UserService } from '@/services/userService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { calculateFlightDuration } from '@/src/utils/flightUtils';
 import { MapUtils } from '@/utils/mapUtils';
+import { EmbeddedLocationMap } from '@/components/EmbeddedLocationMap';
 
 export default function FlightDetailsScreen() {
   const { t } = useTranslation('common');
@@ -170,7 +171,7 @@ export default function FlightDetailsScreen() {
               <Text style={styles.detail}>{t('flightDetails.date')}: {flight.date}</Text>
               <Text style={styles.detail}>{t('flightDetails.location')}: {flight.location}</Text>
               
-              {/* Coordinates section with Google Maps button */}
+              {/* Coordinates section with embedded map and Google Maps button */}
               {flight.coordinates && (
                 <View style={styles.coordinatesContainer}>
                   <View style={styles.coordinatesRow}>
@@ -183,6 +184,14 @@ export default function FlightDetailsScreen() {
                       <Ionicons name="map" size={18} color="#007AFF" />
                       <Text style={styles.mapButtonText}>{t('flightDetails.viewOnMap')}</Text>
                     </TouchableOpacity>
+                  </View>
+                  
+                  {/* Embedded location map for quick viewing */}
+                  <View style={styles.embeddedMapContainer}>
+                    <EmbeddedLocationMap 
+                      coordinates={flight.coordinates}
+                      height={180}
+                    />
                   </View>
                 </View>
               )}
@@ -369,6 +378,11 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: 14,
     fontWeight: '500',
+  },
+  embeddedMapContainer: {
+    marginTop: 12,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
 });
 
