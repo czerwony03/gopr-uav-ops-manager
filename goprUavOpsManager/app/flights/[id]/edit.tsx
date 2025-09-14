@@ -59,6 +59,7 @@ export default function EditFlightScreen() {
           operationType: flight.operationType as OperationType,
           activityType: flight.activityType as ActivityType,
           droneId: flight.droneId,
+          operator: flight.operator || '', // Include existing operator data
           startDate: startDateTime.date,
           startTime: startDateTime.time,
           endDate: endDateTime.date,
@@ -118,6 +119,7 @@ export default function EditFlightScreen() {
         activityType: formData.activityType as ActivityType,
         droneId: formData.droneId,
         droneName,
+        operator: formData.operator,
         startTime: startDateTime,
         endTime: endDateTime,
         conditions: formData.conditions,

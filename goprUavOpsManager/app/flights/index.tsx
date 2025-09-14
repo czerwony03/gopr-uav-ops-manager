@@ -286,10 +286,18 @@ export default function FlightsListScreen() {
           <Text style={styles.detailValue}>{formatFlightDurationCompact(item.startTime, item.endTime)}</Text>
         </View>
         {(user?.role === 'admin' || user?.role === 'manager') && item.userEmail ? (
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>{t('flights.operator')}:</Text>
-            <Text style={styles.detailValue}>{item.userEmail}</Text>
-          </View>
+          <>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Pilot:</Text>
+              <Text style={styles.detailValue}>{item.userEmail}</Text>
+            </View>
+            {item.operator && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('flights.operator')}:</Text>
+                <Text style={styles.detailValue}>{item.operator}</Text>
+              </View>
+            )}
+          </>
         ) : null}
       </View>
 
@@ -499,12 +507,12 @@ export default function FlightsListScreen() {
 
             {(user?.role === 'admin' || user?.role === 'manager') ? (
               <View style={styles.filterRow}>
-                <Text style={styles.filterLabel}>Operator Email:</Text>
+                <Text style={styles.filterLabel}>Pilot Email:</Text>
                 <TextInput
                   style={styles.textInput}
                   value={filters.userEmail || ''}
                   onChangeText={(value) => setFilters({...filters, userEmail: value})}
-                  placeholder="Enter operator email..."
+                  placeholder="Enter pilot email..."
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
