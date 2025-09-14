@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
@@ -20,7 +21,8 @@ import { useCrossPlatformAlert } from './CrossPlatformAlert';
 import WebCompatibleDatePicker from './WebCompatibleDatePicker';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import TimePicker from './TimePicker';
-import LocationButton from './LocationButton';
+import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
 import { 
   FlightCategory, 
   OperationType, 
@@ -32,6 +34,7 @@ import {
 
 export interface FlightFormData {
   location: string;
+  coordinates: string;
   flightCategory: FlightCategory | '';
   operationType: OperationType | '';
   activityType: ActivityType | '';
@@ -65,6 +68,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
     const today = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
     return {
       location: '',
+      coordinates: '',
       flightCategory: '',
       operationType: '',
       activityType: '',
@@ -111,8 +115,139 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleLocationReceived = (location: string) => {
-    updateFormData('location', location);
+  const [locationLoading, setLocationLoading] = useState(false);
+
+  // Reverse geocode coordinates to get location
+  const reverseGeocodeCoordinates = async (coordinatesString: string): Promise<string> => {
+    if (!coordinatesString.trim()) return '';
+    
+    try {
+      // Parse coordinates (expect format: "lat, lng" or "lat,lng")
+      const coords = coordinatesString.split(',').map(c => parseFloat(c.trim()));
+      if (coords.length !== 2 || coords.some(c => isNaN(c))) {
+        return '';
+      }
+      
+      const [latitude, longitude] = coords;
+      
+      console.log('FlightForm: Reverse geocoding coordinates:', { latitude, longitude });
+      
+      // Try Expo's built-in reverse geocoding first
+      const reverseGeocodedAddress = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
+
+      if (reverseGeocodedAddress && reverseGeocodedAddress.length > 0) {
+        const address = reverseGeocodedAddress[0];
+        const parts: string[] = [];
+        
+        if (address.name) parts.push(address.name);
+        if (address.streetNumber) parts.push(address.streetNumber);
+        if (address.street) parts.push(address.street);
+        if (address.district) parts.push(address.district);
+        if (address.city) parts.push(address.city);
+        if (address.subregion && address.subregion !== address.city) parts.push(address.subregion);
+        if (address.region && address.region !== address.city && address.region !== address.subregion) parts.push(address.region);
+        if (address.country && address.country !== address.region) parts.push(address.country);
+        
+        if (parts.length > 0) {
+          return parts.join(', ');
+        }
+      }
+      
+      // Fallback to Nominatim API
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'GOPRUAVOpsManager/1.0'
+          }
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.display_name) {
+          let address = data.display_name;
+          address = address.replace(/\d{2}-\d{3}/g, '');
+          address = address.replace(/\b\d{5}\b/g, '');
+          address = address.replace(/,\s*,/g, ',');
+          address = address.replace(/^,\s*|,\s*$/g, '');
+          return address.trim();
+        }
+      }
+      
+      return '';
+    } catch (error) {
+      console.error('FlightForm: Reverse geocoding failed:', error);
+      return '';
+    }
+  };
+
+  // Handle coordinate changes and auto-update location
+  const handleCoordinatesChange = async (coordinates: string) => {
+    updateFormData('coordinates', coordinates);
+    
+    if (coordinates.trim()) {
+      setLocationLoading(true);
+      try {
+        const location = await reverseGeocodeCoordinates(coordinates);
+        if (location) {
+          updateFormData('location', location);
+        }
+      } catch (error) {
+        console.error('FlightForm: Error updating location from coordinates:', error);
+      } finally {
+        setLocationLoading(false);
+      }
+    }
+  };
+
+  // Get current location and set coordinates
+  const handleGetCurrentLocation = async () => {
+    setLocationLoading(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        throw new Error(t('location.permissionDenied'));
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const coordinates = `${location.coords.latitude.toFixed(6)}, ${location.coords.longitude.toFixed(6)}`;
+      await handleCoordinatesChange(coordinates);
+    } catch (error) {
+      console.error('FlightForm: Error getting current location:', error);
+      
+      let errorMessage = t('location.error');
+      if (error instanceof Error) {
+        if (error.message.includes('permission')) {
+          errorMessage = t('location.permissionDenied');
+        } else if (error.message.includes('timeout')) {
+          errorMessage = t('location.timeout');
+        }
+      }
+
+      if (Platform.OS === 'web') {
+        alert(errorMessage);
+      } else {
+        Alert.alert(t('location.errorTitle'), errorMessage);
+      }
+    } finally {
+      setLocationLoading(false);
+    }
+  };
+
+  // Handle map button press (placeholder for now)
+  const handleMapSelection = () => {
+    if (Platform.OS === 'web') {
+      alert(t('map.notImplemented', 'Map selection feature coming soon!'));
+    } else {
+      Alert.alert(t('map.title', 'Map Selection'), t('map.notImplemented', 'Map selection feature coming soon!'));
+    }
   };
 
   // Calculate flight duration for display
@@ -261,6 +396,41 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('flightForm.basicInfo')}</Text>
             
+            {/* Get Current Location Button */}
+            <TouchableOpacity
+              style={[styles.getCurrentLocationButton, locationLoading && styles.disabledButton]}
+              onPress={handleGetCurrentLocation}
+              disabled={loading || locationLoading}
+            >
+              {locationLoading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Ionicons name="location-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+              )}
+              <Text style={styles.getCurrentLocationText}>
+                {locationLoading ? t('location.loading', 'Getting location...') : t('location.getCurrentLocation', 'Get current location')}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Coordinates Field with Map Button */}
+            <Text style={styles.label}>{t('flightForm.coordinates', 'Coordinates')}</Text>
+            <View style={styles.coordinatesContainer}>
+              <TextInput
+                style={[styles.input, styles.coordinatesInput]}
+                value={formData.coordinates}
+                onChangeText={handleCoordinatesChange}
+                placeholder={t('flightForm.coordinatesPlaceholder', 'Enter coordinates (lat, lng)')}
+              />
+              <TouchableOpacity
+                style={styles.mapButton}
+                onPress={handleMapSelection}
+                disabled={loading}
+              >
+                <Ionicons name="map-outline" size={20} color="#0066CC" />
+              </TouchableOpacity>
+            </View>
+            
+            {/* Location Field (Auto-updated) */}
             <Text style={styles.label}>{t('flightForm.location')} *</Text>
             <View style={styles.locationContainer}>
               <TextInput
@@ -269,11 +439,11 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
                 onChangeText={(value) => updateFormData('location', value)}
                 placeholder={t('flightForm.locationPlaceholder')}
               />
-              <LocationButton
-                onLocationReceived={handleLocationReceived}
-                disabled={loading}
-                style={styles.locationButton}
-              />
+              {locationLoading && (
+                <View style={styles.locationLoadingIndicator}>
+                  <ActivityIndicator size="small" color="#0066CC" />
+                </View>
+              )}
             </View>
 
             <Text style={styles.label}>{t('flightForm.category')} *</Text>
@@ -482,16 +652,54 @@ const styles = StyleSheet.create({
   },
   locationContainer: {
     flexDirection: 'row',
-    alignItems: 'stretch',
+    alignItems: 'center',
     marginBottom: 16,
-    gap: 8,
+    position: 'relative',
   },
   locationInput: {
     flex: 1,
     marginBottom: 0,
   },
-  locationButton: {
-    alignSelf: 'flex-start',
+  locationLoadingIndicator: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    transform: [{ translateY: -10 }],
+  },
+  getCurrentLocationButton: {
+    backgroundColor: '#0066CC',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    marginBottom: 16,
+  },
+  getCurrentLocationText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  coordinatesContainer: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    marginBottom: 16,
+    gap: 8,
+  },
+  coordinatesInput: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  mapButton: {
+    padding: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 50,
   },
   textArea: {
     height: 80,
