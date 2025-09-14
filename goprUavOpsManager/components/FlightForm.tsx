@@ -142,15 +142,28 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
 
       if (reverseGeocodedAddress && reverseGeocodedAddress.length > 0) {
         const address = reverseGeocodedAddress[0];
+        
+        // Format address in the requested order: Postal code, City, Street, voivodeship, country (if available)
         const parts: string[] = [];
         
-        if (address.name) parts.push(address.name);
-        if (address.streetNumber) parts.push(address.streetNumber);
-        if (address.street) parts.push(address.street);
-        if (address.district) parts.push(address.district);
+        // Add postal code first
+        if (address.postalCode) parts.push(address.postalCode);
+        
+        // Add city
         if (address.city) parts.push(address.city);
-        if (address.subregion && address.subregion !== address.city) parts.push(address.subregion);
-        if (address.region && address.region !== address.city && address.region !== address.subregion) parts.push(address.region);
+        
+        // Add street (combine street number and street name if available)
+        const streetParts = [];
+        if (address.street) streetParts.push(address.street);
+        if (address.streetNumber) streetParts.push(address.streetNumber);
+        if (streetParts.length > 0) {
+          parts.push(streetParts.join(' '));
+        }
+        
+        // Add voivodeship (region in Poland context)
+        if (address.region && address.region !== address.city) parts.push(address.region);
+        
+        // Add country
         if (address.country && address.country !== address.region) parts.push(address.country);
         
         if (parts.length > 0) {
@@ -170,7 +183,40 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
       
       if (response.ok) {
         const data = await response.json();
+        if (data && data.display_name && data.address) {
+          // Format address in the requested order: Postal code, City, Street, voivodeship, country (if available)
+          const addr = data.address;
+          const parts: string[] = [];
+          
+          // Add postal code first
+          if (addr.postcode) parts.push(addr.postcode);
+          
+          // Add city (try multiple city fields)
+          const city = addr.city || addr.town || addr.village || addr.municipality;
+          if (city) parts.push(city);
+          
+          // Add street (combine house number and street)
+          const streetParts = [];
+          if (addr.road) streetParts.push(addr.road);
+          if (addr.house_number) streetParts.push(addr.house_number);
+          if (streetParts.length > 0) {
+            parts.push(streetParts.join(' '));
+          }
+          
+          // Add voivodeship (state/region)
+          const voivodeship = addr.state || addr.region;
+          if (voivodeship && voivodeship !== city) parts.push(voivodeship);
+          
+          // Add country
+          if (addr.country && addr.country !== voivodeship) parts.push(addr.country);
+          
+          if (parts.length > 0) {
+            return parts.join(', ');
+          }
+        }
+        
         if (data && data.display_name) {
+          // Fallback to display name if address components are not available
           let address = data.display_name;
           address = address.replace(/\d{2}-\d{3}/g, '');
           address = address.replace(/\b\d{5}\b/g, '');

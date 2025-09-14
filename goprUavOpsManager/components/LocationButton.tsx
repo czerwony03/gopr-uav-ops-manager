@@ -83,8 +83,42 @@ const LocationButton: React.FC<LocationButtonProps> = ({
       const data = await response.json();
       console.log('LocationButton: Nominatim response:', data);
       
+      if (data && data.display_name && data.address) {
+        // Format address in the requested order: Postal code, City, Street, voivodeship, country (if available)
+        const addr = data.address;
+        const parts: string[] = [];
+        
+        // Add postal code first
+        if (addr.postcode) parts.push(addr.postcode);
+        
+        // Add city (try multiple city fields)
+        const city = addr.city || addr.town || addr.village || addr.municipality;
+        if (city) parts.push(city);
+        
+        // Add street (combine house number and street)
+        const streetParts = [];
+        if (addr.road) streetParts.push(addr.road);
+        if (addr.house_number) streetParts.push(addr.house_number);
+        if (streetParts.length > 0) {
+          parts.push(streetParts.join(' '));
+        }
+        
+        // Add voivodeship (state/region)
+        const voivodeship = addr.state || addr.region;
+        if (voivodeship && voivodeship !== city) parts.push(voivodeship);
+        
+        // Add country
+        if (addr.country && addr.country !== voivodeship) parts.push(addr.country);
+        
+        if (parts.length > 0) {
+          const formattedAddress = parts.join(', ');
+          console.log('LocationButton: Formatted Nominatim address:', formattedAddress);
+          return formattedAddress;
+        }
+      }
+      
       if (data && data.display_name) {
-        // Clean up and format the display name
+        // Fallback to display name if address components are not available
         let address = data.display_name;
         
         // Remove postal codes and coordinates from the display name
@@ -124,19 +158,28 @@ const LocationButton: React.FC<LocationButtonProps> = ({
         
         console.log('LocationButton: Processing address object:', address);
         
-        // Format a readable location string - check all possible fields
+        // Format address in the requested order: Postal code, City, Street, voivodeship, country (if available)
         const parts: string[] = [];
         
-        // Add more comprehensive field mapping
-        if (address.name) parts.push(address.name);
-        if (address.streetNumber) parts.push(address.streetNumber);
-        if (address.street) parts.push(address.street);
-        if (address.district) parts.push(address.district);
-        if (address.city) parts.push(address.city);
-        if (address.subregion && address.subregion !== address.city) parts.push(address.subregion);
-        if (address.region && address.region !== address.city && address.region !== address.subregion) parts.push(address.region);
-        if (address.country && address.country !== address.region) parts.push(address.country);
+        // Add postal code first
         if (address.postalCode) parts.push(address.postalCode);
+        
+        // Add city
+        if (address.city) parts.push(address.city);
+        
+        // Add street (combine street number and street name if available)
+        const streetParts = [];
+        if (address.street) streetParts.push(address.street);
+        if (address.streetNumber) streetParts.push(address.streetNumber);
+        if (streetParts.length > 0) {
+          parts.push(streetParts.join(' '));
+        }
+        
+        // Add voivodeship (region in Poland context)
+        if (address.region && address.region !== address.city) parts.push(address.region);
+        
+        // Add country
+        if (address.country && address.country !== address.region) parts.push(address.country);
         
         console.log('LocationButton: Address parts found:', parts);
         console.log('LocationButton: All address fields:', {
