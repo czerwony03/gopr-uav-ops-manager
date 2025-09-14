@@ -272,6 +272,8 @@
     "durationPlaceholder": "Wprowadź czas trwania",
     "location": "Lokalizacja",
     "locationPlaceholder": "Wprowadź lokalizację lotu",
+    "coordinates": "Współrzędne",
+    "coordinatesPlaceholder": "Wprowadź współrzędne (szer, dł)",
     "date": "Data",
     "datePlaceholder": "YYYY-MM-DD",
     "startDate": "Data rozpoczęcia",
@@ -643,6 +645,11 @@
     "timeout": "Żądanie lokalizacji przekroczyło limit czasu. Spróbuj ponownie.",
     "networkError": "Wystąpił błąd sieci podczas pobierania lokalizacji.",
     "getCurrentLocation": "Pobierz bieżącą lokalizację",
-    "geocodingFallback": "Znaleziono lokalizację GPS, ale nie można było przekonwertować jej na czytelny adres. Używanie współrzędnych."
+    "geocodingFallback": "Znaleziono lokalizację GPS, ale nie można było przekonwertować jej na czytelny adres. Używanie współrzędnych.",
+    "loading": "Pobieranie lokalizacji..."
+  },
+  "map": {
+    "title": "Wybór z mapy",
+    "notImplemented": "Funkcja wyboru z mapy już wkrótce!"
   }
 }

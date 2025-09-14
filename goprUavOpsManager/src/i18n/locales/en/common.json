@@ -272,6 +272,8 @@
     "durationPlaceholder": "Enter duration",
     "location": "Location",
     "locationPlaceholder": "Enter flight location",
+    "coordinates": "Coordinates",
+    "coordinatesPlaceholder": "Enter coordinates (lat, lng)",
     "date": "Date",
     "datePlaceholder": "YYYY-MM-DD",
     "startDate": "Start Date",
@@ -643,6 +645,11 @@
     "timeout": "Location request timed out. Please try again.",
     "networkError": "Network error occurred while getting location.",
     "getCurrentLocation": "Get current location",
-    "geocodingFallback": "GPS location found, but couldn't convert to readable address. Using coordinates instead."
+    "geocodingFallback": "GPS location found, but couldn't convert to readable address. Using coordinates instead.",
+    "loading": "Getting location..."
+  },
+  "map": {
+    "title": "Map Selection",
+    "notImplemented": "Map selection feature coming soon!"
   }
 }
