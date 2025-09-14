@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { Drone } from '@/types/Drone';
 import { useCrossPlatformAlert } from './CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import MultiImagePicker from './MultiImagePicker';
 
 export type DroneFormData = Omit<Drone, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'isDeleted' | 'createdBy' | 'updatedBy'>;
 
@@ -57,6 +58,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
     maxSpeed: 0,
     userManual: '',
     additionalInfo: '',
+    images: [],
   };
 
   const [formData, setFormData] = useState<DroneFormData>(initialData || defaultFormData);
@@ -337,6 +339,16 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
               multiline
               numberOfLines={4}
               textAlignVertical="top"
+            />
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('droneForm.images')}</Text>
+            <MultiImagePicker
+              images={formData.images || []}
+              onImagesChange={(images) => updateFormData('images', images)}
+              maxImages={10}
+              disabled={loading}
             />
           </View>
 
