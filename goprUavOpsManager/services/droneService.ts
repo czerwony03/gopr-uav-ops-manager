@@ -1,6 +1,7 @@
 import { Drone } from '@/types/Drone';
 import { AuditLogService } from './auditLogService';
 import { UserService } from './userService';
+import { ImageService } from './imageService';
 import {UserRole} from "@/types/UserRole";
 import {DroneRepository} from "@/repositories/DroneRepository";
 
@@ -33,7 +34,26 @@ export class DroneService {
     }
 
     try {
-      const docId = await DroneRepository.createDrone(droneData, userId);
+      // Generate a temporary ID for image processing
+      const tempId = `temp_${Date.now()}`;
+      
+      // Process images if any
+      let processedImages: string[] = [];
+      if (droneData.images && droneData.images.length > 0) {
+        processedImages = await ImageService.processImages(
+          droneData.images,
+          'drones/images',
+          tempId
+        );
+      }
+
+      // Create the drone data with processed images
+      const processedDroneData = {
+        ...droneData,
+        images: processedImages,
+      };
+
+      const docId = await DroneRepository.createDrone(processedDroneData, userId);
 
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);
@@ -44,7 +64,7 @@ export class DroneService {
         userId,
         userEmail,
         details: AuditLogService.createChangeDetails('create', 'drone'),
-        newValues: { ...droneData, isDeleted: false }
+        newValues: { ...processedDroneData, isDeleted: false }
       });
 
       return docId;
@@ -72,12 +92,36 @@ export class DroneService {
         throw new Error('Cannot update deleted drone');
       }
 
+      // Process images if provided
+      let processedData = { ...droneData };
+      if (droneData.images !== undefined) {
+        processedData.images = await ImageService.processImages(
+          droneData.images,
+          'drones/images',
+          id
+        );
+
+        // Clean up old images that are no longer being used
+        const oldImages = currentDrone.images || [];
+        const newImages = processedData.images;
+        const imagesToDelete = oldImages.filter(oldImg => !newImages.includes(oldImg));
+        
+        // Delete unused images asynchronously (don't wait for completion)
+        imagesToDelete.forEach(async (imageUrl) => {
+          try {
+            await ImageService.deleteImage(imageUrl);
+          } catch (error) {
+            console.warn('Failed to delete old image:', imageUrl, error);
+          }
+        });
+      }
+
       // Store previous values for audit log
       const previousValues = { ...currentDrone };
-      const newValues = { ...currentDrone, ...droneData };
+      const newValues = { ...currentDrone, ...processedData };
 
       // Update drone in repository
-      await DroneRepository.updateDrone(id, droneData, userId);
+      await DroneRepository.updateDrone(id, processedData, userId);
 
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);

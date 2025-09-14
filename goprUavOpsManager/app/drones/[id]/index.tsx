@@ -17,6 +17,7 @@ import { DroneService } from '@/services/droneService';
 import { UserService } from '@/services/userService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import ImageGallery from '@/components/ImageGallery';
 
 export default function DroneDetailsScreen() {
   const [drone, setDrone] = useState<Drone | null>(null);
@@ -248,6 +249,17 @@ export default function DroneDetailsScreen() {
           </View>
         ) : null}
 
+        {drone.images && drone.images.length > 0 && (
+          <View style={styles.section}>
+            <ImageGallery
+              images={drone.images}
+              title={t('droneDetails.images')}
+              numColumns={2}
+              containerStyle={styles.imageGalleryContainer}
+            />
+          </View>
+        )}
+
         {drone.additionalInfo ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('droneForm.additionalInfo')}</Text>
@@ -464,5 +476,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderLeftWidth: 3,
     borderLeftColor: '#0066CC',
+  },
+  imageGalleryContainer: {
+    marginTop: 0,
   },
 });

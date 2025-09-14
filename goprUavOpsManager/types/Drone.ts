@@ -26,6 +26,7 @@ export interface Drone {
   maxSpeed: number; // in km/h
   userManual?: string; // URL to user manual document
   additionalInfo?: string; // Additional information about the drone
+  images?: string[]; // Array of image URLs
   isDeleted?: boolean; // soft-delete flag
   deletedAt?: Date; // timestamp when deleted
   createdAt?: Date; // timestamp when created

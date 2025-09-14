@@ -339,6 +339,7 @@
     "batteryInfo": "Informacje o baterii",
     "manufacturingInfo": "Informacje o produkcji",
     "documentation": "Dokumentacja",
+    "images": "Zdjęcia",
     "auditInfo": "Informacje audytowe",
     "editButton": "Edytuj drona",
     "deleteButton": "Usuń drona",
@@ -462,6 +463,7 @@
     "userManualPlaceholder": "https://...",
     "additionalInfo": "Dodatkowe informacje",
     "additionalInfoPlaceholder": "Wprowadź dodatkowe informacje o dronie (opcjonalne)",
+    "images": "Zdjęcia",
     "cancel": "Anuluj",
     "updateDrone": "Zaktualizuj drona",
     "createDrone": "Utwórz drona",
@@ -475,6 +477,17 @@
     "droneCreated": "Dron został pomyślnie utworzony",
     "failedToUpdate": "Nie udało się zaktualizować drona",
     "failedToCreate": "Nie udało się utworzyć drona"
+  },
+  "imageForm": {
+    "permissionRequired": "Wymagane uprawnienia",
+    "permissionDenied": "Wymagane są uprawnienia do kamery i biblioteki zdjęć, aby dodać zdjęcia.",
+    "error": "Błąd",
+    "failedToPickImage": "Nie udało się wybrać zdjęcia. Spróbuj ponownie.",
+    "confirmDelete": "Usuń zdjęcie",
+    "confirmDeleteMessage": "Czy na pewno chcesz usunąć to zdjęcie?",
+    "addFirstImage": "Dodaj zdjęcie",
+    "addImage": "Dodaj kolejne zdjęcie",
+    "imageCount": "{{count}} z {{max}} zdjęć"
   },
   "dashboard": {
     "title": "GOPR UAV Ops Manager",
