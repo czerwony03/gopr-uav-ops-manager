@@ -207,6 +207,13 @@ export default function FlightDetailsScreen() {
                 {calculateFlightDuration(flight.startTime, flight.endTime, t)}
               </Text>
               <Text style={styles.detail}>{t('flightDetails.conditions')}: {flight.conditions}</Text>
+              
+              {flight.additionalInfo && (
+                <View style={styles.additionalInfoContainer}>
+                  <Text style={styles.additionalInfoLabel}>{t('flightForm.additionalInfo')}:</Text>
+                  <Text style={styles.additionalInfoText}>{flight.additionalInfo}</Text>
+                </View>
+              )}
             </View>
 
             <View style={styles.section}>
@@ -384,6 +391,25 @@ const styles = StyleSheet.create({
     marginTop: 12,
     borderRadius: 8,
     overflow: 'hidden',
+  },
+  additionalInfoContainer: {
+    marginTop: 12,
+    backgroundColor: '#f9f9f9',
+    padding: 12,
+    borderRadius: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: '#0066CC',
+  },
+  additionalInfoLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 6,
+  },
+  additionalInfoText: {
+    fontSize: 16,
+    color: '#333',
+    lineHeight: 24,
   },
 });
 

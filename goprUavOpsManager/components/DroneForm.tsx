@@ -56,6 +56,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
     },
     maxSpeed: 0,
     userManual: '',
+    additionalInfo: '',
   };
 
   const [formData, setFormData] = useState<DroneFormData>(initialData || defaultFormData);
@@ -326,6 +327,17 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
               onChangeText={(value) => updateFormData('userManual', value)}
               placeholder={t('droneForm.userManualPlaceholder')}
             />
+
+            <Text style={styles.label}>{t('droneForm.additionalInfo')}</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={formData.additionalInfo}
+              onChangeText={(value) => updateFormData('additionalInfo', value)}
+              placeholder={t('droneForm.additionalInfoPlaceholder')}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
           </View>
 
           <View style={styles.actionButtons}>
@@ -444,5 +456,9 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#ccc',
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
   },
 });

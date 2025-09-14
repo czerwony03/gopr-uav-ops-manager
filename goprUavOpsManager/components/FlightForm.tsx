@@ -44,6 +44,7 @@ export interface FlightFormData {
   endDate: string; // YYYY-MM-DD
   endTime: string; // HH:mm
   conditions: string;
+  additionalInfo?: string; // Additional information about the flight
 }
 
 interface FlightFormProps {
@@ -83,6 +84,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
       endDate: today,
       endTime: '',
       conditions: '',
+      additionalInfo: '',
     };
   }, []);
 
@@ -477,6 +479,17 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
               placeholder={t('flightForm.conditionsPlaceholder')}
               multiline
               numberOfLines={3}
+            />
+
+            <Text style={styles.label}>{t('flightForm.additionalInfo')}</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={formData.additionalInfo || ''}
+              onChangeText={(value) => updateFormData('additionalInfo', value)}
+              placeholder={t('flightForm.additionalInfoPlaceholder')}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
             />
           </View>
 

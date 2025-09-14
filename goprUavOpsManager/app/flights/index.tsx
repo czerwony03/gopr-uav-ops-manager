@@ -299,6 +299,14 @@ export default function FlightsListScreen() {
             )}
           </>
         ) : null}
+
+        {item.additionalInfo && (
+          <View style={styles.additionalInfoRow}>
+            <Text style={styles.additionalInfoPreview} numberOfLines={2}>
+              {t('flightForm.additionalInfo')}: {item.additionalInfo.length > 60 ? `${item.additionalInfo.substring(0, 60)}...` : item.additionalInfo}
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.buttonContainer}>
@@ -905,5 +913,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     paddingHorizontal: 4,
+  },
+  additionalInfoRow: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  additionalInfoPreview: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
+    lineHeight: 18,
   },
 });

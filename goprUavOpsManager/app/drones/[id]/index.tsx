@@ -248,6 +248,13 @@ export default function DroneDetailsScreen() {
           </View>
         ) : null}
 
+        {drone.additionalInfo ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('droneForm.additionalInfo')}</Text>
+            <Text style={styles.additionalInfoText}>{drone.additionalInfo}</Text>
+          </View>
+        ) : null}
+
         {(drone.createdAt || drone.updatedAt || drone.deletedAt) ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('droneDetails.auditInfo')}</Text>
@@ -447,5 +454,15 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  additionalInfoText: {
+    fontSize: 16,
+    color: '#333',
+    lineHeight: 24,
+    backgroundColor: '#f9f9f9',
+    padding: 12,
+    borderRadius: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: '#0066CC',
   },
 });
