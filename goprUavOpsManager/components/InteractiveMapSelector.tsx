@@ -38,7 +38,6 @@ import {
   Modal,
   TouchableOpacity,
   Platform,
-  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -96,7 +95,8 @@ export default function InteractiveMapSelector({
     }
   }, [initialCoordinates]);
 
-  const { width, height } = Dimensions.get('window');
+  // Removed unused dimensions since the map is handled by CSS in the WebView
+  // const { width, height } = Dimensions.get('window');
 
   // Default to Zakopane, Poland (GOPR headquarters area) if no initial coordinates
   const defaultCoords = initialCoordinates || CoordinateUtils.getZakopaneCenter();
@@ -352,7 +352,7 @@ export default function InteractiveMapSelector({
           scalesPageToFit={Platform.OS === 'android'}
           mixedContentMode="compatibility"
           originWhitelist={['*']}
-          onError={(error) => {
+          onError={(error: any) => {
             console.error('InteractiveMapSelector: WebView error:', error);
           }}
         />

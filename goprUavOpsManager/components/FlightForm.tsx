@@ -37,6 +37,7 @@ export interface FlightFormData {
   operationType: OperationType | '';
   activityType: ActivityType | '';
   droneId: string;
+  customDroneName?: string; // For "Other" drone selection
   operator?: string; // Optional for backward compatibility, but required during validation
   startDate: string; // YYYY-MM-DD
   startTime: string; // HH:mm
@@ -63,6 +64,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
   const [drones, setDrones] = useState<Drone[]>([]);
   const [operatorSelection, setOperatorSelection] = useState<string>(''); // For create mode operator selection
   const [showOtherOperatorInput, setShowOtherOperatorInput] = useState(false); // Show "Other" input field
+  const [showCustomDroneInput, setShowCustomDroneInput] = useState(false); // Show custom drone name input
   
   // Default form data for creating new flights
   const defaultFormData = useMemo((): FlightFormData => {
@@ -74,6 +76,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
       operationType: '',
       activityType: '',
       droneId: '',
+      customDroneName: '',
       operator: '',
       startDate: today,
       startTime: '',
@@ -108,6 +111,10 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
+      // Set the custom drone input visibility based on droneId
+      if (initialData.droneId === 'other') {
+        setShowCustomDroneInput(true);
+      }
     } else if (mode === 'create') {
       setFormData(defaultFormData);
     }
@@ -175,8 +182,14 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
       return false;
     }
 
-    // Validate selected drone exists
-    if (!drones.find(drone => drone.id === formData.droneId)) {
+    // Validate selected drone exists or is custom
+    if (formData.droneId === 'other') {
+      // For custom drone, validate custom drone name is provided
+      if (!formData.customDroneName || !formData.customDroneName.trim()) {
+        crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.customDroneNameRequired') });
+        return false;
+      }
+    } else if (!drones.find(drone => drone.id === formData.droneId)) {
       crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.selectValidDrone') });
       return false;
     }
@@ -330,7 +343,16 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
             <View style={styles.pickerContainer}>
               <Picker
                 selectedValue={String(formData.droneId || '')}
-                onValueChange={(value) => updateFormData('droneId', value)}
+                onValueChange={(value) => {
+                  updateFormData('droneId', value);
+                  if (value === 'other') {
+                    setShowCustomDroneInput(true);
+                    updateFormData('customDroneName', '');
+                  } else {
+                    setShowCustomDroneInput(false);
+                    updateFormData('customDroneName', '');
+                  }
+                }}
                 style={styles.picker}
               >
                 <Picker.Item label={t('flightForm.dronePlaceholder')} value="" />
@@ -341,8 +363,23 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
                     value={drone.id}
                   />
                 ))}
+                <Picker.Item label={t('flightForm.otherDrone')} value="other" />
               </Picker>
             </View>
+
+            {showCustomDroneInput && (
+              <>
+                <Text style={styles.label}>{t('flightForm.customDroneName')} *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.customDroneName || ''}
+                  onChangeText={(value) => updateFormData('customDroneName', value)}
+                  placeholder={t('flightForm.customDroneNamePlaceholder')}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                />
+              </>
+            )}
 
             {/* Operator field - different behavior for create vs edit */}
             <Text style={styles.label}>{t('flightForm.operator')} *</Text>

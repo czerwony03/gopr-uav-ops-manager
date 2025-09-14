@@ -59,6 +59,7 @@ export default function EditFlightScreen() {
           operationType: flight.operationType as OperationType,
           activityType: flight.activityType as ActivityType,
           droneId: flight.droneId,
+          customDroneName: flight.droneId === 'other' ? flight.droneName : '', // Set custom drone name if it's an "other" drone
           operator: flight.operator || '', // Include existing operator data
           startDate: startDateTime.date,
           startTime: startDateTime.time,
@@ -102,9 +103,16 @@ export default function EditFlightScreen() {
     setLoading(true);
     try {
       // Get drone name for the snapshot
-      const fetchedDrones = await DroneService.getDrones(user.role);
-      const selectedDrone = fetchedDrones.find(drone => drone.id === formData.droneId);
-      const droneName = selectedDrone?.name || '';
+      let droneName = '';
+      if (formData.droneId === 'other') {
+        // Use custom drone name for "other" option
+        droneName = formData.customDroneName || '';
+      } else {
+        // Get drone name from database for regular drones
+        const fetchedDrones = await DroneService.getDrones(user.role);
+        const selectedDrone = fetchedDrones.find(drone => drone.id === formData.droneId);
+        droneName = selectedDrone?.name || '';
+      }
 
       // Convert separate date/time fields to datetime strings
       const startDateTime = `${formData.startDate}T${formData.startTime}:00`;

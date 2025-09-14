@@ -270,6 +270,9 @@
     "conditionsPlaceholder": "Warunki pogodowe i lotu (opcjonalne)",
     "drone": "Dron",
     "dronePlaceholder": "Wybierz drona",
+    "otherDrone": "Inny (wpis ręczny)",
+    "customDroneName": "Nazwa niestandardowego drona",
+    "customDroneNamePlaceholder": "Wprowadź nazwę drona",
     "operator": "Operator",
     "operatorPlaceholder": "Wybierz operatora",
     "duration": "Czas trwania (minuty)",
@@ -315,13 +318,15 @@
       "activityTypeRequired": "Typ aktywności jest wymagany",
       "noDronesAvailable": "Brak dostępnych dronów. Proszę najpierw dodać drony.",
       "selectValidDrone": "Proszę wybrać prawidłowy dron",
+      "customDroneNameRequired": "Nazwa niestandardowego drona jest wymagana",
       "dateFormat": "Data musi być w formacie YYYY-MM-DD",
       "startDateFormat": "Data rozpoczęcia musi być w formacie YYYY-MM-DD",
       "endDateFormat": "Data zakończenia musi być w formacie YYYY-MM-DD",
       "startTimeFormat": "Czas rozpoczęcia musi być w formacie HH:mm",
       "endTimeFormat": "Czas zakończenia musi być w formacie HH:mm",
       "invalidDateTime": "Nieprawidłowy format daty/czasu",
-      "endAfterStart": "Czas zakończenia musi być późniejszy niż czas rozpoczęcia"
+      "endAfterStart": "Czas zakończenia musi być późniejszy niż czas rozpoczęcia",
+      "maxDuration24Hours": "Czas trwania lotu nie może przekroczyć 24 godzin"
     }
   },
   "droneDetails": {
