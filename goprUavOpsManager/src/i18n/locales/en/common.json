@@ -339,6 +339,7 @@
     "batteryInfo": "Battery Information",
     "manufacturingInfo": "Manufacturing Information",
     "documentation": "Documentation",
+    "images": "Images",
     "auditInfo": "Audit Information",
     "editButton": "Edit Drone",
     "deleteButton": "Delete Drone",
@@ -462,6 +463,7 @@
     "userManualPlaceholder": "https://...",
     "additionalInfo": "Additional Info",
     "additionalInfoPlaceholder": "Enter any additional information about the drone (optional)",
+    "images": "Images",
     "cancel": "Cancel",
     "updateDrone": "Update Drone",
     "createDrone": "Create Drone",
@@ -475,6 +477,17 @@
     "droneCreated": "Drone created successfully",
     "failedToUpdate": "Failed to update drone",
     "failedToCreate": "Failed to create drone"
+  },
+  "imageForm": {
+    "permissionRequired": "Permission Required",
+    "permissionDenied": "Camera and photo library permissions are required to add images.",
+    "error": "Error",
+    "failedToPickImage": "Failed to pick image. Please try again.",
+    "confirmDelete": "Delete Image",
+    "confirmDeleteMessage": "Are you sure you want to delete this image?",
+    "addFirstImage": "Add Image",
+    "addImage": "Add Another Image",
+    "imageCount": "{{count}} of {{max}} images"
   },
   "dashboard": {
     "title": "GOPR UAV Ops Manager",
