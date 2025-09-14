@@ -23,6 +23,7 @@ import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import TimePicker from './TimePicker';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
+import MapSelector from './MapSelector';
 import { 
   FlightCategory, 
   OperationType, 
@@ -116,6 +117,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
   };
 
   const [locationLoading, setLocationLoading] = useState(false);
+  const [mapSelectorVisible, setMapSelectorVisible] = useState(false);
 
   // Reverse geocode coordinates to get location
   const reverseGeocodeCoordinates = async (coordinatesString: string): Promise<string> => {
@@ -241,13 +243,30 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
     }
   };
 
-  // Handle map button press (placeholder for now)
+  // Handle map button press - show map selector
   const handleMapSelection = () => {
-    if (Platform.OS === 'web') {
-      alert(t('map.notImplemented', 'Map selection feature coming soon!'));
-    } else {
-      Alert.alert(t('map.title', 'Map Selection'), t('map.notImplemented', 'Map selection feature coming soon!'));
+    setMapSelectorVisible(true);
+  };
+
+  // Handle location selection from map
+  const handleLocationFromMap = async (coordinates: { latitude: number; longitude: number }) => {
+    const coordinatesString = `${coordinates.latitude.toFixed(6)}, ${coordinates.longitude.toFixed(6)}`;
+    await handleCoordinatesChange(coordinatesString);
+  };
+
+  // Parse coordinates string to get initial coordinates for map
+  const getInitialMapCoordinates = (): { latitude: number; longitude: number } | undefined => {
+    if (!formData.coordinates.trim()) return undefined;
+    
+    try {
+      const coords = formData.coordinates.split(',').map(c => parseFloat(c.trim()));
+      if (coords.length === 2 && !coords.some(c => isNaN(c))) {
+        return { latitude: coords[0], longitude: coords[1] };
+      }
+    } catch (error) {
+      console.error('FlightForm: Error parsing coordinates for map:', error);
     }
+    return undefined;
   };
 
   // Calculate flight duration for display
@@ -588,6 +607,14 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Map Selector Modal */}
+      <MapSelector
+        visible={mapSelectorVisible}
+        initialCoordinates={getInitialMapCoordinates()}
+        onLocationSelect={handleLocationFromMap}
+        onClose={() => setMapSelectorVisible(false)}
+      />
     </SafeAreaView>
   );
 }

@@ -650,6 +650,9 @@
   },
   "map": {
     "title": "Wybór z mapy",
-    "notImplemented": "Funkcja wyboru z mapy już wkrótce!"
+    "notImplemented": "Funkcja wyboru z mapy już wkrótce!",
+    "selectLocation": "Dotknij mapę, aby wybrać lokalizację",
+    "noLocationSelected": "Nie wybrano lokalizacji",
+    "selectedCoordinates": "Wybrano:"
   }
 }

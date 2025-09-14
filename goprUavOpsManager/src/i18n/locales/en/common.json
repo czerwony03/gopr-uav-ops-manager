@@ -650,6 +650,9 @@
   },
   "map": {
     "title": "Map Selection",
-    "notImplemented": "Map selection feature coming soon!"
+    "notImplemented": "Map selection feature coming soon!",
+    "selectLocation": "Tap on the map to select a location",
+    "noLocationSelected": "No location selected",
+    "selectedCoordinates": "Selected:"
   }
 }
