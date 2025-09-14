@@ -1,3 +1,10 @@
+export interface DroneEquipmentItem {
+  id: string;
+  name: string;
+  quantity: number;
+  image?: string; // URL to equipment image
+}
+
 export interface Drone {
   id: string;
   name: string;
@@ -27,6 +34,7 @@ export interface Drone {
   userManual?: string; // URL to user manual document
   additionalInfo?: string; // Additional information about the drone
   images?: string[]; // Array of image URLs
+  equipmentList?: DroneEquipmentItem[]; // Array of equipment items
   isDeleted?: boolean; // soft-delete flag
   deletedAt?: Date; // timestamp when deleted
   createdAt?: Date; // timestamp when created

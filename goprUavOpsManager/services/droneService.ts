@@ -47,10 +47,17 @@ export class DroneService {
         );
       }
 
-      // Create the drone data with processed images
+      // Process equipment images if any
+      let processedEquipment: any[] = [];
+      if (droneData.equipmentList && droneData.equipmentList.length > 0) {
+        processedEquipment = await this.processEquipmentImages(droneData.equipmentList, tempId);
+      }
+
+      // Create the drone data with processed images and equipment
       const processedDroneData = {
         ...droneData,
         images: processedImages,
+        equipmentList: processedEquipment,
       };
 
       const docId = await DroneRepository.createDrone(processedDroneData, userId);
@@ -114,6 +121,14 @@ export class DroneService {
             console.warn('Failed to delete old image:', imageUrl, error);
           }
         });
+      }
+
+      // Process equipment images if provided
+      if (droneData.equipmentList !== undefined) {
+        processedData.equipmentList = await this.processEquipmentImages(droneData.equipmentList, id);
+        
+        // Clean up old equipment images that are no longer being used
+        await this.cleanupEquipmentImages(currentDrone.equipmentList, processedData.equipmentList);
       }
 
       // Store previous values for audit log
@@ -205,6 +220,64 @@ export class DroneService {
       console.error('Error restoring drone:', error);
       throw new Error('Failed to restore drone');
     }
+  }
+
+  // Process equipment images for upload
+  private static async processEquipmentImages(equipmentList: any[], droneId: string): Promise<any[]> {
+    if (!equipmentList || equipmentList.length === 0) {
+      return [];
+    }
+
+    const processedEquipment = [];
+    
+    for (const item of equipmentList) {
+      let processedItem = { ...item };
+      
+      // Process equipment image if present and it's a new local URI
+      if (item.image && !item.image.startsWith('https://')) {
+        try {
+          const uploadedImageUrl = await ImageService.uploadImage(
+            item.image,
+            `equipment_${item.id}_${Date.now()}`,
+            `drones/equipment/${droneId}`
+          );
+          processedItem.image = uploadedImageUrl;
+        } catch (error) {
+          console.warn('Failed to upload equipment image:', error);
+          // Continue without the image rather than failing the entire operation
+          // Remove the image field entirely to avoid undefined values in Firebase
+          const { image, ...itemWithoutImage } = processedItem;
+          processedItem = itemWithoutImage;
+        }
+      }
+      
+      processedEquipment.push(processedItem);
+    }
+    
+    return processedEquipment;
+  }
+
+  // Clean up unused equipment images
+  private static async cleanupEquipmentImages(oldEquipment: any[] = [], newEquipment: any[] = []): Promise<void> {
+    // Get old images that are no longer being used
+    const oldImages = oldEquipment
+      .filter(item => item.image && item.image.startsWith('https://'))
+      .map(item => item.image);
+    
+    const newImages = newEquipment
+      .filter(item => item.image && item.image.startsWith('https://'))
+      .map(item => item.image);
+    
+    const imagesToDelete = oldImages.filter(oldImg => !newImages.includes(oldImg));
+    
+    // Delete unused images asynchronously (don't wait for completion)
+    imagesToDelete.forEach(async (imageUrl) => {
+      try {
+        await ImageService.deleteImage(imageUrl);
+      } catch (error) {
+        console.warn('Failed to delete old equipment image:', imageUrl, error);
+      }
+    });
   }
 
   // Check if user can modify drones

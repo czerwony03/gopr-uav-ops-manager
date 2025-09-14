@@ -10,10 +10,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { Drone } from '@/types/Drone';
+import { Drone, DroneEquipmentItem } from '@/types/Drone';
 import { useCrossPlatformAlert } from './CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import MultiImagePicker from './MultiImagePicker';
+import EquipmentItemForm from './EquipmentItemForm';
 
 export type DroneFormData = Omit<Drone, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'isDeleted' | 'createdBy' | 'updatedBy'>;
 
@@ -59,6 +60,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
     userManual: '',
     additionalInfo: '',
     images: [],
+    equipmentList: [],
   };
 
   const [formData, setFormData] = useState<DroneFormData>(initialData || defaultFormData);
@@ -91,6 +93,36 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
     });
   };
 
+  // Equipment list management functions
+  const addEquipmentItem = () => {
+    const newItem: DroneEquipmentItem = {
+      id: `eq_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: '',
+      quantity: 1,
+    };
+    
+    setFormData(prev => ({
+      ...prev,
+      equipmentList: [...(prev.equipmentList || []), newItem],
+    }));
+  };
+
+  const updateEquipmentItem = (itemId: string, updatedItem: DroneEquipmentItem) => {
+    setFormData(prev => ({
+      ...prev,
+      equipmentList: (prev.equipmentList || []).map(item => 
+        item.id === itemId ? updatedItem : item
+      ),
+    }));
+  };
+
+  const removeEquipmentItem = (itemId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      equipmentList: (prev.equipmentList || []).filter(item => item.id !== itemId),
+    }));
+  };
+
   const validateForm = (): boolean => {
     if (!formData.name.trim()) {
       crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.nameRequired') });
@@ -104,6 +136,27 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
       crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.registrationRequired') });
       return false;
     }
+    
+    // Validate equipment items if any exist
+    if (formData.equipmentList && formData.equipmentList.length > 0) {
+      for (const item of formData.equipmentList) {
+        if (!item.name.trim()) {
+          crossPlatformAlert.showAlert({ 
+            title: t('equipment.validation.nameRequired'), 
+            message: t('equipment.validation.nameRequired') 
+          });
+          return false;
+        }
+        if (item.quantity < 1) {
+          crossPlatformAlert.showAlert({ 
+            title: t('equipment.validation.quantityRequired'), 
+            message: t('equipment.validation.quantityRequired') 
+          });
+          return false;
+        }
+      }
+    }
+    
     return true;
   };
 
@@ -343,6 +396,36 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
           </View>
 
           <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{t('equipment.list')}</Text>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={addEquipmentItem}
+                disabled={loading}
+              >
+                <Text style={styles.addButtonText}>{t('equipment.addItem')}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {formData.equipmentList && formData.equipmentList.length > 0 ? (
+              formData.equipmentList.map((item) => (
+                <EquipmentItemForm
+                  key={item.id}
+                  item={item}
+                  onUpdate={(updatedItem) => updateEquipmentItem(item.id, updatedItem)}
+                  onRemove={() => removeEquipmentItem(item.id)}
+                  disabled={loading}
+                />
+              ))
+            ) : (
+              <View style={styles.emptyEquipment}>
+                <Text style={styles.emptyText}>{t('equipment.noEquipment')}</Text>
+                <Text style={styles.emptySubtext}>{t('equipment.addFirstItem')}</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('droneForm.images')}</Text>
             <MultiImagePicker
               images={formData.images || []}
@@ -472,5 +555,37 @@ const styles = StyleSheet.create({
   textArea: {
     height: 100,
     textAlignVertical: 'top',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  addButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  emptyEquipment: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 4,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999',
   },
 });

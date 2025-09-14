@@ -683,5 +683,30 @@
     "notAvailable": "Interaktywna mapa nie jest dostępna na tej platformie",
     "useCoordinatesInput": "Proszę użyć pola współrzędnych",
     "markerPlaced": "Marker ustawiony"
+  },
+  "equipment": {
+    "title": "Wyposażenie",
+    "list": "Lista wyposażenia",
+    "item": "Element wyposażenia",
+    "name": "Nazwa",
+    "namePlaceholder": "Wprowadź nazwę wyposażenia",
+    "quantity": "Ilość",
+    "image": "Zdjęcie",
+    "addImage": "Dodaj zdjęcie",
+    "addItem": "Dodaj element wyposażenia",
+    "removeItem": "Usuń element wyposażenia",
+    "removeItemConfirm": "Czy na pewno chcesz usunąć \"{{name}}\"? Spowoduje to również usunięcie powiązanego zdjęcia.",
+    "noEquipment": "Nie dodano jeszcze żadnych elementów wyposażenia",
+    "addFirstItem": "Dodaj pierwszy element wyposażenia za pomocą przycisku powyżej",
+    "checklist": "Lista kontrolna wyposażenia",
+    "checkEquipment": "Sprawdź wyposażenie",
+    "progress": "{{checked}} z {{total}} elementów sprawdzonych",
+    "allItemsChecked": "Wszystkie elementy wyposażenia zostały sprawdzone!",
+    "reset": "Resetuj",
+    "checklistNote": "Ta lista kontrolna służy wyłącznie do osobistej weryfikacji i nie jest zapisywana.",
+    "validation": {
+      "nameRequired": "Nazwa wyposażenia jest wymagana",
+      "quantityRequired": "Ilość musi wynosić co najmniej 1"
+    }
   }
 }
