@@ -54,6 +54,7 @@ export default function EditFlightScreen() {
 
         setInitialData({
           location: flight.location,
+          coordinates: flight.coordinates || '', // Include coordinates from existing flight
           flightCategory: flight.flightCategory as FlightCategory,
           operationType: flight.operationType as OperationType,
           activityType: flight.activityType as ActivityType,
@@ -111,6 +112,7 @@ export default function EditFlightScreen() {
       const flightData = {
         date: formData.startDate, // Derive date from startDate for database indexing
         location: formData.location,
+        coordinates: formData.coordinates || undefined, // Save coordinates if provided
         flightCategory: formData.flightCategory as FlightCategory,
         operationType: formData.operationType as OperationType,
         activityType: formData.activityType as ActivityType,

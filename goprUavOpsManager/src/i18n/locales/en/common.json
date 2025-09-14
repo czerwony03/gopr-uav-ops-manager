@@ -239,6 +239,8 @@
     "operator": "Operator",
     "duration": "Duration",
     "location": "Location",
+    "coordinates": "Coordinates",
+    "viewOnMap": "View on Google Maps",
     "date": "Date",
     "createdBy": "Created by",
     "updatedBy": "Updated by",
