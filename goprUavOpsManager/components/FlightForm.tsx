@@ -37,6 +37,7 @@ export interface FlightFormData {
   operationType: OperationType | '';
   activityType: ActivityType | '';
   droneId: string;
+  operator?: string; // Optional for backward compatibility, but required during validation
   startDate: string; // YYYY-MM-DD
   startTime: string; // HH:mm
   endDate: string; // YYYY-MM-DD
@@ -60,6 +61,8 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
 
   const [dronesLoading, setDronesLoading] = useState(true);
   const [drones, setDrones] = useState<Drone[]>([]);
+  const [operatorSelection, setOperatorSelection] = useState<string>(''); // For create mode operator selection
+  const [showOtherOperatorInput, setShowOtherOperatorInput] = useState(false); // Show "Other" input field
   
   // Default form data for creating new flights
   const defaultFormData = useMemo((): FlightFormData => {
@@ -71,6 +74,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
       operationType: '',
       activityType: '',
       droneId: '',
+      operator: '',
       startDate: today,
       startTime: '',
       endDate: today,
@@ -154,11 +158,11 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
   const validateForm = (): boolean => {
     const requiredFields: (keyof FlightFormData)[] = [
       'location', 'flightCategory', 'operationType', 
-      'activityType', 'droneId', 'startDate', 'startTime', 'endDate', 'endTime'
+      'activityType', 'droneId', 'operator', 'startDate', 'startTime', 'endDate', 'endTime'
     ];
 
     for (const field of requiredFields) {
-      const value = formData[field];
+      const value = formData[field as keyof FlightFormData];
       if (!value || (typeof value === 'string' && !value.trim())) {
         crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t(`flightForm.validation.${field}Required`) });
         return false;
@@ -339,6 +343,60 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
                 ))}
               </Picker>
             </View>
+
+            {/* Operator field - different behavior for create vs edit */}
+            <Text style={styles.label}>{t('flightForm.operator')} *</Text>
+            {mode === 'create' ? (
+              <>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={operatorSelection}
+                    onValueChange={(value) => {
+                      setOperatorSelection(value);
+                      if (value === 'Other') {
+                        setShowOtherOperatorInput(true);
+                        updateFormData('operator', '');
+                      } else {
+                        setShowOtherOperatorInput(false);
+                        updateFormData('operator', value);
+                      }
+                    }}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label={t('flightForm.operatorPlaceholder')} value="" />
+                    <Picker.Item 
+                      label={user?.firstname && user?.surname ? `${user.firstname} ${user.surname}` : user?.email || 'Current User'} 
+                      value={user?.firstname && user?.surname ? `${user.firstname} ${user.surname}` : user?.email || 'Current User'} 
+                    />
+                    <Picker.Item label="GOPR Bieszczady" value="GOPR Bieszczady" />
+                    <Picker.Item label="Other" value="Other" />
+                  </Picker>
+                </View>
+
+                {showOtherOperatorInput && (
+                  <>
+                    <Text style={styles.label}>Other Operator *</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={formData.operator || ''}
+                      onChangeText={(value) => updateFormData('operator', value)}
+                      placeholder="Enter operator name"
+                      autoCapitalize="words"
+                      autoCorrect={false}
+                    />
+                  </>
+                )}
+              </>
+            ) : (
+              <TextInput
+                style={styles.input}
+                value={formData.operator || ''}
+                onChangeText={(value) => updateFormData('operator', value)}
+                placeholder={t('flightForm.operatorPlaceholder')}
+                autoCapitalize="words"
+                autoCorrect={false}
+              />
+            )}
 
             <WebCompatibleDatePicker
               label={t('flightForm.startDate')}

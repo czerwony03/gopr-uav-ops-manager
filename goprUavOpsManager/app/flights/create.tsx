@@ -50,6 +50,7 @@ export default function CreateFlightScreen() {
         activityType: formData.activityType as ActivityType,
         droneId: formData.droneId,
         droneName,
+        operator: formData.operator || '',
         startTime: startDateTime,
         endTime: endDateTime,
         conditions: formData.conditions,

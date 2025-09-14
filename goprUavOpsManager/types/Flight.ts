@@ -30,7 +30,8 @@ export const AVAILABLE_ACTIVITY_TYPES: ActivityType[] = [
 export interface Flight {
   id: string;
   userId: string; // owner's Firebase Auth UID
-  userEmail?: string; // snapshot for reference
+  userEmail?: string; // snapshot for reference (pilot who performed the flight)
+  operator?: string; // operator who was responsible for the flight
   date: string; // YYYY-MM-DD
   location: string;
   coordinates?: string; // GPS coordinates in "latitude, longitude" format
@@ -56,7 +57,7 @@ export interface FlightQuery {
   endDate?: Date;
   flightCategory?: FlightCategory;
   activityType?: ActivityType;
-  userEmail?: string; // For admin/manager to filter by operator
+  userEmail?: string; // For admin/manager to filter by pilot email
   droneId?: string;
   lastDocumentSnapshot?: any; // Firestore DocumentSnapshot for pagination
 }
