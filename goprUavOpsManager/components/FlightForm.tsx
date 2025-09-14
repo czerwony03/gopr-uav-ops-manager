@@ -37,7 +37,7 @@ export interface FlightFormData {
   operationType: OperationType | '';
   activityType: ActivityType | '';
   droneId: string;
-  operator: string;
+  operator?: string; // Optional for backward compatibility, but required during validation
   startDate: string; // YYYY-MM-DD
   startTime: string; // HH:mm
   endDate: string; // YYYY-MM-DD
@@ -162,7 +162,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
     ];
 
     for (const field of requiredFields) {
-      const value = formData[field];
+      const value = formData[field as keyof FlightFormData];
       if (!value || (typeof value === 'string' && !value.trim())) {
         crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t(`flightForm.validation.${field}Required`) });
         return false;
@@ -378,7 +378,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
                     <Text style={styles.label}>Other Operator *</Text>
                     <TextInput
                       style={styles.input}
-                      value={formData.operator}
+                      value={formData.operator || ''}
                       onChangeText={(value) => updateFormData('operator', value)}
                       placeholder="Enter operator name"
                       autoCapitalize="words"
@@ -390,7 +390,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
             ) : (
               <TextInput
                 style={styles.input}
-                value={formData.operator}
+                value={formData.operator || ''}
                 onChangeText={(value) => updateFormData('operator', value)}
                 placeholder={t('flightForm.operatorPlaceholder')}
                 autoCapitalize="words"

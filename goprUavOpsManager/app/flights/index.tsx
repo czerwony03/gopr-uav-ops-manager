@@ -288,7 +288,7 @@ export default function FlightsListScreen() {
         {(user?.role === 'admin' || user?.role === 'manager') && item.userEmail ? (
           <>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Pilot:</Text>
+              <Text style={styles.detailLabel}>{t('flights.pilot')}:</Text>
               <Text style={styles.detailValue}>{item.userEmail}</Text>
             </View>
             {item.operator && (

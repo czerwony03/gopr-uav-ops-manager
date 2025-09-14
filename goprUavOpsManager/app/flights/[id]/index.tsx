@@ -223,7 +223,7 @@ export default function FlightDetailsScreen() {
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{t('users.title')}</Text>
-              <Text style={styles.detail}>Pilot: {flight.userEmail || t('userDetails.noData')}</Text>
+              <Text style={styles.detail}>{t('flightDetails.pilot')}: {flight.userEmail || t('userDetails.noData')}</Text>
               <Text style={styles.detail}>{t('flightDetails.operator')}: {flight.operator || t('userDetails.noData')}</Text>
             </View>
 
