@@ -61,7 +61,7 @@ export default function EquipmentItemForm({
       if (!result.canceled && result.assets?.[0]) {
         handleFieldChange('image', result.assets[0].uri);
       }
-    } catch (error) {
+    } catch {
       crossPlatformAlert.showAlert({
         title: t('imageForm.error'),
         message: t('imageForm.failedToPickImage')
