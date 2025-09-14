@@ -270,6 +270,9 @@
     "conditionsPlaceholder": "Weather and flight conditions (optional)",
     "drone": "Drone",
     "dronePlaceholder": "Select a drone",
+    "otherDrone": "Other (manual entry)",
+    "customDroneName": "Custom Drone Name",
+    "customDroneNamePlaceholder": "Enter drone name",
     "operator": "Operator",
     "operatorPlaceholder": "Select operator",
     "duration": "Duration (minutes)",
@@ -315,13 +318,15 @@
       "activityTypeRequired": "Activity type is required",
       "noDronesAvailable": "No drones available. Please add drones first.",
       "selectValidDrone": "Please select a valid drone",
+      "customDroneNameRequired": "Custom drone name is required",
       "dateFormat": "Date must be in YYYY-MM-DD format",
       "startDateFormat": "Start date must be in YYYY-MM-DD format",
       "endDateFormat": "End date must be in YYYY-MM-DD format",
       "startTimeFormat": "Start time must be in HH:mm format",
       "endTimeFormat": "End time must be in HH:mm format",
       "invalidDateTime": "Invalid date/time format",
-      "endAfterStart": "End time must be after start time"
+      "endAfterStart": "End time must be after start time",
+      "maxDuration24Hours": "Flight duration cannot exceed 24 hours"
     }
   },
   "droneDetails": {
