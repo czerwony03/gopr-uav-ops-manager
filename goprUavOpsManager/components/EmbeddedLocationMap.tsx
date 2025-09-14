@@ -167,7 +167,7 @@ export const EmbeddedLocationMap: React.FC<EmbeddedLocationMapProps> = ({
               <Text style={styles.loadingText}>Loading map...</Text>
             </View>
           )}
-          onError={(error) => {
+          onError={(error: any) => {
             console.error('WebView error in EmbeddedLocationMap:', error);
           }}
         />
