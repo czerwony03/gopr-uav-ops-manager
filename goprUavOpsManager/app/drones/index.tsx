@@ -164,6 +164,12 @@ export default function DronesListScreen() {
         {t('drones.manufactured')}: {item.yearOfManufacture} | {t('drones.commissioned')}: {item.yearOfCommissioning}
       </Text>
 
+      {item.additionalInfo && (
+        <Text style={styles.additionalInfoPreview} numberOfLines={2}>
+          {t('droneForm.additionalInfo')}: {item.additionalInfo.length > 60 ? `${item.additionalInfo.substring(0, 60)}...` : item.additionalInfo}
+        </Text>
+      )}
+
       <View style={styles.actionButtons}>
         <Link href={`/drones/${item.id}`} asChild>
           <TouchableOpacity style={styles.viewButton}>
@@ -422,5 +428,13 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  additionalInfoPreview: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 6,
+    marginBottom: 6,
+    fontStyle: 'italic',
+    lineHeight: 18,
   },
 });

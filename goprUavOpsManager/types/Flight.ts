@@ -43,6 +43,7 @@ export interface Flight {
   startTime: string; // ISO datetime string for flights that can cross midnight
   endTime: string; // ISO datetime string for flights that can cross midnight
   conditions: string; // Warunki
+  additionalInfo?: string; // Additional information about the flight
   createdAt?: Date; // timestamp when created
   updatedAt?: Date; // timestamp when last updated
   createdBy?: string; // user ID who created it

@@ -268,6 +268,8 @@
     "activityPlaceholder": "Wybierz aktywność",
     "conditions": "Warunki",
     "conditionsPlaceholder": "Warunki pogodowe i lotu (opcjonalne)",
+    "additionalInfo": "Dodatkowe informacje",
+    "additionalInfoPlaceholder": "Wprowadź dodatkowe informacje o locie (opcjonalne)",
     "drone": "Dron",
     "dronePlaceholder": "Wybierz drona",
     "otherDrone": "Inny (wpis ręczny)",
@@ -458,6 +460,8 @@
     "yearOfCommissioning": "Rok wprowadzenia do służby",
     "userManual": "URL instrukcji obsługi (opcjonalne)",
     "userManualPlaceholder": "https://...",
+    "additionalInfo": "Dodatkowe informacje",
+    "additionalInfoPlaceholder": "Wprowadź dodatkowe informacje o dronie (opcjonalne)",
     "cancel": "Anuluj",
     "updateDrone": "Zaktualizuj drona",
     "createDrone": "Utwórz drona",
@@ -664,6 +668,7 @@
     "noLocationSelected": "Nie wybrano lokalizacji",
     "selectedCoordinates": "Wybrano:",
     "notAvailable": "Interaktywna mapa nie jest dostępna na tej platformie",
-    "useCoordinatesInput": "Proszę użyć pola współrzędnych"
+    "useCoordinatesInput": "Proszę użyć pola współrzędnych",
+    "markerPlaced": "Marker ustawiony"
   }
 }

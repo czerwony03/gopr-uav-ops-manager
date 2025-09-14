@@ -66,6 +66,7 @@ export default function EditFlightScreen() {
           endDate: endDateTime.date,
           endTime: endDateTime.time,
           conditions: flight.conditions || '',
+          additionalInfo: flight.additionalInfo || '',
         });
       } else {
         crossPlatformAlert.showAlert({ title: t('common.error'), message: t('flightForm.notFound') });
@@ -131,6 +132,7 @@ export default function EditFlightScreen() {
         startTime: startDateTime,
         endTime: endDateTime,
         conditions: formData.conditions,
+        additionalInfo: formData.additionalInfo || '',
         // Don't include userId and userEmail in updates - they should remain as the original user's data
         // Only the updatedBy field should track who made the change
       };
