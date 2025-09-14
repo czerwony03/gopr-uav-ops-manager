@@ -668,6 +668,7 @@
     "noLocationSelected": "No location selected",
     "selectedCoordinates": "Selected:",
     "notAvailable": "Interactive map is not available on this platform",
-    "useCoordinatesInput": "Please use the coordinates input field instead"
+    "useCoordinatesInput": "Please use the coordinates input field instead",
+    "markerPlaced": "Marker placed"
   }
 }
