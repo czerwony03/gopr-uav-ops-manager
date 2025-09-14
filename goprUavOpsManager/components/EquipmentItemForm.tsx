@@ -80,7 +80,11 @@ export default function EquipmentItemForm({
         {
           text: t('common.delete'),
           style: 'destructive',
-          onPress: () => handleFieldChange('image', undefined),
+          onPress: () => {
+            // Create a new object without the image field to avoid undefined values
+            const { image, ...itemWithoutImage } = item;
+            onUpdate(itemWithoutImage as DroneEquipmentItem);
+          },
         },
       ],
     });

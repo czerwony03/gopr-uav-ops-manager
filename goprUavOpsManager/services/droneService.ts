@@ -245,7 +245,9 @@ export class DroneService {
         } catch (error) {
           console.warn('Failed to upload equipment image:', error);
           // Continue without the image rather than failing the entire operation
-          processedItem.image = undefined;
+          // Remove the image field entirely to avoid undefined values in Firebase
+          const { image, ...itemWithoutImage } = processedItem;
+          processedItem = itemWithoutImage;
         }
       }
       
