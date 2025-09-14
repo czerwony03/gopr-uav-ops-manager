@@ -10,12 +10,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 import { Flight } from '@/types/Flight';
 import { useAuth } from '@/contexts/AuthContext';
 import { FlightService } from '@/services/flightService';
 import { UserService } from '@/services/userService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { calculateFlightDuration } from '@/src/utils/flightUtils';
+import { MapUtils } from '@/utils/mapUtils';
+import { EmbeddedLocationMap } from '@/components/EmbeddedLocationMap';
 
 export default function FlightDetailsScreen() {
   const { t } = useTranslation('common');
@@ -102,6 +105,28 @@ export default function FlightDetailsScreen() {
     }
   };
 
+  const handleViewOnMap = async () => {
+    if (!flight?.coordinates) {
+      crossPlatformAlert.showAlert({
+        title: t('common.error'),
+        message: 'No coordinates available for this flight',
+        buttons: [{ text: t('common.ok') }]
+      });
+      return;
+    }
+
+    try {
+      await MapUtils.openInPlatformOptimizedMaps(flight.coordinates);
+    } catch (error) {
+      console.error('Error opening map:', error);
+      crossPlatformAlert.showAlert({
+        title: t('common.error'),
+        message: 'Unable to open map application',
+        buttons: [{ text: t('common.ok') }]
+      });
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -145,6 +170,32 @@ export default function FlightDetailsScreen() {
               <Text style={styles.sectionTitle}>{t('flightDetails.basicInfo')}</Text>
               <Text style={styles.detail}>{t('flightDetails.date')}: {flight.date}</Text>
               <Text style={styles.detail}>{t('flightDetails.location')}: {flight.location}</Text>
+              
+              {/* Coordinates section with embedded map and Google Maps button */}
+              {flight.coordinates && (
+                <View style={styles.coordinatesContainer}>
+                  <View style={styles.coordinatesRow}>
+                    <Text style={styles.detail}>{t('flightDetails.coordinates')}: {MapUtils.getDisplayCoordinates(flight.coordinates)}</Text>
+                    <TouchableOpacity
+                      style={styles.mapButton}
+                      onPress={handleViewOnMap}
+                      accessibilityLabel={t('flightDetails.viewOnMap')}
+                    >
+                      <Ionicons name="map" size={18} color="#007AFF" />
+                      <Text style={styles.mapButtonText}>{t('flightDetails.viewOnMap')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                  
+                  {/* Embedded location map for quick viewing */}
+                  <View style={styles.embeddedMapContainer}>
+                    <EmbeddedLocationMap 
+                      coordinates={flight.coordinates}
+                      height={180}
+                    />
+                  </View>
+                </View>
+              )}
+              
               <Text style={styles.detail}>
                 {t('common.time')}: {crossesMidnight ? (
                   `${formatDateTime(flight.startTime)} - ${formatDateTime(flight.endTime)}`
@@ -303,6 +354,35 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  coordinatesContainer: {
+    marginBottom: 8,
+  },
+  coordinatesRow: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  mapButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f8ff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#007AFF',
+    alignSelf: 'flex-start',
+    gap: 6,
+  },
+  mapButtonText: {
+    color: '#007AFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  embeddedMapContainer: {
+    marginTop: 12,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
 });
 

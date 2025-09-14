@@ -20,6 +20,7 @@ import { useCrossPlatformAlert } from './CrossPlatformAlert';
 import WebCompatibleDatePicker from './WebCompatibleDatePicker';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import TimePicker from './TimePicker';
+import LocationSelector from './LocationSelector';
 import { 
   FlightCategory, 
   OperationType, 
@@ -31,6 +32,7 @@ import {
 
 export interface FlightFormData {
   location: string;
+  coordinates: string;
   flightCategory: FlightCategory | '';
   operationType: OperationType | '';
   activityType: ActivityType | '';
@@ -64,6 +66,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
     const today = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
     return {
       location: '',
+      coordinates: '',
       flightCategory: '',
       operationType: '',
       activityType: '',
@@ -256,12 +259,13 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('flightForm.basicInfo')}</Text>
             
-            <Text style={styles.label}>{t('flightForm.location')} *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.location}
-              onChangeText={(value) => updateFormData('location', value)}
-              placeholder={t('flightForm.locationPlaceholder')}
+            {/* Location Selector Component */}
+            <LocationSelector
+              coordinates={formData.coordinates}
+              location={formData.location}
+              onCoordinatesChange={(coords) => updateFormData('coordinates', coords)}
+              onLocationChange={(location) => updateFormData('location', location)}
+              disabled={loading}
             />
 
             <Text style={styles.label}>{t('flightForm.category')} *</Text>

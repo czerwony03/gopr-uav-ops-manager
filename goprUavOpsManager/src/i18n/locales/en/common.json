@@ -239,6 +239,8 @@
     "operator": "Operator",
     "duration": "Duration",
     "location": "Location",
+    "coordinates": "Coordinates",
+    "viewOnMap": "View on Google Maps",
     "date": "Date",
     "createdBy": "Created by",
     "updatedBy": "Updated by",
@@ -272,6 +274,8 @@
     "durationPlaceholder": "Enter duration",
     "location": "Location",
     "locationPlaceholder": "Enter flight location",
+    "coordinates": "Coordinates",
+    "coordinatesPlaceholder": "Enter coordinates (lat, lng)",
     "date": "Date",
     "datePlaceholder": "YYYY-MM-DD",
     "startDate": "Start Date",
@@ -635,5 +639,24 @@
   "offline": {
     "noConnection": "No internet connection - viewing cached data",
     "viewingCachedData": "Viewing cached data from offline storage"
+  },
+  "location": {
+    "error": "Unable to get location. Please try again.",
+    "errorTitle": "Location Error",
+    "permissionDenied": "Location permission denied. Please enable location access in settings.",
+    "timeout": "Location request timed out. Please try again.",
+    "networkError": "Network error occurred while getting location.",
+    "getCurrentLocation": "Get current location",
+    "geocodingFallback": "GPS location found, but couldn't convert to readable address. Using coordinates instead.",
+    "loading": "Getting location..."
+  },
+  "map": {
+    "title": "Map Selection",
+    "notImplemented": "Map selection feature coming soon!",
+    "selectLocation": "Tap on the map to select a location",
+    "noLocationSelected": "No location selected",
+    "selectedCoordinates": "Selected:",
+    "notAvailable": "Interactive map is not available on this platform",
+    "useCoordinatesInput": "Please use the coordinates input field instead"
   }
 }

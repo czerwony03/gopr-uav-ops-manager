@@ -33,6 +33,7 @@ export interface Flight {
   userEmail?: string; // snapshot for reference
   date: string; // YYYY-MM-DD
   location: string;
+  coordinates?: string; // GPS coordinates in "latitude, longitude" format
   flightCategory: FlightCategory; // Kategoria lotu
   operationType: OperationType; // Rodzaj operacji
   activityType: ActivityType; // Rodzaj działań
