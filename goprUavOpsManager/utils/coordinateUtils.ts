@@ -390,23 +390,5 @@ export class CoordinateUtils {
     return this.isValid(coordinates) ? coordinates : null;
   }
 
-  /**
-   * Create a random coordinate within specified bounds (useful for testing)
-   * @param bounds Optional bounds (defaults to world bounds)
-   * @returns Random coordinates within bounds
-   */
-  static createRandom(bounds?: CoordinatesBounds): Coordinates {
-    const effectiveBounds = bounds || {
-      northEast: { latitude: this.MAX_LATITUDE, longitude: this.MAX_LONGITUDE },
-      southWest: { latitude: this.MIN_LATITUDE, longitude: this.MIN_LONGITUDE }
-    };
 
-    const latRange = effectiveBounds.northEast.latitude - effectiveBounds.southWest.latitude;
-    const lngRange = effectiveBounds.northEast.longitude - effectiveBounds.southWest.longitude;
-
-    return {
-      latitude: effectiveBounds.southWest.latitude + (Math.random() * latRange),
-      longitude: effectiveBounds.southWest.longitude + (Math.random() * lngRange)
-    };
-  }
 }
