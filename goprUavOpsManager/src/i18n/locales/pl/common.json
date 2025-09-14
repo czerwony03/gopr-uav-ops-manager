@@ -653,6 +653,8 @@
     "notImplemented": "Funkcja wyboru z mapy już wkrótce!",
     "selectLocation": "Dotknij mapę, aby wybrać lokalizację",
     "noLocationSelected": "Nie wybrano lokalizacji",
-    "selectedCoordinates": "Wybrano:"
+    "selectedCoordinates": "Wybrano:",
+    "notAvailable": "Interaktywna mapa nie jest dostępna na tej platformie",
+    "useCoordinatesInput": "Proszę użyć pola współrzędnych"
   }
 }

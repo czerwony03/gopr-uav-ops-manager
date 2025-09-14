@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   Platform,
   Dimensions,
 } from 'react-native';
-import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
@@ -29,6 +28,22 @@ export default function MapSelector({
   const [selectedCoords, setSelectedCoords] = useState<{ latitude: number; longitude: number } | null>(
     initialCoordinates || null
   );
+  const [WebView, setWebView] = useState<any>(null);
+
+  // Try to load WebView component
+  useEffect(() => {
+    const loadWebView = async () => {
+      if (Platform.OS !== 'web') {
+        try {
+          const ReactNativeWebView = await import('react-native-webview');
+          setWebView(() => ReactNativeWebView.WebView);
+        } catch (error) {
+          console.log('WebView not available:', error);
+        }
+      }
+    };
+    loadWebView();
+  }, []);
 
   const { width, height } = Dimensions.get('window');
 
@@ -44,6 +59,7 @@ export default function MapSelector({
     }
   };
 
+  // Handle messages from mobile WebView
   const handleMessage = (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
@@ -57,6 +73,23 @@ export default function MapSelector({
       console.error('MapSelector: Error parsing message from WebView:', error);
     }
   };
+
+  // Handle messages from web iframe
+  useEffect(() => {
+    if (Platform.OS === 'web' && visible) {
+      const handleWebMessage = (event: any) => {
+        if (event.data && event.data.type === 'coordinatesSelected' && event.data.coordinates) {
+          setSelectedCoords({
+            latitude: event.data.coordinates.lat,
+            longitude: event.data.coordinates.lng,
+          });
+        }
+      };
+
+      window.addEventListener('message', handleWebMessage);
+      return () => window.removeEventListener('message', handleWebMessage);
+    }
+  }, [visible]);
 
   // HTML for the interactive map using OpenStreetMap and Leaflet
   const mapHtml = `
@@ -143,12 +176,18 @@ export default function MapSelector({
           // Update coordinates display
           coordinatesEl.textContent = lat.toFixed(6) + ', ' + lng.toFixed(6);
           
-          // Send coordinates to React Native
+          // Send coordinates to React Native or parent window
+          const messageData = {
+            type: 'coordinatesSelected',
+            coordinates: { lat: lat, lng: lng }
+          };
+          
           if (window.ReactNativeWebView) {
-            window.ReactNativeWebView.postMessage(JSON.stringify({
-              type: 'coordinatesSelected',
-              coordinates: { lat: lat, lng: lng }
-            }));
+            // Mobile: Send to React Native WebView
+            window.ReactNativeWebView.postMessage(JSON.stringify(messageData));
+          } else if (window.parent !== window) {
+            // Web: Send to parent window
+            window.parent.postMessage(messageData, '*');
           }
         });
 
@@ -158,6 +197,53 @@ export default function MapSelector({
     </body>
     </html>
   `;
+
+  const renderMapContent = () => {
+    if (Platform.OS === 'web') {
+      // Web implementation using iframe
+      const mapUrl = `data:text/html,${encodeURIComponent(mapHtml)}`;
+      
+      return (
+        <iframe
+          src={mapUrl}
+          style={{
+            width: '100%',
+            height: '100%',
+            border: 'none',
+          }}
+          title="Interactive Map"
+        />
+      );
+    } else if (WebView) {
+      // Mobile implementation using WebView
+      return (
+        <WebView
+          source={{ html: mapHtml }}
+          style={styles.webView}
+          onMessage={handleMessage}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          startInLoadingState={true}
+          scalesPageToFit={Platform.OS === 'android'}
+          mixedContentMode="compatibility"
+          originWhitelist={['*']}
+        />
+      );
+    } else {
+      // Fallback for when WebView is not available
+      return (
+        <View style={styles.errorContainer}>
+          <Ionicons name="map-outline" size={48} color="#ccc" />
+          <Text style={styles.errorText}>
+            {t('map.notAvailable', 'Interactive map is not available on this platform')}
+          </Text>
+          <Text style={styles.errorSubText}>
+            {t('map.useCoordinatesInput', 'Please use the coordinates input field instead')}
+          </Text>
+        </View>
+      );
+    }
+  };
 
   return (
     <Modal
@@ -183,17 +269,7 @@ export default function MapSelector({
           </TouchableOpacity>
         </View>
 
-        <WebView
-          source={{ html: mapHtml }}
-          style={styles.webView}
-          onMessage={handleMessage}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          startInLoadingState={true}
-          scalesPageToFit={Platform.OS === 'android'}
-          mixedContentMode="compatibility"
-          originWhitelist={['*']}
-        />
+        {renderMapContent()}
 
         {selectedCoords && (
           <View style={styles.coordsDisplay}>
@@ -249,6 +325,24 @@ const styles = StyleSheet.create({
   },
   webView: {
     flex: 1,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 16,
+  },
+  errorSubText: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    marginTop: 8,
   },
   coordsDisplay: {
     position: 'absolute',
