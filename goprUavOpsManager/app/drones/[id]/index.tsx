@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Linking,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
@@ -18,12 +19,14 @@ import { UserService } from '@/services/userService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import ImageGallery from '@/components/ImageGallery';
+import EquipmentChecklistModal from '@/components/EquipmentChecklistModal';
 
 export default function DroneDetailsScreen() {
   const [drone, setDrone] = useState<Drone | null>(null);
   const [loading, setLoading] = useState(true);
   const [createdByEmail, setCreatedByEmail] = useState<string>('');
   const [updatedByEmail, setUpdatedByEmail] = useState<string>('');
+  const [showEquipmentChecklist, setShowEquipmentChecklist] = useState(false);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const router = useRouter();
@@ -267,6 +270,34 @@ export default function DroneDetailsScreen() {
           </View>
         ) : null}
 
+        {drone.equipmentList && drone.equipmentList.length > 0 ? (
+          <View style={styles.section}>
+            <View style={styles.equipmentHeader}>
+              <Text style={styles.sectionTitle}>{t('equipment.list')}</Text>
+              <TouchableOpacity
+                style={styles.checkEquipmentButton}
+                onPress={() => setShowEquipmentChecklist(true)}
+              >
+                <Text style={styles.checkEquipmentButtonText}>{t('equipment.checkEquipment')}</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.equipmentGrid}>
+              {drone.equipmentList.map((item) => (
+                <View key={item.id} style={styles.equipmentItem}>
+                  {item.image && (
+                    <Image source={{ uri: item.image }} style={styles.equipmentImage} />
+                  )}
+                  <Text style={styles.equipmentName}>{item.name}</Text>
+                  <Text style={styles.equipmentQuantity}>
+                    {t('equipment.quantity')}: {item.quantity}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
         {(drone.createdAt || drone.updatedAt || drone.deletedAt) ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('droneDetails.auditInfo')}</Text>
@@ -326,6 +357,12 @@ export default function DroneDetailsScreen() {
         </View>
       </View>
     </ScrollView>
+    
+    <EquipmentChecklistModal
+      visible={showEquipmentChecklist}
+      equipmentList={drone?.equipmentList || []}
+      onClose={() => setShowEquipmentChecklist(false)}
+    />
     </SafeAreaView>
     </>
   );
@@ -479,5 +516,57 @@ const styles = StyleSheet.create({
   },
   imageGalleryContainer: {
     marginTop: 0,
+  },
+  equipmentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  checkEquipmentButton: {
+    backgroundColor: '#34C759',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  checkEquipmentButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  equipmentGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  equipmentItem: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    flex: 1,
+    minWidth: '45%',
+    maxWidth: '48%',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  equipmentImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 6,
+    marginBottom: 8,
+    backgroundColor: '#f0f0f0',
+  },
+  equipmentName: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  equipmentQuantity: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
   },
 });

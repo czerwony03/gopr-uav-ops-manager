@@ -683,5 +683,30 @@
     "notAvailable": "Interactive map is not available on this platform",
     "useCoordinatesInput": "Please use the coordinates input field instead",
     "markerPlaced": "Marker placed"
+  },
+  "equipment": {
+    "title": "Equipment",
+    "list": "Equipment List",
+    "item": "Equipment Item",
+    "name": "Name",
+    "namePlaceholder": "Enter equipment name",
+    "quantity": "Quantity",
+    "image": "Image",
+    "addImage": "Add Image",
+    "addItem": "Add Equipment Item",
+    "removeItem": "Remove Equipment Item",
+    "removeItemConfirm": "Are you sure you want to remove \"{{name}}\"? This will also delete any associated image.",
+    "noEquipment": "No equipment items added yet",
+    "addFirstItem": "Add your first equipment item using the button above",
+    "checklist": "Equipment Checklist",
+    "checkEquipment": "Check Equipment",
+    "progress": "{{checked}} of {{total}} items checked",
+    "allItemsChecked": "All equipment items have been checked!",
+    "reset": "Reset",
+    "checklistNote": "This checklist is for personal verification only and is not saved.",
+    "validation": {
+      "nameRequired": "Equipment name is required",
+      "quantityRequired": "Quantity must be at least 1"
+    }
   }
 }
