@@ -61,6 +61,7 @@ export default function CreateFlightScreen() {
         startTime: startDateTime,
         endTime: endDateTime,
         conditions: formData.conditions,
+        additionalInfo: formData.additionalInfo || '',
         userId: user.uid,
         userEmail: user.email,
       };
