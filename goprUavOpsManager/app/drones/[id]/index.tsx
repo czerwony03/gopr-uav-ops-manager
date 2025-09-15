@@ -94,7 +94,7 @@ export default function DroneDetailsScreen() {
 
     crossPlatformAlert.showAlert({
       title: t('droneDetails.deleteConfirmTitle'),
-      message: t('droneDetails.deleteConfirmMessage', { name: drone.name }),
+      message: t('droneDetails.deleteConfirmMessage', { name: DroneService.formatDroneName(drone) }),
       buttons: [
         { text: t('common.cancel'), style: 'cancel' },
         {
@@ -125,7 +125,7 @@ export default function DroneDetailsScreen() {
 
     crossPlatformAlert.showAlert({
       title: t('droneDetails.restoreConfirmTitle'),
-      message: t('droneDetails.restoreConfirmMessage', { name: drone.name }),
+      message: t('droneDetails.restoreConfirmMessage', { name: DroneService.formatDroneName(drone) }),
       buttons: [
         { text: t('common.cancel'), style: 'cancel' },
         {
