@@ -44,19 +44,9 @@ export default function Index() {
     // Only check if user is authenticated and profile is incomplete
     if (user && (!user.firstname?.trim() || !user.surname?.trim())) {
       console.log('[Index] Redirecting to profile edit - missing firstname or surname');
-      router.replace(`/users/${user.uid}/edit`);
+      router.navigate(`/users/${user.uid}/edit`);
     }
   }, [user, router]);
-
-  // If profile is incomplete, show loading while redirect happens
-  if (user && (!user.firstname?.trim() || !user.surname?.trim())) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>{t('common.loading')}</Text>
-      </View>
-    );
-  }
 
   // Navigation button configuration
   const navigationButtons = [
