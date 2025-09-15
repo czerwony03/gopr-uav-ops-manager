@@ -507,7 +507,7 @@ export default function FlightsListScreen() {
                 >
                   <Picker.Item label="All" value="" />
                   {drones.map((drone) => (
-                    <Picker.Item key={drone.id} label={`${drone.name} (${drone.registrationNumber})`} value={drone.id} />
+                    <Picker.Item key={drone.id} label={DroneService.formatDroneName(drone)} value={drone.id} />
                   ))}
                 </Picker>
               </View>

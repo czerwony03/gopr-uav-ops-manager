@@ -345,4 +345,13 @@ export class DroneService {
     }
     return `${length} x ${width} x ${height} mm`;
   }
+
+  // Format drone display name with inventory code
+  static formatDroneName(drone: Drone): string {
+    if (drone.inventoryCode) {
+      return `${drone.name} [${drone.inventoryCode}]`;
+    }
+    // Fallback for legacy data without inventory code
+    return drone.name;
+  }
 }

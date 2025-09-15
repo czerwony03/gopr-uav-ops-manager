@@ -140,7 +140,7 @@ export default function DronesListScreen() {
   const renderDroneItem = ({ item }: { item: Drone }) => (
     <View style={[styles.droneCard, item.isDeleted && styles.deletedCard]}>
       <View style={styles.droneHeader}>
-        <Text style={styles.droneName}>{item.name}</Text>
+        <Text style={styles.droneName}>{DroneService.formatDroneName(item)}</Text>
         {item.isDeleted && user?.role === 'admin' ? (
           <View style={styles.deletedBadge}>
             <Text style={styles.deletedBadgeText}>{t('drones.deleted')}</Text>

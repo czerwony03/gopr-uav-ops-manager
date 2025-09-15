@@ -194,7 +194,7 @@ export default function DroneDetailsScreen() {
       <ScrollView>
       <View style={[styles.card, drone.isDeleted && styles.deletedCard]}>
         <View style={styles.header}>
-          <Text style={styles.title}>{drone.name}</Text>
+          <Text style={styles.title}>{DroneService.formatDroneName(drone)}</Text>
           {drone.isDeleted && user?.role === 'admin' ? (
             <View style={styles.deletedBadge}>
               <Text style={styles.deletedBadgeText}>{t('droneDetails.deleted')}</Text>

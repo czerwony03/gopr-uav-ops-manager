@@ -8,6 +8,7 @@ export interface DroneEquipmentItem {
 export interface Drone {
   id: string;
   name: string;
+  inventoryCode: string;
   location: string;
   registrationNumber: string;
   totalFlightTime: number; // in minutes - TODO: will be calculated based on flights list in the future

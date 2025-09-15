@@ -395,6 +395,8 @@
     "serialNumberPlaceholder": "Wprowadź numer seryjny",
     "callSign": "Znak wywoławczy",
     "callSignPlaceholder": "Wprowadź znak wywoławczy",
+    "inventoryCode": "Kod inwentarzowy",
+    "inventoryCodePlaceholder": "Wprowadź kod inwentarzowy",
     "registration": "Rejestracja",
     "registrationPlaceholder": "Wprowadź numer rejestracji",
     "manufacturer": "Producent",
@@ -429,6 +431,7 @@
       "modelRequired": "Model jest wymagany",
       "serialNumberRequired": "Numer seryjny jest wymagany",
       "callSignRequired": "Znak wywoławczy jest wymagany",
+      "inventoryCodeRequired": "Kod inwentarzowy jest wymagany",
       "registrationRequired": "Rejestracja jest wymagana",
       "manufacturerRequired": "Producent jest wymagany"
     },
