@@ -1,6 +1,9 @@
 name: Automatic Version Bump
 permissions:
   contents: write
+concurrency:
+  group: version-bump
+  cancel-in-progress: false
 
 on:
   workflow_dispatch:

@@ -2,6 +2,9 @@ name: Build Android Signed APK & AAB
 permissions:
   contents: read
   pull-requests: write
+concurrency:
+  group: build-android
+  cancel-in-progress: false
 
 on:
   workflow_dispatch:
