@@ -164,11 +164,11 @@ export default function DronesListScreen() {
         {t('drones.manufactured')}: {item.yearOfManufacture} | {t('drones.commissioned')}: {item.yearOfCommissioning}
       </Text>
 
-      {item.additionalInfo && (
+      {item.additionalInfo ? (
         <Text style={styles.additionalInfoPreview} numberOfLines={2}>
           {t('droneForm.additionalInfo')}: {item.additionalInfo.length > 60 ? `${item.additionalInfo.substring(0, 60)}...` : item.additionalInfo}
         </Text>
-      )}
+      ) : null}
 
       <View style={styles.actionButtons}>
         <Link href={`/drones/${item.id}`} asChild>
@@ -177,7 +177,7 @@ export default function DronesListScreen() {
           </TouchableOpacity>
         </Link>
 
-        {user && (user.role === 'manager' || user.role === 'admin') && !item.isDeleted && (
+        {user && (user.role === 'manager' || user.role === 'admin') && !item.isDeleted ? (
           <>
             <TouchableOpacity 
               style={[styles.editButton, getDisabledStyle()]} 
@@ -198,9 +198,9 @@ export default function DronesListScreen() {
               </Text>
             </TouchableOpacity>
           </>
-        )}
+        ) : null}
 
-        {user?.role === 'admin' && item.isDeleted && (
+        {user?.role === 'admin' && item.isDeleted ? (
           <TouchableOpacity 
             style={[styles.restoreButton, getDisabledStyle()]} 
             onPress={() => handleRestoreDrone(item)}
@@ -210,7 +210,7 @@ export default function DronesListScreen() {
               {t('drones.restore')}
             </Text>
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
     </View>
   );
@@ -236,7 +236,7 @@ export default function DronesListScreen() {
       
       <View style={styles.header}>
         <Text style={styles.title}>{t('drones.title')}</Text>
-        {canCreateDrones && (
+        {canCreateDrones ? (
           <TouchableOpacity 
             style={[styles.createButton, getDisabledStyle()]} 
             onPress={handleCreateDrone}
@@ -246,7 +246,7 @@ export default function DronesListScreen() {
               + {t('drones.add')}
             </Text>
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
 
       {drones.length === 0 ? (
