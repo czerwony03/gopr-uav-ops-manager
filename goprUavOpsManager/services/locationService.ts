@@ -108,12 +108,12 @@ export class LocationService {
    * @returns Parsed coordinates or null if invalid
    */
   static parseCoordinates(coordinatesString: string): LocationCoordinates | null {
-    if (!coordinatesString || !coordinatesString.trim()) {
+    if (!coordinatesString || !(coordinatesString || '').trim()) {
       return null;
     }
 
     try {
-      const coords = coordinatesString.split(',').map(c => parseFloat(c.trim()));
+      const coords = coordinatesString.split(',').map(c => parseFloat((c || '').trim()));
       if (coords.length !== 2 || coords.some(c => isNaN(c))) {
         return null;
       }
@@ -271,7 +271,7 @@ export class LocationService {
         address = address.replace(/\b\d{5}\b/g, ''); // Remove US postal codes
         address = address.replace(/,\s*,/g, ','); // Remove double commas
         address = address.replace(/^,\s*|,\s*$/g, ''); // Remove leading/trailing commas
-        address = address.trim();
+        address = (address || '').trim();
         
         console.log('LocationService: Cleaned Nominatim display name:', address);
         return address;

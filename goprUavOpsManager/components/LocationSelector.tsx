@@ -130,7 +130,7 @@ export default function LocationSelector({
   const handleCoordinatesChange = useCallback(async (newCoordinates: string) => {
     onCoordinatesChange(newCoordinates);
     
-    if (!autoUpdateLocation || !newCoordinates.trim()) {
+    if (!autoUpdateLocation || !(newCoordinates || '').trim()) {
       return;
     }
 

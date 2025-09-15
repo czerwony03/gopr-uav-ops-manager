@@ -172,7 +172,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
 
     for (const field of requiredFields) {
       const value = formData[field as keyof FlightFormData];
-      if (!value || (typeof value === 'string' && !value.trim())) {
+      if (!value || (typeof value === 'string' && !(value || '').trim())) {
         crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t(`flightForm.validation.${field}Required`) });
         return false;
       }
@@ -187,7 +187,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
     // Validate selected drone exists or is custom
     if (formData.droneId === 'other') {
       // For custom drone, validate custom drone name is provided
-      if (!formData.customDroneName || !formData.customDroneName.trim()) {
+      if (!formData.customDroneName || !(formData.customDroneName || '').trim()) {
         crossPlatformAlert.showAlert({ title: t('flightForm.validation.title'), message: t('flightForm.validation.customDroneNameRequired') });
         return false;
       }

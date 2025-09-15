@@ -68,19 +68,19 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
     const phoneRegex = /^\+?[0-9\s\-]{6,15}$/;
 
     // Email
-    if (!formData.email.trim()) {
+    if (!(formData.email || '').trim()) {
       newErrors.email = t('userForm.validation.emailRequired');
     } else if (!emailRegex.test(formData.email)) {
       newErrors.email = t('userForm.validation.emailInvalid');
     }
 
     // Firstname
-    if (!formData.firstname.trim()) {
+    if (!(formData.firstname || '').trim()) {
       newErrors.firstname = t('userForm.validation.firstnameRequired');
     }
 
     // Surname
-    if (!formData.surname.trim()) {
+    if (!(formData.surname || '').trim()) {
       newErrors.surname = t('userForm.validation.surnameRequired');
     }
 
@@ -90,14 +90,14 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
     }
 
     // Language
-    if (!formData.language.trim()) {
+    if (!(formData.language || '').trim()) {
       newErrors.language = t('userForm.validation.languageRequired');
     } else if (!availableLanguages.some(lang => lang.code === formData.language)) {
       newErrors.language = t('userForm.validation.languageInvalid');
     }
 
     // Phone
-    if (formData.phone && !phoneRegex.test(formData.phone.trim())) {
+    if (formData.phone && !phoneRegex.test((formData.phone || '').trim())) {
       newErrors.phone = t('userForm.validation.phoneInvalid');
     }
 
@@ -175,7 +175,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
               autoCapitalize="none"
               editable={false}
             />
-            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+            {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
 
             <Text style={styles.label}>{t('userForm.firstName')} *</Text>
             <TextInput
@@ -184,7 +184,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
               onChangeText={(value) => updateFormData('firstname', value)}
               placeholder={t('userForm.firstNamePlaceholder')}
             />
-            {errors.firstname && <Text style={styles.errorText}>{errors.firstname}</Text>}
+            {errors.firstname ? <Text style={styles.errorText}>{errors.firstname}</Text> : null}
 
             <Text style={styles.label}>{t('userForm.surname')} *</Text>
             <TextInput
@@ -193,10 +193,10 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
               onChangeText={(value) => updateFormData('surname', value)}
               placeholder={t('userForm.surnamePlaceholder')}
             />
-            {errors.surname && <Text style={styles.errorText}>{errors.surname}</Text>}
+            {errors.surname ? <Text style={styles.errorText}>{errors.surname}</Text> : null}
 
             {/* Only show role field for admin users */}
-            {currentUserRole === UserRole.ADMIN && (
+            {currentUserRole === UserRole.ADMIN ? (
               <>
                 <Text style={styles.label}>{t('userForm.role')} *</Text>
                 <View style={[styles.pickerContainer, errors.role && styles.inputError]}>
@@ -215,9 +215,9 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
                     ))}
                   </Picker>
                 </View>
-                {errors.role && <Text style={styles.errorText}>{errors.role}</Text>}
+                {errors.role ? <Text style={styles.errorText}>{errors.role}</Text> : null}
               </>
-            )}
+            ) : null}
 
             <Text style={styles.label}>{t('userForm.phone')}</Text>
             <TextInput
@@ -255,7 +255,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
                 ))}
               </Picker>
             </View>
-            {errors.language && <Text style={styles.errorText}>{errors.language}</Text>}
+            {errors.language ? <Text style={styles.errorText}>{errors.language}</Text> : null}
           </View>
 
           <View style={styles.section}>

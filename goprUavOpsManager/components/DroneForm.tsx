@@ -126,27 +126,27 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
   };
 
   const validateForm = (): boolean => {
-    if (!formData.name.trim()) {
-      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.nameRequired') });
+    if (!(formData.name || '').trim()) {
+      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.validation.nameRequired') });
       return false;
     }
-    if (!formData.inventoryCode.trim()) {
-      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.inventoryCodeRequired') });
+    if (!(formData.inventoryCode || '').trim()) {
+      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.validation.inventoryCodeRequired') });
       return false;
     }
-    if (!formData.callSign.trim()) {
-      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.callSignRequired') });
+    if (!(formData.callSign || '').trim()) {
+      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.validation.callSignRequired') });
       return false;
     }
-    if (!formData.registrationNumber.trim()) {
-      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.registrationRequired') });
+    if (!(formData.registrationNumber || '').trim()) {
+      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.validation.registrationRequired') });
       return false;
     }
     
     // Validate equipment storages if any exist
     if (formData.equipmentStorages && formData.equipmentStorages.length > 0) {
       for (const storage of formData.equipmentStorages) {
-        if (!storage.name.trim()) {
+        if (!(storage.name || '').trim()) {
           crossPlatformAlert.showAlert({ 
             title: t('equipmentStorage.validation.nameRequired'), 
             message: t('equipmentStorage.validation.nameRequired') 
@@ -156,7 +156,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
         
         // Validate items within each storage
         for (const item of storage.items) {
-          if (!item.name.trim()) {
+          if (!(item.name || '').trim()) {
             crossPlatformAlert.showAlert({ 
               title: t('equipment.validation.nameRequired'), 
               message: t('equipment.validation.nameRequiredInStorage', { storageName: storage.name })
