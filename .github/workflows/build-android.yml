@@ -15,6 +15,14 @@ on:
           - apk
           - aab
           - both
+      environment:
+        description: "Choose environment"
+        required: true
+        default: "test"
+        type: choice
+        options:
+          - test
+          - prod
   workflow_run:
     workflows: [ "Automatic Version Bump" ]
     types:
@@ -31,6 +39,7 @@ jobs:
        (github.event.comment.body == '/build' || github.event.comment.body == '/build android') &&
        github.event.issue.pull_request != null)
     runs-on: self-hosted
+    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'test' }}
 
     defaults:
       run:
