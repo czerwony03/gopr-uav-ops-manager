@@ -26,6 +26,7 @@ jobs:
        (github.event.comment.body == '/build' || github.event.comment.body == '/build web') &&
        github.event.issue.pull_request != null)
     runs-on: ubuntu-latest
+    environment: test
 
     defaults:
       run:
