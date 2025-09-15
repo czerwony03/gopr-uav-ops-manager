@@ -77,8 +77,8 @@ export class CoordinateUtils {
 
     try {
       // Clean the string - remove parentheses and extra whitespace
-      const cleaned = coordinateString
-        .replace(/[()]/g, '')
+      const cleaned = (coordinateString
+        .replace(/[()]/g, '') || '')
         .trim();
 
       // Split by comma, semicolon, or space
