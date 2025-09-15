@@ -50,10 +50,18 @@ jobs:
       BUILD_TYPE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.buildType || (github.event_name == 'issue_comment' && (github.event.comment.body == '/build' || github.event.comment.body == '/build android') && 'apk') || 'both' }}
       EXPO_PUBLIC_GIT_COMMIT_HASH: ${{ github.sha }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'test' }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Patch app.json for test environment
+        if: env.ENVIRONMENT == 'test'
+        run: |
+          echo "🔧 Patching app.json package name for TEST..."
+          sed -i 's/dev.redmed.gopruavopsmanager/dev.redmed.gopruavopsmanagertest/g' app.json
+
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
