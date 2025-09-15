@@ -182,7 +182,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: android-build-apk
+          name: android-build-apk-${{ env.ENVIRONMENT }}
           path: |
             goprUavOpsManager/android/app/build/outputs/apk/release/*.apk
           if-no-files-found: ignore
@@ -190,7 +190,7 @@ jobs:
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
-          name: android-build-aab
+          name: android-build-aab-${{ env.ENVIRONMENT }}
           path: |
             goprUavOpsManager/android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: ignore
