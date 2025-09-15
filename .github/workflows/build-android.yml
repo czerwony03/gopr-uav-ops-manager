@@ -138,9 +138,9 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('android/**/*.gradle*', 'android/**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ env.ENVIRONMENT }}
           restore-keys: |
-            ${{ runner.os }}-gradle-
+            ${{ runner.os }}-gradle-${{ env.ENVIRONMENT }}
 
       - name: Decode Keystore
         run: |
