@@ -39,6 +39,19 @@ export default function Index() {
 
   console.log('[Index] User authenticated, showing dashboard for:', user.uid);
 
+  // Check if user profile is complete (firstname and surname required)
+  // If not, redirect to edit profile page
+  if (!user.firstname?.trim() || !user.surname?.trim()) {
+    console.log('[Index] Redirecting to profile edit - missing firstname or surname');
+    router.replace(`/users/${user.uid}/edit` as any);
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.loadingText}>{t('common.loading')}</Text>
+      </View>
+    );
+  }
+
   // Navigation button configuration
   const navigationButtons = [
     {

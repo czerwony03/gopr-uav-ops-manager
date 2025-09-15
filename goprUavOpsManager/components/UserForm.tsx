@@ -8,6 +8,7 @@ import {UserRole} from "@/types/UserRole";
 import WebCompatibleDatePicker from './WebCompatibleDatePicker';
 import {getAvailableLanguages} from '@/src/i18n';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import { useCrossPlatformAlert } from './CrossPlatformAlert';
 
 interface UserFormProps {
   mode: 'create' | 'edit';
@@ -21,6 +22,7 @@ interface UserFormProps {
 export default function UserForm({ mode, initialData, onSave, onCancel, loading = false, currentUserRole }: UserFormProps) {
   const { t } = useTranslation('common');
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
+  const crossPlatformAlert = useCrossPlatformAlert();
 
   // Default form data
   const defaultFormData: UserFormData = {
@@ -129,7 +131,16 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
   };
 
   const handleSave = async () => {
-    if (!validateForm() || isButtonDisabled()) return;
+    if (!validateForm()) {
+      // Show cross-platform alert for validation errors
+      crossPlatformAlert.showAlert({
+        title: t('userForm.validation.title'),
+        message: t('userForm.validation.message')
+      });
+      return;
+    }
+    
+    if (isButtonDisabled()) return;
 
     try {
       // Remove role from form data if current user is not admin
