@@ -152,7 +152,7 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
   };
 
   const validateForm = (): boolean => {
-    if (!formData.title.trim()) {
+    if (!(formData.title || '').trim()) {
       crossPlatformAlert.showAlert({ 
         title: t('procedureForm.error'), 
         message: t('procedureForm.titleRequired') 
@@ -170,14 +170,14 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
 
     for (let i = 0; i < formData.items.length; i++) {
       const item = formData.items[i];
-      if (!item.topic.trim()) {
+      if (!(item.topic || '').trim()) {
         crossPlatformAlert.showAlert({ 
           title: t('procedureForm.error'), 
           message: t('procedureForm.itemTopicRequired', { number: i + 1 }) 
         });
         return false;
       }
-      if (!item.content.trim()) {
+      if (!(item.content || '').trim()) {
         crossPlatformAlert.showAlert({ 
           title: t('procedureForm.error'), 
           message: t('procedureForm.itemContentRequired', { number: i + 1 }) 
