@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Text, View, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -39,11 +39,17 @@ export default function Index() {
 
   console.log('[Index] User authenticated, showing dashboard for:', user.uid);
 
-  // Check if user profile is complete (firstname and surname required)
-  // If not, redirect to edit profile page
-  if (!user.firstname?.trim() || !user.surname?.trim()) {
-    console.log('[Index] Redirecting to profile edit - missing firstname or surname');
-    router.replace(`/users/${user.uid}/edit` as any);
+  // Check if user profile is complete and redirect if needed
+  useEffect(() => {
+    // Only check if user is authenticated and profile is incomplete
+    if (user && (!user.firstname?.trim() || !user.surname?.trim())) {
+      console.log('[Index] Redirecting to profile edit - missing firstname or surname');
+      router.replace(`/users/${user.uid}/edit`);
+    }
+  }, [user, router]);
+
+  // If profile is incomplete, show loading while redirect happens
+  if (user && (!user.firstname?.trim() || !user.surname?.trim())) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
