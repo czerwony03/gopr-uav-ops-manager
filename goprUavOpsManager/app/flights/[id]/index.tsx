@@ -12,8 +12,10 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Flight } from '@/types/Flight';
+import { Drone } from '@/types/Drone';
 import { useAuth } from '@/contexts/AuthContext';
 import { FlightService } from '@/services/flightService';
+import { DroneService } from '@/services/droneService';
 import { UserService } from '@/services/userService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { calculateFlightDuration } from '@/src/utils/flightUtils';
@@ -23,6 +25,7 @@ import { EmbeddedLocationMap } from '@/components/EmbeddedLocationMap';
 export default function FlightDetailsScreen() {
   const { t } = useTranslation('common');
   const [flight, setFlight] = useState<Flight | null>(null);
+  const [drone, setDrone] = useState<Drone | null>(null);
   const [loading, setLoading] = useState(true);
   const [createdByEmail, setCreatedByEmail] = useState<string>('');
   const [updatedByEmail, setUpdatedByEmail] = useState<string>('');
@@ -48,6 +51,17 @@ export default function FlightDetailsScreen() {
           return;
         }
         setFlight(flightData);
+        
+        // Fetch the drone data to get current drone name with inventory code
+        if (flightData.droneId) {
+          try {
+            const droneData = await DroneService.getDrone(flightData.droneId, user.role);
+            setDrone(droneData);
+          } catch (error) {
+            console.error('Error fetching drone:', error);
+            // Continue without drone data, will fall back to stored name
+          }
+        }
         
         // Fetch user emails for audit trail
         if (flightData.createdBy) {
@@ -150,6 +164,9 @@ export default function FlightDetailsScreen() {
 
   const canEdit = user && (user.role === 'admin' || user.role === 'manager' || flight.userId === user.uid);
   const crossesMidnight = checkIfCrossesMidnight(flight.startTime, flight.endTime);
+  
+  // Get real drone name with inventory code
+  const displayDroneName = drone ? DroneService.formatDroneName(drone) : (flight.droneName || flight.droneId);
 
   return (
     <>
@@ -225,7 +242,7 @@ export default function FlightDetailsScreen() {
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{t('drones.title')}</Text>
-              <Text style={styles.detail}>{t('flightDetails.drone')}: {flight.droneName || flight.droneId}</Text>
+              <Text style={styles.detail}>{t('flightDetails.drone')}: {displayDroneName}</Text>
             </View>
 
             <View style={styles.section}>

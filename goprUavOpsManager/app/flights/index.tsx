@@ -38,6 +38,7 @@ export default function FlightsListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [paginationData, setPaginationData] = useState<PaginatedFlightResponse | null>(null);
   const [drones, setDrones] = useState<Drone[]>([]);
+  const [droneMap, setDroneMap] = useState<Map<string, Drone>>(new Map());
 
   // Filter states
   const [filters, setFilters] = useState<FlightQuery>({
@@ -91,6 +92,13 @@ export default function FlightsListScreen() {
     try {
       const fetchedDrones = await DroneService.getDrones(user.role);
       setDrones(fetchedDrones);
+      
+      // Create a map for quick drone lookup
+      const droneMapNew = new Map<string, Drone>();
+      fetchedDrones.forEach(drone => {
+        droneMapNew.set(drone.id, drone);
+      });
+      setDroneMap(droneMapNew);
     } catch (error) {
       console.error('Error fetching drones:', error);
       // Don't show error alert for drones as it's not critical
@@ -244,6 +252,10 @@ export default function FlightsListScreen() {
     const crossesMidnight = startDateTime && endDateTime && 
       startDateTime.toDateString() !== endDateTime.toDateString();
 
+    // Get real drone name with inventory code
+    const drone = droneMap.get(item.droneId);
+    const displayDroneName = drone ? DroneService.formatDroneName(drone) : (item.droneName || item.droneId);
+
     return (
       <View style={styles.flightCard}>
         <View style={styles.flightHeader}>
@@ -259,7 +271,7 @@ export default function FlightsListScreen() {
       
       <View style={styles.flightInfo}>
         <Text style={styles.flightLocation}>{item.location}</Text>
-        <Text style={styles.droneName}>{item.droneName || item.droneId}</Text>
+        <Text style={styles.droneName}>{displayDroneName}</Text>
       </View>
 
       <View style={styles.flightDetails}>
@@ -507,7 +519,7 @@ export default function FlightsListScreen() {
                 >
                   <Picker.Item label="All" value="" />
                   {drones.map((drone) => (
-                    <Picker.Item key={drone.id} label={`${drone.name} (${drone.registrationNumber})`} value={drone.id} />
+                    <Picker.Item key={drone.id} label={DroneService.formatDroneName(drone)} value={drone.id} />
                   ))}
                 </Picker>
               </View>

@@ -35,6 +35,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
   // Default form data
   const defaultFormData: DroneFormData = {
     name: '',
+    inventoryCode: '',
     location: '',
     registrationNumber: '',
     totalFlightTime: 0,
@@ -129,6 +130,10 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
       crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.nameRequired') });
       return false;
     }
+    if (!formData.inventoryCode.trim()) {
+      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.inventoryCodeRequired') });
+      return false;
+    }
     if (!formData.callSign.trim()) {
       crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.callSignRequired') });
       return false;
@@ -200,6 +205,14 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
               value={formData.name}
               onChangeText={(value) => updateFormData('name', value)}
               placeholder={t('droneForm.namePlaceholder')}
+            />
+
+            <Text style={styles.label}>{t('droneForm.inventoryCode')} *</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.inventoryCode}
+              onChangeText={(value) => updateFormData('inventoryCode', value)}
+              placeholder={t('droneForm.inventoryCodePlaceholder')}
             />
 
             <Text style={styles.label}>{t('droneForm.callSign')} *</Text>

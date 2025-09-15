@@ -123,6 +123,7 @@ Collection: drones
 Document ID: [auto-generated]
 {
   "name": "DJI Mavic 3",
+  "inventoryCode": "INV001",
   "location": "Base Station A", 
   "registrationNumber": "REG123456",
   "totalFlightTime": 1440, // in minutes
@@ -169,7 +170,7 @@ Document ID: [auto-generated]
   "operationType": "IR", // IR|WIDE|CARGO|SARUAV|TERMO
   "activityType": "Individual training", // Individual training|Group training|Rescue
   "droneId": "drone_document_id", // reference to drones collection
-  "droneName": "DJI Mavic 3", // snapshot for display
+  "droneName": "DJI Mavic 3 [INV001]", // snapshot for display
   "startTime": "2024-01-15T10:00:00Z", // ISO datetime string
   "endTime": "2024-01-15T11:30:00Z", // ISO datetime string
   "conditions": "Clear weather, 15km/h wind",

@@ -395,6 +395,8 @@
     "serialNumberPlaceholder": "Enter serial number",
     "callSign": "Call Sign",
     "callSignPlaceholder": "Enter call sign",
+    "inventoryCode": "Inventory Code",
+    "inventoryCodePlaceholder": "Enter inventory code",
     "registration": "Registration",
     "registrationPlaceholder": "Enter registration number",
     "manufacturer": "Manufacturer",
@@ -429,6 +431,7 @@
       "modelRequired": "Model is required",
       "serialNumberRequired": "Serial number is required",
       "callSignRequired": "Call sign is required",
+      "inventoryCodeRequired": "Inventory code is required",
       "registrationRequired": "Registration is required",
       "manufacturerRequired": "Manufacturer is required"
     },

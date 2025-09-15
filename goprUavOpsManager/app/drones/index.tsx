@@ -91,7 +91,7 @@ export default function DronesListScreen() {
 
     crossPlatformAlert.showAlert({
       title: t('drones.deleteTitle'),
-      message: t('drones.deleteConfirmation', { name: drone.name }),
+      message: t('drones.deleteConfirmation', { name: DroneService.formatDroneName(drone) }),
       buttons: [
         { text: t('common.cancel'), style: 'cancel' },
         {
@@ -117,7 +117,7 @@ export default function DronesListScreen() {
 
     crossPlatformAlert.showAlert({
       title: t('drones.restoreTitle'),
-      message: t('drones.restoreConfirmation', { name: drone.name }),
+      message: t('drones.restoreConfirmation', { name: DroneService.formatDroneName(drone) }),
       buttons: [
         { text: t('common.cancel'), style: 'cancel' },
         {
@@ -140,7 +140,7 @@ export default function DronesListScreen() {
   const renderDroneItem = ({ item }: { item: Drone }) => (
     <View style={[styles.droneCard, item.isDeleted && styles.deletedCard]}>
       <View style={styles.droneHeader}>
-        <Text style={styles.droneName}>{item.name}</Text>
+        <Text style={styles.droneName}>{DroneService.formatDroneName(item)}</Text>
         {item.isDeleted && user?.role === 'admin' ? (
           <View style={styles.deletedBadge}>
             <Text style={styles.deletedBadgeText}>{t('drones.deleted')}</Text>
