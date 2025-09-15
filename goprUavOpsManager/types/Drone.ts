@@ -5,9 +5,16 @@ export interface DroneEquipmentItem {
   image?: string; // URL to equipment image
 }
 
+export interface EquipmentStorage {
+  id: string;
+  name: string;
+  items: DroneEquipmentItem[];
+}
+
 export interface Drone {
   id: string;
   name: string;
+  inventoryCode: string;
   location: string;
   registrationNumber: string;
   totalFlightTime: number; // in minutes - TODO: will be calculated based on flights list in the future
@@ -34,7 +41,8 @@ export interface Drone {
   userManual?: string; // URL to user manual document
   additionalInfo?: string; // Additional information about the drone
   images?: string[]; // Array of image URLs
-  equipmentList?: DroneEquipmentItem[]; // Array of equipment items
+  equipmentList?: DroneEquipmentItem[]; // Array of equipment items (deprecated, for migration)
+  equipmentStorages?: EquipmentStorage[]; // Array of equipment storages (new structure)
   isDeleted?: boolean; // soft-delete flag
   deletedAt?: Date; // timestamp when deleted
   createdAt?: Date; // timestamp when created

@@ -41,7 +41,7 @@ export default function CreateFlightScreen() {
         // Get drone name from database for regular drones
         const fetchedDrones = await DroneService.getDrones(user.role);
         const selectedDrone = fetchedDrones.find(drone => drone.id === formData.droneId);
-        droneName = selectedDrone?.name || '';
+        droneName = selectedDrone ? DroneService.formatDroneName(selectedDrone) : '';
       }
 
       // Convert separate date/time fields to datetime strings

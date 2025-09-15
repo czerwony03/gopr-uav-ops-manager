@@ -91,7 +91,7 @@ export default function DronesListScreen() {
 
     crossPlatformAlert.showAlert({
       title: t('drones.deleteTitle'),
-      message: t('drones.deleteConfirmation', { name: drone.name }),
+      message: t('drones.deleteConfirmation', { name: DroneService.formatDroneName(drone) }),
       buttons: [
         { text: t('common.cancel'), style: 'cancel' },
         {
@@ -117,7 +117,7 @@ export default function DronesListScreen() {
 
     crossPlatformAlert.showAlert({
       title: t('drones.restoreTitle'),
-      message: t('drones.restoreConfirmation', { name: drone.name }),
+      message: t('drones.restoreConfirmation', { name: DroneService.formatDroneName(drone) }),
       buttons: [
         { text: t('common.cancel'), style: 'cancel' },
         {
@@ -140,7 +140,7 @@ export default function DronesListScreen() {
   const renderDroneItem = ({ item }: { item: Drone }) => (
     <View style={[styles.droneCard, item.isDeleted && styles.deletedCard]}>
       <View style={styles.droneHeader}>
-        <Text style={styles.droneName}>{item.name}</Text>
+        <Text style={styles.droneName}>{DroneService.formatDroneName(item)}</Text>
         {item.isDeleted && user?.role === 'admin' ? (
           <View style={styles.deletedBadge}>
             <Text style={styles.deletedBadgeText}>{t('drones.deleted')}</Text>
@@ -164,11 +164,11 @@ export default function DronesListScreen() {
         {t('drones.manufactured')}: {item.yearOfManufacture} | {t('drones.commissioned')}: {item.yearOfCommissioning}
       </Text>
 
-      {item.additionalInfo && (
+      {item.additionalInfo ? (
         <Text style={styles.additionalInfoPreview} numberOfLines={2}>
           {t('droneForm.additionalInfo')}: {item.additionalInfo.length > 60 ? `${item.additionalInfo.substring(0, 60)}...` : item.additionalInfo}
         </Text>
-      )}
+      ) : null}
 
       <View style={styles.actionButtons}>
         <Link href={`/drones/${item.id}`} asChild>
@@ -177,7 +177,7 @@ export default function DronesListScreen() {
           </TouchableOpacity>
         </Link>
 
-        {user && (user.role === 'manager' || user.role === 'admin') && !item.isDeleted && (
+        {user && (user.role === 'manager' || user.role === 'admin') && !item.isDeleted ? (
           <>
             <TouchableOpacity 
               style={[styles.editButton, getDisabledStyle()]} 
@@ -198,9 +198,9 @@ export default function DronesListScreen() {
               </Text>
             </TouchableOpacity>
           </>
-        )}
+        ) : null}
 
-        {user?.role === 'admin' && item.isDeleted && (
+        {user?.role === 'admin' && item.isDeleted ? (
           <TouchableOpacity 
             style={[styles.restoreButton, getDisabledStyle()]} 
             onPress={() => handleRestoreDrone(item)}
@@ -210,7 +210,7 @@ export default function DronesListScreen() {
               {t('drones.restore')}
             </Text>
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
     </View>
   );
@@ -236,7 +236,7 @@ export default function DronesListScreen() {
       
       <View style={styles.header}>
         <Text style={styles.title}>{t('drones.title')}</Text>
-        {canCreateDrones && (
+        {canCreateDrones ? (
           <TouchableOpacity 
             style={[styles.createButton, getDisabledStyle()]} 
             onPress={handleCreateDrone}
@@ -246,7 +246,7 @@ export default function DronesListScreen() {
               + {t('drones.add')}
             </Text>
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
 
       {drones.length === 0 ? (

@@ -395,6 +395,8 @@
     "serialNumberPlaceholder": "Wprowadź numer seryjny",
     "callSign": "Znak wywoławczy",
     "callSignPlaceholder": "Wprowadź znak wywoławczy",
+    "inventoryCode": "Kod inwentarzowy",
+    "inventoryCodePlaceholder": "Wprowadź kod inwentarzowy",
     "registration": "Rejestracja",
     "registrationPlaceholder": "Wprowadź numer rejestracji",
     "manufacturer": "Producent",
@@ -429,6 +431,7 @@
       "modelRequired": "Model jest wymagany",
       "serialNumberRequired": "Numer seryjny jest wymagany",
       "callSignRequired": "Znak wywoławczy jest wymagany",
+      "inventoryCodeRequired": "Kod inwentarzowy jest wymagany",
       "registrationRequired": "Rejestracja jest wymagana",
       "manufacturerRequired": "Producent jest wymagany"
     },
@@ -698,15 +701,34 @@
     "removeItemConfirm": "Czy na pewno chcesz usunąć \"{{name}}\"? Spowoduje to również usunięcie powiązanego zdjęcia.",
     "noEquipment": "Nie dodano jeszcze żadnych elementów wyposażenia",
     "addFirstItem": "Dodaj pierwszy element wyposażenia za pomocą przycisku powyżej",
+    "noEquipmentInStorage": "Brak elementów wyposażenia w tym schowku",
+    "addFirstItemToStorage": "Dodaj pierwszy element wyposażenia do tego schowka",
     "checklist": "Lista kontrolna wyposażenia",
     "checkEquipment": "Sprawdź wyposażenie",
+    "items": "Elementy",
     "progress": "{{checked}} z {{total}} elementów sprawdzonych",
     "allItemsChecked": "Wszystkie elementy wyposażenia zostały sprawdzone!",
     "reset": "Resetuj",
     "checklistNote": "Ta lista kontrolna służy wyłącznie do osobistej weryfikacji i nie jest zapisywana.",
     "validation": {
       "nameRequired": "Nazwa wyposażenia jest wymagana",
-      "quantityRequired": "Ilość musi wynosić co najmniej 1"
+      "nameRequiredInStorage": "Nazwa wyposażenia jest wymagana w schowku \"{{storageName}}\"",
+      "quantityRequired": "Ilość musi wynosić co najmniej 1",
+      "quantityRequiredInStorage": "Ilość musi wynosić co najmniej 1 w schowku \"{{storageName}}\""
+    }
+  },
+  "equipmentStorage": {
+    "storage": "Schowek",
+    "storages": "Schowki na wyposażenie",
+    "name": "Nazwa schowka",
+    "namePlaceholder": "np. Torba 1, Walizka A, Skrzynka narzędziowa",
+    "addStorage": "Dodaj schowek",
+    "removeStorage": "Usuń schowek",
+    "removeStorageConfirm": "Czy na pewno chcesz usunąć schowek \"{{name}}\" i wszystkie jego elementy wyposażenia?",
+    "noStorages": "Nie dodano jeszcze żadnych schowków",
+    "addFirstStorage": "Dodaj pierwszy schowek za pomocą przycisku powyżej",
+    "validation": {
+      "nameRequired": "Nazwa schowka jest wymagana"
     }
   }
 }

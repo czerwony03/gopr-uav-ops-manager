@@ -1,4 +1,4 @@
-import { Drone } from '@/types/Drone';
+import { Drone, EquipmentStorage } from '@/types/Drone';
 import { AuditLogService } from './auditLogService';
 import { UserService } from './userService';
 import { ImageService } from './imageService';
@@ -8,7 +8,10 @@ import {DroneRepository} from "@/repositories/DroneRepository";
 export class DroneService {
   // Get all drones based on user role
   static async getDrones(userRole: UserRole): Promise<Drone[]> {
-    return DroneRepository.getDrones(userRole);
+    const drones = await DroneRepository.getDrones(userRole);
+    
+    // Migrate legacy equipment structure for all drones if needed
+    return drones.map(drone => this.migrateEquipmentStructure(drone));
   }
 
   // Get a single drone by ID
@@ -24,7 +27,10 @@ export class DroneService {
       return null; // Non-admin users cannot see deleted drones
     }
 
-    return drone;
+    // Migrate legacy equipment structure if needed
+    const migratedDrone = this.migrateEquipmentStructure(drone);
+
+    return migratedDrone;
   }
 
   // Create a new drone (manager and admin only)
@@ -48,16 +54,16 @@ export class DroneService {
       }
 
       // Process equipment images if any
-      let processedEquipment: any[] = [];
-      if (droneData.equipmentList && droneData.equipmentList.length > 0) {
-        processedEquipment = await this.processEquipmentImages(droneData.equipmentList, tempId);
+      let processedEquipment: EquipmentStorage[] = [];
+      if (droneData.equipmentStorages && droneData.equipmentStorages.length > 0) {
+        processedEquipment = await this.processEquipmentStorageImages(droneData.equipmentStorages, tempId);
       }
 
       // Create the drone data with processed images and equipment
       const processedDroneData = {
         ...droneData,
         images: processedImages,
-        equipmentList: processedEquipment,
+        equipmentStorages: processedEquipment,
       };
 
       const docId = await DroneRepository.createDrone(processedDroneData, userId);
@@ -124,11 +130,11 @@ export class DroneService {
       }
 
       // Process equipment images if provided
-      if (droneData.equipmentList !== undefined) {
-        processedData.equipmentList = await this.processEquipmentImages(droneData.equipmentList, id);
+      if (droneData.equipmentStorages !== undefined) {
+        processedData.equipmentStorages = await this.processEquipmentStorageImages(droneData.equipmentStorages, id);
         
         // Clean up old equipment images that are no longer being used
-        await this.cleanupEquipmentImages(currentDrone.equipmentList, processedData.equipmentList);
+        await this.cleanupEquipmentStorageImages(currentDrone.equipmentStorages, processedData.equipmentStorages);
       }
 
       // Store previous values for audit log
@@ -222,51 +228,99 @@ export class DroneService {
     }
   }
 
-  // Process equipment images for upload
-  private static async processEquipmentImages(equipmentList: any[], droneId: string): Promise<any[]> {
-    if (!equipmentList || equipmentList.length === 0) {
+  // Migrate legacy equipment structure to new storage-based structure
+  private static migrateEquipmentStructure(drone: Drone): Drone {
+    // If already using new structure, return as is
+    if (drone.equipmentStorages && drone.equipmentStorages.length > 0) {
+      return drone;
+    }
+
+    // If has legacy equipment list, migrate it
+    if (drone.equipmentList && drone.equipmentList.length > 0) {
+      const defaultStorage: EquipmentStorage = {
+        id: `storage_default_${Date.now()}`,
+        name: 'Default Bag',
+        items: drone.equipmentList,
+      };
+
+      return {
+        ...drone,
+        equipmentStorages: [defaultStorage],
+        // Keep equipmentList for backward compatibility but don't expose it in UI
+      };
+    }
+
+    // No equipment at all, return with empty storages
+    return {
+      ...drone,
+      equipmentStorages: [],
+    };
+  }
+
+  // Process equipment storage images for upload
+  private static async processEquipmentStorageImages(storages: EquipmentStorage[], droneId: string): Promise<EquipmentStorage[]> {
+    if (!storages || storages.length === 0) {
       return [];
     }
 
-    const processedEquipment = [];
+    const processedStorages: EquipmentStorage[] = [];
     
-    for (const item of equipmentList) {
-      let processedItem = { ...item };
+    for (const storage of storages) {
+      const processedItems = [];
       
-      // Process equipment image if present and it's a new local URI
-      if (item.image && !item.image.startsWith('https://')) {
-        try {
-          const uploadedImageUrl = await ImageService.uploadImage(
-            item.image,
-            `equipment_${item.id}_${Date.now()}`,
-            `drones/equipment/${droneId}`
-          );
-          processedItem.image = uploadedImageUrl;
-        } catch (error) {
-          console.warn('Failed to upload equipment image:', error);
-          // Continue without the image rather than failing the entire operation
-          // Remove the image field entirely to avoid undefined values in Firebase
-          const { image, ...itemWithoutImage } = processedItem;
-          processedItem = itemWithoutImage;
+      for (const item of storage.items) {
+        let processedItem = { ...item };
+        
+        // Process equipment image if present and it's a new local URI
+        if (item.image && !item.image.startsWith('https://')) {
+          try {
+            const uploadedImageUrl = await ImageService.uploadImage(
+              item.image,
+              `equipment_${item.id}_${Date.now()}`,
+              `drones/equipment/${droneId}`
+            );
+            processedItem.image = uploadedImageUrl;
+          } catch (error) {
+            console.warn('Failed to upload equipment image:', error);
+            // Continue without the image rather than failing the entire operation
+            // Remove the image field entirely to avoid undefined values in Firebase
+            const { image, ...itemWithoutImage } = processedItem;
+            processedItem = itemWithoutImage;
+          }
         }
+        
+        processedItems.push(processedItem);
       }
       
-      processedEquipment.push(processedItem);
+      processedStorages.push({
+        ...storage,
+        items: processedItems,
+      });
     }
     
-    return processedEquipment;
+    return processedStorages;
   }
 
-  // Clean up unused equipment images
-  private static async cleanupEquipmentImages(oldEquipment: any[] = [], newEquipment: any[] = []): Promise<void> {
+  // Clean up unused equipment storage images
+  private static async cleanupEquipmentStorageImages(oldStorages: EquipmentStorage[] = [], newStorages: EquipmentStorage[] = []): Promise<void> {
     // Get old images that are no longer being used
-    const oldImages = oldEquipment
-      .filter(item => item.image && item.image.startsWith('https://'))
-      .map(item => item.image);
+    const oldImages: string[] = [];
+    oldStorages.forEach(storage => {
+      storage.items.forEach(item => {
+        if (item.image && item.image.startsWith('https://')) {
+          oldImages.push(item.image);
+        }
+      });
+    });
     
-    const newImages = newEquipment
-      .filter(item => item.image && item.image.startsWith('https://'))
-      .map(item => item.image);
+    const newImages: string[] = [];
+    newStorages.forEach(storage => {
+      storage.items.forEach(item => {
+        if (item.image && item.image.startsWith('https://')) {
+          newImages.push(item.image);
+        }
+      });
+    });
     
     const imagesToDelete = oldImages.filter(oldImg => !newImages.includes(oldImg));
     
@@ -344,5 +398,14 @@ export class DroneService {
       return `${lengthCm} x ${widthCm} x ${heightCm} cm`;
     }
     return `${length} x ${width} x ${height} mm`;
+  }
+
+  // Format drone display name with inventory code
+  static formatDroneName(drone: Drone): string {
+    if (drone.inventoryCode) {
+      return `${drone.name} [${drone.inventoryCode}]`;
+    }
+    // Fallback for legacy data without inventory code
+    return drone.name;
   }
 }

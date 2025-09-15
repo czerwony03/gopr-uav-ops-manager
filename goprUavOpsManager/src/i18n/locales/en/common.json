@@ -395,6 +395,8 @@
     "serialNumberPlaceholder": "Enter serial number",
     "callSign": "Call Sign",
     "callSignPlaceholder": "Enter call sign",
+    "inventoryCode": "Inventory Code",
+    "inventoryCodePlaceholder": "Enter inventory code",
     "registration": "Registration",
     "registrationPlaceholder": "Enter registration number",
     "manufacturer": "Manufacturer",
@@ -429,6 +431,7 @@
       "modelRequired": "Model is required",
       "serialNumberRequired": "Serial number is required",
       "callSignRequired": "Call sign is required",
+      "inventoryCodeRequired": "Inventory code is required",
       "registrationRequired": "Registration is required",
       "manufacturerRequired": "Manufacturer is required"
     },
@@ -698,15 +701,34 @@
     "removeItemConfirm": "Are you sure you want to remove \"{{name}}\"? This will also delete any associated image.",
     "noEquipment": "No equipment items added yet",
     "addFirstItem": "Add your first equipment item using the button above",
+    "noEquipmentInStorage": "No equipment items in this storage",
+    "addFirstItemToStorage": "Add your first equipment item to this storage",
     "checklist": "Equipment Checklist",
     "checkEquipment": "Check Equipment",
+    "items": "Items",
     "progress": "{{checked}} of {{total}} items checked",
     "allItemsChecked": "All equipment items have been checked!",
     "reset": "Reset",
     "checklistNote": "This checklist is for personal verification only and is not saved.",
     "validation": {
       "nameRequired": "Equipment name is required",
-      "quantityRequired": "Quantity must be at least 1"
+      "nameRequiredInStorage": "Equipment name is required in storage \"{{storageName}}\"",
+      "quantityRequired": "Quantity must be at least 1",
+      "quantityRequiredInStorage": "Quantity must be at least 1 in storage \"{{storageName}}\""
+    }
+  },
+  "equipmentStorage": {
+    "storage": "Storage",
+    "storages": "Equipment Storages",
+    "name": "Storage Name",
+    "namePlaceholder": "e.g., Bag 1, Case A, Tool Box",
+    "addStorage": "Add Storage",
+    "removeStorage": "Remove Storage",
+    "removeStorageConfirm": "Are you sure you want to remove storage \"{{name}}\" and all its equipment items?",
+    "noStorages": "No storage containers added yet",
+    "addFirstStorage": "Add your first storage container using the button above",
+    "validation": {
+      "nameRequired": "Storage name is required"
     }
   }
 }

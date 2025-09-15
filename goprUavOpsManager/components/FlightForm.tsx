@@ -361,7 +361,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
                 {drones.map((drone) => (
                   <Picker.Item
                     key={drone.id}
-                    label={`${drone.name} (${drone.callSign})`}
+                    label={DroneService.formatDroneName(drone)}
                     value={drone.id}
                   />
                 ))}
