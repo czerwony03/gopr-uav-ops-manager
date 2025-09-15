@@ -421,6 +421,16 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
           </View>
 
           <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('droneForm.images')}</Text>
+            <MultiImagePicker
+              images={formData.images || []}
+              onImagesChange={(images) => updateFormData('images', images)}
+              maxImages={10}
+              disabled={loading}
+            />
+          </View>
+
+          <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>{t('equipmentStorage.storages')}</Text>
               <TouchableOpacity
@@ -450,16 +460,6 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
                 <Text style={styles.emptySubtext}>{t('equipmentStorage.addFirstStorage')}</Text>
               </View>
             )}
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('droneForm.images')}</Text>
-            <MultiImagePicker
-              images={formData.images || []}
-              onImagesChange={(images) => updateFormData('images', images)}
-              maxImages={10}
-              disabled={loading}
-            />
           </View>
 
           <View style={styles.actionButtons}>
