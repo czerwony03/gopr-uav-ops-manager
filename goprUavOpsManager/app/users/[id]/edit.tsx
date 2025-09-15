@@ -96,7 +96,16 @@ export default function EditUserScreen() {
       };
 
       await UserService.updateUser(id, formDataWithDates, user.role, user.uid);
-      router.back();
+      
+      // Smart navigation based on context
+      if (user.uid === id) {
+        // Current user editing their own profile - redirect to home dashboard
+        router.replace('/');
+      } else {
+        // Admin/manager editing another user - redirect to users list
+        router.replace('/users');
+      }
+      
       crossPlatformAlert.showAlert({ title: t('userForm.success'), message: t('userForm.userUpdated') });
     } catch (error) {
       console.error('Error updating user:', error);
@@ -107,7 +116,14 @@ export default function EditUserScreen() {
   };
 
   const handleCancel = () => {
-    router.back();
+    // Smart navigation based on context
+    if (user && user.uid === id) {
+      // Current user canceling their own profile edit - redirect to home dashboard
+      router.replace('/');
+    } else {
+      // Admin/manager canceling another user edit - redirect to users list
+      router.replace('/users');
+    }
   };
 
   return (
