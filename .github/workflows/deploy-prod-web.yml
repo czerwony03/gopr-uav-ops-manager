@@ -1,0 +1,60 @@
+name: Deploy Expo Web App to Production Server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set env vars from vars context JSON
+        run: |
+          echo "$VARS_CONTEXT" | jq -r 'to_entries | .[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
+
+      - name: Restore google-services.json
+        run: |
+          echo "$GOOGLE_SERVICES_JSON" | base64 --decode > google-services.json
+        shell: bash
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
+      - name: Set Git commit hash
+        run: echo "EXPO_PUBLIC_GIT_COMMIT_HASH=${GITHUB_SHA}" >> $GITHUB_ENV
+
+      - name: Install dependencies (clean install)
+        run: npm ci
+
+      - name: Export Expo Web App
+        run: npm run export:web:sourcemaps
+        env:
+          EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
+
+      - name: Upload Sentry Source Maps
+        run: npx sentry-expo-upload-sourcemaps dist
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          cat >> ~/.ssh/config <<EOF
+          Host deploy-target
+            HostName ${{ secrets.DEPLOY_SSH_HOST }}
+            User ${{ secrets.DEPLOY_SSH_USERNAME }}
+            Port ${{ secrets.DEPLOY_SSH_PORT }}
+            IdentityFile ~/.ssh/deploy_key
+            StrictHostKeyChecking no
+          EOF
+
+      - name: Deploy files
+        run: |
+          rsync -avz --delete dist/ deploy-target:/home/${{ secrets.DEPLOY_SSH_USERNAME }}/web/${{ secrets.DEPLOY_SSH_DOMAIN }}/public_html/
