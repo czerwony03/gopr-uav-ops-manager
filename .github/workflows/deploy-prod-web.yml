@@ -7,6 +7,14 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: goprUavOpsManager
+
+    env:
+      VARS_CONTEXT: ${{ toJson(vars) }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
