@@ -127,19 +127,19 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
 
   const validateForm = (): boolean => {
     if (!(formData.name || '').trim()) {
-      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.nameRequired') });
+      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.validation.nameRequired') });
       return false;
     }
     if (!(formData.inventoryCode || '').trim()) {
-      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.inventoryCodeRequired') });
+      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.validation.inventoryCodeRequired') });
       return false;
     }
     if (!(formData.callSign || '').trim()) {
-      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.callSignRequired') });
+      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.validation.callSignRequired') });
       return false;
     }
     if (!(formData.registrationNumber || '').trim()) {
-      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.registrationRequired') });
+      crossPlatformAlert.showAlert({ title: t('droneForm.error'), message: t('droneForm.validation.registrationRequired') });
       return false;
     }
     
