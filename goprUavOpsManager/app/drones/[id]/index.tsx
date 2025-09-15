@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 import { Drone } from '@/types/Drone';
 import { useAuth } from '@/contexts/AuthContext';
 import { DroneService } from '@/services/droneService';
@@ -270,10 +271,10 @@ export default function DroneDetailsScreen() {
           </View>
         ) : null}
 
-        {drone.equipmentList && drone.equipmentList.length > 0 ? (
+        {drone.equipmentStorages && drone.equipmentStorages.length > 0 ? (
           <View style={styles.section}>
             <View style={styles.equipmentHeader}>
-              <Text style={styles.sectionTitle}>{t('equipment.list')}</Text>
+              <Text style={styles.sectionTitle}>{t('equipmentStorage.storages')}</Text>
               <TouchableOpacity
                 style={styles.checkEquipmentButton}
                 onPress={() => setShowEquipmentChecklist(true)}
@@ -282,19 +283,34 @@ export default function DroneDetailsScreen() {
               </TouchableOpacity>
             </View>
             
-            <View style={styles.equipmentGrid}>
-              {drone.equipmentList.map((item) => (
-                <View key={item.id} style={styles.equipmentItem}>
-                  {item.image && (
-                    <Image source={{ uri: item.image }} style={styles.equipmentImage} />
-                  )}
-                  <Text style={styles.equipmentName}>{item.name}</Text>
-                  <Text style={styles.equipmentQuantity}>
-                    {t('equipment.quantity')}: {item.quantity}
-                  </Text>
+            {drone.equipmentStorages.map((storage) => (
+              <View key={storage.id} style={styles.storageSection}>
+                <View style={styles.storageHeader}>
+                  <Ionicons name="bag-outline" size={20} color="#0066CC" />
+                  <Text style={styles.storageTitle}>{storage.name}</Text>
                 </View>
-              ))}
-            </View>
+                
+                {storage.items.length > 0 ? (
+                  <View style={styles.equipmentGrid}>
+                    {storage.items.map((item) => (
+                      <View key={item.id} style={styles.equipmentItem}>
+                        {item.image && (
+                          <Image source={{ uri: item.image }} style={styles.equipmentImage} />
+                        )}
+                        <Text style={styles.equipmentName}>{item.name}</Text>
+                        <Text style={styles.equipmentQuantity}>
+                          {t('equipment.quantity')}: {item.quantity}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <View style={styles.emptyStorage}>
+                    <Text style={styles.emptyStorageText}>{t('equipment.noEquipmentInStorage')}</Text>
+                  </View>
+                )}
+              </View>
+            ))}
           </View>
         ) : null}
 
@@ -360,7 +376,7 @@ export default function DroneDetailsScreen() {
     
     <EquipmentChecklistModal
       visible={showEquipmentChecklist}
-      equipmentList={drone?.equipmentList || []}
+      equipmentStorages={drone?.equipmentStorages || []}
       onClose={() => setShowEquipmentChecklist(false)}
     />
     </SafeAreaView>
@@ -568,5 +584,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     textAlign: 'center',
+  },
+  storageSection: {
+    marginBottom: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  storageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  storageTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0066CC',
+  },
+  emptyStorage: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  emptyStorageText: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
   },
 });

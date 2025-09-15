@@ -10,11 +10,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { Drone, DroneEquipmentItem } from '@/types/Drone';
+import { Ionicons } from '@expo/vector-icons';
+import { Drone, EquipmentStorage } from '@/types/Drone';
 import { useCrossPlatformAlert } from './CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import MultiImagePicker from './MultiImagePicker';
-import EquipmentItemForm from './EquipmentItemForm';
+import EquipmentStorageForm from './EquipmentStorageForm';
 
 export type DroneFormData = Omit<Drone, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'isDeleted' | 'createdBy' | 'updatedBy'>;
 
@@ -60,7 +61,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
     userManual: '',
     additionalInfo: '',
     images: [],
-    equipmentList: [],
+    equipmentStorages: [],
   };
 
   const [formData, setFormData] = useState<DroneFormData>(initialData || defaultFormData);
@@ -93,33 +94,33 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
     });
   };
 
-  // Equipment list management functions
-  const addEquipmentItem = () => {
-    const newItem: DroneEquipmentItem = {
-      id: `eq_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+  // Equipment storage management functions
+  const addEquipmentStorage = () => {
+    const newStorage: EquipmentStorage = {
+      id: `storage_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: '',
-      quantity: 1,
+      items: [],
     };
     
     setFormData(prev => ({
       ...prev,
-      equipmentList: [...(prev.equipmentList || []), newItem],
+      equipmentStorages: [...(prev.equipmentStorages || []), newStorage],
     }));
   };
 
-  const updateEquipmentItem = (itemId: string, updatedItem: DroneEquipmentItem) => {
+  const updateEquipmentStorage = (storageId: string, updatedStorage: EquipmentStorage) => {
     setFormData(prev => ({
       ...prev,
-      equipmentList: (prev.equipmentList || []).map(item => 
-        item.id === itemId ? updatedItem : item
+      equipmentStorages: (prev.equipmentStorages || []).map(storage => 
+        storage.id === storageId ? updatedStorage : storage
       ),
     }));
   };
 
-  const removeEquipmentItem = (itemId: string) => {
+  const removeEquipmentStorage = (storageId: string) => {
     setFormData(prev => ({
       ...prev,
-      equipmentList: (prev.equipmentList || []).filter(item => item.id !== itemId),
+      equipmentStorages: (prev.equipmentStorages || []).filter(storage => storage.id !== storageId),
     }));
   };
 
@@ -137,22 +138,33 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
       return false;
     }
     
-    // Validate equipment items if any exist
-    if (formData.equipmentList && formData.equipmentList.length > 0) {
-      for (const item of formData.equipmentList) {
-        if (!item.name.trim()) {
+    // Validate equipment storages if any exist
+    if (formData.equipmentStorages && formData.equipmentStorages.length > 0) {
+      for (const storage of formData.equipmentStorages) {
+        if (!storage.name.trim()) {
           crossPlatformAlert.showAlert({ 
-            title: t('equipment.validation.nameRequired'), 
-            message: t('equipment.validation.nameRequired') 
+            title: t('equipmentStorage.validation.nameRequired'), 
+            message: t('equipmentStorage.validation.nameRequired') 
           });
           return false;
         }
-        if (item.quantity < 1) {
-          crossPlatformAlert.showAlert({ 
-            title: t('equipment.validation.quantityRequired'), 
-            message: t('equipment.validation.quantityRequired') 
-          });
-          return false;
+        
+        // Validate items within each storage
+        for (const item of storage.items) {
+          if (!item.name.trim()) {
+            crossPlatformAlert.showAlert({ 
+              title: t('equipment.validation.nameRequired'), 
+              message: t('equipment.validation.nameRequiredInStorage', { storageName: storage.name })
+            });
+            return false;
+          }
+          if (item.quantity < 1) {
+            crossPlatformAlert.showAlert({ 
+              title: t('equipment.validation.quantityRequired'), 
+              message: t('equipment.validation.quantityRequiredInStorage', { storageName: storage.name })
+            });
+            return false;
+          }
         }
       }
     }
@@ -397,30 +409,32 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('equipment.list')}</Text>
+              <Text style={styles.sectionTitle}>{t('equipmentStorage.storages')}</Text>
               <TouchableOpacity
                 style={styles.addButton}
-                onPress={addEquipmentItem}
+                onPress={addEquipmentStorage}
                 disabled={loading}
               >
-                <Text style={styles.addButtonText}>{t('equipment.addItem')}</Text>
+                <Ionicons name="add-circle-outline" size={16} color="#fff" />
+                <Text style={styles.addButtonText}>{t('equipmentStorage.addStorage')}</Text>
               </TouchableOpacity>
             </View>
 
-            {formData.equipmentList && formData.equipmentList.length > 0 ? (
-              formData.equipmentList.map((item) => (
-                <EquipmentItemForm
-                  key={item.id}
-                  item={item}
-                  onUpdate={(updatedItem) => updateEquipmentItem(item.id, updatedItem)}
-                  onRemove={() => removeEquipmentItem(item.id)}
+            {formData.equipmentStorages && formData.equipmentStorages.length > 0 ? (
+              formData.equipmentStorages.map((storage) => (
+                <EquipmentStorageForm
+                  key={storage.id}
+                  storage={storage}
+                  onUpdate={(updatedStorage) => updateEquipmentStorage(storage.id, updatedStorage)}
+                  onRemove={() => removeEquipmentStorage(storage.id)}
                   disabled={loading}
                 />
               ))
             ) : (
               <View style={styles.emptyEquipment}>
-                <Text style={styles.emptyText}>{t('equipment.noEquipment')}</Text>
-                <Text style={styles.emptySubtext}>{t('equipment.addFirstItem')}</Text>
+                <Ionicons name="bag-outline" size={48} color="#999" />
+                <Text style={styles.emptyText}>{t('equipmentStorage.noStorages')}</Text>
+                <Text style={styles.emptySubtext}>{t('equipmentStorage.addFirstStorage')}</Text>
               </View>
             )}
           </View>
@@ -567,6 +581,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   addButtonText: {
     color: '#fff',
@@ -578,6 +595,7 @@ const styles = StyleSheet.create({
     paddingVertical: 32,
     backgroundColor: '#f8f8f8',
     borderRadius: 8,
+    gap: 8,
   },
   emptyText: {
     fontSize: 16,

@@ -11,11 +11,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { DroneEquipmentItem } from '@/types/Drone';
+import { EquipmentStorage } from '@/types/Drone';
 
 interface EquipmentChecklistModalProps {
   visible: boolean;
-  equipmentList: DroneEquipmentItem[];
+  equipmentStorages: EquipmentStorage[];
   onClose: () => void;
 }
 
@@ -25,11 +25,16 @@ interface ChecklistState {
 
 export default function EquipmentChecklistModal({
   visible,
-  equipmentList,
+  equipmentStorages,
   onClose,
 }: EquipmentChecklistModalProps) {
   const { t } = useTranslation('common');
   const [checkedItems, setCheckedItems] = useState<ChecklistState>({});
+  const [currentStorageIndex, setCurrentStorageIndex] = useState(0);
+
+  // Get all items from all storages for total count
+  const allItems = equipmentStorages.flatMap(storage => storage.items);
+  const currentStorage = equipmentStorages[currentStorageIndex] || null;
 
   const handleToggleCheck = (equipmentId: string) => {
     setCheckedItems(prev => ({
@@ -39,8 +44,24 @@ export default function EquipmentChecklistModal({
   };
 
   const checkedCount = Object.values(checkedItems).filter(Boolean).length;
-  const totalCount = equipmentList.length;
+  const totalCount = allItems.length;
   const allChecked = checkedCount === totalCount && totalCount > 0;
+
+  // Navigation functions
+  const goToPreviousStorage = () => {
+    if (currentStorageIndex > 0) {
+      setCurrentStorageIndex(currentStorageIndex - 1);
+    }
+  };
+
+  const goToNextStorage = () => {
+    if (currentStorageIndex < equipmentStorages.length - 1) {
+      setCurrentStorageIndex(currentStorageIndex + 1);
+    }
+  };
+
+  const canGoBack = currentStorageIndex > 0;
+  const canGoForward = currentStorageIndex < equipmentStorages.length - 1;
 
   const handleResetChecklist = () => {
     setCheckedItems({});
@@ -62,6 +83,41 @@ export default function EquipmentChecklistModal({
             <Text style={styles.resetButtonText}>{t('equipment.reset')}</Text>
           </TouchableOpacity>
         </View>
+
+        {equipmentStorages.length > 1 && (
+          <View style={styles.navigationHeader}>
+            <TouchableOpacity 
+              style={[styles.navButton, !canGoBack && styles.navButtonDisabled]} 
+              onPress={goToPreviousStorage}
+              disabled={!canGoBack}
+            >
+              <Ionicons name="chevron-back" size={20} color={canGoBack ? "#007AFF" : "#ccc"} />
+            </TouchableOpacity>
+            
+            <View style={styles.storageInfo}>
+              <Text style={styles.storageTitle}>
+                {currentStorage?.name || t('equipmentStorage.storage')}
+              </Text>
+              <Text style={styles.storageCounter}>
+                {currentStorageIndex + 1} / {equipmentStorages.length}
+              </Text>
+            </View>
+            
+            <TouchableOpacity 
+              style={[styles.navButton, !canGoForward && styles.navButtonDisabled]} 
+              onPress={goToNextStorage}
+              disabled={!canGoForward}
+            >
+              <Ionicons name="chevron-forward" size={20} color={canGoForward ? "#007AFF" : "#ccc"} />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {equipmentStorages.length === 1 && currentStorage && (
+          <View style={styles.singleStorageHeader}>
+            <Text style={styles.storageTitle}>{currentStorage.name}</Text>
+          </View>
+        )}
 
         <View style={styles.progressContainer}>
           <View style={styles.progressBar}>
@@ -85,13 +141,23 @@ export default function EquipmentChecklistModal({
         )}
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {equipmentList.length === 0 ? (
+          {equipmentStorages.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="bag-outline" size={48} color="#999" />
+              <Text style={styles.emptyStateText}>{t('equipmentStorage.noStorages')}</Text>
+            </View>
+          ) : !currentStorage ? (
             <View style={styles.emptyState}>
               <Ionicons name="list-outline" size={48} color="#999" />
               <Text style={styles.emptyStateText}>{t('equipment.noEquipment')}</Text>
             </View>
+          ) : currentStorage.items.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="list-outline" size={48} color="#999" />
+              <Text style={styles.emptyStateText}>{t('equipment.noEquipmentInStorage')}</Text>
+            </View>
           ) : (
-            equipmentList.map((item) => {
+            currentStorage.items.map((item) => {
               const isChecked = checkedItems[item.id] || false;
               return (
                 <TouchableOpacity
@@ -287,5 +353,48 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+  navigationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#f0f8ff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  singleStorageHeader: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#f0f8ff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    alignItems: 'center',
+  },
+  navButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    minWidth: 40,
+    alignItems: 'center',
+  },
+  navButtonDisabled: {
+    backgroundColor: '#f5f5f5',
+  },
+  storageInfo: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  storageTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0066CC',
+    textAlign: 'center',
+  },
+  storageCounter: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
   },
 });
