@@ -185,7 +185,6 @@ export default function ImageViewer({
               <View style={styles.counter}>
                 <Ionicons name="images-outline" size={16} color="#fff" />
                 <View style={styles.counterText}>
-                  <Ionicons name="ellipse" size={8} color="#fff" style={{ marginHorizontal: 2 }} />
                   {images.map((_, index) => (
                     <Ionicons
                       key={index}
@@ -195,7 +194,6 @@ export default function ImageViewer({
                       style={{ marginHorizontal: 2 }}
                     />
                   ))}
-                  <Ionicons name="ellipse" size={8} color="#fff" style={{ marginHorizontal: 2 }} />
                 </View>
               </View>
             </>
