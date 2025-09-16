@@ -27,6 +27,9 @@ jobs:
        github.event.issue.pull_request != null)
     runs-on: ubuntu-latest
     environment: test
+    concurrency:
+      group: expo-web-deploy-${{ github.event.inputs.alias || 'test' }}
+      cancel-in-progress: true
 
     defaults:
       run:
