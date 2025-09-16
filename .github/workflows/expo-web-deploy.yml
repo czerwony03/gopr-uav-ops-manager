@@ -43,6 +43,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Patch app.json for test environment
+        if: env.ENVIRONMENT == 'test'
+        run: |
+          echo "🔧 Patching app.json package name for TEST..."
+          sed -i 's/dev.redmed.gopruavopsmanager/dev.redmed.gopruavopsmanagertest/g' app.json
+          sed -i 's/icon.png/icon-test.png/g' app.json
+          sed -i 's/GOPR UAV Ops Manager/GOPR UAV Ops Manager Test/g' app.json
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

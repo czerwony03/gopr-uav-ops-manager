@@ -64,6 +64,7 @@ jobs:
         run: |
           echo "🔧 Patching app.json package name for TEST..."
           sed -i 's/dev.redmed.gopruavopsmanager/dev.redmed.gopruavopsmanagertest/g' app.json
+          sed -i 's/icon.png/icon-test.png/g' app.json
           sed -i 's/GOPR UAV Ops Manager/GOPR UAV Ops Manager Test/g' app.json
 
       - name: Setup Node.js
