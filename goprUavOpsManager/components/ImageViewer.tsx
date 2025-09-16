@@ -12,6 +12,7 @@ import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ImageCacheService } from '../utils/imageCache';
+import ImageZoom from 'react-native-image-pan-zoom';
 
 interface ImageItem {
   uri: string;
@@ -128,6 +129,56 @@ export default function ImageViewer({
 
   const currentImageUri = cachedImageUris[currentIndex] || images[currentIndex]?.uri;
 
+  // Platform-specific image container component
+  const renderImageContainer = () => {
+    if (Platform.OS === 'android') {
+      // Android: Use ImageZoom for pinch/zoom support
+      return (
+        <ImageZoom
+          cropWidth={screenWidth}
+          cropHeight={screenHeight}
+          imageWidth={screenWidth - 40}
+          imageHeight={screenHeight - 160}
+          enableCenterFocus={false}
+          maxOverflow={0}
+          minScale={0.6}
+          maxScale={3}
+          enableDoubleClickZoom={true}
+          doubleClickInterval={250}
+          onClick={onRequestClose}
+          style={styles.imageZoomContainer}
+        >
+          <Image
+            source={{ uri: currentImageUri }}
+            style={styles.image}
+            contentFit="contain"
+            transition={200}
+          />
+        </ImageZoom>
+      );
+    } else {
+      // iOS/Web: Use ScrollView with zoom (existing behavior)
+      return (
+        <ScrollView
+          style={styles.imageScrollView}
+          contentContainerStyle={styles.imageContainer}
+          maximumZoomScale={3}
+          minimumZoomScale={1}
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+          centerContent
+        >
+          <Image
+            source={{ uri: currentImageUri }}
+            style={styles.image}
+            contentFit="contain"
+            transition={200}
+          />
+        </ScrollView>
+      );
+    }
+  };
+
   return (
     <Modal
       visible={visible}
@@ -142,23 +193,8 @@ export default function ImageViewer({
             <Ionicons name="close" size={32} color="#fff" />
           </TouchableOpacity>
 
-          {/* Image container with scroll view for zoom */}
-          <ScrollView
-            style={styles.imageScrollView}
-            contentContainerStyle={styles.imageContainer}
-            maximumZoomScale={3}
-            minimumZoomScale={1}
-            showsHorizontalScrollIndicator={false}
-            showsVerticalScrollIndicator={false}
-            centerContent
-          >
-            <Image
-              source={{ uri: currentImageUri }}
-              style={styles.image}
-              contentFit="contain"
-              transition={200}
-            />
-          </ScrollView>
+          {/* Image container with platform-specific zoom implementation */}
+          {renderImageContainer()}
 
           {/* Navigation buttons (only show if multiple images) */}
           {images.length > 1 && (
@@ -227,6 +263,10 @@ const styles = StyleSheet.create({
     flex: 1,
     width: screenWidth,
     height: screenHeight,
+  },
+  imageZoomContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
   },
   imageContainer: {
     flex: 1,
