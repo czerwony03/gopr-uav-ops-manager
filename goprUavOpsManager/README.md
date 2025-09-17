@@ -667,6 +667,78 @@ The workflow automatically skips execution if the PR title contains `[version bu
 
 The version is automatically available throughout the application via the `ApplicationMetadata.getVersion()` utility, which reads from Expo Constants and falls back to the app.json version.
 
+## Testing
+
+The application includes comprehensive test coverage using Jest and React Testing Library.
+
+### Test Structure
+
+- **Service tests**: Located in `services/__tests__/` - Test business logic and Firebase operations
+- **App tests**: Located in `app/__tests__/` - Test UI components and user interactions using jest-expo
+
+### Test Configuration
+
+The project uses a dual-configuration setup:
+- **Services**: Node.js environment for service layer testing
+- **App**: jsdom environment with jest-expo for React Native component testing
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run only app tests (UI/component tests)
+npx jest --selectProjects app
+
+# Run only service tests (business logic tests)
+npx jest --selectProjects services
+
+# Run tests in watch mode
+npm run test:watch
+
+# Generate coverage report
+npm run test:coverage
+```
+
+### Test Accounts
+
+The following test accounts are available for development and testing:
+
+**Admin Account:**
+- Email: `admin@example.com`
+- Password: `admin123`
+- Access: Full access to all features including user management and audit logs
+
+**Manager Account:**
+- Email: `manager@example.com`
+- Password: `manager123`
+- Access: Can manage users but cannot access audit logs
+
+**User Account:**
+- Email: `user@example.com`
+- Password: `user123`
+- Access: Basic access to flights, drones, procedures, and profile
+
+### Test Coverage
+
+The test suite covers:
+- **Authentication flows**: Login with test accounts, role-based access
+- **Dashboard functionality**: Role-based navigation visibility
+- **Navigation behavior**: Route handling and role permissions
+- **Form validation**: Input validation and error handling
+- **Firebase integration**: Mocked Firebase operations
+- **Service layer**: Business logic for all major entities
+
+### Mocking Strategy
+
+Tests use comprehensive mocking for:
+- Firebase Authentication and Firestore
+- React Native components and APIs
+- Expo Router navigation
+- Google Sign-In integration
+- Sentry error tracking
+
 ## Learn more
 
 To learn more about developing your project with Expo, look at the following resources:

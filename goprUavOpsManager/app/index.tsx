@@ -26,7 +26,7 @@ export default function Index() {
     console.log('[Index] Showing loading screen');
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator testID="loading-indicator" size="large" color="#007AFF" />
         <Text style={styles.loadingText}>{t('common.loading')}</Text>
       </View>
     );
