@@ -25,8 +25,8 @@ import EquipmentChecklistModal from '@/components/EquipmentChecklistModal';
 export default function DroneDetailsScreen() {
   const [drone, setDrone] = useState<Drone | null>(null);
   const [loading, setLoading] = useState(true);
-  const [createdByEmail, setCreatedByEmail] = useState<string>('');
-  const [updatedByEmail, setUpdatedByEmail] = useState<string>('');
+  const [createdByName, setCreatedByName] = useState<string>('');
+  const [updatedByName, setUpdatedByName] = useState<string>('');
   const [showEquipmentChecklist, setShowEquipmentChecklist] = useState(false);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
@@ -53,14 +53,14 @@ export default function DroneDetailsScreen() {
         }
         setDrone(droneData);
         
-        // Fetch user emails for audit trail
+        // Fetch user names for audit trail
         if (droneData.createdBy) {
-          const createdEmail = await UserService.getUserEmail(droneData.createdBy);
-          setCreatedByEmail(createdEmail);
+          const createdName = await UserService.getUserDisplayName(droneData.createdBy);
+          setCreatedByName(createdName);
         }
         if (droneData.updatedBy) {
-          const updatedEmail = await UserService.getUserEmail(droneData.updatedBy);
-          setUpdatedByEmail(updatedEmail);
+          const updatedName = await UserService.getUserDisplayName(droneData.updatedBy);
+          setUpdatedByName(updatedName);
         }
       } catch (error) {
         console.error('Error fetching drone:', error);
@@ -138,10 +138,10 @@ export default function DroneDetailsScreen() {
               const updatedDrone = await DroneService.getDrone(drone.id, user.role);
               setDrone(updatedDrone);
               
-              // Refresh user emails
+              // Refresh user names
               if (updatedDrone?.updatedBy) {
-                const updatedEmail = await UserService.getUserEmail(updatedDrone.updatedBy);
-                setUpdatedByEmail(updatedEmail);
+                const updatedName = await UserService.getUserDisplayName(updatedDrone.updatedBy);
+                setUpdatedByName(updatedName);
               }
               
               crossPlatformAlert.showAlert({ title: t('common.success'), message: t('droneDetails.restoreSuccess') });
@@ -320,13 +320,13 @@ export default function DroneDetailsScreen() {
             {drone.createdAt ? (
               <Text style={styles.detail}>
                 {t('flightDetails.createdAt')}: {drone.createdAt.toLocaleDateString()} {drone.createdAt.toLocaleTimeString()}
-                {createdByEmail && ` ${t('flightDetails.createdBy')} ${createdByEmail}`}
+                {createdByName && ` ${t('flightDetails.createdBy')} ${createdByName}`}
               </Text>
             ) : null}
             {drone.updatedAt ? (
               <Text style={styles.detail}>
                 {t('flightDetails.updatedAt')}: {drone.updatedAt.toLocaleDateString()} {drone.updatedAt.toLocaleTimeString()}
-                {updatedByEmail && ` ${t('flightDetails.updatedBy')} ${updatedByEmail}`}
+                {updatedByName && ` ${t('flightDetails.updatedBy')} ${updatedByName}`}
               </Text>
             ) : null}
             {drone.deletedAt ? (

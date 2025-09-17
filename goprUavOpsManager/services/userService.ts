@@ -1,4 +1,4 @@
-import {User} from '@/types/User';
+import {User, UserPublicInfo} from '@/types/User';
 import {UserRole} from "@/types/UserRole";
 import {toDateIfTimestamp, toFirestoreTimestamp} from "@/utils/dateUtils";
 import {AuditLogService} from "@/services/auditLogService";
@@ -103,10 +103,10 @@ export class UserService {
     try {
       const publicInfo = await UserRepository.getUserPublicInfo(uid);
       
-      // Generate display name from available data
+      // Generate display name from available data - no fallback to email
       const displayName = publicInfo.firstname && publicInfo.surname 
         ? `${publicInfo.firstname} ${publicInfo.surname}`
-        : await UserRepository.getUserEmail(uid); // Fallback to email if names not available
+        : 'Unknown User';
 
       return {
         uid,
@@ -116,13 +116,12 @@ export class UserService {
       };
     } catch (error) {
       console.error('Error fetching user public info:', error);
-      // Final fallback
-      const email = await UserRepository.getUserEmail(uid);
+      // Return unknown user for any errors
       return {
         uid,
         firstname: null,
         surname: null,
-        displayName: email
+        displayName: 'Unknown User'
       };
     }
   }

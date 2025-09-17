@@ -30,8 +30,8 @@ export default function ProcedureDetailsScreen() {
   const [loading, setLoading] = useState(true);
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
-  const [createdByEmail, setCreatedByEmail] = useState<string>('');
-  const [updatedByEmail, setUpdatedByEmail] = useState<string>('');
+  const [createdByName, setCreatedByName] = useState<string>('');
+  const [updatedByName, setUpdatedByName] = useState<string>('');
   const [isFromCache, setIsFromCache] = useState(false);
   const [cachedImageUris, setCachedImageUris] = useState<Map<string, string>>(new Map());
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -56,15 +56,15 @@ export default function ProcedureDetailsScreen() {
         // Load cached images for all procedure items
         await loadCachedImages(procedure);
         
-        // Fetch user emails for audit trail (only if online and not from cache)
+        // Fetch user names for audit trail (only if online and not from cache)
         if (!fromCache && isConnected) {
           if (procedure.createdBy) {
-            const createdEmail = await UserService.getUserEmail(procedure.createdBy).catch(() => '');
-            setCreatedByEmail(createdEmail);
+            const createdName = await UserService.getUserDisplayName(procedure.createdBy).catch(() => '');
+            setCreatedByName(createdName);
           }
           if (procedure.updatedBy) {
-            const updatedEmail = await UserService.getUserEmail(procedure.updatedBy).catch(() => '');
-            setUpdatedByEmail(updatedEmail);
+            const updatedName = await UserService.getUserDisplayName(procedure.updatedBy).catch(() => '');
+            setUpdatedByName(updatedName);
           }
         }
         
@@ -79,14 +79,14 @@ export default function ProcedureDetailsScreen() {
               // Update cached images for fresh data
               await loadCachedImages(freshProcedure);
               
-              // Update user emails for fresh data
+              // Update user names for fresh data
               if (freshProcedure.createdBy) {
-                const createdEmail = await UserService.getUserEmail(freshProcedure.createdBy).catch(() => '');
-                setCreatedByEmail(createdEmail);
+                const createdName = await UserService.getUserDisplayName(freshProcedure.createdBy).catch(() => '');
+                setCreatedByName(createdName);
               }
               if (freshProcedure.updatedBy) {
-                const updatedEmail = await UserService.getUserEmail(freshProcedure.updatedBy).catch(() => '');
-                setUpdatedByEmail(updatedEmail);
+                const updatedName = await UserService.getUserDisplayName(freshProcedure.updatedBy).catch(() => '');
+                setUpdatedByName(updatedName);
               }
               
               // Force refresh cache to ensure fresh data is available offline
@@ -380,13 +380,13 @@ export default function ProcedureDetailsScreen() {
               {checklist.createdAt ? (
                 <Text style={styles.metadataText}>
                   {t('procedures.created')} {checklist.createdAt.toLocaleDateString()} {checklist.createdAt.toLocaleTimeString()}
-                  {createdByEmail && ` ${t('procedures.by')} ${createdByEmail}`}
+                  {createdByName && ` ${t('procedures.by')} ${createdByName}`}
                 </Text>
               ) : null}
               {checklist.updatedAt ? (
                 <Text style={styles.metadataText}>
                   {t('procedures.updated')} {checklist.updatedAt.toLocaleDateString()} {checklist.updatedAt.toLocaleTimeString()}
-                  {updatedByEmail && ` ${t('procedures.by')} ${updatedByEmail}`}
+                  {updatedByName && ` ${t('procedures.by')} ${updatedByName}`}
                 </Text>
               ) : null}
             </View>
