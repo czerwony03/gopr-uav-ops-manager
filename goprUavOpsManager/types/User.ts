@@ -40,6 +40,14 @@ export interface User {
   lastLoginAt?: Date;
 }
 
+// Public user information interface for audit trails
+export interface UserPublicInfo {
+  uid: string;
+  firstname: string | null;
+  surname: string | null;
+  displayName: string;
+}
+
 // Form data interface for user forms (uses string dates for easier form handling)
 export interface UserFormData {
   email: string;

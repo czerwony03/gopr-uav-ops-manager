@@ -1,4 +1,4 @@
-import {User} from '@/types/User';
+import {User, UserPublicInfo} from '@/types/User';
 import {UserRole} from "@/types/UserRole";
 import {toDateIfTimestamp, toFirestoreTimestamp} from "@/utils/dateUtils";
 import {AuditLogService} from "@/services/auditLogService";
@@ -95,6 +95,42 @@ export class UserService {
   // Get user email by UID (for audit trail display)
   static async getUserEmail(uid: string): Promise<string> {
     return UserRepository.getUserEmail(uid);
+  }
+
+  // Get user public info (firstname, surname) for audit trail display
+  // Available to all authenticated users via publicUsers collection
+  static async getUserPublicInfo(uid: string): Promise<UserPublicInfo> {
+    try {
+      const publicInfo = await UserRepository.getUserPublicInfo(uid);
+      
+      // Generate display name from available data - no fallback to email
+      const displayName = publicInfo.firstname && publicInfo.surname 
+        ? `${publicInfo.firstname} ${publicInfo.surname}`
+        : 'Unknown User';
+
+      return {
+        uid,
+        firstname: publicInfo.firstname,
+        surname: publicInfo.surname,
+        displayName
+      };
+    } catch (error) {
+      console.error('Error fetching user public info:', error);
+      // Return unknown user for any errors
+      return {
+        uid,
+        firstname: null,
+        surname: null,
+        displayName: 'Unknown User'
+      };
+    }
+  }
+
+  // Get display name for user (firstname + surname or email fallback)
+  // This method provides the best available display name for any user
+  static async getUserDisplayName(uid: string): Promise<string> {
+    const publicInfo = await UserService.getUserPublicInfo(uid);
+    return publicInfo.displayName;
   }
 
   // Update last login timestamp

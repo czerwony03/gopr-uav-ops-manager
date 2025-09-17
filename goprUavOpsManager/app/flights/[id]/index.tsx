@@ -27,8 +27,8 @@ export default function FlightDetailsScreen() {
   const [flight, setFlight] = useState<Flight | null>(null);
   const [drone, setDrone] = useState<Drone | null>(null);
   const [loading, setLoading] = useState(true);
-  const [createdByEmail, setCreatedByEmail] = useState<string>('');
-  const [updatedByEmail, setUpdatedByEmail] = useState<string>('');
+  const [createdByName, setCreatedByName] = useState<string>('');
+  const [updatedByName, setUpdatedByName] = useState<string>('');
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const router = useRouter();
@@ -63,14 +63,14 @@ export default function FlightDetailsScreen() {
           }
         }
         
-        // Fetch user emails for audit trail
+        // Fetch user names for audit trail
         if (flightData.createdBy) {
-          const createdEmail = await UserService.getUserEmail(flightData.createdBy);
-          setCreatedByEmail(createdEmail);
+          const createdName = await UserService.getUserDisplayName(flightData.createdBy);
+          setCreatedByName(createdName);
         }
         if (flightData.updatedBy) {
-          const updatedEmail = await UserService.getUserEmail(flightData.updatedBy);
-          setUpdatedByEmail(updatedEmail);
+          const updatedName = await UserService.getUserDisplayName(flightData.updatedBy);
+          setUpdatedByName(updatedName);
         }
       } catch (error) {
         console.error('Error fetching flight:', error);
@@ -257,13 +257,13 @@ export default function FlightDetailsScreen() {
                 {flight.createdAt && (
                   <Text style={styles.detail}>
                     {t('flightDetails.createdAt')}: {flight.createdAt.toLocaleDateString()} {flight.createdAt.toLocaleTimeString()}
-                    {createdByEmail && ` ${t('flightDetails.createdBy')} ${createdByEmail}`}
+                    {createdByName && ` ${t('flightDetails.createdBy')} ${createdByName}`}
                   </Text>
                 )}
                 {flight.updatedAt && (
                   <Text style={styles.detail}>
                     {t('flightDetails.updatedAt')}: {flight.updatedAt.toLocaleDateString()} {flight.updatedAt.toLocaleTimeString()}
-                    {updatedByEmail && ` ${t('flightDetails.updatedBy')} ${updatedByEmail}`}
+                    {updatedByName && ` ${t('flightDetails.updatedBy')} ${updatedByName}`}
                   </Text>
                 )}
               </View>

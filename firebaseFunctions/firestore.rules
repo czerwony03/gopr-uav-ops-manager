@@ -109,6 +109,17 @@ service cloud.firestore {
     }
 
     // =========================
+    // PUBLIC USERS COLLECTION
+    // =========================
+    match /publicUsers/{userId} {
+      // All authenticated users can read public user info (firstname, surname only)
+      allow read: if isSignedIn();
+      
+      // Only Firebase functions can write to this collection
+      allow write: if false;
+    }
+
+    // =========================
     // HELPERS
     // =========================
     function isSignedIn() {
