@@ -1,32 +1,37 @@
+// Mock all external dependencies BEFORE imports
+jest.mock('@/repositories/FlightRepository', () => ({
+  FlightRepository: {
+    getFlights: jest.fn(),
+    getFlight: jest.fn(),
+    createFlight: jest.fn(),
+    updateFlight: jest.fn(),
+    deleteFlight: jest.fn(),
+  }
+}));
+
+jest.mock('../auditLogService', () => ({
+  AuditLogService: {
+    createAuditLog: jest.fn().mockResolvedValue('audit-log-id'),
+  }
+}));
+
+jest.mock('../userService', () => ({
+  UserService: {
+    getUserEmail: jest.fn().mockResolvedValue('test@example.com'),
+  }
+}));
+
 import { FlightService } from '../flightService';
 import { UserRole } from '@/types/UserRole';
 import { TEST_ACCOUNTS, mockFlight } from './setup';
+import { FlightRepository } from '@/repositories/FlightRepository';
+import { AuditLogService } from '../auditLogService';
+import { UserService } from '../userService';
 
-// Mock all external dependencies
-jest.mock('@/repositories/FlightRepository');
-jest.mock('../auditLogService');
-jest.mock('../userService');
-
-const mockFlightRepository = {
-  getFlights: jest.fn(),
-  getFlight: jest.fn(),
-  createFlight: jest.fn(),
-  updateFlight: jest.fn(),
-  deleteFlight: jest.fn(),
-};
-
-const mockAuditLogService = {
-  createAuditLog: jest.fn().mockResolvedValue('audit-log-id'),
-};
-
-const mockUserService = {
-  getUserEmail: jest.fn().mockResolvedValue('test@example.com'),
-};
-
-// Apply mocks
-require('@/repositories/FlightRepository').FlightRepository = mockFlightRepository;
-require('../auditLogService').AuditLogService = mockAuditLogService;
-require('../userService').UserService = mockUserService;
+// Get references to mocked functions
+const mockFlightRepository = FlightRepository as jest.Mocked<typeof FlightRepository>;
+const mockAuditLogService = AuditLogService as jest.Mocked<typeof AuditLogService>;
+const mockUserService = UserService as jest.Mocked<typeof UserService>;
 
 describe('FlightService', () => {
   beforeEach(() => {

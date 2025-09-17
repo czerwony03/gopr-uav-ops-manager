@@ -1,39 +1,51 @@
+// Mock all external dependencies BEFORE imports
+jest.mock('@/repositories/ProcedureChecklistRepository', () => ({
+  ProcedureChecklistRepository: {
+    getProcedureChecklists: jest.fn(),
+    getProcedureChecklist: jest.fn(),
+    createProcedureChecklist: jest.fn(),
+    updateProcedureChecklist: jest.fn(),
+    deleteProcedureChecklist: jest.fn(),
+  }
+}));
+
+jest.mock('../auditLogService', () => ({
+  AuditLogService: {
+    createAuditLog: jest.fn().mockResolvedValue('audit-log-id'),
+  }
+}));
+
+jest.mock('../userService', () => ({
+  UserService: {
+    getUserEmail: jest.fn().mockResolvedValue('test@example.com'),
+  }
+}));
+
+jest.mock('../imageService', () => ({
+  ImageService: {
+    processImages: jest.fn().mockResolvedValue([]),
+  }
+}));
+
+jest.mock('@/utils/imageProcessing', () => ({
+  ImageProcessingService: {
+    processImage: jest.fn().mockResolvedValue('processed-image-url'),
+  }
+}));
+
 import { ProcedureChecklistService } from '../procedureChecklistService';
 import { UserRole } from '@/types/UserRole';
 import { TEST_ACCOUNTS, mockProcedureChecklist } from './setup';
+import { ProcedureChecklistRepository } from '@/repositories/ProcedureChecklistRepository';
+import { AuditLogService } from '../auditLogService';
+import { UserService } from '../userService';
+import { ImageService } from '../imageService';
 
-// Mock all external dependencies
-jest.mock('@/repositories/ProcedureChecklistRepository');
-jest.mock('../auditLogService');
-jest.mock('../userService');
-jest.mock('../imageService');
-jest.mock('@/utils/imageProcessing');
-
-const mockProcedureChecklistRepository = {
-  getProcedureChecklists: jest.fn(),
-  getProcedureChecklist: jest.fn(),
-  createProcedureChecklist: jest.fn(),
-  updateProcedureChecklist: jest.fn(),
-  deleteProcedureChecklist: jest.fn(),
-};
-
-const mockAuditLogService = {
-  createAuditLog: jest.fn().mockResolvedValue('audit-log-id'),
-};
-
-const mockUserService = {
-  getUserEmail: jest.fn().mockResolvedValue('test@example.com'),
-};
-
-const mockImageService = {
-  processImages: jest.fn().mockResolvedValue([]),
-};
-
-// Apply mocks
-require('@/repositories/ProcedureChecklistRepository').ProcedureChecklistRepository = mockProcedureChecklistRepository;
-require('../auditLogService').AuditLogService = mockAuditLogService;
-require('../userService').UserService = mockUserService;
-require('../imageService').ImageService = mockImageService;
+// Get references to mocked functions
+const mockProcedureChecklistRepository = ProcedureChecklistRepository as jest.Mocked<typeof ProcedureChecklistRepository>;
+const mockAuditLogService = AuditLogService as jest.Mocked<typeof AuditLogService>;
+const mockUserService = UserService as jest.Mocked<typeof UserService>;
+const mockImageService = ImageService as jest.Mocked<typeof ImageService>;
 
 describe('ProcedureChecklistService', () => {
   beforeEach(() => {

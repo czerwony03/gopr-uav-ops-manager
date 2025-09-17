@@ -1,38 +1,45 @@
+// Mock all external dependencies BEFORE imports
+jest.mock('@/repositories/DroneRepository', () => ({
+  DroneRepository: {
+    getDrones: jest.fn(),
+    getDrone: jest.fn(),
+    createDrone: jest.fn(),
+    updateDrone: jest.fn(),
+    deleteDrone: jest.fn(),
+  }
+}));
+
+jest.mock('../auditLogService', () => ({
+  AuditLogService: {
+    createAuditLog: jest.fn().mockResolvedValue('audit-log-id'),
+  }
+}));
+
+jest.mock('../userService', () => ({
+  UserService: {
+    getUserEmail: jest.fn().mockResolvedValue('test@example.com'),
+  }
+}));
+
+jest.mock('../imageService', () => ({
+  ImageService: {
+    processImages: jest.fn().mockResolvedValue([]),
+  }
+}));
+
 import { DroneService } from '../droneService';
 import { UserRole } from '@/types/UserRole';
 import { TEST_ACCOUNTS, mockDrone } from './setup';
+import { DroneRepository } from '@/repositories/DroneRepository';
+import { AuditLogService } from '../auditLogService';
+import { UserService } from '../userService';
+import { ImageService } from '../imageService';
 
-// Mock all external dependencies
-jest.mock('@/repositories/DroneRepository');
-jest.mock('../auditLogService');
-jest.mock('../userService');
-jest.mock('../imageService');
-
-const mockDroneRepository = {
-  getDrones: jest.fn(),
-  getDrone: jest.fn(),
-  createDrone: jest.fn(),
-  updateDrone: jest.fn(),
-  deleteDrone: jest.fn(),
-};
-
-const mockAuditLogService = {
-  createAuditLog: jest.fn().mockResolvedValue('audit-log-id'),
-};
-
-const mockUserService = {
-  getUserEmail: jest.fn().mockResolvedValue('test@example.com'),
-};
-
-const mockImageService = {
-  processImages: jest.fn().mockResolvedValue([]),
-};
-
-// Apply mocks
-require('@/repositories/DroneRepository').DroneRepository = mockDroneRepository;
-require('../auditLogService').AuditLogService = mockAuditLogService;
-require('../userService').UserService = mockUserService;
-require('../imageService').ImageService = mockImageService;
+// Get references to mocked functions
+const mockDroneRepository = DroneRepository as jest.Mocked<typeof DroneRepository>;
+const mockAuditLogService = AuditLogService as jest.Mocked<typeof AuditLogService>;
+const mockUserService = UserService as jest.Mocked<typeof UserService>;
+const mockImageService = ImageService as jest.Mocked<typeof ImageService>;
 
 describe('DroneService', () => {
   beforeEach(() => {

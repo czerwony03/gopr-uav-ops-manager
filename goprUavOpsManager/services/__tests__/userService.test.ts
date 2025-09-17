@@ -1,25 +1,28 @@
+// Mock all external dependencies BEFORE imports
+jest.mock('@/repositories/UserRepository', () => ({
+  UserRepository: {
+    getUsers: jest.fn(),
+    getUser: jest.fn(),
+    updateUser: jest.fn(),
+    createUser: jest.fn(),
+  }
+}));
+
+jest.mock('../auditLogService', () => ({
+  AuditLogService: {
+    createAuditLog: jest.fn().mockResolvedValue('audit-log-id'),
+  }
+}));
+
 import { UserService } from '../userService';
 import { UserRole } from '@/types/UserRole';
 import { TEST_ACCOUNTS, mockUser } from './setup';
+import { UserRepository } from '@/repositories/UserRepository';
+import { AuditLogService } from '../auditLogService';
 
-// Mock all external dependencies
-jest.mock('@/repositories/UserRepository');
-jest.mock('../auditLogService');
-
-const mockUserRepository = {
-  getUsers: jest.fn(),
-  getUser: jest.fn(),
-  updateUser: jest.fn(),
-  createUser: jest.fn(),
-};
-
-const mockAuditLogService = {
-  createAuditLog: jest.fn().mockResolvedValue('audit-log-id'),
-};
-
-// Apply mocks
-require('@/repositories/UserRepository').UserRepository = mockUserRepository;
-require('../auditLogService').AuditLogService = mockAuditLogService;
+// Get references to mocked functions
+const mockUserRepository = UserRepository as jest.Mocked<typeof UserRepository>;
+const mockAuditLogService = AuditLogService as jest.Mocked<typeof AuditLogService>;
 
 describe('UserService', () => {
   beforeEach(() => {
