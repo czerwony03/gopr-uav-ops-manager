@@ -25,6 +25,7 @@ jest.mock('../userService', () => ({
 jest.mock('../imageService', () => ({
   ImageService: {
     processImages: jest.fn().mockResolvedValue([]),
+    uploadImage: jest.fn().mockResolvedValue('https://uploaded-image.jpg'),
   }
 }));
 
@@ -53,6 +54,7 @@ describe('DroneService', () => {
     mockAuditLogService.createChangeDetails.mockReturnValue('Drone created');
     mockUserService.getUserEmail.mockResolvedValue('test@example.com');
     mockImageService.processImages.mockResolvedValue([]);
+    mockImageService.uploadImage.mockResolvedValue('https://uploaded-image.jpg');
   });
 
   describe('Permission Logic Tests', () => {
@@ -265,6 +267,189 @@ describe('DroneService', () => {
       
       expect(canModify).toBe(false);
       expect(canViewDeleted).toBe(false);
+    });
+  });
+
+  describe('Advanced Business Logic Tests', () => {
+    describe('migrateEquipmentStructure', () => {
+      test('should return drone as-is if already using new structure', () => {
+        const droneWithNewStructure = {
+          ...mockDrone,
+          equipmentStorages: [{
+            id: 'storage-1',
+            name: 'Main Bag',
+            items: [{ id: 'item-1', name: 'Camera', quantity: 1 }]
+          }]
+        };
+
+        const result = (DroneService as any).migrateEquipmentStructure(droneWithNewStructure);
+
+        expect(result).toEqual(droneWithNewStructure);
+      });
+
+      test('should migrate legacy equipment list to new structure', () => {
+        const droneWithLegacyStructure = {
+          ...mockDrone,
+          equipmentList: [
+            { id: 'item-1', name: 'Camera', quantity: 1 },
+            { id: 'item-2', name: 'Extra Battery', quantity: 2 }
+          ],
+          equipmentStorages: []
+        };
+
+        const result = (DroneService as any).migrateEquipmentStructure(droneWithLegacyStructure);
+
+        expect(result.equipmentStorages).toHaveLength(1);
+        expect(result.equipmentStorages[0].name).toBe('Default Bag');
+        expect(result.equipmentStorages[0].items).toEqual(droneWithLegacyStructure.equipmentList);
+      });
+
+      test('should return empty storages for drone without equipment', () => {
+        const droneWithoutEquipment = {
+          ...mockDrone,
+          equipmentList: [],
+          equipmentStorages: []
+        };
+
+        const result = (DroneService as any).migrateEquipmentStructure(droneWithoutEquipment);
+
+        expect(result.equipmentStorages).toEqual([]);
+      });
+    });
+
+    describe('processEquipmentStorageImages', () => {
+      test('should process equipment storage images successfully', async () => {
+        const storages = [{
+          id: 'storage-1',
+          name: 'Main Bag',
+          items: [
+            {
+              id: 'item-1',
+              name: 'Camera',
+              quantity: 1,
+              image: 'file://local-image.jpg'
+            }
+          ]
+        }];
+
+        mockImageService.uploadImage.mockResolvedValue('https://uploaded-image.jpg');
+
+        const result = await (DroneService as any).processEquipmentStorageImages(storages, 'drone-123');
+
+        expect(result).toHaveLength(1);
+        expect(result[0].items[0].image).toBe('https://uploaded-image.jpg');
+        expect(mockImageService.uploadImage).toHaveBeenCalledWith(
+          'file://local-image.jpg',
+          expect.stringContaining('equipment_item-1'),
+          'drones/equipment/drone-123'
+        );
+      });
+
+      test('should handle equipment image upload failure gracefully', async () => {
+        const storages = [{
+          id: 'storage-1',
+          name: 'Main Bag',
+          items: [
+            {
+              id: 'item-1',
+              name: 'Camera',
+              quantity: 1,
+              image: 'file://corrupted-image.jpg'
+            }
+          ]
+        }];
+
+        mockImageService.uploadImage.mockRejectedValue(new Error('Upload failed'));
+
+        const result = await (DroneService as any).processEquipmentStorageImages(storages, 'drone-123');
+
+        expect(result).toHaveLength(1);
+        expect(result[0].items[0]).not.toHaveProperty('image');
+      });
+
+      test('should skip processing for remote images', async () => {
+        const storages = [{
+          id: 'storage-1',
+          name: 'Main Bag',
+          items: [
+            {
+              id: 'item-1',
+              name: 'Camera',
+              quantity: 1,
+              image: 'https://existing-image.jpg'
+            }
+          ]
+        }];
+
+        const result = await (DroneService as any).processEquipmentStorageImages(storages, 'drone-123');
+
+        expect(result[0].items[0].image).toBe('https://existing-image.jpg');
+        expect(mockImageService.uploadImage).not.toHaveBeenCalled();
+      });
+
+      test('should return empty array for empty storages', async () => {
+        const result = await (DroneService as any).processEquipmentStorageImages([], 'drone-123');
+
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('Edge Cases and Error Handling', () => {
+      test('should handle very long drone names and descriptions', async () => {
+        const longStringDroneData = {
+          ...mockDrone,
+          name: 'A'.repeat(1000),
+          inventoryCode: 'B'.repeat(500),
+        };
+
+        await DroneService.createDrone(longStringDroneData as any, UserRole.ADMIN, TEST_ACCOUNTS.ADMIN.uid);
+
+        expect(mockDroneRepository.createDrone).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'A'.repeat(1000),
+            inventoryCode: 'B'.repeat(500)
+          }),
+          TEST_ACCOUNTS.ADMIN.uid
+        );
+      });
+
+      test('should handle many equipment items efficiently', async () => {
+        const manyItemsData = {
+          ...mockDrone,
+          equipmentStorages: [{
+            id: 'storage-1',
+            name: 'Large Storage',
+            items: Array(20).fill(null).map((_, index) => ({
+              id: `item-${index}`,
+              name: `Equipment ${index}`,
+              quantity: 1,
+            }))
+          }]
+        };
+
+        const result = await DroneService.createDrone(manyItemsData as any, UserRole.ADMIN, TEST_ACCOUNTS.ADMIN.uid);
+
+        expect(result).toBe('new-drone-id');
+        expect(mockDroneRepository.createDrone).toHaveBeenCalledWith(
+          expect.objectContaining({
+            equipmentStorages: expect.arrayContaining([
+              expect.objectContaining({
+                items: expect.arrayContaining([
+                  expect.objectContaining({
+                    id: 'item-0',
+                    name: 'Equipment 0'
+                  }),
+                  expect.objectContaining({
+                    id: 'item-19',
+                    name: 'Equipment 19'
+                  })
+                ])
+              })
+            ])
+          }),
+          TEST_ACCOUNTS.ADMIN.uid
+        );
+      });
     });
   });
 });
