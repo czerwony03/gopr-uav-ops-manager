@@ -94,7 +94,7 @@ describe('ImageService', () => {
       
       // Mock fetch for web platform
       global.fetch = jest.fn().mockResolvedValue({
-        blob: jest.fn().mockResolvedValue(new Blob(['test'], { type: 'image/jpeg', lastModified: Date.now() }))
+        blob: jest.fn().mockResolvedValue(new Blob(['test'], { type: 'image/jpeg', lastModified: Date.now() } as BlobOptions))
       }) as jest.MockedFunction<typeof fetch>;
 
       const result = await ImageService.uploadImage(
@@ -303,7 +303,7 @@ describe('ImageService', () => {
     test('should use blob upload on web platform', async () => {
       (Platform.OS as any) = 'web';
       
-      const mockBlob = new Blob(['test'], { type: 'image/jpeg', lastModified: Date.now() });
+      const mockBlob = new Blob(['test'], { type: 'image/jpeg', lastModified: Date.now() } as BlobOptions);
       global.fetch = jest.fn().mockResolvedValue({
         blob: jest.fn().mockResolvedValue(mockBlob)
       }) as jest.MockedFunction<typeof fetch>;
