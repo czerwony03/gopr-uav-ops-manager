@@ -120,6 +120,29 @@ export class UserRepository {
   }
 
   /**
+   * Get user public info (firstname, surname) by UID from publicUsers collection
+   * Available to all authenticated users for audit trail display
+   */
+  static async getUserPublicInfo(uid: string): Promise<{firstname: string | null, surname: string | null}> {
+    try {
+      const publicUserDoc = await getDocumentData(getDocument('publicUsers', uid));
+      
+      if (!publicUserDoc.exists) {
+        return { firstname: null, surname: null };
+      }
+
+      const publicUserData = publicUserDoc.data;
+      return {
+        firstname: publicUserData.firstname || null,
+        surname: publicUserData.surname || null
+      };
+    } catch (error) {
+      console.error('Error fetching user public info:', error);
+      return { firstname: null, surname: null };
+    }
+  }
+
+  /**
    * Convert Firestore document data to User domain object
    */
   private static convertFromFirestore(uid: string, data: any): User {
