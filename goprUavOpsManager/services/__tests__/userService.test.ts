@@ -11,6 +11,7 @@ jest.mock('@/repositories/UserRepository', () => ({
 jest.mock('../auditLogService', () => ({
   AuditLogService: {
     createAuditLog: jest.fn().mockResolvedValue('audit-log-id'),
+    createChangeDetails: jest.fn().mockReturnValue('User updated'),
   }
 }));
 
@@ -27,6 +28,12 @@ const mockAuditLogService = AuditLogService as jest.Mocked<typeof AuditLogServic
 describe('UserService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Set up default mock implementations 
+    mockUserRepository.getUsers.mockResolvedValue([mockUser]);
+    mockUserRepository.getUser.mockResolvedValue(mockUser);
+    mockUserRepository.updateUser.mockResolvedValue(undefined);
+    mockAuditLogService.createAuditLog.mockResolvedValue('audit-log-id');
+    mockAuditLogService.createChangeDetails.mockReturnValue('User updated');
   });
 
   describe('Permission Logic Tests', () => {

@@ -12,6 +12,7 @@ jest.mock('@/repositories/DroneRepository', () => ({
 jest.mock('../auditLogService', () => ({
   AuditLogService: {
     createAuditLog: jest.fn().mockResolvedValue('audit-log-id'),
+    createChangeDetails: jest.fn().mockReturnValue('Drone created'),
   }
 }));
 
@@ -44,6 +45,14 @@ const mockImageService = ImageService as jest.Mocked<typeof ImageService>;
 describe('DroneService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Set up default mock implementations
+    mockDroneRepository.createDrone.mockResolvedValue('new-drone-id');
+    mockDroneRepository.getDrone.mockResolvedValue(mockDrone);
+    mockDroneRepository.getDrones.mockResolvedValue([mockDrone]);
+    mockAuditLogService.createAuditLog.mockResolvedValue('audit-log-id');
+    mockAuditLogService.createChangeDetails.mockReturnValue('Drone created');
+    mockUserService.getUserEmail.mockResolvedValue('test@example.com');
+    mockImageService.processImages.mockResolvedValue([]);
   });
 
   describe('Permission Logic Tests', () => {

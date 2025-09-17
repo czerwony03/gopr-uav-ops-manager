@@ -12,6 +12,7 @@ jest.mock('@/repositories/FlightRepository', () => ({
 jest.mock('../auditLogService', () => ({
   AuditLogService: {
     createAuditLog: jest.fn().mockResolvedValue('audit-log-id'),
+    createChangeDetails: jest.fn().mockReturnValue('Flight created'),
   }
 }));
 
@@ -36,6 +37,13 @@ const mockUserService = UserService as jest.Mocked<typeof UserService>;
 describe('FlightService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Set up default mock implementations
+    mockFlightRepository.createFlight.mockResolvedValue('new-flight-id');
+    mockFlightRepository.getFlight.mockResolvedValue(mockFlight);
+    mockFlightRepository.getFlights.mockResolvedValue([mockFlight]);
+    mockAuditLogService.createAuditLog.mockResolvedValue('audit-log-id');
+    mockAuditLogService.createChangeDetails.mockReturnValue('Flight created');
+    mockUserService.getUserEmail.mockResolvedValue('test@example.com');
   });
 
   describe('Permission Logic Tests', () => {
@@ -306,14 +314,16 @@ describe('FlightService', () => {
         TEST_ACCOUNTS.USER.email
       );
       
-      expect(mockAuditLogService.createAuditLog).toHaveBeenCalledWith({
-        entityType: 'flight',
-        entityId: 'new-flight-id',
-        action: 'create',
-        userId: TEST_ACCOUNTS.USER.uid,
-        userEmail: TEST_ACCOUNTS.USER.email,
-        details: 'Flight created',
-      });
+      expect(mockAuditLogService.createAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          entityType: 'flight',
+          entityId: 'new-flight-id',
+          action: 'create',
+          userId: TEST_ACCOUNTS.USER.uid,
+          userEmail: TEST_ACCOUNTS.USER.email,
+          details: 'Flight created',
+        })
+      );
     });
   });
 });

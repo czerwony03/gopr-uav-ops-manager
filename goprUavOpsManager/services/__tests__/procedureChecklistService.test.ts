@@ -12,6 +12,7 @@ jest.mock('@/repositories/ProcedureChecklistRepository', () => ({
 jest.mock('../auditLogService', () => ({
   AuditLogService: {
     createAuditLog: jest.fn().mockResolvedValue('audit-log-id'),
+    createChangeDetails: jest.fn().mockReturnValue('Procedure checklist created'),
   }
 }));
 
@@ -50,6 +51,14 @@ const mockImageService = ImageService as jest.Mocked<typeof ImageService>;
 describe('ProcedureChecklistService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Set up default mock implementations
+    mockProcedureChecklistRepository.createProcedureChecklist.mockResolvedValue('new-checklist-id');
+    mockProcedureChecklistRepository.getProcedureChecklist.mockResolvedValue(mockProcedureChecklist);
+    mockProcedureChecklistRepository.getProcedureChecklists.mockResolvedValue([mockProcedureChecklist]);
+    mockAuditLogService.createAuditLog.mockResolvedValue('audit-log-id');
+    mockAuditLogService.createChangeDetails.mockReturnValue('Procedure checklist created');
+    mockUserService.getUserEmail.mockResolvedValue('test@example.com');
+    mockImageService.processImages.mockResolvedValue([]);
   });
 
   describe('Permission Logic Tests', () => {
