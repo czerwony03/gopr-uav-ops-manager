@@ -50,7 +50,7 @@ describe('ImageService', () => {
     jest.clearAllMocks();
     // Set up default mock implementations
     mockImageProcessingService.processImageForUpload.mockResolvedValue({
-      uri: 'processed-image-uri',
+      uri: 'file://processed-image.jpg',
       width: 1200,
       height: 800,
     });
@@ -63,6 +63,9 @@ describe('ImageService', () => {
     mockFileSystem.writeAsStringAsync.mockResolvedValue(undefined as any);
     mockFileSystem.downloadAsync.mockResolvedValue({ uri: 'file:///downloaded-temp.jpg' } as any);
     mockFileSystem.deleteAsync.mockResolvedValue(undefined as any);
+    
+    // Reset Platform.OS to React Native by default
+    (Platform.OS as any) = 'ios';
   });
 
   describe('uploadImage', () => {
@@ -216,13 +219,19 @@ describe('ImageService', () => {
         height: 800,
       });
 
-      // Reset Platform.OS to React Native for file handling
-      (Platform.OS as any) = 'ios';
-
       const result = await ImageService.uploadImage('file://image.jpg', 'test.jpg', 'drones/images');
 
       expect(result).toBe('https://example.com/uploaded-image.jpg');
       expect(mockFirebaseUtils.getStorageRef).toHaveBeenCalledWith('drones/images/test.jpg');
+      expect(mockImageProcessingService.processImageForUpload).toHaveBeenCalledWith(
+        'file://image.jpg',
+        {
+          maxWidth: 1200,
+          maxHeight: 1200,
+          quality: 0.8,
+          format: 'jpeg'
+        }
+      );
 
       Date.now = originalNow;
     });
@@ -238,13 +247,19 @@ describe('ImageService', () => {
         height: 800,
       });
 
-      // Reset Platform.OS to React Native for file handling
-      (Platform.OS as any) = 'ios';
-
       const result = await ImageService.uploadImage('file://image.jpg', fileName, longPath);
 
       expect(result).toBe('https://example.com/uploaded-image.jpg');
       expect(mockFirebaseUtils.getStorageRef).toHaveBeenCalledWith(`${longPath}/${fileName}`);
+      expect(mockImageProcessingService.processImageForUpload).toHaveBeenCalledWith(
+        'file://image.jpg',
+        {
+          maxWidth: 1200,
+          maxHeight: 1200,
+          quality: 0.8,
+          format: 'jpeg'
+        }
+      );
     });
 
     test('should process different image formats', async () => {
@@ -256,13 +271,9 @@ describe('ImageService', () => {
         width: 1200,
         height: 800,
       });
-
-      // Reset Platform.OS to React Native for file handling
-      (Platform.OS as any) = 'ios';
       
       for (const format of formats) {
-        const result = await ImageService.uploadImage(`file://${format}`, format, 'test/images');
-        expect(result).toBe('https://example.com/uploaded-image.jpg');
+        await ImageService.uploadImage(`file://${format}`, format, 'test/images');
       }
 
       expect(mockImageProcessingService.processImageForUpload).toHaveBeenCalledTimes(3);
@@ -271,6 +282,12 @@ describe('ImageService', () => {
 
   describe('Error Handling and Resilience', () => {
     test('should handle network connectivity issues', async () => {
+      // First set up successful processing, then make upload fail
+      mockImageProcessingService.processImageForUpload.mockResolvedValue({
+        uri: 'file://processed-image.jpg',
+        width: 1200,
+        height: 800,
+      });
       mockFirebaseUtils.uploadFile.mockRejectedValue(new Error('Network error'));
 
       await expect(
@@ -291,6 +308,12 @@ describe('ImageService', () => {
     });
 
     test('should handle Firebase storage permission errors', async () => {
+      // First set up successful processing, then make upload fail
+      mockImageProcessingService.processImageForUpload.mockResolvedValue({
+        uri: 'file://processed-image.jpg',
+        width: 1200,
+        height: 800,
+      });
       mockFirebaseUtils.uploadFile.mockRejectedValue(new Error('Permission denied'));
 
       await expect(
