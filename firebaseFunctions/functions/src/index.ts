@@ -31,9 +31,33 @@ export const syncUserRole = onDocumentWritten("users/{userId}",
 
     if (!after) return; // doc deleted
 
-    const role = after.role;
+    const {role, firstname, surname} = after;
+
+    // 1️⃣ Update custom claims
     if (["admin", "manager", "user"].includes(role)) {
-      await admin.auth().setCustomUserClaims(userId, {role});
-      console.log(`Updated ${userId} → role: ${role}`);
+      try {
+        await admin.auth().setCustomUserClaims(userId, {role});
+        console.log(`Updated ${userId} → role: ${role}`);
+      } catch (err) {
+        console.error(`Failed to update role for ${userId}`, err);
+      }
     }
-  });
+
+    // 2️⃣ Update public user data
+    try {
+      await admin.firestore().doc(`publicUsers/${userId}`).set(
+        {
+          firstname: firstname || "",
+          surname: surname || "",
+        },
+        {
+          merge: true,
+        } // merge ensures we don't overwrite other fields
+      );
+      console.log(`Updated publicUsers/${userId} with firstname & surname`);
+    } catch (err) {
+      console.error(`Failed to update public user data for ${userId}`, err);
+    }
+  },
+);
+
