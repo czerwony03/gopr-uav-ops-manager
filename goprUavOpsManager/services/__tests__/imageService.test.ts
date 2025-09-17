@@ -48,28 +48,22 @@ const mockFirebaseUtils = {
 describe('ImageService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Set up default mock implementations
-    mockImageProcessingService.processImageForUpload.mockResolvedValue({
-      uri: 'file://processed-image.jpg',
-      width: 1200,
-      height: 800,
-    });
-    mockFirebaseUtils.getStorageRef.mockReturnValue('mock-storage-ref' as any);
-    mockFirebaseUtils.uploadFile.mockResolvedValue(undefined);
-    mockFirebaseUtils.getDownloadURL.mockResolvedValue('https://example.com/uploaded-image.jpg');
-    mockFirebaseUtils.deleteObject.mockResolvedValue(undefined);
-    
-    // Set up FileSystem mocks
-    mockFileSystem.writeAsStringAsync.mockResolvedValue(undefined as any);
-    mockFileSystem.downloadAsync.mockResolvedValue({ uri: 'file:///downloaded-temp.jpg' } as any);
-    mockFileSystem.deleteAsync.mockResolvedValue(undefined as any);
-    
     // Reset Platform.OS to React Native by default
     (Platform.OS as any) = 'ios';
   });
 
   describe('uploadImage', () => {
     test('should upload image successfully on mobile platforms', async () => {
+      // Set up default mock implementations
+      mockImageProcessingService.processImageForUpload.mockResolvedValue({
+        uri: 'file://processed-image.jpg',
+        width: 1200,
+        height: 800,
+      });
+      mockFirebaseUtils.getStorageRef.mockReturnValue('mock-storage-ref' as any);
+      mockFirebaseUtils.uploadFile.mockResolvedValue(undefined);
+      mockFirebaseUtils.getDownloadURL.mockResolvedValue('https://example.com/uploaded-image.jpg');
+      
       const result = await ImageService.uploadImage(
         'file://local-image.jpg',
         'test-image.jpg',
@@ -94,6 +88,16 @@ describe('ImageService', () => {
     test('should handle web platform upload with blob', async () => {
       // Mock Platform.OS for web
       (Platform.OS as any) = 'web';
+      
+      // For web platform, mock processImageForUpload to return a processed blob URI
+      mockImageProcessingService.processImageForUpload.mockResolvedValue({
+        uri: 'processed-image-uri',
+        width: 1200,
+        height: 800,
+      });
+      mockFirebaseUtils.getStorageRef.mockReturnValue('mock-storage-ref' as any);
+      mockFirebaseUtils.uploadFile.mockResolvedValue(undefined);
+      mockFirebaseUtils.getDownloadURL.mockResolvedValue('https://example.com/uploaded-image.jpg');
       
       // Mock fetch for web platform
       global.fetch = jest.fn().mockResolvedValue({
@@ -212,12 +216,15 @@ describe('ImageService', () => {
       const originalNow = Date.now;
       Date.now = jest.fn(() => 1640995200000); // Fixed timestamp
       
-      // Set up mock to return processed URI that will work with file path logic
+      // Set up mock implementations
       mockImageProcessingService.processImageForUpload.mockResolvedValue({
         uri: 'file://processed-image.jpg',
         width: 1200,
         height: 800,
       });
+      mockFirebaseUtils.getStorageRef.mockReturnValue('mock-storage-ref' as any);
+      mockFirebaseUtils.uploadFile.mockResolvedValue(undefined);
+      mockFirebaseUtils.getDownloadURL.mockResolvedValue('https://example.com/uploaded-image.jpg');
 
       const result = await ImageService.uploadImage('file://image.jpg', 'test.jpg', 'drones/images');
 
@@ -240,12 +247,15 @@ describe('ImageService', () => {
       const longPath = 'a'.repeat(500); // Very long path
       const fileName = 'test.jpg';
       
-      // Set up mock to return processed URI that will work with file path logic
+      // Set up mock implementations
       mockImageProcessingService.processImageForUpload.mockResolvedValue({
         uri: 'file://processed-image.jpg',
         width: 1200,
         height: 800,
       });
+      mockFirebaseUtils.getStorageRef.mockReturnValue('mock-storage-ref' as any);
+      mockFirebaseUtils.uploadFile.mockResolvedValue(undefined);
+      mockFirebaseUtils.getDownloadURL.mockResolvedValue('https://example.com/uploaded-image.jpg');
 
       const result = await ImageService.uploadImage('file://image.jpg', fileName, longPath);
 
@@ -265,12 +275,15 @@ describe('ImageService', () => {
     test('should process different image formats', async () => {
       const formats = ['image.jpg', 'image.png', 'image.webp'];
       
-      // Set up mock to return processed URI that will work with file path logic
+      // Set up mock implementations
       mockImageProcessingService.processImageForUpload.mockResolvedValue({
         uri: 'file://processed-image.jpg',
         width: 1200,
         height: 800,
       });
+      mockFirebaseUtils.getStorageRef.mockReturnValue('mock-storage-ref' as any);
+      mockFirebaseUtils.uploadFile.mockResolvedValue(undefined);
+      mockFirebaseUtils.getDownloadURL.mockResolvedValue('https://example.com/uploaded-image.jpg');
       
       for (const format of formats) {
         await ImageService.uploadImage(`file://${format}`, format, 'test/images');
@@ -282,12 +295,16 @@ describe('ImageService', () => {
 
   describe('Error Handling and Resilience', () => {
     test('should handle network connectivity issues', async () => {
-      // First set up successful processing, then make upload fail
+      // Set up successful processing first
       mockImageProcessingService.processImageForUpload.mockResolvedValue({
         uri: 'file://processed-image.jpg',
         width: 1200,
         height: 800,
       });
+      mockFirebaseUtils.getStorageRef.mockReturnValue('mock-storage-ref' as any);
+      mockFirebaseUtils.getDownloadURL.mockResolvedValue('https://example.com/uploaded-image.jpg');
+      
+      // Then make the upload fail
       mockFirebaseUtils.uploadFile.mockRejectedValue(new Error('Network error'));
 
       await expect(
@@ -296,6 +313,7 @@ describe('ImageService', () => {
     });
 
     test('should handle corrupted image processing', async () => {
+      // Mock processing to return invalid result
       mockImageProcessingService.processImageForUpload.mockResolvedValue({
         uri: '',
         width: 0,
@@ -304,16 +322,20 @@ describe('ImageService', () => {
 
       await expect(
         ImageService.uploadImage('file://corrupted.jpg', 'test.jpg', 'drones/images')
-      ).rejects.toThrow('Failed to upload image');
+      ).rejects.toThrow('Failed to process image');
     });
 
     test('should handle Firebase storage permission errors', async () => {
-      // First set up successful processing, then make upload fail
+      // Set up successful processing first
       mockImageProcessingService.processImageForUpload.mockResolvedValue({
         uri: 'file://processed-image.jpg',
         width: 1200,
         height: 800,
       });
+      mockFirebaseUtils.getStorageRef.mockReturnValue('mock-storage-ref' as any);
+      mockFirebaseUtils.getDownloadURL.mockResolvedValue('https://example.com/uploaded-image.jpg');
+      
+      // Then make the upload fail
       mockFirebaseUtils.uploadFile.mockRejectedValue(new Error('Permission denied'));
 
       await expect(
@@ -326,6 +348,16 @@ describe('ImageService', () => {
     test('should use blob upload on web platform', async () => {
       (Platform.OS as any) = 'web';
       
+      // For web platform, mock processImageForUpload to return a processed blob URI
+      mockImageProcessingService.processImageForUpload.mockResolvedValue({
+        uri: 'blob:processed-image',
+        width: 1200,
+        height: 800,
+      });
+      mockFirebaseUtils.getStorageRef.mockReturnValue('mock-storage-ref' as any);
+      mockFirebaseUtils.uploadFile.mockResolvedValue(undefined);
+      mockFirebaseUtils.getDownloadURL.mockResolvedValue('https://example.com/uploaded-image.jpg');
+      
       const mockBlob = new Blob(['test'], { type: 'image/jpeg', lastModified: Date.now() } as BlobOptions);
       global.fetch = jest.fn().mockResolvedValue({
         blob: jest.fn().mockResolvedValue(mockBlob)
@@ -333,7 +365,7 @@ describe('ImageService', () => {
 
       await ImageService.uploadImage('blob:web-image', 'web.jpg', 'web/images');
 
-      expect(global.fetch).toHaveBeenCalled();
+      expect(global.fetch).toHaveBeenCalledWith('blob:processed-image');
       expect(mockFirebaseUtils.uploadFile).toHaveBeenCalledWith(
         'mock-storage-ref',
         mockBlob,
@@ -350,6 +382,9 @@ describe('ImageService', () => {
         width: 1200,
         height: 800,
       });
+      mockFirebaseUtils.getStorageRef.mockReturnValue('mock-storage-ref' as any);
+      mockFirebaseUtils.uploadFile.mockResolvedValue(undefined);
+      mockFirebaseUtils.getDownloadURL.mockResolvedValue('https://example.com/uploaded-image.jpg');
 
       await ImageService.uploadImage('file://mobile-image.jpg', 'mobile.jpg', 'mobile/images');
 
