@@ -1,25 +1,19 @@
 rules_version = '2';
-
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // DRONE IMAGES: Allow read for signed-in users; write only for manager/admin
     match /drones/images/{allPaths=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['manager', 'admin'];
+      allow write: if request.auth != null && request.auth.token.role in ['manager', 'admin'];
     }
 
-    // PROCEDURE IMAGES: Allow read for signed-in users; write only for manager/admin
     match /procedures_checklists/images/{allPaths=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['manager', 'admin'];
+      allow write: if request.auth != null && request.auth.token.role in ['manager', 'admin'];
     }
 
-    // DENY ALL ELSE
     match /{allOtherPaths=**} {
       allow read, write: if false;
     }
-
   }
 }
-
