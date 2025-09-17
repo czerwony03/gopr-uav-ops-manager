@@ -1,6 +1,7 @@
 {
   "projects": {
     "default": "gopr-uav-ops-manager",
+    "prod": "gopr-uav-ops-manager",
     "test": "gopr-uav-ops-manager-test"
   }
 }

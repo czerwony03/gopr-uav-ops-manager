@@ -3,17 +3,122 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // This rule allows anyone with your Firestore database reference to view, edit,
-    // and delete all data in your Firestore database. It is useful for getting
-    // started, but it is configured to expire after 30 days because it
-    // leaves your app open to attackers. At that time, all client
-    // requests to your Firestore database will be denied.
-    //
-    // Make sure to write security rules for your app before that time, or else
-    // all client requests to your Firestore database will be denied until you Update
-    // your rules
-    match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2025, 10, 15);
+    // =========================
+    // USERS COLLECTION
+    // =========================
+    match /users/{userId} {
+      // Only authenticated users can read their own profile
+      allow read: if isSignedIn() && request.auth.uid == userId;
+
+      // Admins and managers can read any user profile
+      allow read: if isAdmin() || isManager();
+
+      // Users can update their own profile (except role)
+      allow update: if isSignedIn() && request.auth.uid == userId
+      	&& !('role' in request.resource.data.diff(resource.data).affectedKeys());
+
+      // Admins can update any user, including role
+      allow update: if isAdmin();
+
+      // Managers can update any user, but not the role field
+      allow update: if isManager()
+      	&& !('role' in request.resource.data.diff(resource.data).affectedKeys());
+
+      // Only admins can create/delete users (user creation generally via Auth, not Firestore)
+      allow create, delete: if isAdmin();
+    }
+
+    // =========================
+    // DRONES COLLECTION
+    // =========================
+    match /drones/{droneId} {
+  		// Anyone signed in can read non-deleted drones, admins can read all
+  		allow read: if (isSignedIn() && !resource.data.isDeleted) || isAdmin();
+
+  		// Managers/Admins can update anything except restoring
+  		allow update: if (isManager() || isAdmin()) && !isRestoring(resource, request);
+
+  		// Only admins can restore a deleted drone
+  		allow update: if isAdmin() && isRestoring(resource, request);
+
+  		// Managers/Admins can create or soft-delete
+  		allow create, delete: if isManager() || isAdmin();
+		}
+
+    // =========================
+    // FLIGHTS COLLECTION
+    // =========================
+    match /flights/{flightId} {
+      // Flight owner, manager or admin can read
+      allow read: if isAdmin() || isManager() || resource.data.userId == request.auth.uid;
+
+      // Owner can update their own flights (except userId/userEmail fields)
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid
+      	&& !('userId' in request.resource.data.diff(resource.data).affectedKeys())
+				&& !('userEmail' in request.resource.data.diff(resource.data).affectedKeys());
+
+      // Admins and managers can update any flight
+      allow update: if isAdmin() || isManager();
+
+      // Anyone signed in can create a flight for themselves
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+
+      // Only admins/managers can delete
+      allow delete: if isAdmin() || isManager();
+    }
+
+    // =========================
+    // PROCEDURES/CHECKLISTS COLLECTION
+    // =========================
+    match /procedures_checklists/{procedureId} {
+      // Anyone signed in can read non-deleted procedures
+      allow read: if isSignedIn() && !resource.data.isDeleted;
+
+      // Admins can read all procedures
+      allow read: if isAdmin();
+
+			// Managers/Admins can create
+			allow create: if isManager() || isAdmin();
+
+			// Managers/Admins can update *except restoring*
+			allow update: if (isManager() || isAdmin()) && !isRestoring(resource, request);
+
+			// Only admins can restore
+			allow update: if isAdmin() && isRestoring(resource, request);
+
+			// Managers/Admins can soft-delete
+			allow delete: if isManager() || isAdmin();
+    }
+
+    // =========================
+    // AUDIT LOGS COLLECTION
+    // =========================
+    match /auditLogs/{logId} {
+      // Only admins can read audit logs
+      allow read: if isAdmin();
+
+      // Anyone signed in can write audit logs (for their own actions)
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.userId;
+
+      // Prevent updates/deletes from clients
+      allow update, delete: if false;
+    }
+
+    // =========================
+    // HELPERS
+    // =========================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    function isManager() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager';
+    }
+    function isRestoring(resource, request) {
+      // Checks if isDeleted is changing from true to false
+      return resource.data.isDeleted == true && request.resource.data.isDeleted == false;
     }
   }
 }
