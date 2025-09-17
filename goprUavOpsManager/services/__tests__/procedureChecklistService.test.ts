@@ -62,6 +62,10 @@ describe('ProcedureChecklistService', () => {
     mockAuditLogService.createChangeDetails.mockReturnValue('Procedure checklist created');
     mockUserService.getUserEmail.mockResolvedValue('test@example.com');
     mockImageService.processImages.mockResolvedValue([]);
+    mockImageService.uploadImage.mockResolvedValue('uploaded-image-url');
+    
+    // Mock the ProcedureChecklistService uploadImage method
+    jest.spyOn(ProcedureChecklistService, 'uploadImage').mockResolvedValue('uploaded-image-url');
   });
 
   describe('Permission Logic Tests', () => {
@@ -757,25 +761,30 @@ describe('ProcedureChecklistService', () => {
         TEST_ACCOUNTS.ADMIN.uid
       );
 
+      // Check that repository was called with the correct structure
       expect(mockProcedureChecklistRepository.createProcedureChecklist).toHaveBeenCalledWith(
         expect.objectContaining({
-          items: [
-            {
+          title: 'Test Checklist',
+          description: 'Test Description',
+          items: expect.arrayContaining([
+            expect.objectContaining({
               id: 'item-1',
               topic: 'Safety',
               content: 'Check equipment',
               number: 1,
               link: 'https://example.com',
               file: 'document.pdf'
-            },
-            {
+            }),
+            expect.objectContaining({
               id: 'item-2',
               topic: 'Equipment',
               content: 'Verify setup',
               number: 2
               // link and file should be omitted when empty
-            }
-          ]
+            })
+          ]),
+          createdBy: TEST_ACCOUNTS.ADMIN.uid,
+          updatedBy: TEST_ACCOUNTS.ADMIN.uid
         }),
         TEST_ACCOUNTS.ADMIN.uid
       );
@@ -796,7 +805,7 @@ describe('ProcedureChecklistService', () => {
         ]
       };
 
-      mockImageService.uploadImage.mockResolvedValue('https://example.com/uploaded-image.jpg');
+      const uploadImageSpy = jest.spyOn(ProcedureChecklistService, 'uploadImage').mockResolvedValue('https://example.com/uploaded-image.jpg');
       mockProcedureChecklistRepository.createProcedureChecklist.mockResolvedValue('checklist-id');
       mockUserService.getUserEmail.mockResolvedValue(TEST_ACCOUNTS.ADMIN.email);
       mockAuditLogService.createAuditLog.mockResolvedValue('audit-id');
@@ -807,11 +816,27 @@ describe('ProcedureChecklistService', () => {
         TEST_ACCOUNTS.ADMIN.uid
       );
 
-      expect(mockImageService.uploadImage).toHaveBeenCalledWith(
+      expect(uploadImageSpy).toHaveBeenCalledWith(
         'data:image/jpeg;base64,test123',
-        expect.stringMatching(/^\d+_item-1\.jpg$/),
-        'procedures_checklists/images'
+        expect.stringMatching(/^\d+_item-1\.jpg$/)
       );
+
+      // Verify the processed items were passed to repository
+      expect(mockProcedureChecklistRepository.createProcedureChecklist).toHaveBeenCalledWith(
+        expect.objectContaining({
+          items: [
+            expect.objectContaining({
+              id: 'item-1',
+              topic: 'Safety',
+              content: 'Check equipment',
+              number: 1,
+              image: 'https://example.com/uploaded-image.jpg'
+            })
+          ]
+        }),
+        TEST_ACCOUNTS.ADMIN.uid
+      );
+    });
 
       expect(mockProcedureChecklistRepository.createProcedureChecklist).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -844,7 +869,7 @@ describe('ProcedureChecklistService', () => {
         ]
       };
 
-      mockImageService.uploadImage.mockResolvedValue('https://example.com/uploaded-image.jpg');
+      const uploadImageSpy = jest.spyOn(ProcedureChecklistService, 'uploadImage').mockResolvedValue('https://example.com/uploaded-image.jpg');
       mockProcedureChecklistRepository.createProcedureChecklist.mockResolvedValue('checklist-id');
       mockUserService.getUserEmail.mockResolvedValue(TEST_ACCOUNTS.ADMIN.email);
 
@@ -854,10 +879,25 @@ describe('ProcedureChecklistService', () => {
         TEST_ACCOUNTS.ADMIN.uid
       );
 
-      expect(mockImageService.uploadImage).toHaveBeenCalledWith(
+      expect(uploadImageSpy).toHaveBeenCalledWith(
         'file:///path/to/image.jpg',
-        expect.stringMatching(/^\d+_item-1\.jpg$/),
-        'procedures_checklists/images'
+        expect.stringMatching(/^\d+_item-1\.jpg$/)
+      );
+
+      // Verify the processed items were passed to repository
+      expect(mockProcedureChecklistRepository.createProcedureChecklist).toHaveBeenCalledWith(
+        expect.objectContaining({
+          items: [
+            expect.objectContaining({
+              id: 'item-1',
+              topic: 'Safety', 
+              content: 'Check equipment',
+              number: 1,
+              image: 'https://example.com/uploaded-image.jpg'
+            })
+          ]
+        }),
+        TEST_ACCOUNTS.ADMIN.uid
       );
     });
 
@@ -885,11 +925,15 @@ describe('ProcedureChecklistService', () => {
         TEST_ACCOUNTS.ADMIN.uid
       );
 
-      expect(mockImageService.uploadImage).not.toHaveBeenCalled();
+      expect(ProcedureChecklistService.uploadImage).not.toHaveBeenCalled();
       expect(mockProcedureChecklistRepository.createProcedureChecklist).toHaveBeenCalledWith(
         expect.objectContaining({
           items: [
             expect.objectContaining({
+              id: 'item-1',
+              topic: 'Safety',
+              content: 'Check equipment', 
+              number: 1,
               image: 'https://example.com/existing-image.jpg'
             })
           ]
@@ -922,7 +966,7 @@ describe('ProcedureChecklistService', () => {
         TEST_ACCOUNTS.ADMIN.uid
       );
 
-      expect(mockImageService.uploadImage).not.toHaveBeenCalled();
+      expect(ProcedureChecklistService.uploadImage).not.toHaveBeenCalled();
       expect(mockProcedureChecklistRepository.createProcedureChecklist).toHaveBeenCalledWith(
         expect.objectContaining({
           items: [
@@ -930,7 +974,7 @@ describe('ProcedureChecklistService', () => {
               id: 'item-1',
               topic: 'Safety',
               content: 'Check equipment',
-              number: 1
+              number: 1,
               // image should not be included
             })
           ]
@@ -954,7 +998,7 @@ describe('ProcedureChecklistService', () => {
         ]
       };
 
-      mockImageService.uploadImage.mockRejectedValue(new Error('Upload failed'));
+      jest.spyOn(ProcedureChecklistService, 'uploadImage').mockRejectedValue(new Error('Upload failed'));
       mockProcedureChecklistRepository.createProcedureChecklist.mockResolvedValue('checklist-id');
       mockUserService.getUserEmail.mockResolvedValue(TEST_ACCOUNTS.ADMIN.email);
 
@@ -971,7 +1015,7 @@ describe('ProcedureChecklistService', () => {
               id: 'item-1',
               topic: 'Safety',
               content: 'Check equipment',
-              number: 1
+              number: 1,
               // image should not be included due to upload failure
             })
           ]
