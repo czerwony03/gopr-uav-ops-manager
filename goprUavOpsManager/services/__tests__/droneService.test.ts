@@ -238,7 +238,7 @@ describe('DroneService', () => {
       
       expect(mockImageService.processImages).toHaveBeenCalledWith(
         ['image1.jpg', 'image2.jpg'],
-        expect.stringContaining('drone_'),
+        'drones/images',
         expect.stringContaining('temp_')
       );
     });
