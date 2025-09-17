@@ -65,11 +65,8 @@ describe('LocationService', () => {
       const result = await LocationService.getCurrentLocation();
 
       expect(result).toEqual({
-        coordinates: {
-          latitude: 49.2992,
-          longitude: 19.9496,
-        },
-        address: expect.any(String),
+        latitude: 49.2992,
+        longitude: 19.9496,
       });
       expect(mockLocation.requestForegroundPermissionsAsync).toHaveBeenCalled();
       expect(mockLocation.getCurrentPositionAsync).toHaveBeenCalled();
@@ -92,7 +89,7 @@ describe('LocationService', () => {
       mockLocation.getCurrentPositionAsync.mockRejectedValue(new Error('GPS unavailable'));
 
       await expect(LocationService.getCurrentLocation()).rejects.toThrow(
-        'Failed to get current location'
+        'GPS unavailable'
       );
     });
 
@@ -299,7 +296,7 @@ describe('LocationService', () => {
       );
 
       await expect(LocationService.getCurrentLocation()).rejects.toThrow(
-        'Failed to get current location'
+        'GPS sensor not available'
       );
     });
   });

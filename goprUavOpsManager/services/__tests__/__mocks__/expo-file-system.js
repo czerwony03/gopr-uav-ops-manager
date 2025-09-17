@@ -8,6 +8,7 @@ const moveAsync = jest.fn();
 const copyAsync = jest.fn();
 const makeDirectoryAsync = jest.fn();
 const getInfoAsync = jest.fn();
+const downloadAsync = jest.fn();
 
 module.exports = {
   documentDirectory,
@@ -19,4 +20,5 @@ module.exports = {
   copyAsync,
   makeDirectoryAsync,
   getInfoAsync,
+  downloadAsync,
 };

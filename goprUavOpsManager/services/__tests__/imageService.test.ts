@@ -208,9 +208,17 @@ describe('ImageService', () => {
     test('should generate unique file names with timestamp', async () => {
       const originalNow = Date.now;
       Date.now = jest.fn(() => 1640995200000); // Fixed timestamp
+      
+      // Set up mock to return file:// URI to avoid temp file logic
+      mockImageProcessingService.processImageForUpload.mockResolvedValue({
+        uri: 'file://processed-image.jpg',
+        width: 1200,
+        height: 800,
+      });
 
-      await ImageService.uploadImage('file://image.jpg', 'test.jpg', 'drones/images');
+      const result = await ImageService.uploadImage('file://image.jpg', 'test.jpg', 'drones/images');
 
+      expect(result).toBe('https://example.com/uploaded-image.jpg');
       expect(mockFirebaseUtils.getStorageRef).toHaveBeenCalledWith('drones/images/test.jpg');
 
       Date.now = originalNow;
@@ -219,17 +227,33 @@ describe('ImageService', () => {
     test('should handle very large image paths', async () => {
       const longPath = 'a'.repeat(500); // Very long path
       const fileName = 'test.jpg';
+      
+      // Set up mock to return file:// URI to avoid temp file logic
+      mockImageProcessingService.processImageForUpload.mockResolvedValue({
+        uri: 'file://processed-image.jpg',
+        width: 1200,
+        height: 800,
+      });
 
-      await ImageService.uploadImage('file://image.jpg', fileName, longPath);
+      const result = await ImageService.uploadImage('file://image.jpg', fileName, longPath);
 
+      expect(result).toBe('https://example.com/uploaded-image.jpg');
       expect(mockFirebaseUtils.getStorageRef).toHaveBeenCalledWith(`${longPath}/${fileName}`);
     });
 
     test('should process different image formats', async () => {
       const formats = ['image.jpg', 'image.png', 'image.webp'];
       
+      // Set up mock to return file:// URI to avoid temp file logic
+      mockImageProcessingService.processImageForUpload.mockResolvedValue({
+        uri: 'file://processed-image.jpg',
+        width: 1200,
+        height: 800,
+      });
+      
       for (const format of formats) {
-        await ImageService.uploadImage(`file://${format}`, format, 'test/images');
+        const result = await ImageService.uploadImage(`file://${format}`, format, 'test/images');
+        expect(result).toBe('https://example.com/uploaded-image.jpg');
       }
 
       expect(mockImageProcessingService.processImageForUpload).toHaveBeenCalledTimes(3);
@@ -287,12 +311,19 @@ describe('ImageService', () => {
 
     test('should use file upload on mobile platforms', async () => {
       (Platform.OS as any) = 'ios';
+      
+      // Mock processImageForUpload to return a file:// URI for mobile
+      mockImageProcessingService.processImageForUpload.mockResolvedValue({
+        uri: 'file://processed-mobile-image.jpg',
+        width: 1200,
+        height: 800,
+      });
 
       await ImageService.uploadImage('file://mobile-image.jpg', 'mobile.jpg', 'mobile/images');
 
       expect(mockFirebaseUtils.uploadFile).toHaveBeenCalledWith(
         'mock-storage-ref',
-        'processed-image-uri',
+        'file://processed-mobile-image.jpg',
         { cacheControl: 'public,max-age=31536000' }
       );
     });
