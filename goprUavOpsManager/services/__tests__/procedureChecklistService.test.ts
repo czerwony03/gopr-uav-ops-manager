@@ -357,7 +357,7 @@ describe('ProcedureChecklistService', () => {
         action: 'create',
         userId: TEST_ACCOUNTS.ADMIN.uid,
         userEmail: TEST_ACCOUNTS.ADMIN.email,
-        details: expect.stringContaining('Procedure/Checklist created'),
+        details: expect.stringContaining('Procedure checklist created'),
       });
       
       expect(mockAuditLogService.createAuditLog).toHaveBeenCalledWith(expectedCall);

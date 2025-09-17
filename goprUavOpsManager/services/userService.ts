@@ -41,12 +41,13 @@ export class UserService {
       throw new Error('Access denied. Only administrators can change user roles.');
     }
 
+    // Get current user data for audit logging
+    const currentUser = await UserRepository.getUser(uid);
+    if (!currentUser) {
+      throw new Error('User not found');
+    }
+
     try {
-      // Get current user data for audit logging
-      const currentUser = await UserRepository.getUser(uid);
-      if (!currentUser) {
-        throw new Error('User not found');
-      }
 
       // Store previous values for audit log - convert existing Firestore timestamps to Date objects for proper comparison
       const previousValues = {

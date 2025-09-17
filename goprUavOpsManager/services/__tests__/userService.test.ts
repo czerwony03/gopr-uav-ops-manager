@@ -1,10 +1,16 @@
 // Mock all external dependencies BEFORE imports
+jest.mock('@/utils/dateUtils', () => ({
+  toDateIfTimestamp: jest.fn((value) => value instanceof Date ? value : new Date()),
+  toFirestoreTimestamp: jest.fn((value) => value ? { toDate: () => new Date() } : null),
+}));
+
 jest.mock('@/repositories/UserRepository', () => ({
   UserRepository: {
     getUsers: jest.fn(),
     getUser: jest.fn(),
     updateUser: jest.fn(),
     createUser: jest.fn(),
+    getUserEmail: jest.fn(),
   }
 }));
 
@@ -32,6 +38,7 @@ describe('UserService', () => {
     mockUserRepository.getUsers.mockResolvedValue([mockUser]);
     mockUserRepository.getUser.mockResolvedValue(mockUser);
     mockUserRepository.updateUser.mockResolvedValue(undefined);
+    mockUserRepository.getUserEmail.mockResolvedValue('test@example.com');
     mockAuditLogService.createAuditLog.mockResolvedValue('audit-log-id');
     mockAuditLogService.createChangeDetails.mockReturnValue('User updated');
   });
