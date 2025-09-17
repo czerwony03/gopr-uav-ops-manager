@@ -209,12 +209,15 @@ describe('ImageService', () => {
       const originalNow = Date.now;
       Date.now = jest.fn(() => 1640995200000); // Fixed timestamp
       
-      // Set up mock to return file:// URI to avoid temp file logic
+      // Set up mock to return processed URI that will work with file path logic
       mockImageProcessingService.processImageForUpload.mockResolvedValue({
         uri: 'file://processed-image.jpg',
         width: 1200,
         height: 800,
       });
+
+      // Reset Platform.OS to React Native for file handling
+      (Platform.OS as any) = 'ios';
 
       const result = await ImageService.uploadImage('file://image.jpg', 'test.jpg', 'drones/images');
 
@@ -228,12 +231,15 @@ describe('ImageService', () => {
       const longPath = 'a'.repeat(500); // Very long path
       const fileName = 'test.jpg';
       
-      // Set up mock to return file:// URI to avoid temp file logic
+      // Set up mock to return processed URI that will work with file path logic
       mockImageProcessingService.processImageForUpload.mockResolvedValue({
         uri: 'file://processed-image.jpg',
         width: 1200,
         height: 800,
       });
+
+      // Reset Platform.OS to React Native for file handling
+      (Platform.OS as any) = 'ios';
 
       const result = await ImageService.uploadImage('file://image.jpg', fileName, longPath);
 
@@ -244,12 +250,15 @@ describe('ImageService', () => {
     test('should process different image formats', async () => {
       const formats = ['image.jpg', 'image.png', 'image.webp'];
       
-      // Set up mock to return file:// URI to avoid temp file logic
+      // Set up mock to return processed URI that will work with file path logic
       mockImageProcessingService.processImageForUpload.mockResolvedValue({
         uri: 'file://processed-image.jpg',
         width: 1200,
         height: 800,
       });
+
+      // Reset Platform.OS to React Native for file handling
+      (Platform.OS as any) = 'ios';
       
       for (const format of formats) {
         const result = await ImageService.uploadImage(`file://${format}`, format, 'test/images');

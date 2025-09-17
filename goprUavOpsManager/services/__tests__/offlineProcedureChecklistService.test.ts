@@ -87,7 +87,7 @@ describe('OfflineProcedureChecklistService', () => {
     mockImageCacheService.initialize.mockResolvedValue(undefined);
     mockImageCacheService.getCachedImage.mockResolvedValue('cached-image-path');
     mockImageCacheService.preloadImage.mockResolvedValue(undefined);
-    mockImageCacheService.getCacheStats.mockResolvedValue({ size: 1024 });
+    mockImageCacheService.getCacheStats.mockResolvedValue({ size: 1024, count: 5 });
     // mockNetworkConnectivity.isConnected.mockResolvedValue(true); // Commented out due to mock issues
   });
 
