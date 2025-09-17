@@ -42,7 +42,7 @@ app-example
 
 # Test files
 test-*.ts
+coverage/
 
 .env
-
 .env.local
