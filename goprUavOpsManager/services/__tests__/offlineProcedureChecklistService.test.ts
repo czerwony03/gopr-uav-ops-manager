@@ -82,8 +82,8 @@ describe('OfflineProcedureChecklistService', () => {
     mockAsyncStorage.removeItem.mockResolvedValue(undefined as any);
     mockProcedureChecklistService.getProcedureChecklists.mockResolvedValue([mockProcedureChecklist]);
     mockImageCacheService.initialize.mockResolvedValue(undefined);
-    mockImageCacheService.cacheImage.mockResolvedValue('cached-image-path');
-    mockImageCacheService.getCachedImagePath.mockReturnValue('cached-image-path');
+    mockImageCacheService.getCachedImage.mockResolvedValue('cached-image-path');
+    mockImageCacheService.preloadImage.mockResolvedValue(undefined);
     // mockNetworkConnectivity.isConnected.mockResolvedValue(true); // Commented out due to mock issues
   });
 
@@ -206,28 +206,43 @@ describe('OfflineProcedureChecklistService', () => {
   describe('Basic Functionality Tests', () => {
     test('should cache and retrieve basic procedures', async () => {
       const cachedData = [mockProcedureChecklist];
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(cachedData));
+      mockAsyncStorage.getItem.mockResolvedValueOnce(JSON.stringify({
+        procedures: cachedData,
+        timestamp: Date.now(),
+        userRole: 'admin'
+      }));
+      mockAsyncStorage.getItem.mockResolvedValueOnce(JSON.stringify({
+        lastUpdated: Date.now(),
+        userRole: 'admin',
+        procedureCount: 1
+      }));
 
-      const result = await OfflineProcedureChecklistService.getCachedProcedures();
+      const result = await OfflineProcedureChecklistService.getProcedureChecklists('admin', true);
 
-      expect(result).toEqual(cachedData);
-      expect(mockAsyncStorage.getItem).toHaveBeenCalledWith('cached_procedures');
+      expect(result.procedures).toEqual(cachedData);
+      expect(result.isFromCache).toBe(true);
     });
 
     test('should handle empty cache gracefully', async () => {
       mockAsyncStorage.getItem.mockResolvedValue(null);
 
-      const result = await OfflineProcedureChecklistService.getCachedProcedures();
+      const result = await OfflineProcedureChecklistService.getProcedureChecklists('admin', true);
 
-      expect(result).toEqual([]);
+      expect(result.procedures).toEqual([]);
+      expect(result.isFromCache).toBe(false);
     });
 
-    test('should detect cache availability', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue('some cache data');
+    test('should get cache stats', async () => {
+      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify({
+        lastUpdated: Date.now(),
+        userRole: 'admin',
+        procedureCount: 1
+      }));
 
-      const result = await OfflineProcedureChecklistService.isCacheAvailable();
+      const result = await OfflineProcedureChecklistService.getCacheStats();
 
-      expect(result).toBe(true);
+      expect(result.procedureCount).toBe(1);
+      expect(result.lastUpdated).toBeInstanceOf(Date);
     });
 
     test('should clear cache completely', async () => {
