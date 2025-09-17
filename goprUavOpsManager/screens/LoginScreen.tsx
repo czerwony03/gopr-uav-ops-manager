@@ -194,6 +194,7 @@ export default function LoginScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
+            testID="email-input"
           />
 
           <TextInput
@@ -204,15 +205,17 @@ export default function LoginScreen() {
             secureTextEntry
             autoComplete="password"
             onSubmitEditing={handleLogin}
+            testID="password-input"
           />
 
           <TouchableOpacity
             style={[styles.loginButton, loading && styles.disabledButton]}
             onPress={handleLogin}
             disabled={loading}
+            testID="login-button"
           >
             {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator testID="login-loading" color="#FFFFFF" />
             ) : (
               <Text style={styles.loginButtonText}>{t('auth.signIn')}</Text>
             )}

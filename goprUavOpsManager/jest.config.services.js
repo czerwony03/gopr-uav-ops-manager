@@ -1,0 +1,30 @@
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/services'],
+  testMatch: ['**/__tests__/**/*.test.ts'],
+  collectCoverageFrom: [
+    'services/**/*.ts',
+    '!services/**/__tests__/**',
+    '!services/**/*.d.ts',
+  ],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
+    'react-native': '<rootDir>/services/__tests__/__mocks__/react-native.js',
+    'expo-constants': '<rootDir>/services/__tests__/__mocks__/expo-constants.js',
+    'expo-file-system': '<rootDir>/services/__tests__/__mocks__/expo-file-system.js',
+    'expo-location': '<rootDir>/services/__tests__/__mocks__/expo-location.js',
+    'expo-image-manipulator': '<rootDir>/services/__tests__/__mocks__/expo-image-manipulator.js',
+    'firebase/firestore': '<rootDir>/services/__tests__/__mocks__/firebase-firestore.js',
+    'firebase/app': '<rootDir>/services/__tests__/__mocks__/firebase-app.js',
+    'firebase/auth': '<rootDir>/services/__tests__/__mocks__/firebase-auth.js',
+    'firebase/storage': '<rootDir>/services/__tests__/__mocks__/firebase-storage.js',
+  },
+  transform: {
+    '^.+\\.ts$': 'ts-jest',
+  },
+  setupFilesAfterEnv: ['<rootDir>/services/__tests__/setup.ts'],
+  clearMocks: true,
+  resetMocks: true,
+  restoreMocks: true,
+};
