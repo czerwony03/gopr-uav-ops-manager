@@ -24,6 +24,10 @@ service cloud.firestore {
       allow update: if isManager()
       	&& !('role' in request.resource.data.diff(resource.data).affectedKeys());
 
+      // Allow the first-time creation of a user document by the user themselves
+      allow create: if isSignedIn() && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['email', 'role']);
+
       // Only admins can create/delete users (user creation generally via Auth, not Firestore)
       allow create, delete: if isAdmin();
     }
