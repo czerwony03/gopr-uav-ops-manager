@@ -367,46 +367,639 @@ describe('ProcedureChecklistService', () => {
     });
   });
 
-  describe('Integration with Image Processing', () => {
-    test('should handle checklists with image items', async () => {
+  // Test updateProcedureChecklist method
+  describe('Update Procedure/Checklist Tests', () => {
+    it('should allow manager to update procedure/checklist', async () => {
+      const mockChecklist = {
+        id: 'checklist-1',
+        title: 'Original Title',
+        description: 'Original Description',
+        items: [],
+        createdBy: TEST_ACCOUNTS.ADMIN.uid,
+        updatedBy: TEST_ACCOUNTS.ADMIN.uid,
+        isDeleted: false
+      };
+
+      const updateData = {
+        title: 'Updated Title',
+        description: 'Updated Description',
+        items: [
+          {
+            id: 'item-1',
+            topic: 'Safety',
+            content: 'Check equipment',
+            number: 1,
+            link: 'https://example.com',
+            file: 'checklist.pdf'
+          }
+        ]
+      };
+
+      mockProcedureChecklistRepository.getProcedureChecklist.mockResolvedValue(mockChecklist);
+      mockProcedureChecklistRepository.updateProcedureChecklist.mockResolvedValue(undefined);
+      mockUserService.getUserEmail.mockResolvedValue(TEST_ACCOUNTS.MANAGER.email);
+      mockAuditLogService.createAuditLog.mockResolvedValue('audit-id');
+      mockAuditLogService.createChangeDetails.mockReturnValue('Updated procedure/checklist');
+
+      await ProcedureChecklistService.updateProcedureChecklist(
+        'checklist-1',
+        updateData as any,
+        UserRole.MANAGER,
+        TEST_ACCOUNTS.MANAGER.uid
+      );
+
+      expect(mockProcedureChecklistRepository.getProcedureChecklist).toHaveBeenCalledWith('checklist-1');
+      expect(mockProcedureChecklistRepository.updateProcedureChecklist).toHaveBeenCalledWith(
+        'checklist-1',
+        expect.objectContaining({
+          title: 'Updated Title',
+          description: 'Updated Description',
+          updatedBy: TEST_ACCOUNTS.MANAGER.uid
+        }),
+        TEST_ACCOUNTS.MANAGER.uid
+      );
+      expect(mockAuditLogService.createAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          entityType: 'procedureChecklist',
+          entityId: 'checklist-1',
+          action: 'edit',
+          userId: TEST_ACCOUNTS.MANAGER.uid,
+          userEmail: TEST_ACCOUNTS.MANAGER.email
+        })
+      );
+    });
+
+    it('should deny user from updating procedure/checklist', async () => {
+      const updateData = {
+        title: 'Updated Title',
+        description: 'Updated Description',
+        items: []
+      };
+
+      await expect(
+        ProcedureChecklistService.updateProcedureChecklist(
+          'checklist-1',
+          updateData as any,
+          UserRole.USER,
+          TEST_ACCOUNTS.USER.uid
+        )
+      ).rejects.toThrow('Insufficient permissions to update procedure/checklist');
+
+      expect(mockProcedureChecklistRepository.updateProcedureChecklist).not.toHaveBeenCalled();
+    });
+
+    it('should handle non-existent checklist during update', async () => {
+      const updateData = {
+        title: 'Updated Title',
+        description: 'Updated Description',
+        items: []
+      };
+
+      mockProcedureChecklistRepository.getProcedureChecklist.mockResolvedValue(null);
+
+      await expect(
+        ProcedureChecklistService.updateProcedureChecklist(
+          'non-existent',
+          updateData as any,
+          UserRole.MANAGER,
+          TEST_ACCOUNTS.MANAGER.uid
+        )
+      ).rejects.toThrow('Failed to update procedure/checklist');
+
+      expect(mockProcedureChecklistRepository.updateProcedureChecklist).not.toHaveBeenCalled();
+    });
+
+    it('should handle repository error during update', async () => {
+      const mockChecklist = {
+        id: 'checklist-1',
+        title: 'Original Title',
+        description: 'Original Description',
+        items: [],
+        createdBy: TEST_ACCOUNTS.ADMIN.uid,
+        updatedBy: TEST_ACCOUNTS.ADMIN.uid
+      };
+
+      const updateData = {
+        title: 'Updated Title',
+        description: 'Updated Description',
+        items: []
+      };
+
+      mockProcedureChecklistRepository.getProcedureChecklist.mockResolvedValue(mockChecklist);
+      mockProcedureChecklistRepository.updateProcedureChecklist.mockRejectedValue(new Error('Database error'));
+
+      await expect(
+        ProcedureChecklistService.updateProcedureChecklist(
+          'checklist-1',
+          updateData as any,
+          UserRole.MANAGER,
+          TEST_ACCOUNTS.MANAGER.uid
+        )
+      ).rejects.toThrow('Failed to update procedure/checklist');
+    });
+  });
+
+  // Test softDeleteProcedureChecklist method
+  describe('Soft Delete Procedure/Checklist Tests', () => {
+    it('should allow admin to soft delete procedure/checklist', async () => {
+      const mockChecklist = {
+        id: 'checklist-1',
+        title: 'Test Checklist',
+        description: 'Test Description',
+        items: [],
+        createdBy: TEST_ACCOUNTS.ADMIN.uid,
+        updatedBy: TEST_ACCOUNTS.ADMIN.uid,
+        isDeleted: false
+      };
+
+      mockProcedureChecklistRepository.getProcedureChecklist.mockResolvedValue(mockChecklist);
+      mockProcedureChecklistRepository.softDeleteProcedureChecklist.mockResolvedValue(undefined);
+      mockUserService.getUserEmail.mockResolvedValue(TEST_ACCOUNTS.ADMIN.email);
+      mockAuditLogService.createAuditLog.mockResolvedValue('audit-id');
+      mockAuditLogService.createChangeDetails.mockReturnValue('Deleted procedure/checklist');
+
+      await ProcedureChecklistService.softDeleteProcedureChecklist(
+        'checklist-1',
+        UserRole.ADMIN,
+        TEST_ACCOUNTS.ADMIN.uid
+      );
+
+      expect(mockProcedureChecklistRepository.getProcedureChecklist).toHaveBeenCalledWith('checklist-1');
+      expect(mockProcedureChecklistRepository.softDeleteProcedureChecklist).toHaveBeenCalledWith(
+        'checklist-1',
+        TEST_ACCOUNTS.ADMIN.uid
+      );
+      expect(mockAuditLogService.createAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          entityType: 'procedureChecklist',
+          entityId: 'checklist-1',
+          action: 'delete',
+          userId: TEST_ACCOUNTS.ADMIN.uid,
+          userEmail: TEST_ACCOUNTS.ADMIN.email,
+          previousValues: mockChecklist
+        })
+      );
+    });
+
+    it('should allow manager to soft delete procedure/checklist', async () => {
+      const mockChecklist = {
+        id: 'checklist-1',
+        title: 'Test Checklist',
+        description: 'Test Description',
+        items: [],
+        createdBy: TEST_ACCOUNTS.ADMIN.uid,
+        updatedBy: TEST_ACCOUNTS.ADMIN.uid,
+        isDeleted: false
+      };
+
+      mockProcedureChecklistRepository.getProcedureChecklist.mockResolvedValue(mockChecklist);
+      mockProcedureChecklistRepository.softDeleteProcedureChecklist.mockResolvedValue(undefined);
+      mockUserService.getUserEmail.mockResolvedValue(TEST_ACCOUNTS.MANAGER.email);
+
+      await ProcedureChecklistService.softDeleteProcedureChecklist(
+        'checklist-1',
+        UserRole.MANAGER,
+        TEST_ACCOUNTS.MANAGER.uid
+      );
+
+      expect(mockProcedureChecklistRepository.softDeleteProcedureChecklist).toHaveBeenCalledWith(
+        'checklist-1',
+        TEST_ACCOUNTS.MANAGER.uid
+      );
+    });
+
+    it('should deny user from soft deleting procedure/checklist', async () => {
+      await expect(
+        ProcedureChecklistService.softDeleteProcedureChecklist(
+          'checklist-1',
+          UserRole.USER,
+          TEST_ACCOUNTS.USER.uid
+        )
+      ).rejects.toThrow('Insufficient permissions to delete procedure/checklist');
+
+      expect(mockProcedureChecklistRepository.softDeleteProcedureChecklist).not.toHaveBeenCalled();
+    });
+
+    it('should handle non-existent checklist during delete', async () => {
+      mockProcedureChecklistRepository.getProcedureChecklist.mockResolvedValue(null);
+
+      await expect(
+        ProcedureChecklistService.softDeleteProcedureChecklist(
+          'non-existent',
+          UserRole.ADMIN,
+          TEST_ACCOUNTS.ADMIN.uid
+        )
+      ).rejects.toThrow('Failed to delete procedure/checklist');
+
+      expect(mockProcedureChecklistRepository.softDeleteProcedureChecklist).not.toHaveBeenCalled();
+    });
+
+    it('should handle repository error during delete', async () => {
+      const mockChecklist = {
+        id: 'checklist-1',
+        title: 'Test Checklist',
+        description: 'Test Description',
+        items: [],
+        createdBy: TEST_ACCOUNTS.ADMIN.uid,
+        updatedBy: TEST_ACCOUNTS.ADMIN.uid
+      };
+
+      mockProcedureChecklistRepository.getProcedureChecklist.mockResolvedValue(mockChecklist);
+      mockProcedureChecklistRepository.softDeleteProcedureChecklist.mockRejectedValue(new Error('Database error'));
+
+      await expect(
+        ProcedureChecklistService.softDeleteProcedureChecklist(
+          'checklist-1',
+          UserRole.ADMIN,
+          TEST_ACCOUNTS.ADMIN.uid
+        )
+      ).rejects.toThrow('Failed to delete procedure/checklist');
+    });
+  });
+
+  // Test restoreProcedureChecklist method
+  describe('Restore Procedure/Checklist Tests', () => {
+    it('should allow admin to restore procedure/checklist', async () => {
+      const mockChecklist = {
+        id: 'checklist-1',
+        title: 'Test Checklist',
+        description: 'Test Description',
+        items: [],
+        createdBy: TEST_ACCOUNTS.ADMIN.uid,
+        updatedBy: TEST_ACCOUNTS.ADMIN.uid,
+        isDeleted: true
+      };
+
+      mockProcedureChecklistRepository.getProcedureChecklist.mockResolvedValue(mockChecklist);
+      mockProcedureChecklistRepository.restoreProcedureChecklist.mockResolvedValue(undefined);
+      mockUserService.getUserEmail.mockResolvedValue(TEST_ACCOUNTS.ADMIN.email);
+      mockAuditLogService.createAuditLog.mockResolvedValue('audit-id');
+      mockAuditLogService.createChangeDetails.mockReturnValue('Restored procedure/checklist');
+
+      await ProcedureChecklistService.restoreProcedureChecklist(
+        'checklist-1',
+        UserRole.ADMIN,
+        TEST_ACCOUNTS.ADMIN.uid
+      );
+
+      expect(mockProcedureChecklistRepository.getProcedureChecklist).toHaveBeenCalledWith('checklist-1');
+      expect(mockProcedureChecklistRepository.restoreProcedureChecklist).toHaveBeenCalledWith(
+        'checklist-1',
+        TEST_ACCOUNTS.ADMIN.uid
+      );
+      expect(mockAuditLogService.createAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          entityType: 'procedureChecklist',
+          entityId: 'checklist-1',
+          action: 'restore',
+          userId: TEST_ACCOUNTS.ADMIN.uid,
+          userEmail: TEST_ACCOUNTS.ADMIN.email,
+          previousValues: mockChecklist
+        })
+      );
+    });
+
+    it('should deny manager from restoring procedure/checklist', async () => {
+      await expect(
+        ProcedureChecklistService.restoreProcedureChecklist(
+          'checklist-1',
+          UserRole.MANAGER,
+          TEST_ACCOUNTS.MANAGER.uid
+        )
+      ).rejects.toThrow('Insufficient permissions to restore procedure/checklist');
+
+      expect(mockProcedureChecklistRepository.restoreProcedureChecklist).not.toHaveBeenCalled();
+    });
+
+    it('should deny user from restoring procedure/checklist', async () => {
+      await expect(
+        ProcedureChecklistService.restoreProcedureChecklist(
+          'checklist-1',
+          UserRole.USER,
+          TEST_ACCOUNTS.USER.uid
+        )
+      ).rejects.toThrow('Insufficient permissions to restore procedure/checklist');
+
+      expect(mockProcedureChecklistRepository.restoreProcedureChecklist).not.toHaveBeenCalled();
+    });
+
+    it('should handle non-existent checklist during restore', async () => {
+      mockProcedureChecklistRepository.getProcedureChecklist.mockResolvedValue(null);
+
+      await expect(
+        ProcedureChecklistService.restoreProcedureChecklist(
+          'non-existent',
+          UserRole.ADMIN,
+          TEST_ACCOUNTS.ADMIN.uid
+        )
+      ).rejects.toThrow('Failed to restore procedure/checklist');
+
+      expect(mockProcedureChecklistRepository.restoreProcedureChecklist).not.toHaveBeenCalled();
+    });
+
+    it('should handle repository error during restore', async () => {
+      const mockChecklist = {
+        id: 'checklist-1',
+        title: 'Test Checklist',
+        description: 'Test Description',
+        items: [],
+        createdBy: TEST_ACCOUNTS.ADMIN.uid,
+        updatedBy: TEST_ACCOUNTS.ADMIN.uid
+      };
+
+      mockProcedureChecklistRepository.getProcedureChecklist.mockResolvedValue(mockChecklist);
+      mockProcedureChecklistRepository.restoreProcedureChecklist.mockRejectedValue(new Error('Database error'));
+
+      await expect(
+        ProcedureChecklistService.restoreProcedureChecklist(
+          'checklist-1',
+          UserRole.ADMIN,
+          TEST_ACCOUNTS.ADMIN.uid
+        )
+      ).rejects.toThrow('Failed to restore procedure/checklist');
+    });
+  });
+
+  // Test processChecklistItems method (via createProcedureChecklist)
+  describe('Process Checklist Items Tests', () => {
+    it('should process items with all fields correctly', async () => {
       const formData = {
         title: 'Test Checklist',
         description: 'Test Description',
         items: [
-          { 
-            id: '1', 
-            title: 'Item with image', 
-            description: 'Description', 
-            image: 'base64-image-data' 
+          {
+            id: 'item-1',
+            topic: 'Safety',
+            content: 'Check equipment',
+            number: 1,
+            link: 'https://example.com',
+            file: 'document.pdf'
           },
-        ],
+          {
+            id: 'item-2',
+            topic: 'Equipment',
+            content: 'Verify setup',
+            number: 2,
+            link: '',
+            file: ''
+          }
+        ]
       };
-      
-      // Mock processChecklistItems to simulate image processing
-      const processedItems = [
-        { 
-          id: '1', 
-          title: 'Item with image', 
-          description: 'Description', 
-          imageUrl: 'https://storage.example.com/processed-image.jpg' 
-        },
-      ];
-      
-      (ProcedureChecklistService as any).processChecklistItems = jest.fn().mockResolvedValue(processedItems);
-      mockProcedureChecklistRepository.createProcedureChecklist.mockResolvedValue('new-checklist-id');
-      
+
+      mockProcedureChecklistRepository.createProcedureChecklist.mockResolvedValue('checklist-id');
+      mockUserService.getUserEmail.mockResolvedValue(TEST_ACCOUNTS.ADMIN.email);
+      mockAuditLogService.createAuditLog.mockResolvedValue('audit-id');
+      mockAuditLogService.createChangeDetails.mockReturnValue('Created procedure/checklist');
+
       await ProcedureChecklistService.createProcedureChecklist(
         formData as any,
         UserRole.ADMIN,
         TEST_ACCOUNTS.ADMIN.uid
       );
-      
+
       expect(mockProcedureChecklistRepository.createProcedureChecklist).toHaveBeenCalledWith(
         expect.objectContaining({
-          items: processedItems,
+          items: [
+            {
+              id: 'item-1',
+              topic: 'Safety',
+              content: 'Check equipment',
+              number: 1,
+              link: 'https://example.com',
+              file: 'document.pdf'
+            },
+            {
+              id: 'item-2',
+              topic: 'Equipment',
+              content: 'Verify setup',
+              number: 2
+              // link and file should be omitted when empty
+            }
+          ]
         }),
         TEST_ACCOUNTS.ADMIN.uid
       );
+    });
+
+    it('should handle new image upload during item processing', async () => {
+      const formData = {
+        title: 'Test Checklist',
+        description: 'Test Description',
+        items: [
+          {
+            id: 'item-1',
+            topic: 'Safety',
+            content: 'Check equipment',
+            number: 1,
+            image: 'data:image/jpeg;base64,test123'
+          }
+        ]
+      };
+
+      mockImageService.uploadImage.mockResolvedValue('https://example.com/uploaded-image.jpg');
+      mockProcedureChecklistRepository.createProcedureChecklist.mockResolvedValue('checklist-id');
+      mockUserService.getUserEmail.mockResolvedValue(TEST_ACCOUNTS.ADMIN.email);
+      mockAuditLogService.createAuditLog.mockResolvedValue('audit-id');
+
+      await ProcedureChecklistService.createProcedureChecklist(
+        formData as any,
+        UserRole.ADMIN,
+        TEST_ACCOUNTS.ADMIN.uid
+      );
+
+      expect(mockImageService.uploadImage).toHaveBeenCalledWith(
+        'data:image/jpeg;base64,test123',
+        expect.stringMatching(/^\d+_item-1\.jpg$/),
+        'procedures_checklists/images'
+      );
+
+      expect(mockProcedureChecklistRepository.createProcedureChecklist).toHaveBeenCalledWith(
+        expect.objectContaining({
+          items: [
+            expect.objectContaining({
+              id: 'item-1',
+              topic: 'Safety',
+              content: 'Check equipment',
+              number: 1,
+              image: 'https://example.com/uploaded-image.jpg'
+            })
+          ]
+        }),
+        TEST_ACCOUNTS.ADMIN.uid
+      );
+    });
+
+    it('should handle file URI image upload during item processing', async () => {
+      const formData = {
+        title: 'Test Checklist',
+        description: 'Test Description',
+        items: [
+          {
+            id: 'item-1',
+            topic: 'Safety',
+            content: 'Check equipment',
+            number: 1,
+            image: 'file:///path/to/image.jpg'
+          }
+        ]
+      };
+
+      mockImageService.uploadImage.mockResolvedValue('https://example.com/uploaded-image.jpg');
+      mockProcedureChecklistRepository.createProcedureChecklist.mockResolvedValue('checklist-id');
+      mockUserService.getUserEmail.mockResolvedValue(TEST_ACCOUNTS.ADMIN.email);
+
+      await ProcedureChecklistService.createProcedureChecklist(
+        formData as any,
+        UserRole.ADMIN,
+        TEST_ACCOUNTS.ADMIN.uid
+      );
+
+      expect(mockImageService.uploadImage).toHaveBeenCalledWith(
+        'file:///path/to/image.jpg',
+        expect.stringMatching(/^\d+_item-1\.jpg$/),
+        'procedures_checklists/images'
+      );
+    });
+
+    it('should preserve existing image URLs during item processing', async () => {
+      const formData = {
+        title: 'Test Checklist',
+        description: 'Test Description',
+        items: [
+          {
+            id: 'item-1',
+            topic: 'Safety',
+            content: 'Check equipment',
+            number: 1,
+            image: 'https://example.com/existing-image.jpg'
+          }
+        ]
+      };
+
+      mockProcedureChecklistRepository.createProcedureChecklist.mockResolvedValue('checklist-id');
+      mockUserService.getUserEmail.mockResolvedValue(TEST_ACCOUNTS.ADMIN.email);
+
+      await ProcedureChecklistService.createProcedureChecklist(
+        formData as any,
+        UserRole.ADMIN,
+        TEST_ACCOUNTS.ADMIN.uid
+      );
+
+      expect(mockImageService.uploadImage).not.toHaveBeenCalled();
+      expect(mockProcedureChecklistRepository.createProcedureChecklist).toHaveBeenCalledWith(
+        expect.objectContaining({
+          items: [
+            expect.objectContaining({
+              image: 'https://example.com/existing-image.jpg'
+            })
+          ]
+        }),
+        TEST_ACCOUNTS.ADMIN.uid
+      );
+    });
+
+    it('should skip blob URLs during item processing', async () => {
+      const formData = {
+        title: 'Test Checklist',
+        description: 'Test Description',
+        items: [
+          {
+            id: 'item-1',
+            topic: 'Safety',
+            content: 'Check equipment',
+            number: 1,
+            image: 'blob:http://localhost:3000/blob-id'
+          }
+        ]
+      };
+
+      mockProcedureChecklistRepository.createProcedureChecklist.mockResolvedValue('checklist-id');
+      mockUserService.getUserEmail.mockResolvedValue(TEST_ACCOUNTS.ADMIN.email);
+
+      await ProcedureChecklistService.createProcedureChecklist(
+        formData as any,
+        UserRole.ADMIN,
+        TEST_ACCOUNTS.ADMIN.uid
+      );
+
+      expect(mockImageService.uploadImage).not.toHaveBeenCalled();
+      expect(mockProcedureChecklistRepository.createProcedureChecklist).toHaveBeenCalledWith(
+        expect.objectContaining({
+          items: [
+            expect.objectContaining({
+              id: 'item-1',
+              topic: 'Safety',
+              content: 'Check equipment',
+              number: 1
+              // image should not be included
+            })
+          ]
+        }),
+        TEST_ACCOUNTS.ADMIN.uid
+      );
+    });
+
+    it('should continue processing when image upload fails', async () => {
+      const formData = {
+        title: 'Test Checklist',
+        description: 'Test Description',
+        items: [
+          {
+            id: 'item-1',
+            topic: 'Safety',
+            content: 'Check equipment',
+            number: 1,
+            image: 'data:image/jpeg;base64,test123'
+          }
+        ]
+      };
+
+      mockImageService.uploadImage.mockRejectedValue(new Error('Upload failed'));
+      mockProcedureChecklistRepository.createProcedureChecklist.mockResolvedValue('checklist-id');
+      mockUserService.getUserEmail.mockResolvedValue(TEST_ACCOUNTS.ADMIN.email);
+
+      await ProcedureChecklistService.createProcedureChecklist(
+        formData as any,
+        UserRole.ADMIN,
+        TEST_ACCOUNTS.ADMIN.uid
+      );
+
+      expect(mockProcedureChecklistRepository.createProcedureChecklist).toHaveBeenCalledWith(
+        expect.objectContaining({
+          items: [
+            expect.objectContaining({
+              id: 'item-1',
+              topic: 'Safety',
+              content: 'Check equipment',
+              number: 1
+              // image should not be included due to upload failure
+            })
+          ]
+        }),
+        TEST_ACCOUNTS.ADMIN.uid
+      );
+    });
+  });
+
+  // Test image processing and validation
+  describe('Image Management Tests', () => {
+    it('should handle image upload correctly', async () => {
+      const mockUploadImage = jest.fn().mockResolvedValue('https://example.com/uploaded-image.jpg');
+      (mockImageService.uploadImage as jest.Mock) = mockUploadImage;
+
+      const result = await ProcedureChecklistService.uploadImage('data:image/jpeg;base64,test', 'test.jpg');
+
+      expect(result).toBe('https://example.com/uploaded-image.jpg');
+      expect(mockUploadImage).toHaveBeenCalledWith('data:image/jpeg;base64,test', 'test.jpg', 'procedures_checklists/images');
+    });
+
+    it('should handle image deletion correctly', async () => {
+      const mockDeleteImage = jest.fn().mockResolvedValue(undefined);
+      (mockImageService.deleteImage as jest.Mock) = mockDeleteImage;
+
+      await ProcedureChecklistService.deleteImage('https://example.com/image.jpg');
+
+      expect(mockDeleteImage).toHaveBeenCalledWith('https://example.com/image.jpg');
     });
   });
 });
