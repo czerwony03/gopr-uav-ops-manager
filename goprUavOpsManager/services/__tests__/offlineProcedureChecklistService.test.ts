@@ -26,6 +26,7 @@ jest.mock('@/utils/imageCache', () => ({
 jest.mock('@/utils/networkConnectivity', () => ({
   NetworkConnectivity: {
     isConnected: jest.fn(),
+    getConnectionStatus: jest.fn(),
     onConnectivityChange: jest.fn(),
   }
 }));

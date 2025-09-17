@@ -5,7 +5,8 @@ jest.mock('@/repositories/ProcedureChecklistRepository', () => ({
     getProcedureChecklist: jest.fn(),
     createProcedureChecklist: jest.fn(),
     updateProcedureChecklist: jest.fn(),
-    deleteProcedureChecklist: jest.fn(),
+    softDeleteProcedureChecklist: jest.fn(),
+    restoreProcedureChecklist: jest.fn(),
   }
 }));
 
@@ -25,6 +26,8 @@ jest.mock('../userService', () => ({
 jest.mock('../imageService', () => ({
   ImageService: {
     processImages: jest.fn().mockResolvedValue([]),
+    uploadImage: jest.fn().mockResolvedValue('uploaded-image-url'),
+    deleteImage: jest.fn().mockResolvedValue(undefined),
   }
 }));
 
