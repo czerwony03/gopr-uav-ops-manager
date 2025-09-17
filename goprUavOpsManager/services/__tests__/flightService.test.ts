@@ -6,6 +6,7 @@ jest.mock('@/repositories/FlightRepository', () => ({
     createFlight: jest.fn(),
     updateFlight: jest.fn(),
     deleteFlight: jest.fn(),
+    getPaginatedFlights: jest.fn(),
   }
 }));
 
@@ -41,6 +42,15 @@ describe('FlightService', () => {
     mockFlightRepository.createFlight.mockResolvedValue('new-flight-id');
     mockFlightRepository.getFlight.mockResolvedValue(mockFlight);
     mockFlightRepository.getFlights.mockResolvedValue([mockFlight]);
+    mockFlightRepository.updateFlight.mockResolvedValue(undefined);
+    mockFlightRepository.getPaginatedFlights.mockResolvedValue({
+      flights: [mockFlight],
+      totalCount: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+      currentPage: 1,
+      totalPages: 1
+    });
     mockAuditLogService.createAuditLog.mockResolvedValue('audit-log-id');
     mockAuditLogService.createChangeDetails.mockReturnValue('Flight created');
     mockUserService.getUserEmail.mockResolvedValue('test@example.com');
@@ -323,6 +333,175 @@ describe('FlightService', () => {
           userEmail: TEST_ACCOUNTS.USER.email,
           details: 'Flight created',
         })
+      );
+    });
+  });
+
+  describe('updateFlight', () => {
+    const existingFlight = {
+      id: 'flight-1',
+      droneId: 'drone-123',
+      userId: TEST_ACCOUNTS.USER.uid,
+      date: '2023-12-01',
+      location: 'Test Location',
+      flightCategory: 'A1' as const,
+      operationType: 'IR' as const,
+      activityType: 'Individual training' as const,
+      startTime: '2023-12-01T10:00:00Z',
+      endTime: '2023-12-01T11:00:00Z',
+      conditions: 'Good weather'
+    };
+
+    beforeEach(() => {
+      mockFlightRepository.getFlight.mockResolvedValue(existingFlight);
+    });
+
+    it('should update flight by owner', async () => {
+      const updateData = { conditions: 'Updated conditions' };
+      
+      await FlightService.updateFlight('flight-1', updateData, UserRole.USER, TEST_ACCOUNTS.USER.uid);
+      
+      expect(mockFlightRepository.updateFlight).toHaveBeenCalledWith('flight-1', updateData, TEST_ACCOUNTS.USER.uid);
+      expect(mockAuditLogService.createAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          entityType: 'flight',
+          entityId: 'flight-1',
+          action: 'edit'
+        })
+      );
+    });
+
+    it('should allow admin to update any flight', async () => {
+      const updateData = { conditions: 'Admin update' };
+      
+      await FlightService.updateFlight('flight-1', updateData, UserRole.ADMIN, TEST_ACCOUNTS.ADMIN.uid);
+      
+      expect(mockFlightRepository.updateFlight).toHaveBeenCalledWith('flight-1', updateData, TEST_ACCOUNTS.ADMIN.uid);
+    });
+
+    it('should allow manager to update any flight', async () => {
+      const updateData = { conditions: 'Manager update' };
+      
+      await FlightService.updateFlight('flight-1', updateData, UserRole.MANAGER, TEST_ACCOUNTS.MANAGER.uid);
+      
+      expect(mockFlightRepository.updateFlight).toHaveBeenCalledWith('flight-1', updateData, TEST_ACCOUNTS.MANAGER.uid);
+    });
+
+    it('should throw error when flight not found', async () => {
+      mockFlightRepository.getFlight.mockResolvedValue(null);
+      
+      await expect(
+        FlightService.updateFlight('non-existent', {}, UserRole.ADMIN, TEST_ACCOUNTS.ADMIN.uid)
+      ).rejects.toThrow('Failed to update flight');
+    });
+
+    it('should throw error when non-owner user tries to update', async () => {
+      const otherUserFlight = { ...existingFlight, userId: 'other-user-id' };
+      mockFlightRepository.getFlight.mockResolvedValue(otherUserFlight);
+      
+      await expect(
+        FlightService.updateFlight('flight-1', {}, UserRole.USER, TEST_ACCOUNTS.USER.uid)
+      ).rejects.toThrow('Failed to update flight');
+    });
+
+    it('should handle update errors gracefully', async () => {
+      mockFlightRepository.updateFlight.mockRejectedValue(new Error('Update failed'));
+      
+      await expect(
+        FlightService.updateFlight('flight-1', {}, UserRole.USER, TEST_ACCOUNTS.USER.uid)
+      ).rejects.toThrow('Failed to update flight');
+    });
+
+    it('should include previous and new values in audit log', async () => {
+      const updateData = { conditions: 'Updated conditions', additionalInfo: 'Updated notes' };
+      
+      await FlightService.updateFlight('flight-1', updateData, UserRole.USER, TEST_ACCOUNTS.USER.uid);
+      
+      expect(mockAuditLogService.createAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          previousValues: existingFlight,
+          newValues: { ...existingFlight, ...updateData }
+        })
+      );
+    });
+  });
+
+  describe('getPaginatedFlights', () => {
+    const mockPaginatedResponse = {
+      flights: [mockFlight],
+      totalCount: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+      currentPage: 1,
+      totalPages: 1
+    };
+
+    beforeEach(() => {
+      mockFlightRepository.getPaginatedFlights.mockResolvedValue(mockPaginatedResponse);
+    });
+
+    it('should get paginated flights with default parameters', async () => {
+      const result = await FlightService.getPaginatedFlights(UserRole.ADMIN, TEST_ACCOUNTS.ADMIN.uid);
+      
+      expect(mockFlightRepository.getPaginatedFlights).toHaveBeenCalledWith(
+        {},
+        UserRole.ADMIN,
+        TEST_ACCOUNTS.ADMIN.uid
+      );
+      expect(result).toEqual(mockPaginatedResponse);
+    });
+
+    it('should get paginated flights with query parameters', async () => {
+      const queryParams = {
+        pageSize: 10,
+        pageNumber: 2,
+        droneId: 'drone-123'
+      };
+      
+      const result = await FlightService.getPaginatedFlights(
+        UserRole.MANAGER, 
+        TEST_ACCOUNTS.MANAGER.uid, 
+        queryParams
+      );
+      
+      expect(mockFlightRepository.getPaginatedFlights).toHaveBeenCalledWith(
+        queryParams,
+        UserRole.MANAGER,
+        TEST_ACCOUNTS.MANAGER.uid
+      );
+      expect(result).toEqual(mockPaginatedResponse);
+    });
+
+    it('should handle user role pagination correctly', async () => {
+      await FlightService.getPaginatedFlights(UserRole.USER, TEST_ACCOUNTS.USER.uid);
+      
+      expect(mockFlightRepository.getPaginatedFlights).toHaveBeenCalledWith(
+        {},
+        UserRole.USER,
+        TEST_ACCOUNTS.USER.uid
+      );
+    });
+
+    it('should pass through complex query parameters', async () => {
+      const complexQuery = {
+        pageSize: 25,
+        pageNumber: 3,
+        startDate: new Date('2023-01-01'),
+        endDate: new Date('2023-12-31'),
+        droneId: 'drone-456',
+        userId: 'specific-user'
+      };
+      
+      await FlightService.getPaginatedFlights(
+        UserRole.ADMIN, 
+        TEST_ACCOUNTS.ADMIN.uid, 
+        complexQuery
+      );
+      
+      expect(mockFlightRepository.getPaginatedFlights).toHaveBeenCalledWith(
+        complexQuery,
+        UserRole.ADMIN,
+        TEST_ACCOUNTS.ADMIN.uid
       );
     });
   });

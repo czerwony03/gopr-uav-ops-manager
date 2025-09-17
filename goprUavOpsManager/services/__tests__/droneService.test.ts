@@ -6,6 +6,8 @@ jest.mock('@/repositories/DroneRepository', () => ({
     createDrone: jest.fn(),
     updateDrone: jest.fn(),
     deleteDrone: jest.fn(),
+    softDeleteDrone: jest.fn(),
+    restoreDrone: jest.fn(),
   }
 }));
 
@@ -26,6 +28,7 @@ jest.mock('../imageService', () => ({
   ImageService: {
     processImages: jest.fn().mockResolvedValue([]),
     uploadImage: jest.fn().mockResolvedValue('https://uploaded-image.jpg'),
+    deleteImage: jest.fn().mockResolvedValue(undefined),
   }
 }));
 
@@ -50,11 +53,15 @@ describe('DroneService', () => {
     mockDroneRepository.createDrone.mockResolvedValue('new-drone-id');
     mockDroneRepository.getDrone.mockResolvedValue(mockDrone);
     mockDroneRepository.getDrones.mockResolvedValue([mockDrone]);
+    mockDroneRepository.updateDrone.mockResolvedValue(undefined);
+    mockDroneRepository.softDeleteDrone.mockResolvedValue(undefined);
+    mockDroneRepository.restoreDrone.mockResolvedValue(undefined);
     mockAuditLogService.createAuditLog.mockResolvedValue('audit-log-id');
     mockAuditLogService.createChangeDetails.mockReturnValue('Drone created');
     mockUserService.getUserEmail.mockResolvedValue('test@example.com');
     mockImageService.processImages.mockResolvedValue([]);
     mockImageService.uploadImage.mockResolvedValue('https://uploaded-image.jpg');
+    mockImageService.deleteImage.mockResolvedValue(undefined);
   });
 
   describe('Permission Logic Tests', () => {
@@ -450,6 +457,231 @@ describe('DroneService', () => {
           TEST_ACCOUNTS.ADMIN.uid
         );
       });
+    });
+  });
+
+  describe('updateDrone', () => {
+    const existingDrone = {
+      id: 'drone-1',
+      name: 'Existing Drone',
+      inventoryCode: 'INV-001',
+      location: 'Warehouse A',
+      registrationNumber: 'REG-001',
+      totalFlightTime: 120,
+      equipmentRegistrationNumber: 'EQ-001',
+      yearOfCommissioning: 2023,
+      yearOfManufacture: 2022,
+      insurance: 'Policy-123',
+      callSign: 'CALL-001',
+      weight: 2500,
+      maxTakeoffWeight: 3000,
+      operatingTime: 30,
+      range: 5000,
+      dimensions: { length: 400, width: 300, height: 200 },
+      battery: { type: 'LiPo', capacity: 5000, voltage: 14.8 },
+      maxSpeed: 60,
+      isDeleted: false,
+      images: ['old-image.jpg']
+    };
+
+    beforeEach(() => {
+      mockDroneRepository.getDrone.mockResolvedValue(existingDrone);
+    });
+
+    it('should update drone with new data', async () => {
+      const updateData = { name: 'Updated Drone Name' };
+      
+      await DroneService.updateDrone('drone-1', updateData, UserRole.ADMIN, TEST_ACCOUNTS.ADMIN.uid);
+      
+      expect(mockDroneRepository.updateDrone).toHaveBeenCalledWith('drone-1', updateData, TEST_ACCOUNTS.ADMIN.uid);
+      expect(mockAuditLogService.createAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          entityType: 'drone',
+          entityId: 'drone-1',
+          action: 'edit'
+        })
+      );
+    });
+
+    it('should throw error when drone not found', async () => {
+      mockDroneRepository.getDrone.mockResolvedValue(null);
+      
+      await expect(
+        DroneService.updateDrone('non-existent', {}, UserRole.ADMIN, TEST_ACCOUNTS.ADMIN.uid)
+      ).rejects.toThrow('Failed to update drone');
+    });
+
+    it('should throw error when updating deleted drone as non-admin', async () => {
+      const deletedDrone = { ...existingDrone, isDeleted: true };
+      mockDroneRepository.getDrone.mockResolvedValue(deletedDrone);
+      
+      await expect(
+        DroneService.updateDrone('drone-1', {}, UserRole.MANAGER, TEST_ACCOUNTS.MANAGER.uid)
+      ).rejects.toThrow('Failed to update drone');
+    });
+
+    it('should process new images and clean up old ones', async () => {
+      const updateData = { images: ['new-image1.jpg', 'new-image2.jpg'] };
+      mockImageService.processImages.mockResolvedValue(['processed1.jpg', 'processed2.jpg']);
+      
+      await DroneService.updateDrone('drone-1', updateData, UserRole.ADMIN, TEST_ACCOUNTS.ADMIN.uid);
+      
+      expect(mockImageService.processImages).toHaveBeenCalledWith(
+        ['new-image1.jpg', 'new-image2.jpg'],
+        'drones/images',
+        'drone-1'
+      );
+      expect(mockImageService.deleteImage).toHaveBeenCalledWith('old-image.jpg');
+    });
+
+    it('should handle update errors gracefully', async () => {
+      mockDroneRepository.updateDrone.mockRejectedValue(new Error('Update failed'));
+      
+      await expect(
+        DroneService.updateDrone('drone-1', {}, UserRole.ADMIN, TEST_ACCOUNTS.ADMIN.uid)
+      ).rejects.toThrow('Failed to update drone');
+    });
+
+    it('should not allow users to update drones', async () => {
+      await expect(
+        DroneService.updateDrone('drone-1', {}, UserRole.USER, TEST_ACCOUNTS.USER.uid)
+      ).rejects.toThrow('Insufficient permissions to update drone');
+    });
+  });
+
+  describe('softDeleteDrone', () => {
+    const existingDrone = {
+      id: 'drone-1',
+      name: 'Test Drone',
+      inventoryCode: 'INV-001',
+      location: 'Warehouse A',
+      registrationNumber: 'REG-001',
+      totalFlightTime: 120,
+      equipmentRegistrationNumber: 'EQ-001',
+      yearOfCommissioning: 2023,
+      yearOfManufacture: 2022,
+      insurance: 'Policy-123',
+      callSign: 'CALL-001',
+      weight: 2500,
+      maxTakeoffWeight: 3000,
+      operatingTime: 30,
+      range: 5000,
+      dimensions: { length: 400, width: 300, height: 200 },
+      battery: { type: 'LiPo', capacity: 5000, voltage: 14.8 },
+      maxSpeed: 60,
+      isDeleted: false
+    };
+
+    beforeEach(() => {
+      mockDroneRepository.getDrone.mockResolvedValue(existingDrone);
+    });
+
+    it('should soft delete drone for admin', async () => {
+      await DroneService.softDeleteDrone('drone-1', UserRole.ADMIN, TEST_ACCOUNTS.ADMIN.uid);
+      
+      expect(mockDroneRepository.softDeleteDrone).toHaveBeenCalledWith('drone-1', TEST_ACCOUNTS.ADMIN.uid);
+      expect(mockAuditLogService.createAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          entityType: 'drone',
+          entityId: 'drone-1',
+          action: 'delete'
+        })
+      );
+    });
+
+    it('should soft delete drone for manager', async () => {
+      await DroneService.softDeleteDrone('drone-1', UserRole.MANAGER, TEST_ACCOUNTS.MANAGER.uid);
+      
+      expect(mockDroneRepository.softDeleteDrone).toHaveBeenCalledWith('drone-1', TEST_ACCOUNTS.MANAGER.uid);
+    });
+
+    it('should throw error for user role', async () => {
+      await expect(
+        DroneService.softDeleteDrone('drone-1', UserRole.USER, TEST_ACCOUNTS.USER.uid)
+      ).rejects.toThrow('Insufficient permissions to delete drone');
+    });
+
+    it('should throw error when drone not found', async () => {
+      mockDroneRepository.getDrone.mockResolvedValue(null);
+      
+      await expect(
+        DroneService.softDeleteDrone('non-existent', UserRole.ADMIN, TEST_ACCOUNTS.ADMIN.uid)
+      ).rejects.toThrow('Failed to delete drone');
+    });
+
+    it('should handle delete errors gracefully', async () => {
+      mockDroneRepository.softDeleteDrone.mockRejectedValue(new Error('Delete failed'));
+      
+      await expect(
+        DroneService.softDeleteDrone('drone-1', UserRole.ADMIN, TEST_ACCOUNTS.ADMIN.uid)
+      ).rejects.toThrow('Failed to delete drone');
+    });
+  });
+
+  describe('restoreDrone', () => {
+    const deletedDrone = {
+      id: 'drone-1',
+      name: 'Deleted Drone',
+      inventoryCode: 'INV-001',
+      location: 'Warehouse A',
+      registrationNumber: 'REG-001',
+      totalFlightTime: 120,
+      equipmentRegistrationNumber: 'EQ-001',
+      yearOfCommissioning: 2023,
+      yearOfManufacture: 2022,
+      insurance: 'Policy-123',
+      callSign: 'CALL-001',
+      weight: 2500,
+      maxTakeoffWeight: 3000,
+      operatingTime: 30,
+      range: 5000,
+      dimensions: { length: 400, width: 300, height: 200 },
+      battery: { type: 'LiPo', capacity: 5000, voltage: 14.8 },
+      maxSpeed: 60,
+      isDeleted: true
+    };
+
+    beforeEach(() => {
+      mockDroneRepository.getDrone.mockResolvedValue(deletedDrone);
+    });
+
+    it('should restore drone for admin', async () => {
+      await DroneService.restoreDrone('drone-1', UserRole.ADMIN, TEST_ACCOUNTS.ADMIN.uid);
+      
+      expect(mockDroneRepository.restoreDrone).toHaveBeenCalledWith('drone-1', TEST_ACCOUNTS.ADMIN.uid);
+      expect(mockAuditLogService.createAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          entityType: 'drone',
+          entityId: 'drone-1',
+          action: 'restore'
+        })
+      );
+    });
+
+    it('should throw error for non-admin roles', async () => {
+      await expect(
+        DroneService.restoreDrone('drone-1', UserRole.MANAGER, TEST_ACCOUNTS.MANAGER.uid)
+      ).rejects.toThrow('Insufficient permissions to restore drone');
+      
+      await expect(
+        DroneService.restoreDrone('drone-1', UserRole.USER, TEST_ACCOUNTS.USER.uid)
+      ).rejects.toThrow('Insufficient permissions to restore drone');
+    });
+
+    it('should throw error when drone not found', async () => {
+      mockDroneRepository.getDrone.mockResolvedValue(null);
+      
+      await expect(
+        DroneService.restoreDrone('non-existent', UserRole.ADMIN, TEST_ACCOUNTS.ADMIN.uid)
+      ).rejects.toThrow('Failed to restore drone');
+    });
+
+    it('should handle restore errors gracefully', async () => {
+      mockDroneRepository.restoreDrone.mockRejectedValue(new Error('Restore failed'));
+      
+      await expect(
+        DroneService.restoreDrone('drone-1', UserRole.ADMIN, TEST_ACCOUNTS.ADMIN.uid)
+      ).rejects.toThrow('Failed to restore drone');
     });
   });
 });
