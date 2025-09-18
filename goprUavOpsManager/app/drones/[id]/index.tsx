@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import ImageGallery from '@/components/ImageGallery';
 import EquipmentChecklistModal from '@/components/EquipmentChecklistModal';
+import ImageViewer from '@/components/ImageViewer';
 
 export default function DroneDetailsScreen() {
   const [drone, setDrone] = useState<Drone | null>(null);
@@ -28,6 +29,9 @@ export default function DroneDetailsScreen() {
   const [createdByName, setCreatedByName] = useState<string>('');
   const [updatedByName, setUpdatedByName] = useState<string>('');
   const [showEquipmentChecklist, setShowEquipmentChecklist] = useState(false);
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedStorageImages, setSelectedStorageImages] = useState<string[]>([]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const router = useRouter();
@@ -163,6 +167,29 @@ export default function DroneDetailsScreen() {
     }
   };
 
+  // Handle equipment image press - opens ImageViewer with all images from the same storage
+  const handleEquipmentImagePress = useCallback((storageId: string, imageUri: string) => {
+    if (!drone?.equipmentStorages) return;
+    
+    // Find the storage that contains this image
+    const storage = drone.equipmentStorages.find(s => s.id === storageId);
+    if (!storage) return;
+    
+    // Get all images from this storage
+    const storageImages = storage.items
+      .filter(item => item.image)
+      .map(item => item.image!);
+    
+    // Find the index of the selected image
+    const imageIndex = storageImages.findIndex(img => img === imageUri);
+    
+    if (imageIndex >= 0) {
+      setSelectedStorageImages(storageImages);
+      setSelectedImageIndex(imageIndex);
+      setImageViewerVisible(true);
+    }
+  }, [drone?.equipmentStorages]);
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -295,7 +322,12 @@ export default function DroneDetailsScreen() {
                     {storage.items.map((item) => (
                       <View key={item.id} style={styles.equipmentItem}>
                         {item.image && (
-                          <Image source={{ uri: item.image }} style={styles.equipmentImage} />
+                          <TouchableOpacity
+                            onPress={() => handleEquipmentImagePress(storage.id, item.image!)}
+                            activeOpacity={0.8}
+                          >
+                            <Image source={{ uri: item.image }} style={styles.equipmentImage} />
+                          </TouchableOpacity>
                         )}
                         <Text style={styles.equipmentName}>{item.name}</Text>
                         <Text style={styles.equipmentQuantity}>
@@ -378,6 +410,14 @@ export default function DroneDetailsScreen() {
       visible={showEquipmentChecklist}
       equipmentStorages={drone?.equipmentStorages || []}
       onClose={() => setShowEquipmentChecklist(false)}
+    />
+    
+    <ImageViewer
+      images={selectedStorageImages.map(uri => ({ uri }))}
+      imageIndex={selectedImageIndex}
+      visible={imageViewerVisible}
+      onRequestClose={() => setImageViewerVisible(false)}
+      onImageIndexChange={setSelectedImageIndex}
     />
     </SafeAreaView>
     </>
