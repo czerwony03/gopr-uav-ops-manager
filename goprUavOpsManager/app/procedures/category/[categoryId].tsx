@@ -329,16 +329,17 @@ export default function CategoryProceduresScreen() {
             </TouchableOpacity>
           </View>
         ) : procedures.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="clipboard-outline" size={64} color="#ccc" />
-          <Text style={styles.emptyTitle}>{t('procedures.empty.title')}</Text>
-          <Text style={styles.emptyDescription}>
-            {canModifyProcedures 
-              ? t('procedures.empty.descriptionCanCreate')
-              : t('procedures.empty.descriptionCannotCreate')
-            }
-          </Text>
-        </View>
+          <View style={styles.emptyContainer}>
+            <Ionicons name="clipboard-outline" size={64} color="#ccc" />
+            <Text style={styles.emptyTitle}>{t('procedures.empty.title')}</Text>
+            <Text style={styles.emptyDescription}>
+              {canModifyProcedures 
+                ? t('procedures.empty.descriptionCanCreate')
+                : t('procedures.empty.descriptionCannotCreate')
+              }
+            </Text>
+          </View>
+        ) : null
       ) : (
         <FlatList
           data={filteredProcedures}
