@@ -710,6 +710,7 @@
     "permissionDenied": "Tylko menedżerowie i administratorzy mogą tworzyć lub edytować procedury/listy kontrolne.",
     "failedToPickImage": "Nie udało się wybrać obrazu",
     "success": "Sukces",
+    "procedureCreated": "Procedura została utworzona pomyślnie",
     "procedureUpdated": "Procedura została zaktualizowana"
   },
   "contact": {

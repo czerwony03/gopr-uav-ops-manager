@@ -711,6 +711,7 @@
     "permissionDenied": "Only managers and administrators can create or edit procedures/checklists.",
     "failedToPickImage": "Failed to pick image",
     "success": "Success",
+    "procedureCreated": "Procedure created successfully",
     "procedureUpdated": "Procedure updated successfully"
   },
   "contact": {
