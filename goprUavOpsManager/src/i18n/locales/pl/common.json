@@ -3,10 +3,12 @@
     "loading": "Ładowanie...",
     "cancel": "Anuluj",
     "save": "Zapisz",
+    "create": "Utwórz",
     "delete": "Usuń",
     "edit": "Edytuj",
     "view": "Zobacz",
     "back": "Wróć",
+    "goBack": "Wróć",
     "yes": "Tak",
     "no": "Nie",
     "ok": "OK",
@@ -580,6 +582,9 @@
     "itemPlural": "elementów",
     "createdOn": "Utworzono {{date}}",
     "editProcedure": "Edycja procedury/checklisty",
+    "categories": {
+      "title": "Kategorie"
+    },
     "empty": {
       "title": "Brak procedur lub list kontrolnych",
       "descriptionCanCreate": "Utwórz swoją pierwszą procedurę lub listę kontrolną, aby rozpocząć.",
@@ -599,6 +604,61 @@
     },
     "errors": {
       "fetchFailed": "Nie udało się pobrać procedur/list kontrolnych"
+    }
+  },
+  "categories": {
+    "title": "Kategorie",
+    "loading": "Ładowanie kategorii...",
+    "addNew": "Dodaj kategorię",
+    "deleted": "USUNIĘTY",
+    "createTitle": "Utwórz kategorię",
+    "editTitle": "Edytuj kategorię",
+    "empty": {
+      "title": "Brak kategorii",
+      "descriptionCanCreate": "Utwórz pierwszą kategorię, aby organizować procedury.",
+      "descriptionCannotCreate": "Nie utworzono jeszcze żadnych kategorii.",
+      "noCategories": "Brak dostępnych kategorii"
+    },
+    "notFound": {
+      "title": "Kategoria nie została znaleziona",
+      "description": "Żądana kategoria nie mogła zostać znaleziona."
+    },
+    "delete": {
+      "title": "Usuń kategorię",
+      "confirmMessage": "Czy na pewno chcesz usunąć \"{{name}}\"? Ta akcja może być cofnięta przez administratora.",
+      "successMessage": "Kategoria została pomyślnie usunięta",
+      "errorMessage": "Nie udało się usunąć kategorii"
+    },
+    "restore": {
+      "button": "Przywróć",
+      "successMessage": "Kategoria została pomyślnie przywrócona",
+      "errorMessage": "Nie udało się przywrócić kategorii"
+    },
+    "create": {
+      "successMessage": "Kategoria została pomyślnie utworzona"
+    },
+    "edit": {
+      "successMessage": "Kategoria została pomyślnie zaktualizowana"
+    },
+    "form": {
+      "name": "Nazwa",
+      "namePlaceholder": "Nazwa kategorii",
+      "nameRequired": "Nazwa kategorii jest wymagana",
+      "description": "Opis",
+      "descriptionPlaceholder": "Opis kategorii (opcjonalne)",
+      "color": "Kolor",
+      "order": "Kolejność",
+      "orderPlaceholder": "0",
+      "orderInvalid": "Kolejność musi być liczbą dodatnią",
+      "orderHelp": "Kategorie z niższymi numerami kolejności pojawiają się pierwsze",
+      "preview": "Podgląd",
+      "previewMeta": "0 procedur",
+      "errors": {
+        "saveFailed": "Nie udało się zapisać kategorii"
+      }
+    },
+    "errors": {
+      "fetchFailed": "Nie udało się pobrać kategorii"
     }
   },
   "procedureForm": {
@@ -628,6 +688,7 @@
     "removeImage": "Usuń",
     "link": "Link",
     "linkPlaceholder": "Wprowadź link zewnętrzny (opcjonalne)",
+    "categories": "Kategorie",
     "create": "Utwórz",
     "update": "Zaktualizuj",
     "validationError": "Błąd walidacji",
