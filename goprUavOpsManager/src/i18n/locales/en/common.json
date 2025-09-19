@@ -3,10 +3,12 @@
     "loading": "Loading...",
     "cancel": "Cancel",
     "save": "Save",
+    "create": "Create",
     "delete": "Delete",
     "edit": "Edit",
     "view": "View",
     "back": "Back",
+    "goBack": "Go Back",
     "yes": "Yes",
     "no": "No",
     "ok": "OK",
@@ -554,6 +556,7 @@
   },
   "procedures": {
     "title": "Procedure/Checklist",
+    "allProcedures": "All Procedures",
     "loading": "Loading procedure/checklist...",
     "notFound": "Procedure/Checklist Not Found",
     "notFoundDescription": "The requested procedure or checklist could not be found.",
@@ -580,6 +583,9 @@
     "itemPlural": "items",
     "createdOn": "Created {{date}}",
     "editProcedure": "Edit procedure/checklist",
+    "categories": {
+      "title": "Categories"
+    },
     "empty": {
       "title": "No Procedures or Checklists",
       "descriptionCanCreate": "Create your first procedure or checklist to get started.",
@@ -599,6 +605,61 @@
     },
     "errors": {
       "fetchFailed": "Failed to fetch procedures/checklists"
+    }
+  },
+  "categories": {
+    "title": "Categories",
+    "loading": "Loading categories...",
+    "addNew": "Add Category",
+    "deleted": "DELETED",
+    "createTitle": "Create Category",
+    "editTitle": "Edit Category",
+    "empty": {
+      "title": "No Categories",
+      "descriptionCanCreate": "Create your first category to organize procedures.",
+      "descriptionCannotCreate": "No categories have been created yet.",
+      "noCategories": "No categories available"
+    },
+    "notFound": {
+      "title": "Category Not Found",
+      "description": "The requested category could not be found."
+    },
+    "delete": {
+      "title": "Delete Category",
+      "confirmMessage": "Are you sure you want to delete \"{{name}}\"? This action can be undone by an admin.",
+      "successMessage": "Category deleted successfully",
+      "errorMessage": "Failed to delete category"
+    },
+    "restore": {
+      "button": "Restore",
+      "successMessage": "Category restored successfully",
+      "errorMessage": "Failed to restore category"
+    },
+    "create": {
+      "successMessage": "Category created successfully"
+    },
+    "edit": {
+      "successMessage": "Category updated successfully"
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Category name",
+      "nameRequired": "Category name is required",
+      "description": "Description",
+      "descriptionPlaceholder": "Category description (optional)",
+      "color": "Color",
+      "order": "Order",
+      "orderPlaceholder": "0",
+      "orderInvalid": "Order must be a positive number",
+      "orderHelp": "Categories with lower order numbers appear first",
+      "preview": "Preview",
+      "previewMeta": "0 procedures",
+      "errors": {
+        "saveFailed": "Failed to save category"
+      }
+    },
+    "errors": {
+      "fetchFailed": "Failed to fetch categories"
     }
   },
   "procedureForm": {
@@ -628,6 +689,7 @@
     "removeImage": "Remove",
     "link": "Link",
     "linkPlaceholder": "Enter external link (optional)",
+    "categories": "Categories",
     "create": "Create",
     "update": "Update",
     "validationError": "Validation Error",

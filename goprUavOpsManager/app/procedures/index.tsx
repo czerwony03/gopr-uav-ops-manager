@@ -16,6 +16,7 @@ import { Category } from '@/types/Category';
 import { useAuth } from '@/contexts/AuthContext';
 import { CategoryService } from '@/services/categoryService';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
+import { MigrationService } from '@/services/migrationService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
@@ -29,6 +30,7 @@ export default function CategoriesListScreen() {
   const [categories, setCategories] = useState<CategoryWithCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [migrationRan, setMigrationRan] = useState(false);
   const { user } = useAuth();
   const { isConnected } = useNetworkStatus();
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
@@ -36,10 +38,32 @@ export default function CategoriesListScreen() {
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
 
+  // Run migrations once when the component mounts
+  const runMigrationsOnce = useCallback(async () => {
+    if (!user || migrationRan) return;
+    
+    try {
+      const needsMigration = await MigrationService.needsMigration();
+      if (needsMigration) {
+        console.log('[Categories] Running migrations...');
+        await MigrationService.runMigrations();
+        console.log('[Categories] Migrations completed successfully');
+      }
+      setMigrationRan(true);
+    } catch (error) {
+      console.error('[Categories] Migration failed:', error);
+      // Don't fail the app, just log the error
+      setMigrationRan(true);
+    }
+  }, [user, migrationRan]);
+
   const fetchCategories = useCallback(async () => {
     if (!user) return;
     
     try {
+      // Ensure migrations are run first
+      await runMigrationsOnce();
+      
       // Fetch categories
       const categoriesData = await CategoryService.getCategories(user.role);
       
@@ -73,7 +97,7 @@ export default function CategoriesListScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user, t, crossPlatformAlert]);
+  }, [user, t, crossPlatformAlert, runMigrationsOnce]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {

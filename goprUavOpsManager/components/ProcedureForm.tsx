@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,8 +14,12 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { ProcedureChecklistFormData, ChecklistItemFormData } from '@/types/ProcedureChecklist';
+import { Category, DEFAULT_CATEGORY_ID } from '@/types/Category';
+import { CategoryService } from '@/services/categoryService';
+import { useAuth } from '@/contexts/AuthContext';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import { useLocalSearchParams } from 'expo-router';
 
 interface ProcedureFormProps {
   mode: 'create' | 'edit';
@@ -29,23 +33,62 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
   const { t } = useTranslation('common');
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const crossPlatformAlert = useCrossPlatformAlert();
+  const { user } = useAuth();
+  const params = useLocalSearchParams();
+
+  // State for categories
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   // Default form data
   const defaultFormData: ProcedureChecklistFormData = {
     title: '',
     description: '',
     items: [],
+    categories: [],
   };
 
   const [formData, setFormData] = useState<ProcedureChecklistFormData>(initialData || defaultFormData);
+
+  // Fetch categories
+  const fetchCategories = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const categoriesData = await CategoryService.getCategories(user.role);
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Don't show alert here, just use default category
+      setCategories([]);
+    } finally {
+      setLoadingCategories(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
     } else if (mode === 'create') {
-      setFormData(defaultFormData);
+      let defaultCategories = [];
+      
+      // If categoryId is passed as parameter, use it
+      if (params.categoryId) {
+        defaultCategories = [params.categoryId as string];
+      } else {
+        defaultCategories = [DEFAULT_CATEGORY_ID];
+      }
+      
+      setFormData({ 
+        ...defaultFormData, 
+        categories: defaultCategories 
+      });
     }
-  }, [initialData, mode]);
+  }, [initialData, mode, params.categoryId]);
 
   const updateFormData = (field: keyof ProcedureChecklistFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -230,6 +273,79 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
               multiline
               numberOfLines={3}
             />
+
+            {/* Category Selection */}
+            <Text style={styles.label}>{t('procedureForm.categories')}</Text>
+            {loadingCategories ? (
+              <View style={styles.categoriesLoading}>
+                <ActivityIndicator size="small" color="#0066CC" />
+                <Text style={styles.categoriesLoadingText}>{t('categories.loading')}</Text>
+              </View>
+            ) : (
+              <View style={styles.categoriesContainer}>
+                {categories.length === 0 ? (
+                  <Text style={styles.noCategoriesText}>{t('categories.empty.noCategories')}</Text>
+                ) : (
+                  categories.map((category) => {
+                    const isSelected = formData.categories?.includes(category.id) || false;
+                    return (
+                      <TouchableOpacity
+                        key={category.id}
+                        style={[
+                          styles.categoryOption,
+                          isSelected && styles.categoryOptionSelected
+                        ]}
+                        onPress={() => {
+                          const currentCategories = formData.categories || [];
+                          let newCategories;
+                          
+                          if (isSelected) {
+                            // Remove category
+                            newCategories = currentCategories.filter(id => id !== category.id);
+                            // If no categories left, add default category
+                            if (newCategories.length === 0) {
+                              newCategories = [DEFAULT_CATEGORY_ID];
+                            }
+                          } else {
+                            // Add category and remove default if it was the only one
+                            if (currentCategories.length === 1 && currentCategories[0] === DEFAULT_CATEGORY_ID) {
+                              newCategories = [category.id];
+                            } else {
+                              newCategories = [...currentCategories.filter(id => id !== DEFAULT_CATEGORY_ID), category.id];
+                            }
+                          }
+                          
+                          updateFormData('categories', newCategories);
+                        }}
+                      >
+                        <View style={styles.categoryOptionContent}>
+                          {category.color && (
+                            <View style={[styles.categoryColorDot, { backgroundColor: category.color }]} />
+                          )}
+                          <Text style={[
+                            styles.categoryOptionText,
+                            isSelected && styles.categoryOptionTextSelected
+                          ]}>
+                            {category.name}
+                          </Text>
+                          {isSelected && (
+                            <Ionicons name="checkmark-circle" size={20} color="#0066CC" />
+                          )}
+                        </View>
+                        {category.description && (
+                          <Text style={[
+                            styles.categoryOptionDescription,
+                            isSelected && styles.categoryOptionDescriptionSelected
+                          ]}>
+                            {category.description}
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
+              </View>
+            )}
           </View>
 
           <View style={styles.section}>
@@ -561,5 +677,69 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  // Category selection styles
+  categoriesLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  categoriesLoadingText: {
+    marginLeft: 8,
+    color: '#666',
+  },
+  categoriesContainer: {
+    marginBottom: 8,
+  },
+  noCategoriesText: {
+    color: '#999',
+    fontStyle: 'italic',
+    padding: 16,
+    textAlign: 'center',
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+  },
+  categoryOption: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  categoryOptionSelected: {
+    backgroundColor: '#e3f2fd',
+    borderColor: '#0066CC',
+  },
+  categoryOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  categoryColorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  categoryOptionText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+    flex: 1,
+  },
+  categoryOptionTextSelected: {
+    color: '#0066CC',
+  },
+  categoryOptionDescription: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+    marginLeft: 20,
+  },
+  categoryOptionDescriptionSelected: {
+    color: '#0066CC',
   },
 });
