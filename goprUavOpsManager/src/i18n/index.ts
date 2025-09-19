@@ -26,7 +26,7 @@ const getDeviceLanguage = (): string => {
     if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
       // For web browsers, use navigator.language
       const browserLanguage = navigator.language;
-      if (browserLanguage.startsWith('en')) {
+      if (browserLanguage && browserLanguage.startsWith('en')) {
         return 'en';
       }
     } else if (typeof window === 'undefined') {
