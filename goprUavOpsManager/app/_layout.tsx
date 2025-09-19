@@ -13,6 +13,7 @@ import { captureConsoleIntegration } from '@sentry/core';
 import { CrossPlatformAlertProvider } from '@/components/CrossPlatformAlert';
 import { useEffect } from 'react';
 import '@/src/i18n';
+import { useAnalyticsScreenTracking } from '@/utils/useAnalyticsScreenTracking';
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_URL,
@@ -43,6 +44,9 @@ Sentry.init({
 function RootLayoutNavigation() {
   const { user, loading } = useAuth();
   const { t } = useTranslation('common');
+
+  // Enable automatic screen tracking for analytics
+  useAnalyticsScreenTracking();
 
   // Update Sentry user context when authentication state changes
   useEffect(() => {

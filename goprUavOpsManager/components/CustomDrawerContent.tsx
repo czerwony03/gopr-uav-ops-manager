@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { signOut } from '@/utils/firebaseUtils';
 import { useTranslation } from 'react-i18next';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import { AnalyticsService } from '@/services/analyticsService';
 
 export function CustomDrawerContent(props: any) {
   const { user } = useAuth();
@@ -18,6 +19,12 @@ export function CustomDrawerContent(props: any) {
   const handleLogout = async () => {
     try {
       props.navigation.dispatch(DrawerActions.closeDrawer());
+      
+      // Track logout before signing out
+      AnalyticsService.trackLogout().catch(error => {
+        console.warn('[CustomDrawerContent] Failed to track logout:', error);
+      });
+      
       await signOut();
       router.replace('/');
     } catch (error) {

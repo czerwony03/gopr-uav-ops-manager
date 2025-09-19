@@ -21,12 +21,13 @@ export const isWeb = () => Platform.OS === 'web';
  */
 
 // Import Firebase instances from config
-import { auth, firestore, storage } from '@/firebaseConfig';
+import { auth, firestore, storage, analytics } from '@/firebaseConfig';
 
 // Platform-aware function imports - all differences handled here
 let firestoreFunctions: any;
 let authFunctions: any;
 let storageFunctions: any;
+let analyticsFunctions: any;
 let Timestamp: any;
 
 if (isWeb()) {
@@ -34,6 +35,12 @@ if (isWeb()) {
   const webFirestore = require('firebase/firestore');
   const webAuth = require('firebase/auth');
   const webStorage = require('firebase/storage');
+  
+  // Only import analytics if not in test environment
+  let webAnalytics: any = null;
+  if (process.env.NODE_ENV !== 'test') {
+    webAnalytics = require('firebase/analytics');
+  }
   
   firestoreFunctions = {
     collection: webFirestore.collection,
@@ -67,6 +74,13 @@ if (isWeb()) {
     getDownloadURL: webStorage.getDownloadURL,
     deleteObject: webStorage.deleteObject,
   };
+
+  analyticsFunctions = {
+    logEvent: webAnalytics?.logEvent || null,
+    setUserId: webAnalytics?.setUserId || null,
+    setUserProperties: webAnalytics?.setUserProperties || null,
+    setCurrentScreen: webAnalytics?.setCurrentScreen || null,
+  };
   
   Timestamp = webFirestore.Timestamp;
 } else {
@@ -74,6 +88,12 @@ if (isWeb()) {
   const rnFirestore = require('@react-native-firebase/firestore');
   const rnAuth = require('@react-native-firebase/auth');
   const rnStorage = require('@react-native-firebase/storage');
+  
+  // Only import analytics if not in test environment
+  let rnAnalytics: any = null;
+  if (process.env.NODE_ENV !== 'test') {
+    rnAnalytics = require('@react-native-firebase/analytics');
+  }
   
   firestoreFunctions = {
     collection: rnFirestore.collection,
@@ -106,6 +126,13 @@ if (isWeb()) {
     putFile: rnStorage.putFile,
     getDownloadURL: rnStorage.getDownloadURL,
     deleteObject: rnStorage.deleteObject,
+  };
+
+  analyticsFunctions = {
+    logEvent: rnAnalytics?.logEvent || null,
+    setUserId: rnAnalytics?.setUserId || null,
+    setUserProperties: rnAnalytics?.setUserProperties || null,
+    setCurrentScreen: rnAnalytics?.setCurrentScreen || null,
   };
   
   Timestamp = rnFirestore.Timestamp;
@@ -534,4 +561,137 @@ export const handleFirebaseError = (error: any, operation: string) => {
   }
   
   return error;
+};
+
+// ============================================================================
+// ANALYTICS UTILITIES
+// ============================================================================
+
+/**
+ * Check if analytics is available and enabled
+ */
+export const isAnalyticsEnabled = (): boolean => {
+  return analytics !== null && analytics !== undefined;
+};
+
+/**
+ * Log a custom event to Firebase Analytics
+ */
+export const logAnalyticsEvent = async (eventName: string, eventParams?: { [key: string]: any }): Promise<void> => {
+  if (!isAnalyticsEnabled()) {
+    console.log(`[Analytics] Skipping event '${eventName}' - Analytics disabled or not available`);
+    return;
+  }
+
+  try {
+    if (isWeb()) {
+      // Web Analytics
+      if (analyticsFunctions.logEvent) {
+        await analyticsFunctions.logEvent(analytics, eventName, eventParams);
+      }
+    } else {
+      // React Native Analytics
+      if (analyticsFunctions.logEvent) {
+        await analyticsFunctions.logEvent(eventName, eventParams);
+      }
+    }
+    console.log(`[Analytics] Event logged: ${eventName}`, eventParams);
+  } catch (error) {
+    console.warn(`[Analytics] Failed to log event '${eventName}':`, error);
+  }
+};
+
+/**
+ * Set user ID for analytics
+ */
+export const setAnalyticsUserId = async (userId: string | null): Promise<void> => {
+  if (!isAnalyticsEnabled()) {
+    console.log(`[Analytics] Skipping setUserId - Analytics disabled or not available`);
+    return;
+  }
+
+  try {
+    if (isWeb()) {
+      // Web Analytics
+      if (analyticsFunctions.setUserId) {
+        await analyticsFunctions.setUserId(analytics, userId);
+      }
+    } else {
+      // React Native Analytics
+      if (analyticsFunctions.setUserId) {
+        await analyticsFunctions.setUserId(userId);
+      }
+    }
+    console.log(`[Analytics] User ID set:`, userId ? 'authenticated' : 'cleared');
+  } catch (error) {
+    console.warn(`[Analytics] Failed to set user ID:`, error);
+  }
+};
+
+/**
+ * Set user properties for analytics
+ */
+export const setAnalyticsUserProperties = async (properties: { [key: string]: string | null }): Promise<void> => {
+  if (!isAnalyticsEnabled()) {
+    console.log(`[Analytics] Skipping setUserProperties - Analytics disabled or not available`);
+    return;
+  }
+
+  try {
+    if (isWeb()) {
+      // Web Analytics
+      if (analyticsFunctions.setUserProperties) {
+        await analyticsFunctions.setUserProperties(analytics, properties);
+      }
+    } else {
+      // React Native Analytics
+      if (analyticsFunctions.setUserProperties) {
+        await analyticsFunctions.setUserProperties(properties);
+      }
+    }
+    console.log(`[Analytics] User properties set:`, properties);
+  } catch (error) {
+    console.warn(`[Analytics] Failed to set user properties:`, error);
+  }
+};
+
+/**
+ * Set current screen for analytics
+ */
+export const setAnalyticsCurrentScreen = async (screenName: string, screenClass?: string): Promise<void> => {
+  if (!isAnalyticsEnabled()) {
+    console.log(`[Analytics] Skipping setCurrentScreen - Analytics disabled or not available`);
+    return;
+  }
+
+  try {
+    if (isWeb()) {
+      // Web Analytics - use logEvent for page_view
+      if (analyticsFunctions.logEvent) {
+        await analyticsFunctions.logEvent(analytics, 'page_view', {
+          page_title: screenName,
+          page_location: screenClass || screenName,
+        });
+      }
+    } else {
+      // React Native Analytics
+      if (analyticsFunctions.setCurrentScreen) {
+        await analyticsFunctions.setCurrentScreen(screenName, screenClass);
+      }
+    }
+    console.log(`[Analytics] Current screen set: ${screenName}${screenClass ? ` (${screenClass})` : ''}`);
+  } catch (error) {
+    console.warn(`[Analytics] Failed to set current screen:`, error);
+  }
+};
+
+/**
+ * Analytics utility functions export
+ */
+export const analyticsUtils = {
+  isEnabled: isAnalyticsEnabled,
+  logEvent: logAnalyticsEvent,
+  setUserId: setAnalyticsUserId,
+  setUserProperties: setAnalyticsUserProperties,
+  setCurrentScreen: setAnalyticsCurrentScreen,
 };
