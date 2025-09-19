@@ -6,7 +6,6 @@ import {
   getDocumentData,
   addDocument,
   updateDocument,
-  setDocument,
   createQuery,
   where,
   orderBy,
@@ -44,20 +43,6 @@ export class CategoryRepository {
         this.convertFromFirestore(doc.id, doc.data)
       );
 
-      // Ensure default category exists and is included
-      const hasDefaultCategory = categories.some((cat: any) => cat.id === DEFAULT_CATEGORY_ID);
-      if (!hasDefaultCategory) {
-        // Create default category if it doesn't exist
-        await this.ensureDefaultCategory();
-        // Add it to the results
-        categories.push({
-          id: DEFAULT_CATEGORY_ID,
-          ...DEFAULT_CATEGORY,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-      }
-
       return categories;
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -73,19 +58,8 @@ export class CategoryRepository {
       const docRef = getDocument(this.COLLECTION_NAME, id);
       const docSnap = await getDocumentData(docRef);
       
-      if (docSnap.exists()) {
-        return this.convertFromFirestore(id, docSnap.data());
-      }
-
-      // If requesting default category and it doesn't exist, create it
-      if (id === DEFAULT_CATEGORY_ID) {
-        await this.ensureDefaultCategory();
-        return {
-          id: DEFAULT_CATEGORY_ID,
-          ...DEFAULT_CATEGORY,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
+      if (docSnap.exists) {
+        return this.convertFromFirestore(id, docSnap.data);
       }
 
       return null;
@@ -114,7 +88,9 @@ export class CategoryRepository {
         updatedAt: now,
       };
 
-      return await addDocument(this.COLLECTION_NAME, dataWithTimestamps);
+      const docRef = await addDocument(getCollection(this.COLLECTION_NAME), dataWithTimestamps);
+      
+      return docRef.id;
     } catch (error) {
       console.error('Error creating category:', error);
       throw new Error('Failed to create category');
@@ -180,25 +156,6 @@ export class CategoryRepository {
     } catch (error) {
       console.error('Error restoring category:', error);
       throw new Error('Failed to restore category');
-    }
-  }
-
-  /**
-   * Ensure the default category exists
-   */
-  static async ensureDefaultCategory(): Promise<void> {
-    try {
-      const docRef = getDocument(this.COLLECTION_NAME, DEFAULT_CATEGORY_ID);
-      const now = timestampNow();
-      
-      await setDocument(docRef, {
-        ...DEFAULT_CATEGORY,
-        createdAt: now,
-        updatedAt: now,
-      });
-    } catch (error) {
-      console.error('Error ensuring default category:', error);
-      throw new Error('Failed to ensure default category');
     }
   }
 

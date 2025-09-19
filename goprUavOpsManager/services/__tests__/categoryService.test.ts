@@ -7,7 +7,6 @@ jest.mock('@/repositories/CategoryRepository', () => ({
     updateCategory: jest.fn(),
     softDeleteCategory: jest.fn(),
     restoreCategory: jest.fn(),
-    ensureDefaultCategory: jest.fn(),
   }
 }));
 
