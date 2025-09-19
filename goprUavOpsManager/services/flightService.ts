@@ -3,6 +3,7 @@ import { AuditLogService } from './auditLogService';
 import { UserService } from './userService';
 import {UserRole} from "@/types/UserRole";
 import {FlightRepository} from "@/repositories/FlightRepository";
+import { AnalyticsService } from './analyticsService';
 
 export class FlightService {
   // Get flights based on user role
@@ -52,6 +53,11 @@ export class FlightService {
         newValues: { ...flightData, userId: currentUserId, userEmail: currentUserEmail || '' }
       });
 
+      // Track analytics event
+      AnalyticsService.trackCreate('flight', docId).catch(error => {
+        console.warn('[FlightService] Failed to track flight creation:', error);
+      });
+
       return docId;
     } catch (error) {
       console.error('Error creating flight:', error);
@@ -96,6 +102,11 @@ export class FlightService {
         details: AuditLogService.createChangeDetails('edit', 'flight', { previous: previousValues, new: newValues }),
         previousValues,
         newValues
+      });
+
+      // Track analytics event
+      AnalyticsService.trackEdit('flight', id).catch(error => {
+        console.warn('[FlightService] Failed to track flight edit:', error);
       });
     } catch (error) {
       console.error('Error updating flight:', error);

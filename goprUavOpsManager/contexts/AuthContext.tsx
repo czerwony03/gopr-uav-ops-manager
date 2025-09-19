@@ -11,6 +11,7 @@ import {
   getCurrentUser
 } from '@/utils/firebaseUtils';
 import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
+import { AnalyticsService } from '@/services/analyticsService';
 
 /**
  * AuthContext - Firebase Authentication State Management
@@ -178,6 +179,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('[AuthContext] ✅ Successfully restored user session with full data:', userData?.uid);
             setUser(userData);
             
+            // Initialize analytics with user context
+            AnalyticsService.initializeUser(userData.uid, userData.role, userData.language).catch(error => {
+              console.warn('[AuthContext] Failed to initialize analytics for user:', error);
+            });
+            
             // Defer pre-download of procedures to not block login flow
             setTimeout(() => {
               OfflineProcedureChecklistService.preDownloadProcedures(userData.role).catch(error => {
@@ -197,6 +203,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } as UserData;
           setUser(fallbackUserData);
           
+          // Initialize analytics with fallback user context
+          AnalyticsService.initializeUser(fallbackUserData.uid, fallbackUserData.role).catch(error => {
+            console.warn('[AuthContext] Failed to initialize analytics for fallback user:', error);
+          });
+          
           // Defer pre-download of procedures to not block login flow
           setTimeout(() => {
             OfflineProcedureChecklistService.preDownloadProcedures(fallbackUserData.role).catch(error => {
@@ -208,6 +219,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('[AuthContext] ❌ No user session found - user is not authenticated');
         console.log('[AuthContext] This indicates either: 1) Fresh app start with no previous login, 2) User explicitly signed out, or 3) Session was cleared');
         setUser(null);
+        
+        // Clear analytics user context
+        AnalyticsService.clearUser().catch(error => {
+          console.warn('[AuthContext] Failed to clear analytics user context:', error);
+        });
       }
       console.log('[AuthContext] Auth state processing complete, setting loading to false');
       setLoading(false);

@@ -4,6 +4,7 @@ let app: any;
 let auth: any;
 let firestore: any;
 let storage: any;
+let analytics: any;
 
 if (Platform.OS === 'web') {
   // Web platform: Use Firebase JS SDK
@@ -11,6 +12,15 @@ if (Platform.OS === 'web') {
   const { getAuth, setPersistence, browserLocalPersistence } = require('firebase/auth');
   const { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } = require('firebase/firestore');
   const { getStorage } = require('firebase/storage');
+  
+  // Only import analytics if not in test environment
+  let getAnalytics: any = null;
+  let isSupported: any = null;
+  if (process.env.NODE_ENV !== 'test') {
+    const analyticsModule = require('firebase/analytics');
+    getAnalytics = analyticsModule.getAnalytics;
+    isSupported = analyticsModule.isSupported;
+  }
 
   // Firebase configuration
   const firebaseConfig = {
@@ -27,6 +37,25 @@ if (Platform.OS === 'web') {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   storage = getStorage(app);
+
+  // Initialize Analytics for web (only in production and if supported)
+  if (process.env.EXPO_PUBLIC_ENABLE_ANALYTICS !== 'false' && typeof window !== 'undefined' && process.env.NODE_ENV !== 'test' && getAnalytics && isSupported) {
+    isSupported().then((supported: boolean) => {
+      if (supported) {
+        analytics = getAnalytics(app);
+        console.log('[FirebaseConfig] Web Firebase Analytics initialized');
+      } else {
+        console.log('[FirebaseConfig] Firebase Analytics not supported on this browser');
+        analytics = null;
+      }
+    }).catch((error: any) => {
+      console.warn('[FirebaseConfig] Failed to check Analytics support:', error);
+      analytics = null;
+    });
+  } else {
+    console.log('[FirebaseConfig] Firebase Analytics disabled for web (development mode, test environment, or explicitly disabled)');
+    analytics = null;
+  }
 
   // Configure auth persistence for web
   setPersistence(auth, browserLocalPersistence).catch((error: any) => {
@@ -64,6 +93,12 @@ if (Platform.OS === 'web') {
   const rnFirebaseAuth = require('@react-native-firebase/auth').default;
   const rnFirebaseFirestore = require('@react-native-firebase/firestore').default;
   const rnFirebaseStorage = require('@react-native-firebase/storage').default;
+  
+  // Only import analytics if not in test environment
+  let rnFirebaseAnalytics: any = null;
+  if (process.env.NODE_ENV !== 'test') {
+    rnFirebaseAnalytics = require('@react-native-firebase/analytics').default;
+  }
 
   // React Native Firebase automatically uses native configuration
   // from google-services.json (Android) and GoogleService-Info.plist (iOS)
@@ -72,6 +107,15 @@ if (Platform.OS === 'web') {
   auth = rnFirebaseAuth();
   firestore = rnFirebaseFirestore();
   storage = rnFirebaseStorage();
+
+  // Initialize Analytics for React Native (only in production)
+  if (process.env.EXPO_PUBLIC_ENABLE_ANALYTICS !== 'false' && process.env.NODE_ENV !== 'test' && rnFirebaseAnalytics) {
+    analytics = rnFirebaseAnalytics();
+    console.log('[FirebaseConfig] React Native Firebase Analytics initialized');
+  } else {
+    console.log('[FirebaseConfig] Firebase Analytics disabled for React Native (development mode, test environment, or explicitly disabled)');
+    analytics = null;
+  }
 
   // Enable Firestore offline persistence for React Native
   // This is enabled by default in React Native Firebase, but we can configure it
@@ -90,5 +134,5 @@ if (Platform.OS === 'web') {
 // Alias for compatibility with existing code
 export const db = firestore;
 
-export { auth, firestore, storage };
+export { auth, firestore, storage, analytics };
 export default app;
