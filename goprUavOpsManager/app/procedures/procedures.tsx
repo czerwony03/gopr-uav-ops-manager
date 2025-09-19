@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -26,12 +27,30 @@ export default function ProceduresListScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isFromCache, setIsFromCache] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuth();
   const { isConnected } = useNetworkStatus();
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const router = useRouter();
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
+
+  // Filter checklists based on search query
+  const filteredChecklists = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return checklists;
+    }
+    
+    const query = searchQuery.toLowerCase().trim();
+    return checklists.filter(checklist => 
+      checklist.title.toLowerCase().includes(query) ||
+      (checklist.description && checklist.description.toLowerCase().includes(query)) ||
+      checklist.items.some(item => 
+        item.topic.toLowerCase().includes(query) ||
+        item.content.toLowerCase().includes(query)
+      )
+    );
+  }, [checklists, searchQuery]);
 
   const fetchChecklists = useCallback(async () => {
     if (!user) return;
@@ -257,7 +276,44 @@ export default function ProceduresListScreen() {
         )}
       </View>
 
-      {checklists.length === 0 ? (
+      {/* Search Box */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBox}>
+          <Ionicons name="search-outline" size={20} color="#666" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder={t('procedures.searchPlaceholder')}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            clearButtonMode="while-editing"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity 
+              onPress={() => setSearchQuery('')}
+              style={styles.clearButton}
+            >
+              <Ionicons name="close-circle" size={20} color="#666" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {filteredChecklists.length === 0 ? (
+        searchQuery.trim() ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="search-outline" size={64} color="#ccc" />
+            <Text style={styles.emptyTitle}>{t('procedures.search.noResults')}</Text>
+            <Text style={styles.emptyDescription}>
+              {t('procedures.search.noResultsDescription', { query: searchQuery })}
+            </Text>
+            <TouchableOpacity 
+              style={styles.clearSearchButton}
+              onPress={() => setSearchQuery('')}
+            >
+              <Text style={styles.clearSearchButtonText}>{t('procedures.search.clearSearch')}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : checklists.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="clipboard-outline" size={64} color="#ccc" />
           <Text style={styles.emptyTitle}>{t('procedures.empty.title')}</Text>
@@ -270,7 +326,7 @@ export default function ProceduresListScreen() {
         </View>
       ) : (
         <FlatList
-          data={checklists}
+          data={filteredChecklists}
           renderItem={renderChecklistItem}
           keyExtractor={(item) => item.id}
           refreshControl={
@@ -324,6 +380,43 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     marginLeft: 4,
+  },
+  searchContainer: {
+    padding: 16,
+    paddingBottom: 8,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    height: 40,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+  clearButton: {
+    marginLeft: 8,
+  },
+  clearSearchButton: {
+    backgroundColor: '#0066CC',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  clearSearchButtonText: {
+    color: '#fff',
+    fontWeight: '600',
   },
   listContainer: {
     padding: 16,

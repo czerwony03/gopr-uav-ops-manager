@@ -111,6 +111,10 @@ export default function CategoriesListScreen() {
     }
   };
 
+  const handleViewAllProcedures = () => {
+    router.push('/procedures/procedures');
+  };
+
   const handleEditCategory = (category: Category) => {
     if (!isButtonDisabled()) {
       router.push(`/procedures/categories/${category.id}/edit`);
@@ -256,18 +260,30 @@ export default function CategoriesListScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>{t('procedures.categories.title')}</Text>
         
-        {canModifyCategories && (
+        <View style={styles.headerButtons}>
           <TouchableOpacity 
-            style={[styles.addButton, getDisabledStyle()]} 
-            onPress={handleCreateCategory}
-            disabled={isButtonDisabled()}
+            style={styles.viewAllButton} 
+            onPress={handleViewAllProcedures}
           >
-            <Ionicons name="add" size={24} color={isButtonDisabled() ? "#999" : "#fff"} />
-            <Text style={[styles.addButtonText, isButtonDisabled() && { color: '#999' }]}>
-              {t('categories.addNew')}
+            <Ionicons name="list-outline" size={20} color="#0066CC" />
+            <Text style={styles.viewAllButtonText}>
+              {t('procedures.viewAll')}
             </Text>
           </TouchableOpacity>
-        )}
+
+          {canModifyCategories && (
+            <TouchableOpacity 
+              style={[styles.addButton, getDisabledStyle()]} 
+              onPress={handleCreateCategory}
+              disabled={isButtonDisabled()}
+            >
+              <Ionicons name="add" size={24} color={isButtonDisabled() ? "#999" : "#fff"} />
+              <Text style={[styles.addButtonText, isButtonDisabled() && { color: '#999' }]}>
+                {t('categories.addNew')}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {categories.length === 0 ? (
@@ -324,6 +340,27 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+    flex: 1,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#0066CC',
+  },
+  viewAllButtonText: {
+    color: '#0066CC',
+    fontWeight: '600',
+    marginLeft: 4,
   },
   addButton: {
     flexDirection: 'row',

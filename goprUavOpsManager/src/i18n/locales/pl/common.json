@@ -556,6 +556,7 @@
   },
   "procedures": {
     "title": "Procedury/Checklisty",
+    "viewAll": "Zobacz wszystkie",
     "loading": "Ładowanie procedury/listy kontrolnej...",
     "notFound": "Procedura/Lista kontrolna nie została znaleziona",
     "notFoundDescription": "Żądana procedura lub lista kontrolna nie mogła zostać znaleziona.",
@@ -582,6 +583,12 @@
     "itemPlural": "elementów",
     "createdOn": "Utworzono {{date}}",
     "editProcedure": "Edycja procedury/checklisty",
+    "searchPlaceholder": "Szukaj procedur...",
+    "search": {
+      "noResults": "Nie znaleziono procedur",
+      "noResultsDescription": "Żadne procedury nie pasują do \"{{query}}\". Spróbuj dostosować wyszukiwane terminy.",
+      "clearSearch": "Wyczyść wyszukiwanie"
+    },
     "categories": {
       "title": "Kategorie"
     },

@@ -557,6 +557,7 @@
   "procedures": {
     "title": "Procedure/Checklist",
     "allProcedures": "All Procedures",
+    "viewAll": "View All",
     "loading": "Loading procedure/checklist...",
     "notFound": "Procedure/Checklist Not Found",
     "notFoundDescription": "The requested procedure or checklist could not be found.",
@@ -583,6 +584,12 @@
     "itemPlural": "items",
     "createdOn": "Created {{date}}",
     "editProcedure": "Edit procedure/checklist",
+    "searchPlaceholder": "Search procedures...",
+    "search": {
+      "noResults": "No Procedures Found",
+      "noResultsDescription": "No procedures match \"{{query}}\". Try adjusting your search terms.",
+      "clearSearch": "Clear Search"
+    },
     "categories": {
       "title": "Categories"
     },
