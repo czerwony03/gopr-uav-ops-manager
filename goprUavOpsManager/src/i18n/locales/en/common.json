@@ -407,7 +407,7 @@
     "maxWeightPlaceholder": "Enter maximum weight",
     "maxSpeed": "Max Speed (km/h)",
     "maxSpeedPlaceholder": "Enter maximum speed",
-    "range": "Range (km)",
+    "range": "Range (m)",
     "rangePlaceholder": "Enter range",
     "flightTime": "Flight Time (min)",
     "flightTimePlaceholder": "Enter flight time",

@@ -299,7 +299,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
               keyboardType="numeric"
             />
 
-            <Text style={styles.label}>{t('droneForm.weight')} (kg)</Text>
+            <Text style={styles.label}>{t('droneForm.weight')}</Text>
             <TextInput
               style={styles.input}
               value={formData.weight.toString()}
@@ -308,7 +308,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
               keyboardType="numeric"
             />
 
-            <Text style={styles.label}>{t('droneForm.maxTakeoffWeight')} (kg)</Text>
+            <Text style={styles.label}>{t('droneForm.maxTakeoffWeight')}</Text>
             <TextInput
               style={styles.input}
               value={formData.maxTakeoffWeight.toString()}
@@ -317,7 +317,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
               keyboardType="numeric"
             />
 
-            <Text style={styles.label}>{t('droneForm.range')} (km)</Text>
+            <Text style={styles.label}>{t('droneForm.range')}</Text>
             <TextInput
               style={styles.input}
               value={formData.range.toString()}
@@ -326,7 +326,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
               keyboardType="numeric"
             />
 
-            <Text style={styles.label}>{t('droneForm.maxSpeed')} (km/h)</Text>
+            <Text style={styles.label}>{t('droneForm.maxSpeed')}</Text>
             <TextInput
               style={styles.input}
               value={formData.maxSpeed.toString()}
@@ -339,7 +339,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('droneDetails.dimensions')}</Text>
             
-            <Text style={styles.label}>{t('droneForm.length')} (cm)</Text>
+            <Text style={styles.label}>{t('droneForm.length')}</Text>
             <TextInput
               style={styles.input}
               value={formData.dimensions.length.toString()}
@@ -348,7 +348,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
               keyboardType="numeric"
             />
 
-            <Text style={styles.label}>{t('droneForm.width')} (cm)</Text>
+            <Text style={styles.label}>{t('droneForm.width')}</Text>
             <TextInput
               style={styles.input}
               value={formData.dimensions.width.toString()}
@@ -357,7 +357,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
               keyboardType="numeric"
             />
 
-            <Text style={styles.label}>{t('droneForm.height')} (cm)</Text>
+            <Text style={styles.label}>{t('droneForm.height')}</Text>
             <TextInput
               style={styles.input}
               value={formData.dimensions.height.toString()}
@@ -378,7 +378,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
               placeholder={t('droneForm.batteryTypePlaceholder')}
             />
 
-            <Text style={styles.label}>{t('droneForm.capacity')} (mAh)</Text>
+            <Text style={styles.label}>{t('droneForm.capacity')}</Text>
             <TextInput
               style={styles.input}
               value={formData.battery.capacity.toString()}
@@ -387,7 +387,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
               keyboardType="numeric"
             />
 
-            <Text style={styles.label}>{t('droneForm.voltage')} (V)</Text>
+            <Text style={styles.label}>{t('droneForm.voltage')}</Text>
             <TextInput
               style={styles.input}
               value={formData.battery.voltage.toString()}
