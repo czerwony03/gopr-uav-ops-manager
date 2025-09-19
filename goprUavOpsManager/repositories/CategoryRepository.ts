@@ -45,7 +45,7 @@ export class CategoryRepository {
       );
 
       // Ensure default category exists and is included
-      const hasDefaultCategory = categories.some(cat => cat.id === DEFAULT_CATEGORY_ID);
+      const hasDefaultCategory = categories.some((cat: any) => cat.id === DEFAULT_CATEGORY_ID);
       if (!hasDefaultCategory) {
         // Create default category if it doesn't exist
         await this.ensureDefaultCategory();
