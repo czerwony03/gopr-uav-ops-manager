@@ -21,11 +21,6 @@ export class ProcedureChecklistService {
     return ProcedureChecklistRepository.getProcedureChecklistsByCategory(categoryId, userRole);
   }
 
-  // Migrate existing procedures to default category
-  static async migrateProceduresToDefaultCategory(): Promise<number> {
-    return ProcedureChecklistRepository.migrateProceduresToDefaultCategory();
-  }
-
   // Get a single procedure/checklist by ID
   static async getProcedureChecklist(id: string, userRole: UserRole): Promise<ProcedureChecklist | null> {
     const checklist = await ProcedureChecklistRepository.getProcedureChecklist(id);

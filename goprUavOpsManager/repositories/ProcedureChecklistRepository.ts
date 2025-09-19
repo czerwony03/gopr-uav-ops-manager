@@ -212,39 +212,6 @@ export class ProcedureChecklistRepository {
   }
 
   /**
-   * Migrate existing procedures to have default category if they have no categories
-   */
-  static async migrateProceduresToDefaultCategory(): Promise<number> {
-    try {
-      const checklistsCollection = getCollection(this.COLLECTION_NAME);
-      const q = createQuery(checklistsCollection);
-      const snapshot = await getDocs(q);
-      
-      let migrated = 0;
-      const procedures = getDocsArray(snapshot);
-      
-      for (const doc of procedures) {
-        const data = doc.data;
-        // If procedure has no categories field or empty categories, assign default category
-        if (!data.categories || data.categories.length === 0) {
-          const checklistRef = getDocument(this.COLLECTION_NAME, doc.id);
-          await updateDocument(checklistRef, {
-            categories: [DEFAULT_CATEGORY_ID],
-            updatedAt: timestampNow(),
-            updatedBy: 'system',
-          });
-          migrated++;
-        }
-      }
-      
-      return migrated;
-    } catch (error) {
-      console.error('Error migrating procedures to default category:', error);
-      throw new Error('Failed to migrate procedures to default category');
-    }
-  }
-
-  /**
    * Convert Firestore document data to ProcedureChecklist domain object
    */
   private static convertFromFirestore(id: string, data: any): ProcedureChecklist {
