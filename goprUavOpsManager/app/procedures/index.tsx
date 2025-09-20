@@ -163,28 +163,24 @@ export default function CategoriesListScreen() {
   const canModifyCategories = user?.role === 'manager' || user?.role === 'admin';
 
   const renderCategoryItem = ({ item }: { item: CategoryWithCount }) => (
-    <View style={styles.categoryItem}>
-      <TouchableOpacity 
-        style={styles.categoryContent}
-        onPress={() => handleViewCategory(item)}
-      >
-        <View style={styles.categoryHeader}>
-          <View style={styles.categoryInfo}>
-            <View style={styles.categoryTitleRow}>
-              {item.color && (
-                <View style={[styles.colorIndicator, { backgroundColor: item.color }]} />
-              )}
-              <Text style={styles.categoryTitle}>{item.name}</Text>
-            </View>
-            {item.description ? (
-              <Text style={styles.categoryDescription} numberOfLines={2}>
-                {item.description}
-              </Text>
-            ) : null}
-            <Text style={styles.categoryMeta}>
-              {item.procedureCount} {item.procedureCount === 1 ? t('procedures.itemSingle') : t('procedures.itemPlural')}
-            </Text>
-          </View>
+    <TouchableOpacity 
+      style={[
+        styles.categoryCard,
+        item.isDeleted && user?.role === 'admin' && styles.deletedCategoryCard
+      ]}
+      onPress={() => handleViewCategory(item)}
+    >
+      {/* Color indicator */}
+      {item.color && (
+        <View style={[styles.categoryColorBar, { backgroundColor: item.color }]} />
+      )}
+      
+      {/* Category content */}
+      <View style={styles.categoryCardContent}>
+        <View style={styles.categoryCardHeader}>
+          <Text style={styles.categoryCardTitle} numberOfLines={2}>
+            {item.name}
+          </Text>
           
           {/* Status badge for deleted items (admin only) */}
           {item.isDeleted && user?.role === 'admin' && (
@@ -194,50 +190,50 @@ export default function CategoriesListScreen() {
           )}
         </View>
 
-        <View style={styles.categoryActions}>
-          <TouchableOpacity 
-            style={styles.actionButton} 
-            onPress={() => handleViewCategory(item)}
-          >
-            <Ionicons name="eye-outline" size={20} color="#0066CC" />
-            <Text style={styles.actionButtonText}>{t('common.view')}</Text>
-          </TouchableOpacity>
+        {item.description && (
+          <Text style={styles.categoryCardDescription} numberOfLines={2}>
+            {item.description}
+          </Text>
+        )}
+        
+        <Text style={styles.categoryCardCount}>
+          {item.procedureCount} {item.procedureCount === 1 ? t('procedures.itemSingle') : t('procedures.itemPlural')}
+        </Text>
 
-          {canModifyCategories && !item.isDeleted && (
-            <>
+        {/* Quick actions for managers/admins */}
+        {canModifyCategories && (
+          <View style={styles.categoryCardActions}>
+            {!item.isDeleted ? (
+              <>
+                <TouchableOpacity 
+                  style={[styles.quickActionButton, getDisabledStyle()]} 
+                  onPress={() => handleEditCategory(item)}
+                  disabled={isButtonDisabled()}
+                >
+                  <Ionicons name="create-outline" size={16} color={isButtonDisabled() ? "#999" : "#4CAF50"} />
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.quickActionButton, getDisabledStyle()]} 
+                  onPress={() => handleDeleteCategory(item)}
+                  disabled={isButtonDisabled()}
+                >
+                  <Ionicons name="trash-outline" size={16} color={isButtonDisabled() ? "#999" : "#F44336"} />
+                </TouchableOpacity>
+              </>
+            ) : user?.role === 'admin' && (
               <TouchableOpacity 
-                style={[styles.actionButton, getDisabledStyle()]} 
-                onPress={() => handleEditCategory(item)}
+                style={[styles.quickActionButton, getDisabledStyle()]} 
+                onPress={() => handleRestoreCategory(item)}
                 disabled={isButtonDisabled()}
               >
-                <Ionicons name="create-outline" size={20} color={isButtonDisabled() ? "#999" : "#4CAF50"} />
-                <Text style={[styles.actionButtonText, isButtonDisabled() && { color: '#999' }]}>{t('common.edit')}</Text>
+                <Ionicons name="refresh-outline" size={16} color={isButtonDisabled() ? "#999" : "#FF9800"} />
               </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.actionButton, getDisabledStyle()]} 
-                onPress={() => handleDeleteCategory(item)}
-                disabled={isButtonDisabled()}
-              >
-                <Ionicons name="trash-outline" size={20} color={isButtonDisabled() ? "#999" : "#F44336"} />
-                <Text style={[styles.actionButtonText, isButtonDisabled() && { color: '#999' }]}>{t('common.delete')}</Text>
-              </TouchableOpacity>
-            </>
-          )}
-
-          {user?.role === 'admin' && item.isDeleted && (
-            <TouchableOpacity 
-              style={[styles.actionButton, getDisabledStyle()]} 
-              onPress={() => handleRestoreCategory(item)}
-              disabled={isButtonDisabled()}
-            >
-              <Ionicons name="refresh-outline" size={20} color={isButtonDisabled() ? "#999" : "#FF9800"} />
-              <Text style={[styles.actionButtonText, isButtonDisabled() && { color: '#999' }]}>{t('categories.restore.button')}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </TouchableOpacity>
-    </View>
+            )}
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
   );
 
   if (loading) {
@@ -260,30 +256,18 @@ export default function CategoriesListScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>{t('procedures.categories.title')}</Text>
         
-        <View style={styles.headerButtons}>
+        {canModifyCategories && (
           <TouchableOpacity 
-            style={styles.viewAllButton} 
-            onPress={handleViewAllProcedures}
+            style={[styles.addButton, getDisabledStyle()]} 
+            onPress={handleCreateCategory}
+            disabled={isButtonDisabled()}
           >
-            <Ionicons name="list-outline" size={20} color="#0066CC" />
-            <Text style={styles.viewAllButtonText}>
-              {t('procedures.viewAll')}
+            <Ionicons name="add" size={24} color={isButtonDisabled() ? "#999" : "#fff"} />
+            <Text style={[styles.addButtonText, isButtonDisabled() && { color: '#999' }]}>
+              {t('categories.addNew')}
             </Text>
           </TouchableOpacity>
-
-          {canModifyCategories && (
-            <TouchableOpacity 
-              style={[styles.addButton, getDisabledStyle()]} 
-              onPress={handleCreateCategory}
-              disabled={isButtonDisabled()}
-            >
-              <Ionicons name="add" size={24} color={isButtonDisabled() ? "#999" : "#fff"} />
-              <Text style={[styles.addButtonText, isButtonDisabled() && { color: '#999' }]}>
-                {t('categories.addNew')}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        )}
       </View>
 
       {categories.length === 0 ? (
@@ -299,9 +283,47 @@ export default function CategoriesListScreen() {
         </View>
       ) : (
         <FlatList
-          data={categories}
-          renderItem={renderCategoryItem}
+          data={[
+            // Special "View All" item as first item
+            {
+              id: '__view_all__',
+              name: t('procedures.viewAll'),
+              description: t('procedures.allProcedures'),
+              procedureCount: 0,
+              color: '#0066CC',
+              isViewAll: true,
+            } as CategoryWithCount & { isViewAll: boolean },
+            ...categories
+          ]}
+          renderItem={({ item }) => {
+            if ('isViewAll' in item && item.isViewAll) {
+              return (
+                <TouchableOpacity 
+                  style={styles.viewAllCard}
+                  onPress={handleViewAllProcedures}
+                >
+                  <View style={[styles.categoryColorBar, { backgroundColor: item.color }]} />
+                  <View style={styles.categoryCardContent}>
+                    <View style={styles.categoryCardHeader}>
+                      <Text style={styles.categoryCardTitle}>
+                        {item.name}
+                      </Text>
+                    </View>
+                    <Text style={styles.categoryCardDescription}>
+                      {item.description}
+                    </Text>
+                    <View style={styles.viewAllIcon}>
+                      <Ionicons name="list-outline" size={24} color="#0066CC" />
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            }
+            return renderCategoryItem({ item });
+          }}
           keyExtractor={(item) => item.id}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
@@ -342,26 +364,6 @@ const styles = StyleSheet.create({
     color: '#333',
     flex: 1,
   },
-  headerButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  viewAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#0066CC',
-  },
-  viewAllButtonText: {
-    color: '#0066CC',
-    fontWeight: '600',
-    marginLeft: 4,
-  },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -376,12 +378,17 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   listContainer: {
-    padding: 16,
+    padding: 12,
   },
-  categoryItem: {
+  row: {
+    justifyContent: 'space-between',
+  },
+  categoryCard: {
     backgroundColor: '#fff',
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: 12,
+    flex: 0.48,
+    minHeight: 120,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -390,76 +397,92 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+    overflow: 'hidden',
   },
-  categoryContent: {
-    padding: 16,
+  deletedCategoryCard: {
+    opacity: 0.7,
+    borderWidth: 1,
+    borderColor: '#F44336',
   },
-  categoryHeader: {
+  viewAllCard: {
+    backgroundColor: '#f8f9ff',
+    borderRadius: 12,
+    marginBottom: 12,
+    flex: 0.48,
+    minHeight: 120,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#0066CC',
+  },
+  categoryColorBar: {
+    height: 4,
+    width: '100%',
+  },
+  categoryCardContent: {
+    padding: 12,
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  categoryCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 6,
   },
-  categoryInfo: {
-    flex: 1,
-  },
-  categoryTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  colorIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  categoryTitle: {
-    fontSize: 18,
+  categoryCardTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
     flex: 1,
+    lineHeight: 20,
   },
-  categoryDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  categoryMeta: {
+  categoryCardDescription: {
     fontSize: 12,
+    color: '#666',
+    marginBottom: 8,
+    lineHeight: 16,
+  },
+  categoryCardCount: {
+    fontSize: 11,
     color: '#999',
+    marginBottom: 8,
   },
   deletedBadge: {
     backgroundColor: '#F44336',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: 4,
+    marginLeft: 8,
   },
   deletedBadgeText: {
     color: '#fff',
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: 'bold',
   },
-  categoryActions: {
+  categoryCardActions: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    flexWrap: 'wrap',
-  },
-  actionButton: {
-    flexDirection: 'row',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
-    marginBottom: 4,
-    borderRadius: 6,
-    backgroundColor: '#f0f0f0',
+    gap: 4,
   },
-  actionButtonText: {
-    marginLeft: 4,
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
+  quickActionButton: {
+    padding: 4,
+    borderRadius: 4,
+    backgroundColor: '#f0f0f0',
+    minWidth: 28,
+    alignItems: 'center',
+  },
+  viewAllIcon: {
+    alignSelf: 'center',
+    marginTop: 8,
   },
   emptyContainer: {
     flex: 1,

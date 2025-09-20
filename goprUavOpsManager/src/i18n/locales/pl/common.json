@@ -556,6 +556,7 @@
   },
   "procedures": {
     "title": "Procedury/Checklisty",
+    "allProcedures": "Wszystkie procedury",
     "viewAll": "Zobacz wszystkie",
     "loading": "Ładowanie procedury/listy kontrolnej...",
     "notFound": "Procedura/Lista kontrolna nie została znaleziona",
