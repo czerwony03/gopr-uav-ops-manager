@@ -13,6 +13,7 @@ export interface ProcedureChecklist {
   title: string;
   description?: string;
   items: ChecklistItem[];
+  categories?: string[]; // array of category IDs this procedure belongs to
   createdBy: string; // user ID who created it
   updatedBy?: string; // user ID who last updated it
   isDeleted?: boolean; // soft-delete flag
@@ -26,6 +27,7 @@ export interface ProcedureChecklistFormData {
   title: string;
   description: string;
   items: ChecklistItemFormData[];
+  categories?: string[]; // array of category IDs
 }
 
 export interface ChecklistItemFormData {

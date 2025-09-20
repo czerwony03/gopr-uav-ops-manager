@@ -8,13 +8,19 @@
  */
 
 import * as admin from "firebase-admin";
+import * as fs from "fs";
+import * as path from "path";
 import {setGlobalOptions} from "firebase-functions/v2";
 import {beforeUserCreated} from "firebase-functions/v2/identity";
 import {onDocumentWritten} from "firebase-functions/v2/firestore";
+import {defineSecret} from "firebase-functions/params";
+import {onRequest} from "firebase-functions/v2/https";
 
 admin.initializeApp();
 
 setGlobalOptions({maxInstances: 10});
+
+const MIGRATION_TOKEN = defineSecret("MIGRATION_TOKEN");
 
 export const beforeCreate = beforeUserCreated(async (event) => {
   const user = event.data;
@@ -61,3 +67,57 @@ export const syncUserRole = onDocumentWritten("users/{userId}",
   },
 );
 
+export const runMigrations = onRequest({
+  secrets: [MIGRATION_TOKEN],
+}, async (req, res) => {
+  try {
+    const token = req.query.token as string;
+    if (token !== MIGRATION_TOKEN.value()) {
+      res.status(403).send("Forbidden");
+      return;
+    }
+
+    const migrationsDir = path.join(__dirname, "migrations");
+    const files = fs.readdirSync(migrationsDir)
+      .filter((f) => f.endsWith(".js"));
+
+    files.sort(); // assumes YYYY-MM-DD prefix
+
+    const executedSnap = await admin.firestore().collection("migrations").get();
+    const executedIds = executedSnap.docs.map((d) => d.id);
+
+    const results: unknown[] = [];
+
+    for (const file of files) {
+      const id = path.basename(file, ".js");
+
+      if (executedIds.includes(id)) {
+        console.log(`⏭ Skipping ${id} (already executed)`);
+        continue;
+      }
+
+      console.log(`🚀 Executing migration: ${id}`);
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const migration = require(path.join(migrationsDir, file));
+
+      const start = Date.now();
+      const result = await migration.run();
+
+      await admin.firestore().collection("migrations").doc(id).set({
+        executedAt: admin.firestore.FieldValue.serverTimestamp(),
+        durationMs: Date.now() - start,
+        result: result || {},
+      });
+
+      results.push({id, result});
+    }
+
+    res.json({
+      status: "done",
+      executed: results,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Migration runner failed ❌");
+  }
+});

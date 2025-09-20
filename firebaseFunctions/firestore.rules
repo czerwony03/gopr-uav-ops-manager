@@ -36,18 +36,18 @@ service cloud.firestore {
     // DRONES COLLECTION
     // =========================
     match /drones/{droneId} {
-  		// Anyone signed in can read non-deleted drones, admins can read all
-  		allow read: if (isSignedIn() && !resource.data.isDeleted) || isAdmin();
+      // Anyone signed in can read non-deleted drones, admins can read all
+      allow read: if (isSignedIn() && !resource.data.isDeleted) || isAdmin();
 
-  		// Managers/Admins can update anything except restoring
-  		allow update: if (isManager() || isAdmin()) && !isRestoring(resource, request);
+  	  // Managers/Admins can update anything except restoring
+  	  allow update: if (isManager() || isAdmin()) && !isRestoring(resource, request);
 
-  		// Only admins can restore a deleted drone
-  		allow update: if isAdmin() && isRestoring(resource, request);
+      // Only admins can restore a deleted drone
+      allow update: if isAdmin() && isRestoring(resource, request);
 
-  		// Managers/Admins can create or soft-delete
-  		allow create, delete: if isManager() || isAdmin();
-		}
+  	  // Managers/Admins can create or soft-delete
+  	  allow create, delete: if isManager() || isAdmin();
+    }
 
     // =========================
     // FLIGHTS COLLECTION
@@ -59,7 +59,7 @@ service cloud.firestore {
       // Owner can update their own flights (except userId/userEmail fields)
       allow update: if isSignedIn() && resource.data.userId == request.auth.uid
       	&& !('userId' in request.resource.data.diff(resource.data).affectedKeys())
-				&& !('userEmail' in request.resource.data.diff(resource.data).affectedKeys());
+        && !('userEmail' in request.resource.data.diff(resource.data).affectedKeys());
 
       // Admins and managers can update any flight
       allow update: if isAdmin() || isManager();
@@ -81,17 +81,34 @@ service cloud.firestore {
       // Admins can read all procedures
       allow read: if isAdmin();
 
-			// Managers/Admins can create
-			allow create: if isManager() || isAdmin();
+      // Managers/Admins can create
+      allow create: if isManager() || isAdmin();
 
-			// Managers/Admins can update *except restoring*
-			allow update: if (isManager() || isAdmin()) && !isRestoring(resource, request);
+      // Managers/Admins can update *except restoring*
+      allow update: if (isManager() || isAdmin()) && !isRestoring(resource, request);
 
-			// Only admins can restore
-			allow update: if isAdmin() && isRestoring(resource, request);
+	  // Only admins can restore
+	  allow update: if isAdmin() && isRestoring(resource, request);
 
-			// Managers/Admins can soft-delete
-			allow delete: if isManager() || isAdmin();
+      // Managers/Admins can soft-delete
+	  allow delete: if isManager() || isAdmin();
+    }
+
+    // =========================
+    // CATEGORIES COLLECTION
+    // =========================
+    match /categories/{categoryId} {
+      // Wszyscy zalogowani widzą nieusunięte kategorie, admin widzi wszystkie
+      allow read: if (isSignedIn() && !resource.data.isDeleted) || isAdmin();
+
+      // Manager/admin mogą tworzyć i aktualizować (oprócz przywracania)
+      allow create, update: if (isManager() || isAdmin()) && !isRestoring(resource, request);
+
+      // Tylko admin może przywracać kategorię
+      allow update: if isAdmin() && isRestoring(resource, request);
+
+      // Manager/admin mogą usuwać (soft-delete)
+      allow delete: if isManager() || isAdmin();
     }
 
     // =========================

@@ -1,5 +1,6 @@
 import { ProcedureChecklist } from '@/types/ProcedureChecklist';
 import { UserRole } from '@/types/UserRole';
+import { DEFAULT_CATEGORY_ID } from '@/types/Category';
 import {
   getCollection,
   getDocument,
@@ -11,7 +12,8 @@ import {
   orderBy,
   getDocs,
   getDocsArray,
-  timestampNow
+  timestampNow,
+  arrayContains
 } from '@/utils/firebaseUtils';
 
 export class ProcedureChecklistRepository {
@@ -42,6 +44,66 @@ export class ProcedureChecklistRepository {
     } catch (error) {
       console.error('Error fetching procedures/checklists:', error);
       throw new Error('Failed to fetch procedures/checklists');
+    }
+  }
+
+  /**
+   * Get procedures/checklists by category ID
+   */
+  static async getProcedureChecklistsByCategory(categoryId: string, userRole: UserRole): Promise<ProcedureChecklist[]> {
+    try {
+      const checklistsCollection = getCollection(this.COLLECTION_NAME);
+      let q;
+
+      if (categoryId === DEFAULT_CATEGORY_ID) {
+        // Get procedures with no categories or empty categories array or explicitly assigned to default
+        if (userRole === 'admin') {
+          // For admin, we need to check for procedures with no categories field at all, empty array, or containing default category
+          q = createQuery(
+            checklistsCollection,
+            orderBy('createdAt', 'desc')
+          );
+        } else {
+          q = createQuery(
+            checklistsCollection,
+            where('isDeleted', '==', false),
+            orderBy('createdAt', 'desc')
+          );
+        }
+      } else {
+        // Get procedures that contain this category ID
+        if (userRole === 'admin') {
+          q = createQuery(
+            checklistsCollection,
+            where('categories', 'array-contains', categoryId),
+            orderBy('createdAt', 'desc')
+          );
+        } else {
+          q = createQuery(
+            checklistsCollection,
+            where('categories', 'array-contains', categoryId),
+            where('isDeleted', '==', false),
+            orderBy('createdAt', 'desc')
+          );
+        }
+      }
+
+      const snapshot = await getDocs(q);
+      let procedures = getDocsArray(snapshot).map((doc: any) => this.convertFromFirestore(doc.id, doc.data));
+      
+      // For default category, filter client-side to get procedures without categories or with default category
+      if (categoryId === DEFAULT_CATEGORY_ID) {
+        procedures = procedures.filter(proc => 
+          !proc.categories || 
+          proc.categories.length === 0 || 
+          proc.categories.includes(DEFAULT_CATEGORY_ID)
+        );
+      }
+
+      return procedures;
+    } catch (error) {
+      console.error('Error fetching procedures/checklists by category:', error);
+      throw new Error('Failed to fetch procedures/checklists by category');
     }
   }
 

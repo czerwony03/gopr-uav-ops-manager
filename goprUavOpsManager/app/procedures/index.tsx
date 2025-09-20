@@ -12,20 +12,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { ProcedureChecklist } from '@/types/ProcedureChecklist';
+import { Category } from '@/types/Category';
 import { useAuth } from '@/contexts/AuthContext';
+import { CategoryService } from '@/services/categoryService';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
-import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 
-export default function ProceduresListScreen() {
-  const [checklists, setChecklists] = useState<ProcedureChecklist[]>([]);
+interface CategoryWithCount extends Category {
+  procedureCount: number;
+}
+
+export default function CategoriesListScreen() {
+  const [categories, setCategories] = useState<CategoryWithCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [isFromCache, setIsFromCache] = useState(false);
   const { user } = useAuth();
   const { isConnected } = useNetworkStatus();
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
@@ -33,43 +36,44 @@ export default function ProceduresListScreen() {
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
 
-  const fetchChecklists = useCallback(async () => {
+  const fetchCategories = useCallback(async () => {
     if (!user) return;
     
     try {
-      // Try to get procedures from offline service first
-      const { procedures, isFromCache: fromCache } = await OfflineProcedureChecklistService.getProcedureChecklists(user.role);
-      setChecklists(procedures);
-      setIsFromCache(fromCache);
+      // Fetch categories
+      const categoriesData = await CategoryService.getCategories(user.role);
       
-      // If we got cached data and we're online, try to get fresh data in background
-      if (fromCache && isConnected) {
-        try {
-          const freshProcedures = await ProcedureChecklistService.getProcedureChecklists(user.role);
-          setChecklists(freshProcedures);
-          setIsFromCache(false);
-          
-          // Always refresh cache with fresh data when online
-          console.log('[ProceduresList] Refreshing cache with fresh data');
-          OfflineProcedureChecklistService.forceRefreshProcedures(user.role, freshProcedures).catch(error => {
-            console.error('Error updating cache with fresh data:', error);
-          });
-        } catch (error) {
-          console.log('Failed to fetch fresh data, keeping cached data:', error);
-          // Keep using cached data if fresh fetch fails
-        }
-      }
+      // Count procedures for each category
+      const categoriesWithCount: CategoryWithCount[] = await Promise.all(
+        categoriesData.map(async (category) => {
+          try {
+            const procedures = await ProcedureChecklistService.getProcedureChecklistsByCategory(category.id, user.role);
+            return {
+              ...category,
+              procedureCount: procedures.length,
+            };
+          } catch (error) {
+            console.error(`Error counting procedures for category ${category.id}:`, error);
+            return {
+              ...category,
+              procedureCount: 0,
+            };
+          }
+        })
+      );
+
+      setCategories(categoriesWithCount);
     } catch (error) {
-      console.error('Error fetching procedures/checklists:', error);
+      console.error('Error fetching categories:', error);
       crossPlatformAlert.showAlert({
         title: t('common.error'), 
-        message: t('procedures.errors.fetchFailed')
+        message: t('categories.errors.fetchFailed')
       });
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user, isConnected, t, crossPlatformAlert]);
+  }, [user, t, crossPlatformAlert]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {
@@ -80,45 +84,49 @@ export default function ProceduresListScreen() {
   }, [user, router]);
 
   useEffect(() => {
-    fetchChecklists();
-  }, [fetchChecklists]);
+    fetchCategories();
+  }, [fetchCategories]);
 
-  // Refresh checklists when the screen comes into focus
+  // Refresh categories when the screen comes into focus
   useFocusEffect(
     useCallback(() => {
       if (user) {
-        fetchChecklists();
+        fetchCategories();
       }
-    }, [fetchChecklists, user])
+    }, [fetchCategories, user])
   );
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchChecklists();
+    fetchCategories();
   };
 
-  const handleCreateChecklist = () => {
+  const handleViewCategory = (category: Category) => {
+    router.push(`/procedures/category/${category.id}`);
+  };
+
+  const handleCreateCategory = () => {
     if (!isButtonDisabled()) {
-      router.push('/procedures/create');
+      router.push('/procedures/categories/create');
     }
   };
 
-  const handleEditChecklist = (checklist: ProcedureChecklist) => {
+  const handleViewAllProcedures = () => {
+    router.push('/procedures/procedures');
+  };
+
+  const handleEditCategory = (category: Category) => {
     if (!isButtonDisabled()) {
-      router.push(`/procedures/${checklist.id}/edit`);
+      router.push(`/procedures/categories/${category.id}/edit`);
     }
   };
 
-  const handleViewDetails = (checklist: ProcedureChecklist) => {
-    router.push(`/procedures/${checklist.id}`);
-  };
-
-  const handleDeleteChecklist = async (checklist: ProcedureChecklist) => {
+  const handleDeleteCategory = async (category: Category) => {
     if (!user || isButtonDisabled()) return;
 
     crossPlatformAlert.showAlert({
-      title: t('procedures.delete.title'),
-      message: t('procedures.delete.confirmMessage', { title: checklist.title }),
+      title: t('categories.delete.title'),
+      message: t('categories.delete.confirmMessage', { name: category.name }),
       buttons: [
         { text: t('common.cancel'), style: 'cancel' },
         {
@@ -126,12 +134,12 @@ export default function ProceduresListScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await ProcedureChecklistService.softDeleteProcedureChecklist(checklist.id, user.role, user.uid);
-              await fetchChecklists(); // Refresh the list
-              crossPlatformAlert.showAlert({ title: t('common.success'), message: t('procedures.delete.successMessage') });
+              await CategoryService.softDeleteCategory(category.id, user.role, user.uid);
+              await fetchCategories(); // Refresh the list
+              crossPlatformAlert.showAlert({ title: t('common.success'), message: t('categories.delete.successMessage') });
             } catch (error) {
-              console.error('Error deleting procedure/checklist:', error);
-              crossPlatformAlert.showAlert({ title: t('common.error'), message: t('procedures.delete.errorMessage') });
+              console.error('Error deleting category:', error);
+              crossPlatformAlert.showAlert({ title: t('common.error'), message: t('categories.delete.errorMessage') });
             }
           },
         },
@@ -139,95 +147,100 @@ export default function ProceduresListScreen() {
     });
   };
 
-  const handleRestoreChecklist = async (checklist: ProcedureChecklist) => {
+  const handleRestoreCategory = async (category: Category) => {
     if (!user || isButtonDisabled()) return;
 
     try {
-      await ProcedureChecklistService.restoreProcedureChecklist(checklist.id, user.role, user.uid);
-      await fetchChecklists(); // Refresh the list
-      crossPlatformAlert.showAlert({ title: t('common.success'), message: t('procedures.restore.successMessage') });
+      await CategoryService.restoreCategory(category.id, user.role, user.uid);
+      await fetchCategories(); // Refresh the list
+      crossPlatformAlert.showAlert({ title: t('common.success'), message: t('categories.restore.successMessage') });
     } catch (error) {
-      console.error('Error restoring procedure/checklist:', error);
-      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('procedures.restore.errorMessage') });
+      console.error('Error restoring category:', error);
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('categories.restore.errorMessage') });
     }
   };
 
-  const canModifyChecklists = user?.role === 'manager' || user?.role === 'admin';
+  const canModifyCategories = user?.role === 'manager' || user?.role === 'admin';
 
-  const renderChecklistItem = ({ item }: { item: ProcedureChecklist }) => (
-    <View style={styles.checklistItem}>
-      <View style={styles.checklistHeader}>
-        <View style={styles.checklistInfo}>
-          <Text style={styles.checklistTitle}>{item.title}</Text>
-          {item.description ? (
-            <Text style={styles.checklistDescription} numberOfLines={2}>
-              {item.description}
-            </Text>
-          ) : null}
-          <Text style={styles.checklistMeta}>
-            {item.items.length} {item.items.length === 1 ? t('procedures.itemSingle') : t('procedures.itemPlural')}
-            {item.createdAt && ` • ${t('procedures.createdOn', { date: item.createdAt.toLocaleDateString() })}`}
+  const renderCategoryItem = ({ item }: { item: CategoryWithCount }) => (
+    <TouchableOpacity 
+      style={[
+        styles.categoryCard,
+        item.isDeleted && user?.role === 'admin' && styles.deletedCategoryCard
+      ]}
+      onPress={() => handleViewCategory(item)}
+    >
+      {/* Color indicator */}
+      {item.color && (
+        <View style={[styles.categoryColorBar, { backgroundColor: item.color }]} />
+      )}
+      
+      {/* Category content */}
+      <View style={styles.categoryCardContent}>
+        <View style={styles.categoryCardHeader}>
+          <Text style={styles.categoryCardTitle} numberOfLines={2}>
+            {item.name}
           </Text>
+          
+          {/* Status badge for deleted items (admin only) */}
+          {item.isDeleted && user?.role === 'admin' && (
+            <View style={styles.deletedBadge}>
+              <Text style={styles.deletedBadgeText}>{t('categories.deleted')}</Text>
+            </View>
+          )}
         </View>
+
+        {item.description && (
+          <Text style={styles.categoryCardDescription} numberOfLines={2}>
+            {item.description}
+          </Text>
+        )}
         
-        {/* Status badge for deleted items (admin only) */}
-        {item.isDeleted && user?.role === 'admin' && (
-          <View style={styles.deletedBadge}>
-            <Text style={styles.deletedBadgeText}>{t('procedures.deleted')}</Text>
+        <Text style={styles.categoryCardCount}>
+          {item.procedureCount} {item.procedureCount === 1 ? t('procedures.itemSingle') : t('procedures.itemPlural')}
+        </Text>
+
+        {/* Quick actions for managers/admins */}
+        {canModifyCategories && (
+          <View style={styles.categoryCardActions}>
+            {!item.isDeleted ? (
+              <>
+                <TouchableOpacity 
+                  style={[styles.quickActionButton, getDisabledStyle()]} 
+                  onPress={() => handleEditCategory(item)}
+                  disabled={isButtonDisabled()}
+                >
+                  <Ionicons name="create-outline" size={16} color={isButtonDisabled() ? "#999" : "#4CAF50"} />
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.quickActionButton, getDisabledStyle()]} 
+                  onPress={() => handleDeleteCategory(item)}
+                  disabled={isButtonDisabled()}
+                >
+                  <Ionicons name="trash-outline" size={16} color={isButtonDisabled() ? "#999" : "#F44336"} />
+                </TouchableOpacity>
+              </>
+            ) : user?.role === 'admin' && (
+              <TouchableOpacity 
+                style={[styles.quickActionButton, getDisabledStyle()]} 
+                onPress={() => handleRestoreCategory(item)}
+                disabled={isButtonDisabled()}
+              >
+                <Ionicons name="refresh-outline" size={16} color={isButtonDisabled() ? "#999" : "#FF9800"} />
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </View>
-
-      <View style={styles.checklistActions}>
-        <TouchableOpacity 
-          style={styles.actionButton} 
-          onPress={() => handleViewDetails(item)}
-        >
-          <Ionicons name="eye-outline" size={20} color="#0066CC" />
-          <Text style={styles.actionButtonText}>{t('common.view')}</Text>
-        </TouchableOpacity>
-
-        {canModifyChecklists && !item.isDeleted && (
-          <>
-            <TouchableOpacity 
-              style={[styles.actionButton, getDisabledStyle()]} 
-              onPress={() => handleEditChecklist(item)}
-              disabled={isButtonDisabled()}
-            >
-              <Ionicons name="create-outline" size={20} color={isButtonDisabled() ? "#999" : "#4CAF50"} />
-              <Text style={[styles.actionButtonText, isButtonDisabled() && { color: '#999' }]}>{t('common.edit')}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.actionButton, getDisabledStyle()]} 
-              onPress={() => handleDeleteChecklist(item)}
-              disabled={isButtonDisabled()}
-            >
-              <Ionicons name="trash-outline" size={20} color={isButtonDisabled() ? "#999" : "#F44336"} />
-              <Text style={[styles.actionButtonText, isButtonDisabled() && { color: '#999' }]}>{t('common.delete')}</Text>
-            </TouchableOpacity>
-          </>
-        )}
-
-        {user?.role === 'admin' && item.isDeleted && (
-          <TouchableOpacity 
-            style={[styles.actionButton, getDisabledStyle()]} 
-            onPress={() => handleRestoreChecklist(item)}
-            disabled={isButtonDisabled()}
-          >
-            <Ionicons name="refresh-outline" size={20} color={isButtonDisabled() ? "#999" : "#FF9800"} />
-            <Text style={[styles.actionButtonText, isButtonDisabled() && { color: '#999' }]}>{t('procedures.restore.button')}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
+    </TouchableOpacity>
   );
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0066CC" />
-        <Text style={styles.loadingText}>{t('procedures.loading')}</Text>
+        <Text style={styles.loadingText}>{t('categories.loading')}</Text>
       </View>
     );
   }
@@ -236,43 +249,81 @@ export default function ProceduresListScreen() {
     <SafeAreaView style={styles.container}>
       {/* Offline info bar */}
       <OfflineInfoBar 
-        visible={!isConnected || isFromCache} 
-        message={!isConnected ? t('offline.noConnection') : t('offline.viewingCachedData')}
+        visible={!isConnected} 
+        message={t('offline.noConnection')}
       />
       
       <View style={styles.header}>
-        <Text style={styles.title}>{t('procedures.title')}</Text>
+        <Text style={styles.title}>{t('procedures.categories.title')}</Text>
         
-        {canModifyChecklists && (
+        {canModifyCategories && (
           <TouchableOpacity 
             style={[styles.addButton, getDisabledStyle()]} 
-            onPress={handleCreateChecklist}
+            onPress={handleCreateCategory}
             disabled={isButtonDisabled()}
           >
             <Ionicons name="add" size={24} color={isButtonDisabled() ? "#999" : "#fff"} />
             <Text style={[styles.addButtonText, isButtonDisabled() && { color: '#999' }]}>
-              {t('procedures.addNew')}
+              {t('categories.addNew')}
             </Text>
           </TouchableOpacity>
         )}
       </View>
 
-      {checklists.length === 0 ? (
+      {categories.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="clipboard-outline" size={64} color="#ccc" />
-          <Text style={styles.emptyTitle}>{t('procedures.empty.title')}</Text>
+          <Ionicons name="folder-outline" size={64} color="#ccc" />
+          <Text style={styles.emptyTitle}>{t('categories.empty.title')}</Text>
           <Text style={styles.emptyDescription}>
-            {canModifyChecklists 
-              ? t('procedures.empty.descriptionCanCreate')
-              : t('procedures.empty.descriptionCannotCreate')
+            {canModifyCategories 
+              ? t('categories.empty.descriptionCanCreate')
+              : t('categories.empty.descriptionCannotCreate')
             }
           </Text>
         </View>
       ) : (
         <FlatList
-          data={checklists}
-          renderItem={renderChecklistItem}
+          data={[
+            // Special "View All" item as first item
+            {
+              id: '__view_all__',
+              name: t('procedures.viewAll'),
+              description: t('procedures.allProcedures'),
+              procedureCount: 0,
+              color: '#0066CC',
+              isViewAll: true,
+            } as CategoryWithCount & { isViewAll: boolean },
+            ...categories
+          ]}
+          renderItem={({ item }) => {
+            if ('isViewAll' in item && item.isViewAll) {
+              return (
+                <TouchableOpacity 
+                  style={styles.viewAllCard}
+                  onPress={handleViewAllProcedures}
+                >
+                  <View style={[styles.categoryColorBar, { backgroundColor: item.color }]} />
+                  <View style={styles.categoryCardContent}>
+                    <View style={styles.categoryCardHeader}>
+                      <Text style={styles.categoryCardTitle}>
+                        {item.name}
+                      </Text>
+                    </View>
+                    <Text style={styles.categoryCardDescription}>
+                      {item.description}
+                    </Text>
+                    <View style={styles.viewAllIcon}>
+                      <Ionicons name="list-outline" size={24} color="#0066CC" />
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            }
+            return renderCategoryItem({ item });
+          }}
           keyExtractor={(item) => item.id}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
@@ -311,6 +362,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+    flex: 1,
   },
   addButton: {
     flexDirection: 'row',
@@ -326,13 +378,17 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   listContainer: {
-    padding: 16,
+    padding: 12,
   },
-  checklistItem: {
+  row: {
+    justifyContent: 'space-between',
+  },
+  categoryCard: {
     backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: 12,
     marginBottom: 12,
+    flex: 0.48,
+    minHeight: 120,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -341,62 +397,92 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+    overflow: 'hidden',
   },
-  checklistHeader: {
+  deletedCategoryCard: {
+    opacity: 0.7,
+    borderWidth: 1,
+    borderColor: '#F44336',
+  },
+  viewAllCard: {
+    backgroundColor: '#f8f9ff',
+    borderRadius: 12,
+    marginBottom: 12,
+    flex: 0.48,
+    minHeight: 120,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#0066CC',
+  },
+  categoryColorBar: {
+    height: 4,
+    width: '100%',
+  },
+  categoryCardContent: {
+    padding: 12,
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  categoryCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 6,
   },
-  checklistInfo: {
-    flex: 1,
-  },
-  checklistTitle: {
-    fontSize: 18,
+  categoryCardTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 4,
+    flex: 1,
+    lineHeight: 20,
   },
-  checklistDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  checklistMeta: {
+  categoryCardDescription: {
     fontSize: 12,
+    color: '#666',
+    marginBottom: 8,
+    lineHeight: 16,
+  },
+  categoryCardCount: {
+    fontSize: 11,
     color: '#999',
+    marginBottom: 8,
   },
   deletedBadge: {
     backgroundColor: '#F44336',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: 4,
+    marginLeft: 8,
   },
   deletedBadgeText: {
     color: '#fff',
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: 'bold',
   },
-  checklistActions: {
+  categoryCardActions: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    flexWrap: 'wrap',
-  },
-  actionButton: {
-    flexDirection: 'row',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
-    marginBottom: 4,
-    borderRadius: 6,
-    backgroundColor: '#f0f0f0',
+    gap: 4,
   },
-  actionButtonText: {
-    marginLeft: 4,
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
+  quickActionButton: {
+    padding: 4,
+    borderRadius: 4,
+    backgroundColor: '#f0f0f0',
+    minWidth: 28,
+    alignItems: 'center',
+  },
+  viewAllIcon: {
+    alignSelf: 'center',
+    marginTop: 8,
   },
   emptyContainer: {
     flex: 1,
