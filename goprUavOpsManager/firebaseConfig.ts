@@ -12,15 +12,7 @@ if (Platform.OS === 'web') {
   const { getAuth, setPersistence, browserLocalPersistence } = require('firebase/auth');
   const { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } = require('firebase/firestore');
   const { getStorage } = require('firebase/storage');
-  
-  // Only import analytics if not in test environment
-  let getAnalytics: any = null;
-  let isSupported: any = null;
-  if (process.env.NODE_ENV !== 'test') {
-    const analyticsModule = require('firebase/analytics');
-    getAnalytics = analyticsModule.getAnalytics;
-    isSupported = analyticsModule.isSupported;
-  }
+  const { getAnalytics, isSupported } = require('firebase/analytics');
 
   // Firebase configuration
   const firebaseConfig = {
@@ -39,7 +31,7 @@ if (Platform.OS === 'web') {
   storage = getStorage(app);
 
   // Initialize Analytics for web (only in production and if supported)
-  if (process.env.EXPO_PUBLIC_ENABLE_ANALYTICS !== 'false' && typeof window !== 'undefined' && process.env.NODE_ENV !== 'test' && getAnalytics && isSupported) {
+  if (process.env.EXPO_PUBLIC_ENABLE_ANALYTICS !== 'false' && typeof window !== 'undefined') {
     isSupported().then((supported: boolean) => {
       if (supported) {
         analytics = getAnalytics(app);
@@ -53,7 +45,7 @@ if (Platform.OS === 'web') {
       analytics = null;
     });
   } else {
-    console.log('[FirebaseConfig] Firebase Analytics disabled for web (development mode, test environment, or explicitly disabled)');
+    console.log('[FirebaseConfig] Firebase Analytics disabled for web');
     analytics = null;
   }
 
@@ -93,12 +85,7 @@ if (Platform.OS === 'web') {
   const rnFirebaseAuth = require('@react-native-firebase/auth').default;
   const rnFirebaseFirestore = require('@react-native-firebase/firestore').default;
   const rnFirebaseStorage = require('@react-native-firebase/storage').default;
-  
-  // Only import analytics if not in test environment
-  let rnFirebaseAnalytics: any = null;
-  if (process.env.NODE_ENV !== 'test') {
-    rnFirebaseAnalytics = require('@react-native-firebase/analytics').default;
-  }
+  const rnFirebaseAnalytics = require('@react-native-firebase/analytics').default;
 
   // React Native Firebase automatically uses native configuration
   // from google-services.json (Android) and GoogleService-Info.plist (iOS)
@@ -109,11 +96,11 @@ if (Platform.OS === 'web') {
   storage = rnFirebaseStorage();
 
   // Initialize Analytics for React Native (only in production)
-  if (process.env.EXPO_PUBLIC_ENABLE_ANALYTICS !== 'false' && process.env.NODE_ENV !== 'test' && rnFirebaseAnalytics) {
+  if (process.env.EXPO_PUBLIC_ENABLE_ANALYTICS !== 'false') {
     analytics = rnFirebaseAnalytics();
     console.log('[FirebaseConfig] React Native Firebase Analytics initialized');
   } else {
-    console.log('[FirebaseConfig] Firebase Analytics disabled for React Native (development mode, test environment, or explicitly disabled)');
+    console.log('[FirebaseConfig] Firebase Analytics disabled for React Native');
     analytics = null;
   }
 
@@ -131,8 +118,4 @@ if (Platform.OS === 'web') {
   }
 }
 
-// Alias for compatibility with existing code
-export const db = firestore;
-
-export { auth, firestore, storage, analytics };
-export default app;
+export { app, auth, firestore, storage, analytics };
