@@ -1,7 +1,7 @@
 {
   "name": "gopruavopsmanager",
   "main": "expo-router/entry",
-  "version": "1.0.54",
+  "version": "1.0.55",
   "scripts": {
     "start": "npx expo start",
     "android": "npx expo run:android",
