@@ -98,16 +98,22 @@ service cloud.firestore {
     // CATEGORIES COLLECTION
     // =========================
     match /categories/{categoryId} {
-      // Wszyscy zalogowani widzą nieusunięte kategorie, admin widzi wszystkie
-      allow read: if (isSignedIn() && !resource.data.isDeleted) || isAdmin();
+      // Anyone signed in can read non-deleted procedures
+      allow read: if isSignedIn() && !resource.data.isDeleted;
 
-      // Manager/admin mogą tworzyć i aktualizować (oprócz przywracania)
-      allow create, update: if (isManager() || isAdmin()) && !isRestoring(resource, request);
+      // Admins can read all procedures
+      allow read: if isAdmin();
 
-      // Tylko admin może przywracać kategorię
+      // Managers/Admins can create
+      allow create: if isManager() || isAdmin();
+
+      // Managers/Admins can update *except restoring*
+      allow update: if (isManager() || isAdmin()) && !isRestoring(resource, request);
+
+      // Only admins can restore
       allow update: if isAdmin() && isRestoring(resource, request);
 
-      // Manager/admin mogą usuwać (soft-delete)
+      // Managers/Admins can soft-delete
       allow delete: if isManager() || isAdmin();
     }
 
