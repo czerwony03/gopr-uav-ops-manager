@@ -591,8 +591,8 @@ export const logAnalyticsEvent = async (eventName: string, eventParams?: { [key:
       }
     } else {
       // React Native Analytics
-      if (analyticsFunctions.logEvent) {
-        await analyticsFunctions.logEvent(eventName, eventParams);
+      if (analytics && analytics.logEvent) {
+        await analytics.logEvent(eventName, eventParams);
       }
     }
     console.log(`[Analytics] Event logged: ${eventName}`, eventParams);
@@ -618,8 +618,8 @@ export const setAnalyticsUserId = async (userId: string | null): Promise<void> =
       }
     } else {
       // React Native Analytics
-      if (analyticsFunctions.setUserId) {
-        await analyticsFunctions.setUserId(userId);
+      if (analytics && analytics.setUserId) {
+        await analytics.setUserId(userId);
       }
     }
     console.log(`[Analytics] User ID set:`, userId ? 'authenticated' : 'cleared');
@@ -645,8 +645,8 @@ export const setAnalyticsUserProperties = async (properties: { [key: string]: st
       }
     } else {
       // React Native Analytics
-      if (analyticsFunctions.setUserProperties) {
-        await analyticsFunctions.setUserProperties(properties);
+      if (analytics && analytics.setUserProperties) {
+        await analytics.setUserProperties(properties);
       }
     }
     console.log(`[Analytics] User properties set:`, properties);
@@ -675,8 +675,8 @@ export const setAnalyticsCurrentScreen = async (screenName: string, screenClass?
       }
     } else {
       // React Native Analytics
-      if (analyticsFunctions.setCurrentScreen) {
-        await analyticsFunctions.setCurrentScreen(screenName, screenClass);
+      if (analytics && analytics.setCurrentScreen) {
+        await analytics.setCurrentScreen(screenName, screenClass);
       }
     }
     console.log(`[Analytics] Current screen set: ${screenName}${screenClass ? ` (${screenClass})` : ''}`);
