@@ -12,7 +12,7 @@ export default function ProceduresLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: t('procedures.title'),
+          title: t('procedures.categories.title'),
           headerStyle: { backgroundColor: '#0066CC' },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold' },
@@ -32,12 +32,51 @@ export default function ProceduresLayout() {
           ),
         }}
       />
-      {/* Hide parent header for dynamic routes so nested [id] stack controls the header */}
+      {/* Category procedures screen */}
+      <Stack.Screen
+        name="category/[categoryId]"
+        options={{
+          title: t('procedures.title'),
+          headerStyle: { backgroundColor: '#0066CC' },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold' },
+        }}
+      />
+      {/* Category management screens */}
+      <Stack.Screen
+        name="categories/create"
+        options={{
+          title: t('categories.createTitle'),
+          headerStyle: { backgroundColor: '#0066CC' },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold' },
+        }}
+      />
+      <Stack.Screen
+        name="categories/[categoryId]/edit"
+        options={{
+          title: t('categories.editTitle'),
+          headerStyle: { backgroundColor: '#0066CC' },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold' },
+        }}
+      />
+      {/* Keep existing procedure routes */}
       <Stack.Screen name="[id]" options={{ headerShown: false }} />
       <Stack.Screen
         name="create"
         options={{
           title: t('procedureForm.createTitle'),
+          headerStyle: { backgroundColor: '#0066CC' },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold' },
+        }}
+      />
+      {/* Legacy procedures list - can be kept for backward compatibility */}
+      <Stack.Screen
+        name="procedures"
+        options={{
+          title: t('procedures.allProcedures'),
           headerStyle: { backgroundColor: '#0066CC' },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold' },

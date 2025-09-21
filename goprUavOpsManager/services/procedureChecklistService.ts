@@ -6,6 +6,7 @@ import {ImageService} from './imageService';
 import {UserRole} from "@/types/UserRole";
 import {ImageProcessingService} from '@/utils/imageProcessing';
 import {ProcedureChecklistRepository} from '@/repositories/ProcedureChecklistRepository';
+import { DEFAULT_CATEGORY_ID } from '@/types/Category';
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 
@@ -13,6 +14,11 @@ export class ProcedureChecklistService {
   // Get all procedures/checklists based on user role
   static async getProcedureChecklists(userRole: UserRole): Promise<ProcedureChecklist[]> {
     return ProcedureChecklistRepository.getProcedureChecklists(userRole);
+  }
+
+  // Get procedures/checklists by category ID
+  static async getProcedureChecklistsByCategory(categoryId: string, userRole: UserRole): Promise<ProcedureChecklist[]> {
+    return ProcedureChecklistRepository.getProcedureChecklistsByCategory(categoryId, userRole);
   }
 
   // Get a single procedure/checklist by ID
@@ -49,6 +55,7 @@ export class ProcedureChecklistService {
         title: formData.title,
         description: formData.description,
         items: processedItems,
+        categories: formData.categories && formData.categories.length > 0 ? formData.categories : [DEFAULT_CATEGORY_ID],
         createdBy: userId,
         updatedBy: userId,
       };
@@ -100,6 +107,7 @@ export class ProcedureChecklistService {
         title: formData.title,
         description: formData.description,
         items: processedItems,
+        categories: formData.categories && formData.categories.length > 0 ? formData.categories : [DEFAULT_CATEGORY_ID],
         updatedBy: userId,
       };
 
