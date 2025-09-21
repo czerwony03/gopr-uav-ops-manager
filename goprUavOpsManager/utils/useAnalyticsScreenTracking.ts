@@ -40,25 +40,31 @@ export function useAnalyticsScreenTracking() {
  * Generate a consistent screen name from Expo Router segments or pathname
  */
 function generateScreenName(segments: string[], pathname: string): string {
-  if (segments.length === 0) {
-    return 'unknown';
+  let screenName = '';
+
+  // Try to generate screen name from segments first
+  if (segments.length > 0) {
+    // Use segments to create a structured screen name
+    screenName = segments.join('/');
+    
+    // Handle special cases and clean up screen names
+    screenName = screenName
+      .replace(/^\(tabs\)\//, '') // Remove tab group prefix
+      .replace(/^\(drawer\)\//, '') // Remove drawer group prefix
+      .replace(/^app\//, '') // Remove app prefix
+      .replace(/\/index$/, '') // Remove trailing /index
+      .replace(/\/\[([^\]]+)\]/, '/:$1') // Convert [id] to :id
+      .replace(/^\/$/, 'home') // Convert root to home
+      || 'home';
+      
+    // If we end up with just 'app' or similar, it means we're at the root
+    if (screenName === 'app' || screenName === 'index') {
+      screenName = 'home';
+    }
   }
 
-  // Use segments to create a structured screen name
-  let screenName = segments.join('/');
-  
-  // Handle special cases and clean up screen names
-  screenName = screenName
-    .replace(/^\(tabs\)\//, '') // Remove tab group prefix
-    .replace(/^\(drawer\)\//, '') // Remove drawer group prefix
-    .replace(/^app\//, '') // Remove app prefix
-    .replace(/\/index$/, '') // Remove trailing /index
-    .replace(/\/\[([^\]]+)\]/, '/:$1') // Convert [id] to :id
-    .replace(/^\/$/, 'home') // Convert root to home
-    || 'home';
-
-  // Fallback to pathname if segments don't provide good name
-  if (screenName === 'unknown' || screenName === '') {
+  // Fallback to pathname if segments don't provide good name or are empty
+  if (!screenName || screenName === 'unknown' || screenName === '') {
     screenName = pathname
       .replace(/^\//, '') // Remove leading slash
       .replace(/\/\[([^\]]+)\]/g, '/:$1') // Convert [id] to :id
