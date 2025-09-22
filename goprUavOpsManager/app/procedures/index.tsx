@@ -16,6 +16,7 @@ import { Category } from '@/types/Category';
 import { useAuth } from '@/contexts/AuthContext';
 import { CategoryService } from '@/services/categoryService';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
+import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
@@ -43,24 +44,53 @@ export default function CategoriesListScreen() {
       // Fetch categories
       const categoriesData = await CategoryService.getCategories(user.role);
       
-      // Count procedures for each category
-      const categoriesWithCount: CategoryWithCount[] = await Promise.all(
-        categoriesData.map(async (category) => {
-          try {
-            const procedures = await ProcedureChecklistService.getProcedureChecklistsByCategory(category.id, user.role);
+      let categoriesWithCount: CategoryWithCount[];
+      
+      if (!isConnected) {
+        // When offline, fetch all cached procedures once and count in memory
+        try {
+          const { procedures, isFromCache } = await OfflineProcedureChecklistService.getProcedureChecklists(user.role, true);
+          console.log(`[CategoriesListScreen] Using ${isFromCache ? 'cached' : 'fresh'} procedures for offline counting`);
+          
+          // Count procedures for each category in memory
+          categoriesWithCount = categoriesData.map((category) => {
+            const procedureCount = procedures.filter(procedure => 
+              procedure.categories && procedure.categories.includes(category.id)
+            ).length;
+            
             return {
               ...category,
-              procedureCount: procedures.length,
+              procedureCount,
             };
-          } catch (error) {
-            console.error(`Error counting procedures for category ${category.id}:`, error);
-            return {
-              ...category,
-              procedureCount: 0,
-            };
-          }
-        })
-      );
+          });
+        } catch (error) {
+          console.error('Error fetching cached procedures for offline counting:', error);
+          // Fallback to zero counts when offline and no cache available
+          categoriesWithCount = categoriesData.map((category) => ({
+            ...category,
+            procedureCount: 0,
+          }));
+        }
+      } else {
+        // When online, use existing behavior (separate calls per category)
+        categoriesWithCount = await Promise.all(
+          categoriesData.map(async (category) => {
+            try {
+              const procedures = await ProcedureChecklistService.getProcedureChecklistsByCategory(category.id, user.role);
+              return {
+                ...category,
+                procedureCount: procedures.length,
+              };
+            } catch (error) {
+              console.error(`Error counting procedures for category ${category.id}:`, error);
+              return {
+                ...category,
+                procedureCount: 0,
+              };
+            }
+          })
+        );
+      }
 
       setCategories(categoriesWithCount);
     } catch (error) {
@@ -73,7 +103,7 @@ export default function CategoriesListScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user, t, crossPlatformAlert]);
+  }, [user, isConnected, t, crossPlatformAlert]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {
