@@ -41,8 +41,50 @@ export default function CategoriesListScreen() {
     if (!user) return;
     
     try {
-      // Fetch categories
-      const categoriesData = await CategoryService.getCategories(user.role);
+      let categoriesData: Category[];
+      
+      // Try to fetch categories
+      try {
+        categoriesData = await CategoryService.getCategories(user.role);
+      } catch (categoryError) {
+        console.error('Error fetching categories:', categoryError);
+        
+        if (!isConnected) {
+          // When offline and categories can't be loaded, try to extract category info from cached procedures
+          try {
+            const { procedures } = await OfflineProcedureChecklistService.getProcedureChecklists(user.role, true);
+            console.log('[CategoriesListScreen] Categories unavailable offline, extracting from cached procedures');
+            
+            // Extract unique category IDs from procedures and create minimal category objects
+            const categoryIdsSet = new Set<string>();
+            procedures.forEach(procedure => {
+              if (procedure.categories) {
+                procedure.categories.forEach(catId => categoryIdsSet.add(catId));
+              }
+            });
+            
+            // Create minimal category objects for the unique IDs found
+            categoriesData = Array.from(categoryIdsSet).map((categoryId, index) => ({
+              id: categoryId,
+              name: `Category ${categoryId}`, // Fallback name
+              description: 'Category information unavailable offline',
+              color: '#6B7280', // Default gray color
+              order: index,
+              createdBy: 'system',
+              isDeleted: false,
+            }));
+            
+            console.log(`[CategoriesListScreen] Created ${categoriesData.length} fallback categories from cached procedures`);
+          } catch (procedureError) {
+            console.error('Error fetching cached procedures for category extraction:', procedureError);
+            // Final fallback: empty categories list
+            categoriesData = [];
+          }
+        } else {
+          // When online, re-throw the error to show error message to user
+          throw categoryError;
+        }
+      }
       
       let categoriesWithCount: CategoryWithCount[];
       
@@ -94,7 +136,7 @@ export default function CategoriesListScreen() {
 
       setCategories(categoriesWithCount);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Error in fetchCategories:', error);
       crossPlatformAlert.showAlert({
         title: t('common.error'), 
         message: t('categories.errors.fetchFailed')
