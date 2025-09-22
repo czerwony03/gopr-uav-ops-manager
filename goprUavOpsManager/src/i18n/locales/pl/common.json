@@ -311,6 +311,7 @@
       "operatorRequired": "Operator jest wymagany",
       "durationRequired": "Czas trwania jest wymagany",
       "locationRequired": "Lokalizacja jest wymagana",
+      "coordinatesRequired": "Koordynaty są wymagane",
       "dateRequired": "Data jest wymagana",
       "droneIdRequired": "Dron jest wymagany",
       "startDateRequired": "Data rozpoczęcia jest wymagana",

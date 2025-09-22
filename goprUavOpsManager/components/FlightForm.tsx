@@ -166,7 +166,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
 
   const validateForm = (): boolean => {
     const requiredFields: (keyof FlightFormData)[] = [
-      'location', 'flightCategory', 'operationType', 
+      'location', 'coordinates', 'flightCategory', 'operationType',
       'activityType', 'droneId', 'operator', 'startDate', 'startTime', 'endDate', 'endTime'
     ];
 
@@ -285,6 +285,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
               onCoordinatesChange={(coords) => updateFormData('coordinates', coords)}
               onLocationChange={(location) => updateFormData('location', location)}
               disabled={loading}
+              required={true}
             />
 
             <Text style={styles.label}>{t('flightForm.category')} *</Text>

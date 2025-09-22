@@ -13,7 +13,6 @@ import {
   getDocs,
   getDocsArray,
   timestampNow,
-  arrayContains
 } from '@/utils/firebaseUtils';
 
 export class ProcedureChecklistRepository {
@@ -93,7 +92,7 @@ export class ProcedureChecklistRepository {
       
       // For default category, filter client-side to get procedures without categories or with default category
       if (categoryId === DEFAULT_CATEGORY_ID) {
-        procedures = procedures.filter(proc => 
+        procedures = procedures.filter((proc: any) =>
           !proc.categories || 
           proc.categories.length === 0 || 
           proc.categories.includes(DEFAULT_CATEGORY_ID)

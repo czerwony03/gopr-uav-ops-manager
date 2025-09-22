@@ -311,6 +311,7 @@
       "operatorRequired": "Operator is required",
       "durationRequired": "Duration is required",
       "locationRequired": "Location is required",
+      "coordinatesRequired": "Coordinates are required",
       "dateRequired": "Date is required",
       "droneIdRequired": "Drone is required",
       "startDateRequired": "Start date is required",

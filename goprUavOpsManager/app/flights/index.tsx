@@ -303,22 +303,22 @@ export default function FlightsListScreen() {
               <Text style={styles.detailLabel}>{t('flights.pilot')}:</Text>
               <Text style={styles.detailValue}>{item.userEmail}</Text>
             </View>
-            {item.operator && (
+            {item.operator ? (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>{t('flights.operator')}:</Text>
                 <Text style={styles.detailValue}>{item.operator}</Text>
               </View>
-            )}
+            ) : null}
           </>
         ) : null}
 
-        {item.additionalInfo && (
+        {item.additionalInfo ? (
           <View style={styles.additionalInfoRow}>
             <Text style={styles.additionalInfoPreview} numberOfLines={2}>
               {t('flightForm.additionalInfo')}: {item.additionalInfo.length > 60 ? `${item.additionalInfo.substring(0, 60)}...` : item.additionalInfo}
             </Text>
           </View>
-        )}
+        ) : null}
       </View>
 
       <View style={styles.buttonContainer}>

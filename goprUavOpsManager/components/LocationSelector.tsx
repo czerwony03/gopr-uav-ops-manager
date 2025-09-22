@@ -70,6 +70,8 @@ interface LocationSelectorProps {
   style?: any;
   /** Whether to auto-update location from coordinates (default: true) */
   autoUpdateLocation?: boolean;
+  /** Whether the location field is required */
+  required?: boolean;
 }
 
 export default function LocationSelector({
@@ -85,6 +87,7 @@ export default function LocationSelector({
   locationPlaceholder,
   style,
   autoUpdateLocation = true,
+  required = false,
 }: LocationSelectorProps) {
   const { t } = useTranslation('common');
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
@@ -198,13 +201,13 @@ export default function LocationSelector({
       )}
 
       {/* Coordinates Field with Map Button */}
-      <Text style={styles.label}>{t('flightForm.coordinates', 'Coordinates')}</Text>
+      <Text style={styles.label}>{t('flightForm.coordinates', 'Coordinates')}{required ? ' *' : ''}</Text>
       <View style={styles.coordinatesContainer}>
         <TextInput
           style={[
             styles.input, 
             styles.coordinatesInput,
-            disabled && styles.disabledInput
+            disabled && styles.disabledInput,
           ]}
           value={coordinates}
           onChangeText={handleCoordinatesChange}
@@ -225,13 +228,13 @@ export default function LocationSelector({
       {/* Location Field (Auto-updated) */}
       {showLocationField && (
         <>
-          <Text style={styles.label}>{t('flightForm.location')} *</Text>
+          <Text style={styles.label}>{t('flightForm.location')}{required ? ' *' : ''}</Text>
           <View style={styles.locationContainer}>
             <TextInput
               style={[
                 styles.input, 
                 styles.locationInput,
-                disabled && styles.disabledInput
+                disabled && styles.disabledInput,
               ]}
               value={location}
               onChangeText={onLocationChange}
@@ -336,3 +339,4 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
   },
 });
+

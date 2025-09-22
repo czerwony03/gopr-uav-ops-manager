@@ -189,7 +189,7 @@ export default function FlightDetailsScreen() {
               <Text style={styles.detail}>{t('flightDetails.location')}: {flight.location}</Text>
               
               {/* Coordinates section with embedded map and Google Maps button */}
-              {flight.coordinates && (
+              {flight.coordinates ? (
                 <View style={styles.coordinatesContainer}>
                   <View style={styles.coordinatesRow}>
                     <Text style={styles.detail}>{t('flightDetails.coordinates')}: {MapUtils.getDisplayCoordinates(flight.coordinates)}</Text>
@@ -211,7 +211,7 @@ export default function FlightDetailsScreen() {
                     />
                   </View>
                 </View>
-              )}
+              ) : null}
               
               <Text style={styles.detail}>
                 {t('common.time')}: {crossesMidnight ? (
@@ -225,12 +225,12 @@ export default function FlightDetailsScreen() {
               </Text>
               <Text style={styles.detail}>{t('flightDetails.conditions')}: {flight.conditions}</Text>
               
-              {flight.additionalInfo && (
+              {flight.additionalInfo ? (
                 <View style={styles.additionalInfoContainer}>
                   <Text style={styles.additionalInfoLabel}>{t('flightForm.additionalInfo')}:</Text>
                   <Text style={styles.additionalInfoText}>{flight.additionalInfo}</Text>
                 </View>
-              )}
+              ) : null}
             </View>
 
             <View style={styles.section}>
@@ -251,23 +251,23 @@ export default function FlightDetailsScreen() {
               <Text style={styles.detail}>{t('flightDetails.operator')}: {flight.operator || t('userDetails.noData')}</Text>
             </View>
 
-            {(flight.createdAt || flight.updatedAt) && (
+            {(flight.createdAt || flight.updatedAt) ? (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>{t('flightDetails.auditInfo')}</Text>
-                {flight.createdAt && (
+                {flight.createdAt ? (
                   <Text style={styles.detail}>
                     {t('flightDetails.createdAt')}: {flight.createdAt.toLocaleDateString()} {flight.createdAt.toLocaleTimeString()}
                     {createdByName && ` ${t('flightDetails.createdBy')} ${createdByName}`}
                   </Text>
-                )}
-                {flight.updatedAt && (
+                ) : null}
+                {flight.updatedAt ? (
                   <Text style={styles.detail}>
                     {t('flightDetails.updatedAt')}: {flight.updatedAt.toLocaleDateString()} {flight.updatedAt.toLocaleTimeString()}
                     {updatedByName && ` ${t('flightDetails.updatedBy')} ${updatedByName}`}
                   </Text>
-                )}
+                ) : null}
               </View>
-            )}
+            ) : null}
 
             <View style={styles.actionButtons}>
               {canEdit && (
