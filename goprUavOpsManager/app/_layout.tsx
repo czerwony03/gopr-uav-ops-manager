@@ -24,6 +24,7 @@ Sentry.init({
       levels: ['error', 'warn']
     })
   ],
+  maxValueLength: 500,
   beforeSend(event) {
     if (event.exception?.values) {
       event.exception.values.forEach(exception => {
