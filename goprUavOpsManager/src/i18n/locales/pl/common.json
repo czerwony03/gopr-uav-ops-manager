@@ -591,7 +591,8 @@
       "clearSearch": "Wyczyść wyszukiwanie"
     },
     "categories": {
-      "title": "Kategorie"
+      "title": "Procedury",
+      "titleHeader": "Kategorie procedur"
     },
     "empty": {
       "title": "Brak procedur lub list kontrolnych",

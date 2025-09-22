@@ -166,7 +166,8 @@ export default function CategoriesListScreen() {
     <TouchableOpacity 
       style={[
         styles.categoryCard,
-        item.isDeleted && user?.role === 'admin' && styles.deletedCategoryCard
+        item.isDeleted && user?.role === 'admin' && styles.deletedCategoryCard,
+        { borderColor: item.color }
       ]}
       onPress={() => handleViewCategory(item)}
     >
@@ -254,7 +255,7 @@ export default function CategoriesListScreen() {
       />
       
       <View style={styles.header}>
-        <Text style={styles.title}>{t('procedures.categories.title')}</Text>
+        <Text style={styles.title}>{t('procedures.categories.titleHeader')}</Text>
         
         {canModifyCategories && (
           <TouchableOpacity 
@@ -398,6 +399,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
     overflow: 'hidden',
+    borderWidth: 2,
   },
   deletedCategoryCard: {
     opacity: 0.7,

@@ -591,7 +591,8 @@
       "clearSearch": "Clear Search"
     },
     "categories": {
-      "title": "Categories"
+      "title": "Procedures",
+      "titleHeader": "Procedure categories"
     },
     "empty": {
       "title": "No Procedures or Checklists",
