@@ -91,8 +91,10 @@ if (isWeb()) {
   
   // Only import analytics if not in test environment
   let rnAnalytics: any = null;
+  let rnAnalyticsModular: any = null;
   if (process.env.NODE_ENV !== 'test') {
     rnAnalytics = require('@react-native-firebase/analytics');
+    rnAnalyticsModular = require('@react-native-firebase/analytics/lib/modular');
   }
   
   firestoreFunctions = {
@@ -129,10 +131,9 @@ if (isWeb()) {
   };
 
   analyticsFunctions = {
-    logEvent: rnAnalytics?.logEvent || null,
-    setUserId: rnAnalytics?.setUserId || null,
-    setUserProperties: rnAnalytics?.setUserProperties || null,
-    setCurrentScreen: rnAnalytics?.setCurrentScreen || null,
+    logEvent: rnAnalyticsModular?.logEvent || null,
+    setUserId: rnAnalyticsModular?.setUserId || null,
+    setUserProperties: rnAnalyticsModular?.setUserProperties || null,
   };
   
   Timestamp = rnFirestore.Timestamp;
@@ -590,9 +591,9 @@ export const logAnalyticsEvent = async (eventName: string, eventParams?: { [key:
         await analyticsFunctions.logEvent(analytics, eventName, eventParams);
       }
     } else {
-      // React Native Analytics
+      // React Native Analytics - Use modular functions for v22+ compatibility
       if (analyticsFunctions.logEvent) {
-        await analyticsFunctions.logEvent(eventName, eventParams);
+        await analyticsFunctions.logEvent(analytics, eventName, eventParams);
       }
     }
     console.log(`[Analytics] Event logged: ${eventName}`, eventParams);
@@ -617,9 +618,9 @@ export const setAnalyticsUserId = async (userId: string | null): Promise<void> =
         await analyticsFunctions.setUserId(analytics, userId);
       }
     } else {
-      // React Native Analytics
+      // React Native Analytics - Use modular functions for v22+ compatibility
       if (analyticsFunctions.setUserId) {
-        await analyticsFunctions.setUserId(userId);
+        await analyticsFunctions.setUserId(analytics, userId);
       }
     }
     console.log(`[Analytics] User ID set:`, userId ? 'authenticated' : 'cleared');
@@ -644,9 +645,9 @@ export const setAnalyticsUserProperties = async (properties: { [key: string]: st
         await analyticsFunctions.setUserProperties(analytics, properties);
       }
     } else {
-      // React Native Analytics
+      // React Native Analytics - Use modular functions for v22+ compatibility
       if (analyticsFunctions.setUserProperties) {
-        await analyticsFunctions.setUserProperties(properties);
+        await analyticsFunctions.setUserProperties(analytics, properties);
       }
     }
     console.log(`[Analytics] User properties set:`, properties);
@@ -674,9 +675,12 @@ export const setAnalyticsCurrentScreen = async (screenName: string, screenClass?
         });
       }
     } else {
-      // React Native Analytics
-      if (analyticsFunctions.setCurrentScreen) {
-        await analyticsFunctions.setCurrentScreen(screenName, screenClass);
+      // React Native Analytics - Use modular logEvent with screen_view for v22+ compatibility  
+      if (analyticsFunctions.logEvent) {
+        await analyticsFunctions.logEvent(analytics, 'screen_view', {
+          firebase_screen: screenName,
+          firebase_screen_class: screenClass || screenName,
+        });
       }
     }
     console.log(`[Analytics] Current screen set: ${screenName}${screenClass ? ` (${screenClass})` : ''}`);
