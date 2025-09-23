@@ -17,7 +17,6 @@ import { ProcedureChecklist } from '@/types/ProcedureChecklist';
 import { Category, DEFAULT_CATEGORY_ID } from '@/types/Category';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
-import { CategoryService } from '@/services/categoryService';
 import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
 import { OfflineCategoryService } from '@/services/offlineCategoryService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
@@ -60,12 +59,6 @@ export default function CategoryProceduresScreen() {
     if (!user || !categoryId) return;
     
     try {
-      // Check if cache should be updated based on timestamps before fetching
-      await Promise.all([
-        OfflineCategoryService.preDownloadCategories(user.role),
-        OfflineProcedureChecklistService.preDownloadProcedures(user.role),
-      ]);
-
       // Fetch category info from cache-first approach
       const categoriesData = await OfflineCategoryService.getCategories(user.role);
       const categoryData = categoriesData.find(cat => cat.id === categoryId);
