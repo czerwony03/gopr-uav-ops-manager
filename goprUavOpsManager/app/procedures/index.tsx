@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { Category } from '@/types/Category';
+import { Category, DEFAULT_CATEGORY_ID } from '@/types/Category';
 import { useAuth } from '@/contexts/AuthContext';
 import { CategoryService } from '@/services/categoryService';
 import { OfflineCategoryService } from '@/services/offlineCategoryService';
@@ -42,6 +42,12 @@ export default function CategoriesListScreen() {
     if (!user) return;
     
     try {
+      // Check if cache should be updated based on timestamps before fetching
+      await Promise.all([
+        OfflineCategoryService.preDownloadCategories(user.role),
+        OfflineProcedureChecklistService.preDownloadProcedures(user.role),
+      ]);
+
       // Fetch categories using cache-first approach for instant loading
       const categoriesData = await OfflineCategoryService.getCategories(user.role);
       
@@ -56,7 +62,7 @@ export default function CategoriesListScreen() {
             // Filter procedures for this category
             const categoryProcedures = procedures.filter(proc => 
               proc.categories?.includes(category.id) || 
-              ((!proc.categories || proc.categories.length === 0) && category.id === 'default')
+              ((!proc.categories || proc.categories.length === 0) && category.id === DEFAULT_CATEGORY_ID)
             );
             
             return {
