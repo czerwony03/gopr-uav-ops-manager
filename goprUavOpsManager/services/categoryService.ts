@@ -3,6 +3,7 @@ import { UserRole } from '@/types/UserRole';
 import { CategoryRepository } from '@/repositories/CategoryRepository';
 import { AuditLogService } from '@/services/auditLogService';
 import { UserService } from '@/services/userService';
+import { AppSettingsService } from './appSettingsService';
 
 export class CategoryService {
   /**
@@ -65,6 +66,9 @@ export class CategoryService {
       // Create category in repository
       const docId = await CategoryRepository.createCategory(categoryData, userId);
 
+      // Update categories timestamp in AppSettings
+      await AppSettingsService.updateCategoriesLastUpdate();
+
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);
       await AuditLogService.createAuditLog({
@@ -119,6 +123,9 @@ export class CategoryService {
       // Update category in repository
       await CategoryRepository.updateCategory(id, categoryData, userId);
 
+      // Update categories timestamp in AppSettings
+      await AppSettingsService.updateCategoriesLastUpdate();
+
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);
       await AuditLogService.createAuditLog({
@@ -162,6 +169,9 @@ export class CategoryService {
 
       await CategoryRepository.softDeleteCategory(id, userId);
 
+      // Update categories timestamp in AppSettings
+      await AppSettingsService.updateCategoriesLastUpdate();
+
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);
       await AuditLogService.createAuditLog({
@@ -195,6 +205,9 @@ export class CategoryService {
       }
 
       await CategoryRepository.restoreCategory(id, userId);
+
+      // Update categories timestamp in AppSettings
+      await AppSettingsService.updateCategoriesLastUpdate();
 
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);

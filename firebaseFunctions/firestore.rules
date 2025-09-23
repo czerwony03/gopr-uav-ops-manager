@@ -132,6 +132,17 @@ service cloud.firestore {
     }
 
     // =========================
+    // APP SETTINGS COLLECTION
+    // =========================
+    match /appsettings/{settingId} {
+      // Anyone signed in can read app settings (for cache synchronization)
+      allow read: if isSignedIn();
+
+      // Only managers/admins can write app settings (timestamp updates)
+      allow write: if isManager() || isAdmin();
+    }
+
+    // =========================
     // PUBLIC USERS COLLECTION
     // =========================
     match /publicUsers/{userId} {

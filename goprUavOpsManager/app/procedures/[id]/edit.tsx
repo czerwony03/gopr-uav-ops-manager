@@ -29,6 +29,7 @@ export default function EditProcedureScreen() {
         const formData: ProcedureChecklistFormData = {
           title: procedure.title,
           description: procedure.description || '',
+          categories: procedure.categories || [], // Include categories field
           items: procedure.items.map(item => ({
             id: item.id,
             topic: item.topic,

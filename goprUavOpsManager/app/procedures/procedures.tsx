@@ -56,28 +56,13 @@ export default function ProceduresListScreen() {
     if (!user) return;
     
     try {
-      // Try to get procedures from offline service first
+      // Check if cache should be updated based on timestamps before fetching
+      await OfflineProcedureChecklistService.preDownloadProcedures(user.role);
+
+      // Get procedures using cache-first approach
       const { procedures, isFromCache: fromCache } = await OfflineProcedureChecklistService.getProcedureChecklists(user.role);
       setChecklists(procedures);
       setIsFromCache(fromCache);
-      
-      // If we got cached data and we're online, try to get fresh data in background
-      if (fromCache && isConnected) {
-        try {
-          const freshProcedures = await ProcedureChecklistService.getProcedureChecklists(user.role);
-          setChecklists(freshProcedures);
-          setIsFromCache(false);
-          
-          // Always refresh cache with fresh data when online
-          console.log('[ProceduresList] Refreshing cache with fresh data');
-          OfflineProcedureChecklistService.forceRefreshProcedures(user.role, freshProcedures).catch(error => {
-            console.error('Error updating cache with fresh data:', error);
-          });
-        } catch (error) {
-          console.log('Failed to fetch fresh data, keeping cached data:', error);
-          // Keep using cached data if fresh fetch fails
-        }
-      }
     } catch (error) {
       console.error('Error fetching procedures/checklists:', error);
       crossPlatformAlert.showAlert({
@@ -88,7 +73,7 @@ export default function ProceduresListScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user, isConnected, t, crossPlatformAlert]);
+  }, [user, t, crossPlatformAlert]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {

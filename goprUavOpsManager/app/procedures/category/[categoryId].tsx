@@ -14,10 +14,11 @@ import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { ProcedureChecklist } from '@/types/ProcedureChecklist';
-import { Category } from '@/types/Category';
+import { Category, DEFAULT_CATEGORY_ID } from '@/types/Category';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
-import { CategoryService } from '@/services/categoryService';
+import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
+import { OfflineCategoryService } from '@/services/offlineCategoryService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
@@ -58,13 +59,18 @@ export default function CategoryProceduresScreen() {
     if (!user || !categoryId) return;
     
     try {
-      // Fetch category info and procedures
-      const [categoryData, proceduresData] = await Promise.all([
-        CategoryService.getCategory(categoryId, user.role),
-        ProcedureChecklistService.getProcedureChecklistsByCategory(categoryId, user.role)
-      ]);
+      // Fetch category info from cache-first approach
+      const categoriesData = await OfflineCategoryService.getCategories(user.role);
+      const categoryData = categoriesData.find(cat => cat.id === categoryId);
 
-      setCategory(categoryData);
+      // Get all procedures and filter for this category
+      const { procedures: allProcedures } = await OfflineProcedureChecklistService.getProcedureChecklists(user.role);
+      const proceduresData = allProcedures.filter(proc => 
+        proc.categories?.includes(categoryId) || 
+        ((!proc.categories || proc.categories.length === 0) && categoryId === DEFAULT_CATEGORY_ID)
+      );
+
+      setCategory(categoryData || null);
       setProcedures(proceduresData);
     } catch (error) {
       console.error('Error fetching category procedures:', error);

@@ -21,6 +21,7 @@ module.exports = {
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/$1',
         'react-native': '<rootDir>/services/__tests__/__mocks__/react-native.js',
+        '@react-native-async-storage/async-storage': '<rootDir>/services/__tests__/__mocks__/async-storage.js',
         'expo-constants': '<rootDir>/services/__tests__/__mocks__/expo-constants.js',
         'expo-file-system': '<rootDir>/services/__tests__/__mocks__/expo-file-system.js',
         'expo-location': '<rootDir>/services/__tests__/__mocks__/expo-location.js',
@@ -52,6 +53,8 @@ module.exports = {
         'react-native$': '<rootDir>/services/__tests__/__mocks__/react-native.js',
         'react-native/Libraries/Utilities/Platform': '<rootDir>/services/__tests__/__mocks__/react-native.js',
         'react-native/Libraries/StyleSheet/StyleSheet': '<rootDir>/services/__tests__/__mocks__/react-native.js',
+        // AsyncStorage mock
+        '@react-native-async-storage/async-storage': '<rootDir>/services/__tests__/__mocks__/async-storage.js',
         // Expo Router mocks
         'expo-router': '<rootDir>/app/__tests__/__mocks__/expo-router.js',
         // Firebase mocks

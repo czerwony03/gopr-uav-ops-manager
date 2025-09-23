@@ -1,4 +1,4 @@
-// Test AsyncStorage mocking works correctly for OfflineProcedureChecklistService
+// Test AsyncStorage mocking works correctly
 // This file tests that AsyncStorage is properly mocked and won't cause runtime errors
 
 // Mock AsyncStorage before any imports
@@ -10,7 +10,7 @@ const mockAsyncStorage = {
 
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
 
-describe('OfflineProcedureChecklistService AsyncStorage Mocking', () => {
+describe('OfflineCategoryService AsyncStorage Mocking', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Re-setup mock return values after clearing
@@ -46,45 +46,20 @@ describe('OfflineProcedureChecklistService AsyncStorage Mocking', () => {
     expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith('test-key');
   });
 
-  it('should prevent async_storage_1.default.setItem errors for procedures', async () => {
+  it('should prevent async_storage_1.default.setItem errors', async () => {
     // This test verifies that the AsyncStorage mock prevents the runtime error:
     // "TypeError: async_storage_1.default.setItem is not a function"
     
     const AsyncStorage = require('@react-native-async-storage/async-storage');
     
-    // Mock a complex serialization scenario like in the procedure service
-    const testProcedures = [
-      { 
-        id: 'proc-1', 
-        title: 'Test Procedure',
-        items: [{ id: 'item-1', content: 'Test item' }],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-    ];
-    const serializedData = JSON.stringify(testProcedures);
+    // Mock a complex serialization scenario like in the service
+    const testData = { categories: [], metadata: { version: 1 } };
+    const serializedData = JSON.stringify(testData);
     
     // This operation should work without the "setItem is not a function" error
-    const result = await AsyncStorage.setItem('cached_procedures', serializedData);
+    const result = await AsyncStorage.setItem('cached_categories', serializedData);
     expect(result).toBeUndefined();
     
-    expect(mockAsyncStorage.setItem).toHaveBeenCalledWith('cached_procedures', serializedData);
-  });
-
-  it('should handle Promise.all AsyncStorage operations', async () => {
-    // Tests the specific pattern used in the offline services with Promise.all
-    const AsyncStorage = require('@react-native-async-storage/async-storage');
-    
-    const operations = [
-      AsyncStorage.setItem('key1', 'value1'),
-      AsyncStorage.setItem('key2', 'value2')
-    ];
-    
-    // This should work without errors (similar to the service implementation)
-    await expect(Promise.all(operations)).resolves.toEqual([undefined, undefined]);
-    
-    expect(mockAsyncStorage.setItem).toHaveBeenCalledTimes(2);
-    expect(mockAsyncStorage.setItem).toHaveBeenCalledWith('key1', 'value1');
-    expect(mockAsyncStorage.setItem).toHaveBeenCalledWith('key2', 'value2');
+    expect(mockAsyncStorage.setItem).toHaveBeenCalledWith('cached_categories', serializedData);
   });
 });
