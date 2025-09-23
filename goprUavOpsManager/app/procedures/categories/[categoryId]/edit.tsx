@@ -3,10 +3,12 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { CategoryService } from '@/services/categoryService';
+import { OfflineCategoryService } from '@/services/offlineCategoryService';
 import { Category, CategoryFormData } from '@/types/Category';
 import CategoryForm from '@/components/CategoryForm';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useTranslation } from 'react-i18next';
+import { useNetworkStatus } from '@/utils/useNetworkStatus';
 
 export default function EditCategoryScreen() {
   const router = useRouter();
@@ -14,6 +16,7 @@ export default function EditCategoryScreen() {
   const { user } = useAuth();
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
+  const { isConnected } = useNetworkStatus();
   
   const [category, setCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,8 +25,25 @@ export default function EditCategoryScreen() {
     const fetchCategory = async () => {
       if (!user || !categoryId) return;
       
+      // Check if offline when trying to edit
+      if (!isConnected) {
+        crossPlatformAlert.showAlert({
+          title: t('common.error'),
+          message: t('offline.editRequiresConnection'),
+          buttons: [
+            {
+              text: t('common.ok'),
+              onPress: () => router.back()
+            }
+          ]
+        });
+        return;
+      }
+      
       try {
-        const categoryData = await CategoryService.getCategory(categoryId, user.role);
+        // For editing, always fetch fresh data from Firestore to prevent conflicts
+        const categories = await OfflineCategoryService.getCategories(user.role, true); // forceRefresh = true
+        const categoryData = categories.find(cat => cat.id === categoryId);
         
         if (!categoryData) {
           crossPlatformAlert.showAlert({
@@ -41,7 +61,7 @@ export default function EditCategoryScreen() {
         
         setCategory(categoryData);
       } catch (error) {
-        console.error('Error fetching category:', error);
+        console.error('Error fetching category for edit:', error);
         crossPlatformAlert.showAlert({
           title: t('common.error'),
           message: t('categories.errors.fetchFailed'),

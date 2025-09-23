@@ -15,7 +15,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Category } from '@/types/Category';
 import { useAuth } from '@/contexts/AuthContext';
 import { CategoryService } from '@/services/categoryService';
+import { OfflineCategoryService } from '@/services/offlineCategoryService';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
+import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
@@ -40,17 +42,26 @@ export default function CategoriesListScreen() {
     if (!user) return;
     
     try {
-      // Fetch categories
-      const categoriesData = await CategoryService.getCategories(user.role);
+      // Fetch categories using cache-first approach for instant loading
+      const categoriesData = await OfflineCategoryService.getCategories(user.role);
       
-      // Count procedures for each category
+      // Count procedures for each category using cache-first approach
       const categoriesWithCount: CategoryWithCount[] = await Promise.all(
         categoriesData.map(async (category) => {
           try {
-            const procedures = await ProcedureChecklistService.getProcedureChecklistsByCategory(category.id, user.role);
+            const { procedures } = await OfflineProcedureChecklistService.getProcedureChecklists(
+              user.role, 
+              { forceOffline: false } // Cache-first for display
+            );
+            // Filter procedures for this category
+            const categoryProcedures = procedures.filter(proc => 
+              proc.categories?.includes(category.id) || 
+              ((!proc.categories || proc.categories.length === 0) && category.id === 'default')
+            );
+            
             return {
               ...category,
-              procedureCount: procedures.length,
+              procedureCount: categoryProcedures.length,
             };
           } catch (error) {
             console.error(`Error counting procedures for category ${category.id}:`, error);

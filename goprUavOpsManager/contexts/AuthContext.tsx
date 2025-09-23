@@ -11,6 +11,8 @@ import {
   getCurrentUser
 } from '@/utils/firebaseUtils';
 import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
+import { OfflineCategoryService } from '@/services/offlineCategoryService';
+import { AppSettingsService } from '@/services/appSettingsService';
 import { AnalyticsService } from '@/services/analyticsService';
 
 /**
@@ -184,12 +186,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.warn('[AuthContext] Failed to initialize analytics for user:', error);
             });
             
-            // Defer pre-download of procedures to not block login flow
-            setTimeout(() => {
-              OfflineProcedureChecklistService.preDownloadProcedures(userData.role).catch(error => {
-                console.error('[AuthContext] Error pre-downloading procedures:', error);
-                // Don't block login process if pre-download fails
-              });
+            // Initialize app settings and defer background data sync to not block login flow
+            setTimeout(async () => {
+              try {
+                console.log('[AuthContext] Initializing app settings and data sync');
+                
+                // Initialize AppSettings timestamps
+                await AppSettingsService.initializeAppSettings();
+                
+                // Background sync for procedures and categories
+                await Promise.all([
+                  OfflineProcedureChecklistService.preDownloadProcedures(userData.role),
+                  OfflineCategoryService.preDownloadCategories(userData.role),
+                ]);
+                
+                console.log('[AuthContext] ✅ Background data sync completed');
+              } catch (error) {
+                console.error('[AuthContext] Error during background data sync:', error);
+                // Don't block login process if background sync fails
+              }
             }, 100); // Defer by 100ms to let UI render first
           }
         } catch (error) {
