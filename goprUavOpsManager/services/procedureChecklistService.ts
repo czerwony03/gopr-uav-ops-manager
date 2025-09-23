@@ -9,6 +9,7 @@ import {ProcedureChecklistRepository} from '@/repositories/ProcedureChecklistRep
 import { DEFAULT_CATEGORY_ID } from '@/types/Category';
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
+import { AppSettingsService } from './appSettingsService';
 
 export class ProcedureChecklistService {
   // Get all procedures/checklists based on user role
@@ -62,6 +63,9 @@ export class ProcedureChecklistService {
 
       // Create checklist in repository
       const docId = await ProcedureChecklistRepository.createProcedureChecklist(checklistData, userId);
+
+      // Update procedures timestamp in AppSettings
+      await AppSettingsService.updateProceduresLastUpdate();
 
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);
@@ -118,6 +122,9 @@ export class ProcedureChecklistService {
       // Update checklist in repository
       await ProcedureChecklistRepository.updateProcedureChecklist(id, updateData, userId);
 
+      // Update procedures timestamp in AppSettings
+      await AppSettingsService.updateProceduresLastUpdate();
+
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);
       await AuditLogService.createAuditLog({
@@ -152,6 +159,9 @@ export class ProcedureChecklistService {
       // Soft delete checklist in repository
       await ProcedureChecklistRepository.softDeleteProcedureChecklist(id, userId);
 
+      // Update procedures timestamp in AppSettings
+      await AppSettingsService.updateProceduresLastUpdate();
+
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);
       await AuditLogService.createAuditLog({
@@ -184,6 +194,9 @@ export class ProcedureChecklistService {
 
       // Restore checklist in repository
       await ProcedureChecklistRepository.restoreProcedureChecklist(id, userId);
+
+      // Update procedures timestamp in AppSettings
+      await AppSettingsService.updateProceduresLastUpdate();
 
       // Create audit log entry
       const userEmail = await UserService.getUserEmail(userId);

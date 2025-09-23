@@ -5,9 +5,24 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   removeItem: jest.fn(),
 }));
 
+jest.mock('react-native', () => ({
+  Platform: { OS: 'ios' }
+}));
+
 jest.mock('@/services/procedureChecklistService', () => ({
   ProcedureChecklistService: {
     getProcedureChecklists: jest.fn(),
+  }
+}));
+
+jest.mock('@/services/appSettingsService', () => ({
+  AppSettingsService: {
+    getProceduresLastUpdate: jest.fn(),
+    updateProceduresLastUpdate: jest.fn(),
+    getCategoriesLastUpdate: jest.fn(),
+    updateCategoriesLastUpdate: jest.fn(),
+    getLastUpdateTimestamps: jest.fn(),
+    initializeAppSettings: jest.fn(),
   }
 }));
 
@@ -34,6 +49,7 @@ jest.mock('@/utils/networkConnectivity', () => ({
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OfflineProcedureChecklistService } from '../offlineProcedureChecklistService';
 import { ProcedureChecklistService } from '../procedureChecklistService';
+import { AppSettingsService } from '../appSettingsService';
 import { ImageCacheService } from '@/utils/imageCache';
 import { NetworkConnectivity } from '@/utils/networkConnectivity';
 import { UserRole } from '@/types/UserRole';
@@ -41,6 +57,7 @@ import { UserRole } from '@/types/UserRole';
 // Get references to mocked functions
 const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
 const mockProcedureChecklistService = ProcedureChecklistService as jest.Mocked<typeof ProcedureChecklistService>;
+const mockAppSettingsService = AppSettingsService as jest.Mocked<typeof AppSettingsService>;
 const mockImageCacheService = ImageCacheService as jest.Mocked<typeof ImageCacheService>;
 const mockNetworkConnectivity = NetworkConnectivity as jest.Mocked<typeof NetworkConnectivity>;
 
@@ -85,6 +102,8 @@ describe('OfflineProcedureChecklistService', () => {
     mockAsyncStorage.setItem.mockResolvedValue(undefined as any);
     mockAsyncStorage.removeItem.mockResolvedValue(undefined as any);
     mockProcedureChecklistService.getProcedureChecklists.mockResolvedValue([mockProcedureChecklist]);
+    mockAppSettingsService.getProceduresLastUpdate.mockResolvedValue(new Date());
+    mockAppSettingsService.updateProceduresLastUpdate.mockResolvedValue(undefined);
     mockImageCacheService.initialize.mockResolvedValue(undefined);
     mockImageCacheService.getCachedImage.mockResolvedValue('cached-image-path');
     mockImageCacheService.preloadImage.mockResolvedValue(undefined);
@@ -233,7 +252,7 @@ describe('OfflineProcedureChecklistService', () => {
         return Promise.resolve(null);
       });
 
-      const result = await OfflineProcedureChecklistService.getProcedureChecklists(UserRole.ADMIN, true);
+      const result = await OfflineProcedureChecklistService.getProcedureChecklists(UserRole.ADMIN, { forceOffline: true });
 
       expect(result.procedures).toHaveLength(1);
       expect(result.procedures[0].id).toBe('procedure-123');
@@ -243,7 +262,7 @@ describe('OfflineProcedureChecklistService', () => {
     test('should handle empty cache gracefully', async () => {
       mockAsyncStorage.getItem.mockResolvedValue(null);
 
-      const result = await OfflineProcedureChecklistService.getProcedureChecklists(UserRole.ADMIN, true);
+      const result = await OfflineProcedureChecklistService.getProcedureChecklists(UserRole.ADMIN, { forceOffline: true });
 
       expect(result.procedures).toEqual([]);
       expect(result.isFromCache).toBe(true); // Still from cache (empty cache)

@@ -4,6 +4,7 @@ import { ProcedureChecklistService } from '@/services/procedureChecklistService'
 import { ImageCacheService } from '@/utils/imageCache';
 import { NetworkConnectivity } from '@/utils/networkConnectivity';
 import { UserRole } from '@/types/UserRole';
+import { AppSettingsService } from './appSettingsService';
 
 /**
  * Cache metadata interface
@@ -13,6 +14,7 @@ interface CacheMetadata {
   lastUpdated: number;
   userRole: UserRole;
   procedureCount: number;
+  firestoreTimestamp: number | null;
 }
 
 /**
@@ -28,23 +30,21 @@ export class OfflineProcedureChecklistService {
   /**
    * Pre-download and cache all procedures with their images
    * Should be called after successful user login
-   * Only downloads if cache is stale or doesn't exist for the user role
+   * Only downloads if cache is stale based on Firestore timestamps or doesn't exist for the user role
    */
   static async preDownloadProcedures(userRole: UserRole): Promise<void> {
     try {
       console.log('[OfflineProcedureService] Starting pre-download check for role:', userRole);
       
-      // Check if we already have fresh cached data for this user role
-      const metadata = await this.getCacheMetadata();
-      if (metadata && 
-          metadata.userRole === userRole && 
-          metadata.version === this.CACHE_VERSION && 
-          await this.isCacheFresh()) {
-        console.log('[OfflineProcedureService] Cache is fresh, skipping pre-download');
+      // Check if we need to update cache based on timestamps
+      const needsUpdate = await this.shouldUpdateCache(userRole);
+      
+      if (!needsUpdate) {
+        console.log('[OfflineProcedureService] Cache is up to date, skipping pre-download');
         return;
       }
       
-      console.log('[OfflineProcedureService] Cache is stale or missing, starting pre-download');
+      console.log('[OfflineProcedureService] Cache needs update, starting pre-download');
       
       // Initialize image cache if not already done
       await ImageCacheService.initialize();
@@ -105,49 +105,36 @@ export class OfflineProcedureChecklistService {
 
   /**
    * Check if procedures need to be updated
-   * Returns true if cache is stale or doesn't exist for the user role
+   * Returns true if cache is stale based on Firestore timestamps or doesn't exist for the user role
    */
   static async needsUpdate(userRole: UserRole): Promise<boolean> {
-    try {
-      const metadata = await this.getCacheMetadata();
-      
-      // No cache exists
-      if (!metadata) {
-        return true;
-      }
-      
-      // Different user role
-      if (metadata.userRole !== userRole) {
-        return true;
-      }
-      
-      // Wrong cache version
-      if (metadata.version !== this.CACHE_VERSION) {
-        return true;
-      }
-      
-      // Cache is stale
-      if (!(await this.isCacheFresh())) {
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('[OfflineProcedureService] Error checking if update needed:', error);
-      return true; // Assume update needed if we can't check
-    }
+    return this.shouldUpdateCache(userRole);
   }
 
   /**
-   * Get procedures from cache or fallback to network
-   * Returns cached data if offline or if fresh cache is available
+   * Get procedures from cache or network with configurable behavior
+   * Returns cached data for display (cache-first), fresh data for editing (force refresh)
    */
-  static async getProcedureChecklists(userRole: UserRole, forceOffline: boolean = false): Promise<{
+  static async getProcedureChecklists(
+    userRole: UserRole, 
+    options: { forceOffline?: boolean; forceRefresh?: boolean } = {}
+  ): Promise<{
     procedures: ProcedureChecklist[];
     isFromCache: boolean;
   }> {
     try {
-      // Check if we have valid cached data
+      const { forceOffline = false, forceRefresh = false } = options;
+
+      // If force refresh is requested (e.g., for editing), always fetch from Firestore
+      if (forceRefresh) {
+        console.log('[OfflineProcedureService] Force refresh requested, fetching from Firestore');
+        const freshProcedures = await ProcedureChecklistService.getProcedureChecklists(userRole);
+        // Update cache with fresh data
+        await this.cacheProcedures(freshProcedures, userRole);
+        return { procedures: freshProcedures, isFromCache: false };
+      }
+
+      // Try to get cached data first (cache-first approach)
       const cachedData = await this.getCachedProcedures(userRole);
       
       if (forceOffline || !(await NetworkConnectivity.getConnectionStatus())) {
@@ -160,15 +147,15 @@ export class OfflineProcedureChecklistService {
           return { procedures: [], isFromCache: true };
         }
       }
-      
-      // We're online, check if cache is fresh
-      if (cachedData && await this.isCacheFresh()) {
-        console.log('[OfflineProcedureService] Returning fresh cached procedures');
+
+      // Online mode - return cached data if available (cache-first for display)
+      if (cachedData) {
+        console.log('[OfflineProcedureService] Returning cached procedures (cache-first)');
         return { procedures: cachedData, isFromCache: true };
       }
-      
-      // Cache is stale or doesn't exist, fetch from network
-      console.log('[OfflineProcedureService] Fetching fresh procedures from network');
+
+      // No cache available, fetch from network
+      console.log('[OfflineProcedureService] No cache available, fetching fresh procedures from network');
       const procedures = await ProcedureChecklistService.getProcedureChecklists(userRole);
       
       // Update cache in background
@@ -194,11 +181,24 @@ export class OfflineProcedureChecklistService {
   /**
    * Get a specific procedure from cache or network
    */
-  static async getProcedureChecklist(id: string, userRole: UserRole, forceOffline: boolean = false): Promise<{
+  static async getProcedureChecklist(
+    id: string, 
+    userRole: UserRole, 
+    options: { forceOffline?: boolean; forceRefresh?: boolean } = {}
+  ): Promise<{
     procedure: ProcedureChecklist | null;
     isFromCache: boolean;
   }> {
     try {
+      const { forceOffline = false, forceRefresh = false } = options;
+
+      // If force refresh is requested (e.g., for editing), always fetch from Firestore
+      if (forceRefresh) {
+        console.log('[OfflineProcedureService] Force refresh requested for procedure:', id);
+        const procedure = await ProcedureChecklistService.getProcedureChecklist(id, userRole);
+        return { procedure, isFromCache: false };
+      }
+
       // Check cache first
       const cachedProcedures = await this.getCachedProcedures(userRole);
       const cachedProcedure = cachedProcedures?.find(p => p.id === id) || null;
@@ -208,14 +208,14 @@ export class OfflineProcedureChecklistService {
         return { procedure: cachedProcedure, isFromCache: true };
       }
       
-      // If we have fresh cache, use it
-      if (cachedProcedure && await this.isCacheFresh()) {
-        console.log('[OfflineProcedureService] Returning cached procedure (fresh cache)');
+      // Online mode - return cached procedure if available (cache-first for display)
+      if (cachedProcedure) {
+        console.log('[OfflineProcedureService] Returning cached procedure (cache-first)');
         return { procedure: cachedProcedure, isFromCache: true };
       }
       
-      // Fetch from network
-      console.log('[OfflineProcedureService] Fetching procedure from network');
+      // No cached procedure, fetch from network
+      console.log('[OfflineProcedureService] No cached procedure, fetching from network');
       const procedure = await ProcedureChecklistService.getProcedureChecklist(id, userRole);
       
       return { procedure, isFromCache: false };
@@ -279,6 +279,9 @@ export class OfflineProcedureChecklistService {
   /**
    * Cache procedures data to AsyncStorage
    */
+  /**
+   * Cache procedures data to AsyncStorage
+   */
   private static async cacheProcedures(procedures: ProcedureChecklist[], userRole: UserRole): Promise<void> {
     try {
       // Validate and sanitize procedures before caching
@@ -300,19 +303,23 @@ export class OfflineProcedureChecklistService {
         updatedAt: proc.updatedAt?.toISOString(),
         deletedAt: proc.deletedAt?.toISOString(),
       }));
+
+      // Get current Firestore timestamp for cache validation
+      const firestoreTimestamp = await AppSettingsService.getProceduresLastUpdate();
       
       await AsyncStorage.setItem(this.CACHE_KEY, JSON.stringify(serializedProcedures));
       
-      // Save metadata
+      // Save metadata with Firestore timestamp
       const metadata: CacheMetadata = {
         version: this.CACHE_VERSION,
         lastUpdated: Date.now(),
         userRole,
         procedureCount: procedures.length,
+        firestoreTimestamp: firestoreTimestamp ? firestoreTimestamp.getTime() : null,
       };
       
       await AsyncStorage.setItem(this.CACHE_METADATA_KEY, JSON.stringify(metadata));
-      console.log(`[OfflineProcedureService] Cached ${procedures.length} procedures`);
+      console.log(`[OfflineProcedureService] Cached ${procedures.length} procedures for role: ${userRole}`);
     } catch (error) {
       console.error('[OfflineProcedureService] Error caching procedures:', error);
       throw error;
@@ -366,22 +373,32 @@ export class OfflineProcedureChecklistService {
   }
 
   /**
-   * Check if cache is fresh (not expired)
+   * Check if cache should be updated based on Firestore timestamps
    */
-  private static async isCacheFresh(): Promise<boolean> {
+  private static async shouldUpdateCache(userRole: UserRole): Promise<boolean> {
     try {
       const metadata = await this.getCacheMetadata();
-      if (!metadata) {
-        return false;
+      
+      // No cache exists or wrong user role
+      if (!metadata || metadata.userRole !== userRole || metadata.version !== this.CACHE_VERSION) {
+        return true;
       }
-      
-      const cacheAge = Date.now() - metadata.lastUpdated;
-      const cacheExpiryMs = this.CACHE_EXPIRY_HOURS * 60 * 60 * 1000;
-      
-      return cacheAge < cacheExpiryMs;
-    } catch (error) {
-      console.error('[OfflineProcedureService] Error checking cache freshness:', error);
+
+      // Get latest timestamp from Firestore
+      const firestoreTimestamp = await AppSettingsService.getProceduresLastUpdate();
+      const firestoreTimestampMs = firestoreTimestamp ? firestoreTimestamp.getTime() : 0;
+
+      // Compare with cached timestamp
+      if (!metadata.firestoreTimestamp || firestoreTimestampMs > metadata.firestoreTimestamp) {
+        console.log('[OfflineProcedureService] Firestore timestamp is newer than cache');
+        return true;
+      }
+
       return false;
+    } catch (error) {
+      console.error('[OfflineProcedureService] Error checking cache update need:', error);
+      // If we can't check timestamps, assume cache needs update
+      return true;
     }
   }
 
