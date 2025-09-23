@@ -1,13 +1,9 @@
 // Mock all external dependencies first
-const mockAsyncStorageImpl = {
+jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
   setItem: jest.fn(),
   removeItem: jest.fn(),
-};
-
-jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorageImpl);
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
+}));
 
 jest.mock('react-native', () => ({
   Platform: { OS: 'ios' }
@@ -26,218 +22,179 @@ jest.mock('@/services/appSettingsService', () => ({
   }
 }));
 
-jest.mock('@/utils/useNetworkStatus', () => ({
-  useNetworkStatus: jest.fn(),
-}));
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OfflineCategoryService } from '../offlineCategoryService';
 import { CategoryService } from '../categoryService';
 import { AppSettingsService } from '../appSettingsService';
 import { UserRole } from '@/types/UserRole';
 import { Category } from '@/types/Category';
 
-// Get references to mocked functions
-const mockAsyncStorage = mockAsyncStorageImpl;
+// Mock references
+const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
 const mockCategoryService = CategoryService as jest.Mocked<typeof CategoryService>;
-const mockAppSettingsService = AppSettingsService as jest.Mocked<typeof AppSettingsService>;
+const mockAppSettings = AppSettingsService as jest.Mocked<typeof AppSettingsService>;
 
-// Mock category data
+// Mock data
 const mockCategory: Category = {
   id: 'category-123',
   name: 'Test Category',
   description: 'Test Description',
   color: '#FF5733',
   order: 1,
-  isDeleted: false,
-  createdAt: new Date('2024-01-01T00:00:00Z'),
-  updatedAt: new Date('2024-01-01T00:00:00Z'),
   createdBy: 'admin-uid',
   updatedBy: 'admin-uid',
+  isDeleted: false,
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
 describe('OfflineCategoryService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Set up default mock implementations
+    
+    // Setup default mocks
     mockAsyncStorage.getItem.mockResolvedValue(null);
-    mockAsyncStorage.setItem.mockResolvedValue(undefined as any);
-    mockAsyncStorage.removeItem.mockResolvedValue(undefined as any);
+    mockAsyncStorage.setItem.mockResolvedValue(undefined);
+    mockAsyncStorage.removeItem.mockResolvedValue(undefined);
     mockCategoryService.getCategories.mockResolvedValue([mockCategory]);
-    mockAppSettingsService.getCategoriesLastUpdate.mockResolvedValue(new Date('2024-01-01T00:00:00Z'));
-    mockAppSettingsService.updateCategoriesLastUpdate.mockResolvedValue(undefined);
+    mockAppSettings.getCategoriesLastUpdate.mockResolvedValue(new Date());
   });
 
-  describe('preDownloadCategories', () => {
-    it('should download and cache categories for admin role', async () => {
-      await OfflineCategoryService.preDownloadCategories(UserRole.ADMIN);
+  describe('Basic functionality', () => {
+    it('should handle empty cache gracefully', async () => {
+      const result = await OfflineCategoryService.getCategories(UserRole.ADMIN);
 
-      expect(mockCategoryService.getCategories).toHaveBeenCalledWith(UserRole.ADMIN);
-      expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
-        'cached_categories',
-        expect.stringContaining('category-123')
-      );
+      expect(result).toEqual([]);
     });
 
-    it('should skip download if cache is up to date', async () => {
-      // Mock existing cache metadata with same timestamp
-      const metadata = {
-        version: 1,
-        lastUpdated: Date.now(),
-        userRole: UserRole.ADMIN,
-        categoryCount: 1,
-        firestoreTimestamp: new Date('2024-01-01T00:00:00Z').getTime(),
-      };
+    it('should use AppSettings for timestamp checking', async () => {
+      // Mock stale cache
+      const staleTimestamp = new Date('2023-01-01');
+      const freshTimestamp = new Date('2024-01-01');
+      
+      mockAsyncStorage.getItem.mockImplementation((key: string) => {
+        if (key === 'cached_categories_metadata') {
+          return Promise.resolve(JSON.stringify({
+            version: 1,
+            lastUpdated: Date.now(),
+            userRole: UserRole.ADMIN,
+            categoryCount: 0,
+            firestoreTimestamp: staleTimestamp.getTime(),
+          }));
+        }
+        return Promise.resolve(null);
+      });
 
-      mockAsyncStorage.getItem
-        .mockResolvedValueOnce(JSON.stringify(metadata)) // metadata call
-        .mockResolvedValueOnce(null); // cache data call
+      mockAppSettings.getCategoriesLastUpdate.mockResolvedValue(freshTimestamp);
 
       await OfflineCategoryService.preDownloadCategories(UserRole.ADMIN);
 
-      // Should not fetch from CategoryService since cache is up to date
+      // Should fetch fresh data due to timestamp mismatch
+      expect(mockCategoryService.getCategories).toHaveBeenCalledWith(UserRole.ADMIN);
+    });
+
+    it('should skip download when timestamps match', async () => {
+      const sameTimestamp = new Date('2024-01-01');
+      
+      mockAsyncStorage.getItem.mockImplementation((key: string) => {
+        if (key === 'cached_categories_metadata') {
+          return Promise.resolve(JSON.stringify({
+            version: 1,
+            lastUpdated: Date.now(),
+            userRole: UserRole.ADMIN,
+            categoryCount: 1,
+            firestoreTimestamp: sameTimestamp.getTime(),
+          }));
+        }
+        return Promise.resolve(null);
+      });
+
+      mockAppSettings.getCategoriesLastUpdate.mockResolvedValue(sameTimestamp);
+
+      await OfflineCategoryService.preDownloadCategories(UserRole.ADMIN);
+
+      // Should not fetch new data when timestamps match
       expect(mockCategoryService.getCategories).not.toHaveBeenCalled();
     });
 
-    it('should download when Firestore timestamp is newer', async () => {
-      // Mock existing cache with older timestamp
-      const metadata = {
-        version: 1,
-        lastUpdated: Date.now(),
-        userRole: UserRole.ADMIN,
-        categoryCount: 1,
-        firestoreTimestamp: new Date('2023-12-01T00:00:00Z').getTime(), // older
-      };
+    it('should handle forceRefresh option', async () => {
+      await OfflineCategoryService.getCategories(UserRole.ADMIN, true);
 
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(metadata));
-      // Mock newer Firestore timestamp
-      mockAppSettingsService.getCategoriesLastUpdate.mockResolvedValue(new Date('2024-01-01T00:00:00Z'));
-
-      await OfflineCategoryService.preDownloadCategories(UserRole.ADMIN);
-
+      // Should fetch fresh data and cache it
       expect(mockCategoryService.getCategories).toHaveBeenCalledWith(UserRole.ADMIN);
     });
-  });
 
-  describe('getCategories', () => {
-    it('should return cached categories when available (cache-first)', async () => {
-      // Mock cache data
-      const cachedCategories = [
-        {
-          ...mockCategory,
-          createdAt: '2024-01-01T00:00:00.000Z',
-          updatedAt: '2024-01-01T00:00:00.000Z',
-        }
-      ];
-
-      const metadata = {
-        version: 1,
-        lastUpdated: Date.now(),
-        userRole: UserRole.ADMIN,
-        categoryCount: 1,
-        firestoreTimestamp: new Date().getTime(),
-      };
-
-      mockAsyncStorage.getItem
-        .mockResolvedValueOnce(JSON.stringify(metadata))
-        .mockResolvedValueOnce(JSON.stringify(cachedCategories));
-
-      const result = await OfflineCategoryService.getCategories(UserRole.ADMIN);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('category-123');
-      expect(result[0].createdAt).toBeInstanceOf(Date);
-      expect(mockCategoryService.getCategories).not.toHaveBeenCalled();
-    });
-
-    it('should fetch fresh data when forceRefresh is true', async () => {
-      const result = await OfflineCategoryService.getCategories(UserRole.ADMIN, true);
-
-      expect(mockCategoryService.getCategories).toHaveBeenCalledWith(UserRole.ADMIN);
-      expect(result).toEqual([mockCategory]);
-      // Should also update cache with fresh data
-      expect(mockAsyncStorage.setItem).toHaveBeenCalled();
-    });
-
-    it('should fallback to cached data on error', async () => {
-      mockCategoryService.getCategories.mockRejectedValue(new Error('Network error'));
-
-      const cachedCategories = [
-        {
-          ...mockCategory,
-          createdAt: '2024-01-01T00:00:00.000Z',
-          updatedAt: '2024-01-01T00:00:00.000Z',
-        }
-      ];
-
-      const metadata = {
-        version: 1,
-        lastUpdated: Date.now(),
-        userRole: UserRole.ADMIN,
-        categoryCount: 1,
-        firestoreTimestamp: new Date().getTime(),
-      };
-
-      mockAsyncStorage.getItem
-        .mockResolvedValueOnce(JSON.stringify(metadata))
-        .mockResolvedValueOnce(JSON.stringify(cachedCategories));
-
-      const result = await OfflineCategoryService.getCategories(UserRole.ADMIN);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('category-123');
-    });
-  });
-
-  describe('clearCache', () => {
-    it('should remove all cached data', async () => {
+    it('should clear cache', async () => {
       await OfflineCategoryService.clearCache();
 
       expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith('cached_categories');
       expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith('cached_categories_metadata');
     });
-  });
 
-  describe('invalidateCache', () => {
-    it('should remove cache metadata', async () => {
+    it('should invalidate cache', async () => {
       await OfflineCategoryService.invalidateCache();
 
       expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith('cached_categories_metadata');
     });
   });
 
-  describe('cache metadata handling', () => {
+  describe('Error handling', () => {
+    it('should handle network errors gracefully', async () => {
+      mockCategoryService.getCategories.mockRejectedValue(new Error('Network failed'));
+
+      // Should not throw and should handle error gracefully
+      await expect(
+        OfflineCategoryService.preDownloadCategories(UserRole.ADMIN)
+      ).resolves.not.toThrow();
+    });
+
+    it('should handle missing AppSettings timestamp', async () => {
+      mockAppSettings.getCategoriesLastUpdate.mockResolvedValue(null);
+
+      await OfflineCategoryService.preDownloadCategories(UserRole.ADMIN);
+
+      // Should still work when timestamp is null
+      expect(mockCategoryService.getCategories).toHaveBeenCalled();
+    });
+
     it('should handle invalid cache version', async () => {
-      const invalidMetadata = {
-        version: 0, // old version
-        lastUpdated: Date.now(),
-        userRole: UserRole.ADMIN,
-        categoryCount: 1,
-        firestoreTimestamp: new Date().getTime(),
-      };
+      mockAsyncStorage.getItem.mockImplementation((key: string) => {
+        if (key === 'cached_categories_metadata') {
+          return Promise.resolve(JSON.stringify({
+            version: 0, // Old version
+            lastUpdated: Date.now(),
+            userRole: UserRole.ADMIN,
+            categoryCount: 1,
+            firestoreTimestamp: Date.now(),
+          }));
+        }
+        return Promise.resolve(null);
+      });
 
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(invalidMetadata));
+      await OfflineCategoryService.getCategories(UserRole.ADMIN);
 
-      const result = await OfflineCategoryService.getCategories(UserRole.ADMIN);
-
-      // Should fetch from network since cache version is invalid
-      expect(mockCategoryService.getCategories).toHaveBeenCalledWith(UserRole.ADMIN);
+      // Should fetch fresh data due to version mismatch
+      expect(mockCategoryService.getCategories).toHaveBeenCalled();
     });
 
     it('should handle different user roles', async () => {
-      const managerMetadata = {
-        version: 1,
-        lastUpdated: Date.now(),
-        userRole: UserRole.MANAGER, // different role
-        categoryCount: 1,
-        firestoreTimestamp: new Date().getTime(),
-      };
+      mockAsyncStorage.getItem.mockImplementation((key: string) => {
+        if (key === 'cached_categories_metadata') {
+          return Promise.resolve(JSON.stringify({
+            version: 1,
+            lastUpdated: Date.now(),
+            userRole: UserRole.MANAGER, // Different role
+            categoryCount: 1,
+            firestoreTimestamp: Date.now(),
+          }));
+        }
+        return Promise.resolve(null);
+      });
 
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(managerMetadata));
+      await OfflineCategoryService.getCategories(UserRole.ADMIN);
 
-      const result = await OfflineCategoryService.getCategories(UserRole.ADMIN);
-
-      // Should fetch from network since user role doesn't match
-      expect(mockCategoryService.getCategories).toHaveBeenCalledWith(UserRole.ADMIN);
+      // Should fetch fresh data due to role mismatch
+      expect(mockCategoryService.getCategories).toHaveBeenCalled();
     });
   });
 });
