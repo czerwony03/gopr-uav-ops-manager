@@ -120,28 +120,4 @@ export class AppSettingsService {
       };
     }
   }
-
-  /**
-   * Initialize app settings with default timestamps if they don't exist
-   */
-  static async initializeAppSettings(): Promise<void> {
-    try {
-      const timestamps = await this.getLastUpdateTimestamps();
-      
-      // Initialize categories timestamp if it doesn't exist
-      if (!timestamps.categoriesLastUpdate) {
-        await this.updateCategoriesLastUpdate();
-      }
-      
-      // Initialize procedures timestamp if it doesn't exist
-      if (!timestamps.proceduresLastUpdate) {
-        await this.updateProceduresLastUpdate();
-      }
-      
-      console.log('[AppSettings] App settings initialized');
-    } catch (error) {
-      console.error('Error initializing app settings:', error);
-      throw error;
-    }
-  }
 }

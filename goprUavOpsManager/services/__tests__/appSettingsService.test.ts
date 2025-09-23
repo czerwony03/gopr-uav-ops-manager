@@ -160,38 +160,4 @@ describe('AppSettingsService', () => {
       });
     });
   });
-
-  describe('initializeAppSettings', () => {
-    it('should initialize missing timestamps', async () => {
-      // Mock that timestamps don't exist
-      jest.spyOn(AppSettingsService, 'getLastUpdateTimestamps').mockResolvedValue({
-        categoriesLastUpdate: null,
-        proceduresLastUpdate: null,
-      });
-
-      const updateCategoriesSpy = jest.spyOn(AppSettingsService, 'updateCategoriesLastUpdate').mockResolvedValue(undefined);
-      const updateProceduresSpy = jest.spyOn(AppSettingsService, 'updateProceduresLastUpdate').mockResolvedValue(undefined);
-
-      await AppSettingsService.initializeAppSettings();
-
-      expect(updateCategoriesSpy).toHaveBeenCalled();
-      expect(updateProceduresSpy).toHaveBeenCalled();
-    });
-
-    it('should not update existing timestamps', async () => {
-      // Mock that timestamps exist
-      jest.spyOn(AppSettingsService, 'getLastUpdateTimestamps').mockResolvedValue({
-        categoriesLastUpdate: new Date(),
-        proceduresLastUpdate: new Date(),
-      });
-
-      const updateCategoriesSpy = jest.spyOn(AppSettingsService, 'updateCategoriesLastUpdate').mockResolvedValue(undefined);
-      const updateProceduresSpy = jest.spyOn(AppSettingsService, 'updateProceduresLastUpdate').mockResolvedValue(undefined);
-
-      await AppSettingsService.initializeAppSettings();
-
-      expect(updateCategoriesSpy).not.toHaveBeenCalled();
-      expect(updateProceduresSpy).not.toHaveBeenCalled();
-    });
-  });
 });

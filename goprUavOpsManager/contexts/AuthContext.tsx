@@ -186,13 +186,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.warn('[AuthContext] Failed to initialize analytics for user:', error);
             });
             
-            // Initialize app settings and defer background data sync to not block login flow
+            // Defer background data sync to not block login flow
             setTimeout(async () => {
               try {
-                console.log('[AuthContext] Initializing app settings and data sync');
-                
-                // Initialize AppSettings timestamps
-                await AppSettingsService.initializeAppSettings();
+                console.log('[AuthContext] Starting background data sync');
                 
                 // Background sync for procedures and categories
                 await Promise.all([

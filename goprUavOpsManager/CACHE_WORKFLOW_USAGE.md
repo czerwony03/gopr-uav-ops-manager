@@ -19,9 +19,6 @@ Manages global timestamps for data synchronization:
 ```typescript
 import { AppSettingsService } from '@/services/appSettingsService';
 
-// Initialize on app startup
-await AppSettingsService.initializeAppSettings();
-
 // Get current timestamps
 const timestamps = await AppSettingsService.getLastUpdateTimestamps();
 console.log('Categories last updated:', timestamps.categoriesLastUpdate);
@@ -31,6 +28,8 @@ console.log('Procedures last updated:', timestamps.proceduresLastUpdate);
 await AppSettingsService.updateCategoriesLastUpdate();
 await AppSettingsService.updateProceduresLastUpdate();
 ```
+
+**Note**: The AppSettings collection is initialized automatically via Firebase Function migrations, not in client code.
 
 ### 2. OfflineProcedureChecklistService
 
@@ -169,10 +168,8 @@ const initializeDataSync = async () => {
     const { user } = useAuth();
     if (!user) return;
 
-    // Initialize AppSettings timestamps
-    await AppSettingsService.initializeAppSettings();
-
     // Background sync for procedures and categories
+    // AppSettings collection is initialized via Firebase migrations
     await Promise.all([
       OfflineProcedureChecklistService.preDownloadProcedures(user.role),
       OfflineCategoryService.preDownloadCategories(user.role),

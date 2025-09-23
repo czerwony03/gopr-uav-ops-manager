@@ -24,7 +24,6 @@ jest.mock('@/services/appSettingsService', () => ({
     getCategoriesLastUpdate: jest.fn(),
     updateCategoriesLastUpdate: jest.fn(),
     getLastUpdateTimestamps: jest.fn(),
-    initializeAppSettings: jest.fn(),
   }
 }));
 
