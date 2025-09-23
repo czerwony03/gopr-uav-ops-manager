@@ -1,9 +1,11 @@
 // Mock all external dependencies first
-jest.mock('@react-native-async-storage/async-storage', () => ({
+const mockAsyncStorageImpl = {
   getItem: jest.fn(),
   setItem: jest.fn(),
   removeItem: jest.fn(),
-}));
+};
+
+jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorageImpl);
 
 jest.mock('react-native', () => ({
   Platform: { OS: 'ios' }
@@ -55,7 +57,7 @@ import { NetworkConnectivity } from '@/utils/networkConnectivity';
 import { UserRole } from '@/types/UserRole';
 
 // Get references to mocked functions
-const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
+const mockAsyncStorage = mockAsyncStorageImpl;
 const mockProcedureChecklistService = ProcedureChecklistService as jest.Mocked<typeof ProcedureChecklistService>;
 const mockAppSettingsService = AppSettingsService as jest.Mocked<typeof AppSettingsService>;
 const mockImageCacheService = ImageCacheService as jest.Mocked<typeof ImageCacheService>;
