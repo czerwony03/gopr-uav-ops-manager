@@ -271,23 +271,22 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView 
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.formContainer}>
-            <ScrollView 
-              contentContainerStyle={styles.contentContainer}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-            >
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t('flightForm.basicInfo')}</Text>
-                
-                {/* Location Selector Component */}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <ScrollView 
+            contentContainerStyle={styles.contentContainer}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            style={styles.scrollView}
+          >
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('flightForm.basicInfo')}</Text>
+              
+              {/* Location Selector Component */}
                 <LocationSelector
                   coordinates={formData.coordinates}
                   location={formData.location}
@@ -502,9 +501,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
                   textAlignVertical="top"
                 />
               </View>
-            </ScrollView>
-            
-            <View style={styles.actionButtonsContainer}>
+
               <View style={styles.actionButtons}>
                 <TouchableOpacity
                   style={styles.cancelButton}
@@ -528,10 +525,10 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
                   )}
                 </TouchableOpacity>
               </View>
-            </View>
-          </View>
+            </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
+      <SafeAreaView style={styles.bottomSafeArea} edges={['bottom']} />
     </SafeAreaView>
   );
 }
@@ -544,13 +541,16 @@ const styles = StyleSheet.create({
   keyboardAvoidingView: {
     flex: 1,
   },
-  formContainer: {
+  scrollView: {
     flex: 1,
   },
   contentContainer: {
     flexGrow: 1,
     padding: 16,
-    paddingBottom: 0,
+    paddingBottom: Platform.OS === 'android' ? 32 : 16, // Extra padding for Android
+  },
+  bottomSafeArea: {
+    backgroundColor: '#f5f5f5',
   },
   loadingContainer: {
     flex: 1,
@@ -625,25 +625,10 @@ const styles = StyleSheet.create({
       color: '#333',
     }),
   },
-  actionButtonsContainer: {
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    paddingTop: 16,
-    paddingHorizontal: 16,
-    paddingBottom: Platform.OS === 'android' ? 16 : 0,
-    // Ensure buttons stay above navigation bar on Android
-    ...(Platform.OS === 'android' && {
-      elevation: 8,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: -2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-    }),
-  },
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 20,
     gap: 12,
   },
   submitButton: {
