@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -62,6 +62,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
   const { t } = useTranslation('common');
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const crossPlatformAlert = useCrossPlatformAlert();
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const [dronesLoading, setDronesLoading] = useState(true);
   const [drones, setDrones] = useState<Drone[]>([]);
@@ -127,6 +128,15 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
   const updateFormData = (field: keyof FlightFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  // Handle dismissing keyboard and clearing focus
+  const handleDismissKeyboard = useCallback(() => {
+    Keyboard.dismiss();
+    // Force blur any focused input by focusing on the ScrollView
+    if (scrollViewRef.current) {
+      scrollViewRef.current.focus();
+    }
+  }, []);
 
   // Calculate flight duration for display
   const getFlightDuration = (): string => {
@@ -271,22 +281,24 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView 
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <ScrollView 
-            contentContainerStyle={styles.contentContainer}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            style={styles.scrollView}
-          >
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t('flightForm.basicInfo')}</Text>
-              
-              {/* Location Selector Component */}
+        <TouchableWithoutFeedback onPress={handleDismissKeyboard} accessible={false}>
+          <View style={styles.formWrapper}>
+            <ScrollView 
+              ref={scrollViewRef}
+              contentContainerStyle={styles.contentContainer}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              style={styles.scrollView}
+            >
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{t('flightForm.basicInfo')}</Text>
+                
+                {/* Location Selector Component */}
                 <LocationSelector
                   coordinates={formData.coordinates}
                   location={formData.location}
@@ -526,9 +538,9 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
                 </TouchableOpacity>
               </View>
             </ScrollView>
+          </View>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-      <SafeAreaView style={styles.bottomSafeArea} edges={['bottom']} />
     </SafeAreaView>
   );
 }
@@ -541,16 +553,17 @@ const styles = StyleSheet.create({
   keyboardAvoidingView: {
     flex: 1,
   },
+  formWrapper: {
+    flex: 1,
+  },
   scrollView: {
     flex: 1,
   },
   contentContainer: {
     flexGrow: 1,
     padding: 16,
-    paddingBottom: Platform.OS === 'android' ? 32 : 16, // Extra padding for Android
-  },
-  bottomSafeArea: {
-    backgroundColor: '#f5f5f5',
+    // Add significant bottom padding for Android to ensure buttons stay above navigation bar
+    paddingBottom: Platform.OS === 'android' ? 80 : 16,
   },
   loadingContainer: {
     flex: 1,
@@ -630,6 +643,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 20,
     gap: 12,
+    // Add extra margin for Android to ensure visibility
+    ...(Platform.OS === 'android' && {
+      marginBottom: 20,
+    }),
   },
   submitButton: {
     backgroundColor: '#0066CC',
