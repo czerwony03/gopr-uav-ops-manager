@@ -6,6 +6,7 @@
  */
 
 import { analyticsUtils } from '@/utils/firebaseUtils';
+import { Platform } from 'react-native';
 
 /**
  * Standard event names following Firebase Analytics conventions
@@ -281,10 +282,7 @@ export class AnalyticsService {
    * Get current platform identifier
    */
   private static getPlatform(): string {
-    if (typeof window !== 'undefined') {
-      return 'web';
-    }
-    return 'mobile';
+    return Platform.OS;
   }
 
   /**
