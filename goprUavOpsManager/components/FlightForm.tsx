@@ -3,13 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
+  Platform
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { useTranslation } from 'react-i18next';
@@ -270,14 +269,16 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.contentContainer}
+        enableOnAndroid
+        extraScrollHeight={20}
+        keyboardShouldPersistTaps="handled"
       >
-        <ScrollView contentContainerStyle={styles.contentContainer}>
+        <View>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('flightForm.basicInfo')}</Text>
-            
+
             {/* Location Selector Component */}
             <LocationSelector
               coordinates={formData.coordinates}
@@ -404,9 +405,9 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
                     style={styles.picker}
                   >
                     <Picker.Item label={t('flightForm.operatorPlaceholder')} value="" />
-                    <Picker.Item 
-                      label={user?.firstname && user?.surname ? `${user.firstname} ${user.surname}` : user?.email || 'Current User'} 
-                      value={user?.firstname && user?.surname ? `${user.firstname} ${user.surname}` : user?.email || 'Current User'} 
+                    <Picker.Item
+                      label={user?.firstname && user?.surname ? `${user.firstname} ${user.surname}` : user?.email || 'Current User'}
+                      value={user?.firstname && user?.surname ? `${user.firstname} ${user.surname}` : user?.email || 'Current User'}
                     />
                     <Picker.Item label="GOPR Bieszczady" value="GOPR Bieszczady" />
                     <Picker.Item label="Other" value="Other" />
@@ -502,7 +503,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
             >
               <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.submitButton, (loading || isButtonDisabled()) && styles.disabledButton, getDisabledStyle()]}
               onPress={handleSave}
@@ -517,8 +518,8 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
               )}
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
@@ -534,6 +535,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     flexGrow: 1,
     padding: 16,
+    paddingBottom: 30,
   },
   loadingContainer: {
     flex: 1,
