@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
@@ -273,251 +275,262 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
       <KeyboardAvoidingView 
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-        <ScrollView contentContainerStyle={styles.contentContainer}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('flightForm.basicInfo')}</Text>
-            
-            {/* Location Selector Component */}
-            <LocationSelector
-              coordinates={formData.coordinates}
-              location={formData.location}
-              onCoordinatesChange={(coords) => updateFormData('coordinates', coords)}
-              onLocationChange={(location) => updateFormData('location', location)}
-              disabled={loading}
-              required={true}
-            />
-
-            <Text style={styles.label}>{t('flightForm.category')} *</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={String(formData.flightCategory || '')}
-                onValueChange={(value) => updateFormData('flightCategory', value)}
-                style={styles.picker}
-              >
-                <Picker.Item label={t('flightForm.categoryPlaceholder')} value="" />
-                {AVAILABLE_FLIGHT_CATEGORIES.map((category) => (
-                  <Picker.Item
-                    key={category}
-                    label={category}
-                    value={category}
-                  />
-                ))}
-              </Picker>
-            </View>
-
-            <Text style={styles.label}>{t('flightForm.operation')} *</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={String(formData.operationType || '')}
-                onValueChange={(value) => updateFormData('operationType', value)}
-                style={styles.picker}
-              >
-                <Picker.Item label={t('flightForm.operationPlaceholder')} value="" />
-                {AVAILABLE_OPERATION_TYPES.map((type) => (
-                  <Picker.Item
-                    key={type}
-                    label={type}
-                    value={type}
-                  />
-                ))}
-              </Picker>
-            </View>
-
-            <Text style={styles.label}>{t('flightForm.activity')} *</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={String(formData.activityType || '')}
-                onValueChange={(value) => updateFormData('activityType', value)}
-                style={styles.picker}
-              >
-                <Picker.Item label={t('flightForm.activityPlaceholder')} value="" />
-                {AVAILABLE_ACTIVITY_TYPES.map((type) => (
-                  <Picker.Item
-                    key={type}
-                    label={type}
-                    value={type}
-                  />
-                ))}
-              </Picker>
-            </View>
-
-            <Text style={styles.label}>{t('flightForm.drone')} *</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={String(formData.droneId || '')}
-                onValueChange={(value) => {
-                  updateFormData('droneId', value);
-                  if (value === 'other') {
-                    setShowCustomDroneInput(true);
-                    updateFormData('customDroneName', '');
-                  } else {
-                    setShowCustomDroneInput(false);
-                    updateFormData('customDroneName', '');
-                  }
-                }}
-                style={styles.picker}
-              >
-                <Picker.Item label={t('flightForm.dronePlaceholder')} value="" />
-                {drones.map((drone) => (
-                  <Picker.Item
-                    key={drone.id}
-                    label={DroneService.formatDroneName(drone)}
-                    value={drone.id}
-                  />
-                ))}
-                <Picker.Item label={t('flightForm.otherDrone')} value="other" />
-              </Picker>
-            </View>
-
-            {showCustomDroneInput && (
-              <>
-                <Text style={styles.label}>{t('flightForm.customDroneName')} *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={formData.customDroneName || ''}
-                  onChangeText={(value) => updateFormData('customDroneName', value)}
-                  placeholder={t('flightForm.customDroneNamePlaceholder')}
-                  autoCapitalize="words"
-                  autoCorrect={false}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.formContainer}>
+            <ScrollView 
+              contentContainerStyle={styles.contentContainer}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{t('flightForm.basicInfo')}</Text>
+                
+                {/* Location Selector Component */}
+                <LocationSelector
+                  coordinates={formData.coordinates}
+                  location={formData.location}
+                  onCoordinatesChange={(coords) => updateFormData('coordinates', coords)}
+                  onLocationChange={(location) => updateFormData('location', location)}
+                  disabled={loading}
+                  required={true}
                 />
-              </>
-            )}
 
-            {/* Operator field - different behavior for create vs edit */}
-            <Text style={styles.label}>{t('flightForm.operator')} *</Text>
-            {mode === 'create' ? (
-              <>
+                <Text style={styles.label}>{t('flightForm.category')} *</Text>
                 <View style={styles.pickerContainer}>
                   <Picker
-                    selectedValue={operatorSelection}
+                    selectedValue={String(formData.flightCategory || '')}
+                    onValueChange={(value) => updateFormData('flightCategory', value)}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label={t('flightForm.categoryPlaceholder')} value="" />
+                    {AVAILABLE_FLIGHT_CATEGORIES.map((category) => (
+                      <Picker.Item
+                        key={category}
+                        label={category}
+                        value={category}
+                      />
+                    ))}
+                  </Picker>
+                </View>
+
+                <Text style={styles.label}>{t('flightForm.operation')} *</Text>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={String(formData.operationType || '')}
+                    onValueChange={(value) => updateFormData('operationType', value)}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label={t('flightForm.operationPlaceholder')} value="" />
+                    {AVAILABLE_OPERATION_TYPES.map((type) => (
+                      <Picker.Item
+                        key={type}
+                        label={type}
+                        value={type}
+                      />
+                    ))}
+                  </Picker>
+                </View>
+
+                <Text style={styles.label}>{t('flightForm.activity')} *</Text>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={String(formData.activityType || '')}
+                    onValueChange={(value) => updateFormData('activityType', value)}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label={t('flightForm.activityPlaceholder')} value="" />
+                    {AVAILABLE_ACTIVITY_TYPES.map((type) => (
+                      <Picker.Item
+                        key={type}
+                        label={type}
+                        value={type}
+                      />
+                    ))}
+                  </Picker>
+                </View>
+
+                <Text style={styles.label}>{t('flightForm.drone')} *</Text>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={String(formData.droneId || '')}
                     onValueChange={(value) => {
-                      setOperatorSelection(value);
-                      if (value === 'Other') {
-                        setShowOtherOperatorInput(true);
-                        updateFormData('operator', '');
+                      updateFormData('droneId', value);
+                      if (value === 'other') {
+                        setShowCustomDroneInput(true);
+                        updateFormData('customDroneName', '');
                       } else {
-                        setShowOtherOperatorInput(false);
-                        updateFormData('operator', value);
+                        setShowCustomDroneInput(false);
+                        updateFormData('customDroneName', '');
                       }
                     }}
                     style={styles.picker}
                   >
-                    <Picker.Item label={t('flightForm.operatorPlaceholder')} value="" />
-                    <Picker.Item 
-                      label={user?.firstname && user?.surname ? `${user.firstname} ${user.surname}` : user?.email || 'Current User'} 
-                      value={user?.firstname && user?.surname ? `${user.firstname} ${user.surname}` : user?.email || 'Current User'} 
-                    />
-                    <Picker.Item label="GOPR Bieszczady" value="GOPR Bieszczady" />
-                    <Picker.Item label="Other" value="Other" />
+                    <Picker.Item label={t('flightForm.dronePlaceholder')} value="" />
+                    {drones.map((drone) => (
+                      <Picker.Item
+                        key={drone.id}
+                        label={DroneService.formatDroneName(drone)}
+                        value={drone.id}
+                      />
+                    ))}
+                    <Picker.Item label={t('flightForm.otherDrone')} value="other" />
                   </Picker>
                 </View>
 
-                {showOtherOperatorInput && (
+                {showCustomDroneInput && (
                   <>
-                    <Text style={styles.label}>Other Operator *</Text>
+                    <Text style={styles.label}>{t('flightForm.customDroneName')} *</Text>
                     <TextInput
                       style={styles.input}
-                      value={formData.operator || ''}
-                      onChangeText={(value) => updateFormData('operator', value)}
-                      placeholder="Enter operator name"
+                      value={formData.customDroneName || ''}
+                      onChangeText={(value) => updateFormData('customDroneName', value)}
+                      placeholder={t('flightForm.customDroneNamePlaceholder')}
                       autoCapitalize="words"
                       autoCorrect={false}
                     />
                   </>
                 )}
-              </>
-            ) : (
-              <TextInput
-                style={styles.input}
-                value={formData.operator || ''}
-                onChangeText={(value) => updateFormData('operator', value)}
-                placeholder={t('flightForm.operatorPlaceholder')}
-                autoCapitalize="words"
-                autoCorrect={false}
-              />
-            )}
 
-            <WebCompatibleDatePicker
-              label={t('flightForm.startDate')}
-              value={formData.startDate}
-              onDateChange={(value) => updateFormData('startDate', value)}
-              required={true}
-            />
+                {/* Operator field - different behavior for create vs edit */}
+                <Text style={styles.label}>{t('flightForm.operator')} *</Text>
+                {mode === 'create' ? (
+                  <>
+                    <View style={styles.pickerContainer}>
+                      <Picker
+                        selectedValue={operatorSelection}
+                        onValueChange={(value) => {
+                          setOperatorSelection(value);
+                          if (value === 'Other') {
+                            setShowOtherOperatorInput(true);
+                            updateFormData('operator', '');
+                          } else {
+                            setShowOtherOperatorInput(false);
+                            updateFormData('operator', value);
+                          }
+                        }}
+                        style={styles.picker}
+                      >
+                        <Picker.Item label={t('flightForm.operatorPlaceholder')} value="" />
+                        <Picker.Item 
+                          label={user?.firstname && user?.surname ? `${user.firstname} ${user.surname}` : user?.email || 'Current User'} 
+                          value={user?.firstname && user?.surname ? `${user.firstname} ${user.surname}` : user?.email || 'Current User'} 
+                        />
+                        <Picker.Item label="GOPR Bieszczady" value="GOPR Bieszczady" />
+                        <Picker.Item label="Other" value="Other" />
+                      </Picker>
+                    </View>
 
-            <TimePicker
-              label={t('flightForm.startTime')}
-              value={formData.startTime}
-              onTimeChange={(value) => updateFormData('startTime', value)}
-              required={true}
-            />
+                    {showOtherOperatorInput && (
+                      <>
+                        <Text style={styles.label}>Other Operator *</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={formData.operator || ''}
+                          onChangeText={(value) => updateFormData('operator', value)}
+                          placeholder="Enter operator name"
+                          autoCapitalize="words"
+                          autoCorrect={false}
+                        />
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <TextInput
+                    style={styles.input}
+                    value={formData.operator || ''}
+                    onChangeText={(value) => updateFormData('operator', value)}
+                    placeholder={t('flightForm.operatorPlaceholder')}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                  />
+                )}
 
-            <WebCompatibleDatePicker
-              label={t('flightForm.endDate')}
-              value={formData.endDate}
-              onDateChange={(value) => updateFormData('endDate', value)}
-              required={true}
-            />
+                <WebCompatibleDatePicker
+                  label={t('flightForm.startDate')}
+                  value={formData.startDate}
+                  onDateChange={(value) => updateFormData('startDate', value)}
+                  required={true}
+                />
 
-            <TimePicker
-              label={t('flightForm.endTime')}
-              value={formData.endTime}
-              onTimeChange={(value) => updateFormData('endTime', value)}
-              required={true}
-            />
+                <TimePicker
+                  label={t('flightForm.startTime')}
+                  value={formData.startTime}
+                  onTimeChange={(value) => updateFormData('startTime', value)}
+                  required={true}
+                />
 
-            {getFlightDuration() ? (
-              <View style={styles.durationContainer}>
-                <Text style={styles.durationText}>{getFlightDuration()}</Text>
+                <WebCompatibleDatePicker
+                  label={t('flightForm.endDate')}
+                  value={formData.endDate}
+                  onDateChange={(value) => updateFormData('endDate', value)}
+                  required={true}
+                />
+
+                <TimePicker
+                  label={t('flightForm.endTime')}
+                  value={formData.endTime}
+                  onTimeChange={(value) => updateFormData('endTime', value)}
+                  required={true}
+                />
+
+                {getFlightDuration() ? (
+                  <View style={styles.durationContainer}>
+                    <Text style={styles.durationText}>{getFlightDuration()}</Text>
+                  </View>
+                ) : null}
+
+                <Text style={styles.label}>{t('flightForm.conditions')}</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={formData.conditions}
+                  onChangeText={(value) => updateFormData('conditions', value)}
+                  placeholder={t('flightForm.conditionsPlaceholder')}
+                  multiline
+                  numberOfLines={3}
+                />
+
+                <Text style={styles.label}>{t('flightForm.additionalInfo')}</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={formData.additionalInfo || ''}
+                  onChangeText={(value) => updateFormData('additionalInfo', value)}
+                  placeholder={t('flightForm.additionalInfoPlaceholder')}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                />
               </View>
-            ) : null}
-
-            <Text style={styles.label}>{t('flightForm.conditions')}</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={formData.conditions}
-              onChangeText={(value) => updateFormData('conditions', value)}
-              placeholder={t('flightForm.conditionsPlaceholder')}
-              multiline
-              numberOfLines={3}
-            />
-
-            <Text style={styles.label}>{t('flightForm.additionalInfo')}</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={formData.additionalInfo || ''}
-              onChangeText={(value) => updateFormData('additionalInfo', value)}
-              placeholder={t('flightForm.additionalInfoPlaceholder')}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-          </View>
-
-          <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={onCancel}
-              disabled={loading}
-            >
-              <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
-            </TouchableOpacity>
+            </ScrollView>
             
-            <TouchableOpacity
-              style={[styles.submitButton, (loading || isButtonDisabled()) && styles.disabledButton, getDisabledStyle()]}
-              onPress={handleSave}
-              disabled={loading || isButtonDisabled()}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.submitButtonText}>
-                  {mode === 'create' ? t('flightForm.createButton') : t('flightForm.updateButton')}
-                </Text>
-              )}
-            </TouchableOpacity>
+            <View style={styles.actionButtonsContainer}>
+              <View style={styles.actionButtons}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={onCancel}
+                  disabled={loading}
+                >
+                  <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[styles.submitButton, (loading || isButtonDisabled()) && styles.disabledButton, getDisabledStyle()]}
+                  onPress={handleSave}
+                  disabled={loading || isButtonDisabled()}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.submitButtonText}>
+                      {mode === 'create' ? t('flightForm.createButton') : t('flightForm.updateButton')}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
-        </ScrollView>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -531,9 +544,13 @@ const styles = StyleSheet.create({
   keyboardAvoidingView: {
     flex: 1,
   },
+  formContainer: {
+    flex: 1,
+  },
   contentContainer: {
     flexGrow: 1,
     padding: 16,
+    paddingBottom: 0,
   },
   loadingContainer: {
     flex: 1,
@@ -608,10 +625,25 @@ const styles = StyleSheet.create({
       color: '#333',
     }),
   },
+  actionButtonsContainer: {
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    paddingTop: 16,
+    paddingHorizontal: 16,
+    paddingBottom: Platform.OS === 'android' ? 16 : 0,
+    // Ensure buttons stay above navigation bar on Android
+    ...(Platform.OS === 'android' && {
+      elevation: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: -2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+  },
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
     gap: 12,
   },
   submitButton: {
