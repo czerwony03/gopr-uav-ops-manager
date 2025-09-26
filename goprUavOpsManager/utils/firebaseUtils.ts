@@ -8,26 +8,25 @@ export const isWeb = () => Platform.OS === 'web';
 
 /**
  * Centralized Firebase Utilities
- * 
+ *
  * This file provides a single, platform-aware interface for all Firebase operations.
  * It automatically handles the differences between:
  * - Web: Firebase JS SDK (firebase/auth, firebase/firestore, etc.)
  * - React Native: React Native Firebase SDK (@react-native-firebase/*)
- * 
+ *
  * All Firebase operations throughout the app should use these utilities
  * instead of implementing platform-specific logic in individual files.
- * 
+ *
  * Platform differences are abstracted at the import level to avoid code duplication.
  */
 
 // Import Firebase instances from config
-import { auth, firestore, storage, analytics } from '@/firebaseConfig';
+import { auth, firestore, storage } from '@/firebaseConfig';
 
 // Platform-aware function imports - all differences handled here
 let firestoreFunctions: any;
 let authFunctions: any;
 let storageFunctions: any;
-let analyticsFunctions: any;
 let Timestamp: any;
 
 if (isWeb()) {
@@ -35,13 +34,7 @@ if (isWeb()) {
   const webFirestore = require('firebase/firestore');
   const webAuth = require('firebase/auth');
   const webStorage = require('firebase/storage');
-  
-  // Only import analytics if not in test environment
-  let webAnalytics: any = null;
-  if (process.env.NODE_ENV !== 'test') {
-    webAnalytics = require('firebase/analytics');
-  }
-  
+
   firestoreFunctions = {
     collection: webFirestore.collection,
     doc: webFirestore.doc,
@@ -58,7 +51,7 @@ if (isWeb()) {
     getDocs: webFirestore.getDocs,
     getCountFromServer: webFirestore.getCountFromServer,
   };
-  
+
   authFunctions = {
     signInWithEmailAndPassword: webAuth.signInWithEmailAndPassword,
     signInWithPopup: webAuth.signInWithPopup,
@@ -67,7 +60,7 @@ if (isWeb()) {
     onAuthStateChanged: webAuth.onAuthStateChanged,
     GoogleAuthProvider: webAuth.GoogleAuthProvider,
   };
-  
+
   storageFunctions = {
     ref: webStorage.ref,
     uploadBytes: webStorage.uploadBytes,
@@ -75,28 +68,13 @@ if (isWeb()) {
     deleteObject: webStorage.deleteObject,
   };
 
-  analyticsFunctions = {
-    logEvent: webAnalytics?.logEvent || null,
-    setUserId: webAnalytics?.setUserId || null,
-    setUserProperties: webAnalytics?.setUserProperties || null,
-    setCurrentScreen: webAnalytics?.setCurrentScreen || null,
-  };
-  
   Timestamp = webFirestore.Timestamp;
 } else {
   // React Native Firebase SDK - modular imports for v22+
   const rnFirestore = require('@react-native-firebase/firestore');
   const rnAuth = require('@react-native-firebase/auth');
   const rnStorage = require('@react-native-firebase/storage');
-  
-  // Only import analytics if not in test environment
-  let rnAnalytics: any = null;
-  let rnAnalyticsModular: any = null;
-  if (process.env.NODE_ENV !== 'test') {
-    rnAnalytics = require('@react-native-firebase/analytics');
-    rnAnalyticsModular = require('@react-native-firebase/analytics/lib/modular');
-  }
-  
+
   firestoreFunctions = {
     collection: rnFirestore.collection,
     doc: rnFirestore.doc,
@@ -113,7 +91,7 @@ if (isWeb()) {
     getDocs: rnFirestore.getDocs,
     getCountFromServer: rnFirestore.getCountFromServer,
   };
-  
+
   authFunctions = {
     signInWithEmailAndPassword: rnAuth.signInWithEmailAndPassword,
     signInWithPopup: null, // Not available on React Native
@@ -122,7 +100,7 @@ if (isWeb()) {
     onAuthStateChanged: rnAuth.onAuthStateChanged,
     GoogleAuthProvider: rnAuth.GoogleAuthProvider,
   };
-  
+
   storageFunctions = {
     ref: rnStorage.ref,
     putFile: rnStorage.putFile,
@@ -130,12 +108,6 @@ if (isWeb()) {
     deleteObject: rnStorage.deleteObject,
   };
 
-  analyticsFunctions = {
-    logEvent: rnAnalyticsModular?.logEvent || null,
-    setUserId: rnAnalyticsModular?.setUserId || null,
-    setUserProperties: rnAnalyticsModular?.setUserProperties || null,
-  };
-  
   Timestamp = rnFirestore.Timestamp;
 }
 
@@ -459,7 +431,7 @@ const RETRYABLE_ERROR_CODES = [
  */
 const isRetryableError = (error: any): boolean => {
   if (!error || typeof error !== 'object') return false;
-  
+
   const errorCode = error.code || error.status || '';
   return RETRYABLE_ERROR_CODES.includes(errorCode.toLowerCase());
 };
@@ -489,28 +461,28 @@ const withRetry = async <T>(
   config: RetryConfig = DEFAULT_RETRY_CONFIG
 ): Promise<T> => {
   let lastError: any;
-  
+
   for (let attempt = 1; attempt <= config.maxAttempts; attempt++) {
     try {
       return await operation();
     } catch (error) {
       lastError = error;
-      
+
       // Log the error for debugging
       console.warn(`Firebase ${operationName} attempt ${attempt}/${config.maxAttempts} failed:`, error);
-      
+
       // Don't retry if it's the last attempt or error is not retryable
       if (attempt === config.maxAttempts || !isRetryableError(error)) {
         break;
       }
-      
+
       // Calculate delay and wait before retrying
       const delayMs = calculateRetryDelay(attempt, config);
       console.log(`Retrying ${operationName} in ${delayMs}ms...`);
       await sleep(delayMs);
     }
   }
-  
+
   // If we get here, all retries failed
   console.error(`Firebase ${operationName} failed after ${config.maxAttempts} attempts:`, lastError);
   throw lastError;
@@ -553,149 +525,13 @@ export const configureRetry = (config: Partial<RetryConfig>) => {
  */
 export const handleFirebaseError = (error: any, operation: string) => {
   console.error(`Firebase ${operation} error:`, error);
-  
+
   // Add platform-specific error handling if needed
   if (isWeb()) {
     // Web-specific error handling
   } else {
     // React Native-specific error handling
   }
-  
+
   return error;
-};
-
-// ============================================================================
-// ANALYTICS UTILITIES
-// ============================================================================
-
-/**
- * Check if analytics is available and enabled
- */
-export const isAnalyticsEnabled = (): boolean => {
-  return analytics !== null && analytics !== undefined;
-};
-
-/**
- * Log a custom event to Firebase Analytics
- */
-export const logAnalyticsEvent = async (eventName: string, eventParams?: { [key: string]: any }): Promise<void> => {
-  if (!isAnalyticsEnabled()) {
-    console.log(`[Analytics] Skipping event '${eventName}' - Analytics disabled or not available`);
-    return;
-  }
-
-  try {
-    if (isWeb()) {
-      // Web Analytics
-      if (analyticsFunctions.logEvent) {
-        await analyticsFunctions.logEvent(analytics, eventName, eventParams);
-      }
-    } else {
-      // React Native Analytics - Use modular functions for v22+ compatibility
-      if (analyticsFunctions.logEvent) {
-        await analyticsFunctions.logEvent(analytics, eventName, eventParams);
-      }
-    }
-    console.log(`[Analytics] Event logged: ${eventName}`, eventParams);
-  } catch (error) {
-    console.warn(`[Analytics] Failed to log event '${eventName}':`, error);
-  }
-};
-
-/**
- * Set user ID for analytics
- */
-export const setAnalyticsUserId = async (userId: string | null): Promise<void> => {
-  if (!isAnalyticsEnabled()) {
-    console.log(`[Analytics] Skipping setUserId - Analytics disabled or not available`);
-    return;
-  }
-
-  try {
-    if (isWeb()) {
-      // Web Analytics
-      if (analyticsFunctions.setUserId) {
-        await analyticsFunctions.setUserId(analytics, userId);
-      }
-    } else {
-      // React Native Analytics - Use modular functions for v22+ compatibility
-      if (analyticsFunctions.setUserId) {
-        await analyticsFunctions.setUserId(analytics, userId);
-      }
-    }
-    console.log(`[Analytics] User ID set:`, userId ? 'authenticated' : 'cleared');
-  } catch (error) {
-    console.warn(`[Analytics] Failed to set user ID:`, error);
-  }
-};
-
-/**
- * Set user properties for analytics
- */
-export const setAnalyticsUserProperties = async (properties: { [key: string]: string | null }): Promise<void> => {
-  if (!isAnalyticsEnabled()) {
-    console.log(`[Analytics] Skipping setUserProperties - Analytics disabled or not available`);
-    return;
-  }
-
-  try {
-    if (isWeb()) {
-      // Web Analytics
-      if (analyticsFunctions.setUserProperties) {
-        await analyticsFunctions.setUserProperties(analytics, properties);
-      }
-    } else {
-      // React Native Analytics - Use modular functions for v22+ compatibility
-      if (analyticsFunctions.setUserProperties) {
-        await analyticsFunctions.setUserProperties(analytics, properties);
-      }
-    }
-    console.log(`[Analytics] User properties set:`, properties);
-  } catch (error) {
-    console.warn(`[Analytics] Failed to set user properties:`, error);
-  }
-};
-
-/**
- * Set current screen for analytics
- */
-export const setAnalyticsCurrentScreen = async (screenName: string, screenClass?: string): Promise<void> => {
-  if (!isAnalyticsEnabled()) {
-    console.log(`[Analytics] Skipping setCurrentScreen - Analytics disabled or not available`);
-    return;
-  }
-
-  try {
-    if (isWeb()) {
-      // Web Analytics - use logEvent for page_view
-      if (analyticsFunctions.logEvent) {
-        await analyticsFunctions.logEvent(analytics, 'page_view', {
-          page_title: screenName,
-          page_location: screenClass || screenName,
-        });
-      }
-    } else {
-      // React Native Analytics - Use modular logEvent with screen_view for v22+ compatibility  
-      if (analyticsFunctions.logEvent) {
-        await analyticsFunctions.logEvent(analytics, 'screen_view', {
-          firebase_screen: screenName,
-          firebase_screen_class: screenClass || screenName,
-        });
-      }
-    }
-    console.log(`[Analytics] Current screen set: ${screenName}${screenClass ? ` (${screenClass})` : ''}`);
-  } catch (error) {
-    console.warn(`[Analytics] Failed to set current screen:`, error);
-  }
-};
-
-/**
- * Analytics utility functions export
- */
-export const analyticsUtils = {
-  isEnabled: isAnalyticsEnabled,
-  logEvent: logAnalyticsEvent,
-  setUserId: setAnalyticsUserId,
-  setUserProperties: setAnalyticsUserProperties,
-  setCurrentScreen: setAnalyticsCurrentScreen,
 };

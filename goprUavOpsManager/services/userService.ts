@@ -3,7 +3,6 @@ import {UserRole} from "@/types/UserRole";
 import {toDateIfTimestamp, toFirestoreTimestamp} from "@/utils/dateUtils";
 import {AuditLogService} from "@/services/auditLogService";
 import {UserRepository} from "@/repositories/UserRepository";
-import { AnalyticsService } from './analyticsService';
 
 export class UserService {
   // Get all users (admin and manager)
@@ -87,11 +86,6 @@ export class UserService {
         details: AuditLogService.createChangeDetails('edit', 'user', { previous: previousValues, new: newValues }),
         previousValues,
         newValues
-      });
-
-      // Track analytics event
-      AnalyticsService.trackEdit('user', uid).catch(error => {
-        console.warn('[UserService] Failed to track user edit:', error);
       });
     } catch (error) {
       console.error('Error updating user:', error);
