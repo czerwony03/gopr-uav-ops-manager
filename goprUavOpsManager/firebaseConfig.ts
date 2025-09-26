@@ -131,4 +131,8 @@ if (Platform.OS === 'web') {
   }
 }
 
-export { app, auth, firestore, storage, analytics };
+// Alias for compatibility with existing code
+export const db = firestore;
+
+export { auth, firestore, storage, analytics };
+export default app;
