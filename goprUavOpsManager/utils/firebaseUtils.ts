@@ -93,8 +93,8 @@ if (isWeb()) {
   let rnAnalytics: any = null;
   let rnAnalyticsModular: any = null;
   if (process.env.NODE_ENV !== 'test' && process.env.EXPO_PUBLIC_ENABLE_ANALYTICS !== 'false') {
-    rnAnalytics = require('@react-native-firebase/analytics');
-    rnAnalyticsModular = require('@react-native-firebase/analytics/lib/modular');
+    rnAnalytics = null; // require('@react-native-firebase/analytics');
+    rnAnalyticsModular = null; // require('@react-native-firebase/analytics/lib/modular');
   }
   
   firestoreFunctions = {
