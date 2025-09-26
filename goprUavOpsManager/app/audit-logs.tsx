@@ -17,7 +17,6 @@ import { AuditLogService } from '@/services/auditLogService';
 import { AuditLog, AuditLogQuery, PaginatedAuditLogResponse, AuditEntityType, AuditAction } from '@/types/AuditLog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
-import { useAnalyticsSensitiveScreenTracking } from '@/utils/useAnalyticsScreenTracking';
 
 export default function AuditLogsScreen() {
   const insets = useSafeAreaInsets();
@@ -26,9 +25,6 @@ export default function AuditLogsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [paginationData, setPaginationData] = useState<PaginatedAuditLogResponse | null>(null);
   const crossPlatformAlert = useCrossPlatformAlert();
-  
-  // Track sensitive screen view
-  useAnalyticsSensitiveScreenTracking('audit_logs');
   
   // Filter states
   const [filters, setFilters] = useState<AuditLogQuery>({

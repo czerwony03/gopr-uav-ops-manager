@@ -20,7 +20,6 @@ import { getDocument, updateDocument } from '@/utils/firebaseUtils';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
-import { useAnalyticsSensitiveScreenTracking } from '@/utils/useAnalyticsScreenTracking';
 
 interface UserData {
   id: string;
@@ -39,9 +38,6 @@ export default function UsersListScreen() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
-  // Track sensitive screen view for user management
-  useAnalyticsSensitiveScreenTracking('user_management');
 
   const fetchUsers = useCallback(async () => {
     if (!user) return;

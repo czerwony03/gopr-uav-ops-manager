@@ -25,7 +25,6 @@ import {
 import {AuditLogService} from "@/services/auditLogService";
 import {User} from "@/types/User";
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
-import { AnalyticsService } from '@/services/analyticsService';
 
 // Configure Google Sign-In for mobile platforms
 if (Platform.OS !== 'web') {
@@ -56,11 +55,6 @@ export default function LoginScreen() {
     } catch (error: any) {
       console.error('Google login error:', error);
       
-      // Track failed Google login
-      AnalyticsService.trackLoginFailed('google', error.code).catch(analyticsError => {
-        console.warn('[LoginScreen] Failed to track Google login failure:', analyticsError);
-      });
-      
       handleGoogleLoginError(error);
     } finally {
       setGoogleLoading(false);
@@ -77,11 +71,6 @@ export default function LoginScreen() {
     // Firebase will handle the OAuth flow and domain restriction is managed server-side
     const result = await signInWithPopup(provider);
     await addLoginAuditLog();
-    
-    // Track successful Google login
-    AnalyticsService.trackLogin('google').catch(error => {
-      console.warn('[LoginScreen] Failed to track Google login:', error);
-    });
     
     console.log('Google sign-in successful:', result.user.email);
   };
@@ -107,11 +96,6 @@ export default function LoginScreen() {
       
       console.log('Mobile Google sign-in successful:', firebaseResult.user.email);
       await addLoginAuditLog();
-      
-      // Track successful Google login
-      AnalyticsService.trackLogin('google').catch(error => {
-        console.warn('[LoginScreen] Failed to track Google login:', error);
-      });
       
       // Verify domain restriction (additional check for security)
       if (!firebaseResult.user.email?.endsWith('@bieszczady.gopr.pl')) {
@@ -163,19 +147,9 @@ export default function LoginScreen() {
       await signInWithEmailAndPassword(email, password);
       await addLoginAuditLog();
       
-      // Track successful email login
-      AnalyticsService.trackLogin('email').catch(error => {
-        console.warn('[LoginScreen] Failed to track email login:', error);
-      });
-      
       // Navigation will be handled by the auth state change in AuthContext
     } catch (error: any) {
       console.error('Login error:', error);
-      
-      // Track failed email login
-      AnalyticsService.trackLoginFailed('email', error.code).catch(analyticsError => {
-        console.warn('[LoginScreen] Failed to track email login failure:', analyticsError);
-      });
       
       crossPlatformAlert.showAlert({ title: 'Login Failed', message: error.message || 'An error occurred during login' });
     } finally {
