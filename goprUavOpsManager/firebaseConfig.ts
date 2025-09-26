@@ -96,7 +96,7 @@ if (Platform.OS === 'web') {
 
   // Only import analytics if not in test environment
   let rnFirebaseAnalytics: any = null;
-  if (process.env.NODE_ENV !== 'test') {
+  if (process.env.NODE_ENV !== 'test' && process.env.EXPO_PUBLIC_ENABLE_ANALYTICS !== 'false') {
     rnFirebaseAnalytics = require('@react-native-firebase/analytics').default;
   }
 

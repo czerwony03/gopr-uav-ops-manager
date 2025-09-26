@@ -88,11 +88,11 @@ if (isWeb()) {
   const rnFirestore = require('@react-native-firebase/firestore');
   const rnAuth = require('@react-native-firebase/auth');
   const rnStorage = require('@react-native-firebase/storage');
-  
+
   // Only import analytics if not in test environment
   let rnAnalytics: any = null;
   let rnAnalyticsModular: any = null;
-  if (process.env.NODE_ENV !== 'test') {
+  if (process.env.NODE_ENV !== 'test' && process.env.EXPO_PUBLIC_ENABLE_ANALYTICS !== 'false') {
     rnAnalytics = require('@react-native-firebase/analytics');
     rnAnalyticsModular = require('@react-native-firebase/analytics/lib/modular');
   }
