@@ -15,7 +15,7 @@ import { UserRole } from '@/types/UserRole';
 import { DroneCommentService } from '@/services/droneCommentService';
 import { DroneCommentItem } from './DroneCommentItem';
 import { DroneCommentForm } from './DroneCommentForm';
-import { ImageViewer } from './ImageViewer';
+import ImageViewer from './ImageViewer';
 
 interface DroneCommentsSectionProps {
   droneId: string;

@@ -35,15 +35,15 @@ export class DroneCommentRepository {
       if (userRole === 'admin') {
         // Admin can see all comments including soft-deleted ones if requested
         if (!queryParams?.includeDeleted) {
-          conditions.push(where('isDeleted', '!=', true));
+          conditions.push(where('isDeleted', '==', false));
         }
       } else if (userRole === 'manager') {
         // Manager can see all non-deleted comments (public and hidden)
-        conditions.push(where('isDeleted', '!=', true));
+        conditions.push(where('isDeleted', '==', false));
       } else {
         // Regular users only see public, non-deleted comments
         conditions.push(
-          where('isDeleted', '!=', true),
+          where('isDeleted', '==', false),
           where('visibility', '==', 'public')
         );
       }
@@ -117,8 +117,8 @@ export class DroneCommentRepository {
       };
 
       const collection = getCollection(this.COLLECTION_NAME);
-      const docId = await addDocument(collection, docData);
-      return docId;
+      const docRef = await addDocument(collection, docData);
+      return docRef.id;
     } catch (error) {
       console.error('Error creating drone comment:', error);
       throw new Error('Failed to create drone comment');

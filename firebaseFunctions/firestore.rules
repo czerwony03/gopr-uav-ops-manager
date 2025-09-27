@@ -139,17 +139,12 @@ service cloud.firestore {
       // - Regular users: can read public, non-deleted comments
       // - Managers/Admins: can read all non-deleted comments (public and hidden)
       // - Admins: can read all comments including deleted ones
-      allow read: if isSignedIn() && (
-        isAdmin() || 
-        ((isManager() || isAdmin()) && resource.data.get('isDeleted', false) == false) ||
-        (resource.data.get('isDeleted', false) == false && resource.data.visibility == 'public')
-      );
+      allow read: if isSignedIn() && resource.data.visibility == 'public' && !resource.data.isDeleted;
+      allow read: if isManager() && !resource.data.isDeleted;
+      allow read: if isAdmin();
       
       // All authenticated users can create comments
-      allow create: if isSignedIn() && 
-        request.resource.data.userId == request.auth.uid &&
-        request.resource.data.keys().hasAll(['droneId', 'content', 'visibility', 'userId']) &&
-        request.resource.data.visibility in ['public', 'hidden'];
+      allow create: if isSignedIn();
       
       // Users can update their own comments, admins/managers can update any comment
       allow update: if isSignedIn() && (

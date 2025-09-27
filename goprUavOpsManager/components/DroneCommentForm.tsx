@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CommentVisibility } from '@/types/DroneComment';
-import { MultiImagePicker } from './MultiImagePicker';
+import MultiImagePicker from './MultiImagePicker';
 
 interface DroneCommentFormProps {
   onSubmit: (content: string, images: string[], visibility: CommentVisibility) => Promise<void>;
@@ -73,7 +73,6 @@ export const DroneCommentForm: React.FC<DroneCommentFormProps> = ({
           images={images}
           onImagesChange={handleImagePicked}
           maxImages={5}
-          style={styles.imagePicker}
         />
       </View>
 
@@ -187,9 +186,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 8,
-  },
-  imagePicker: {
-    // Styles will be handled by MultiImagePicker component
   },
   visibilityOptions: {
     gap: 12,
