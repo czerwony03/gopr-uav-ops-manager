@@ -828,17 +828,25 @@
       "delete": "Usuń",
       "cancel": "Anuluj"
     },
+    "hideConfirm": {
+      "title": "Ukryj komentarz",
+      "message": "Czy na pewno chcesz ukryć ten komentarz?",
+      "hide": "Ukryj",
+      "cancel": "Anuluj"
+    },
     "messages": {
       "commentAdded": "Komentarz dodany pomyślnie",
       "commentDeleted": "Komentarz usunięty pomyślnie",
       "addCommentError": "Nie udało się dodać komentarza. Spróbuj ponownie.",
       "deleteCommentError": "Nie udało się usunąć komentarza. Spróbuj ponownie.",
+      "hideCommentError": "Nie udało się ukryć komentarza.",
       "offlineError": "Komentarze wymagają połączenia internetowego",
       "loadError": "Nie udało się wczytać komentarzy. Spróbuj ponownie.",
       "commentRemoved": "Ten komentarz został usunięty.",
       "loadingComments": "Ładowanie komentarzy...",
       "loadMoreComments": "Załaduj więcej komentarzy",
-      "enterComment": "Proszę wprowadzić komentarz"
+      "enterComment": "Proszę wprowadzić komentarz",
+      "commentHidden": "Komentarz został ukryty."
     },
     "visibility": {
       "hidden": "Ukryty",

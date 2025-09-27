@@ -12,19 +12,21 @@ interface DroneCommentItemProps {
   currentUserId: string;
   onDeleteComment: (commentId: string) => void;
   onImagePress: (images: string[], index: number) => void;
+  onHideComment: (commentId: string) => void;
 }
 
 export const DroneCommentItem: React.FC<DroneCommentItemProps> = ({
   comment,
   userRole,
-  currentUserId,
   onDeleteComment,
-  onImagePress
+  onImagePress,
+  onHideComment,
 }) => {
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
   const canDelete = (userRole === 'admin' || userRole === 'manager') && !comment.isDeleted;
-  
+  const canHide = (userRole === 'admin' || userRole === 'manager') && !comment.isDeleted && comment.visibility === 'public';
+
   const handleDelete = () => {
     crossPlatformAlert.showAlert({
       title: t('comments.deleteConfirm.title'),
@@ -35,6 +37,21 @@ export const DroneCommentItem: React.FC<DroneCommentItemProps> = ({
           text: t('comments.deleteConfirm.delete'), 
           style: 'destructive',
           onPress: () => onDeleteComment(comment.id)
+        }
+      ]
+    });
+  };
+
+  const handleHide = () => {
+    crossPlatformAlert.showAlert({
+      title: t('comments.hideConfirm.title', 'Ukryj komentarz'),
+      message: t('comments.hideConfirm.message', 'Czy na pewno chcesz ukryć ten komentarz?'),
+      buttons: [
+        { text: t('comments.hideConfirm.cancel', 'Anuluj'), style: 'cancel' },
+        {
+          text: t('comments.hideConfirm.hide', 'Ukryj'),
+          style: 'destructive',
+          onPress: () => onHideComment(comment.id)
         }
       ]
     });
@@ -69,11 +86,18 @@ export const DroneCommentItem: React.FC<DroneCommentItemProps> = ({
             <Text style={styles.visibilityLabel}>{t('comments.visibility.hidden')}</Text>
           )}
         </View>
-        {canDelete && (
-          <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
-            <Ionicons name="trash-outline" size={20} color="#d32f2f" />
-          </TouchableOpacity>
-        )}
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {canHide && (
+            <TouchableOpacity onPress={handleHide} style={styles.deleteButton}>
+              <Ionicons name="eye-off-outline" size={20} color="#FF9800" />
+            </TouchableOpacity>
+          )}
+          {canDelete && (
+            <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
+              <Ionicons name="trash-outline" size={20} color="#d32f2f" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Comment content */}

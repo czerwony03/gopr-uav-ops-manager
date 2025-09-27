@@ -291,4 +291,48 @@ export class DroneCommentService {
   static canRestoreComments(userRole: UserRole): boolean {
     return userRole === 'admin';
   }
+
+  /**
+   * Hide (set visibility to 'hidden') a drone comment - only for admin/manager
+   */
+  static async hideDroneComment(
+    id: string,
+    userRole: UserRole,
+    userId: string,
+    userEmail?: string
+  ): Promise<void> {
+    try {
+      // Only admin/manager can hide comments
+      if (userRole !== 'admin' && userRole !== 'manager') {
+        throw new Error('Permission denied: Only managers and admins can hide comments');
+      }
+      const currentComment = await DroneCommentRepository.getDroneComment(id);
+      if (!currentComment) {
+        throw new Error('Comment not found');
+      }
+      if (currentComment.visibility === 'hidden') {
+        // Already hidden, nothing to do
+        return;
+      }
+      await DroneCommentRepository.updateDroneComment(id, { visibility: 'hidden' }, userId);
+      // Audit log
+      await AuditLogService.createAuditLog({
+        entityType: 'droneComment',
+        entityId: id,
+        action: 'hide',
+        userId,
+        userEmail,
+        details: `Drone comment hidden by ${userRole}`,
+        previousValues: {
+          visibility: currentComment.visibility
+        },
+        newValues: {
+          visibility: 'hidden'
+        }
+      });
+    } catch (error) {
+      console.error('Error hiding drone comment:', error);
+      throw error;
+    }
+  }
 }

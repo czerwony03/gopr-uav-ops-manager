@@ -828,11 +828,18 @@
       "delete": "Delete",
       "cancel": "Cancel"
     },
+    "hideConfirm": {
+      "title": "Hide comment",
+      "message": "Are you sure you want to hide this comment?",
+      "hide": "Hide",
+      "cancel": "Cancel"
+    },
     "messages": {
       "commentAdded": "Comment added successfully",
       "commentDeleted": "Comment deleted successfully",
       "addCommentError": "Failed to add comment. Please try again.",
       "deleteCommentError": "Failed to delete comment. Please try again.",
+      "hideCommentError": "Failed to hide the comment.",
       "offlineError": "Comments require internet connection",
       "loadError": "Failed to load comments. Please try again.",
       "commentRemoved": "This comment has been removed.",

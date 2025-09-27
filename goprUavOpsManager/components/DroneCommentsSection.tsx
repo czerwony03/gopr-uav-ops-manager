@@ -49,7 +49,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
   
   // Pagination state
   const [hasNextPage, setHasNextPage] = useState(false);
-  const [lastDocumentSnapshot, setLastDocumentSnapshot] = useState<any>(null);
+  const [setLastDocumentSnapshot] = useState<any>(null);
   const lastDocumentSnapshotRef = useRef<any>(null);
 
   const loadComments = useCallback(async (refresh = false) => {
@@ -165,6 +165,27 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
     }
   };
 
+  const handleHideComment = async (commentId: string) => {
+    if (isOffline) {
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('comments.messages.offlineError') });
+      return;
+    }
+    try {
+      await DroneCommentService.hideDroneComment(commentId, userRole, userId, userEmail);
+      setComments(prev =>
+        prev.map(comment =>
+          comment.id === commentId
+            ? { ...comment, visibility: 'hidden' as CommentVisibility }
+            : comment
+        )
+      );
+      crossPlatformAlert.showAlert({ title: t('common.success'), message: t('comments.messages.commentHidden', 'Komentarz został ukryty.') });
+    } catch (err) {
+      console.error('Error hiding comment:', err);
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('comments.messages.hideCommentError', 'Nie udało się ukryć komentarza.') });
+    }
+  };
+
   const handleImagePress = (images: string[], index: number) => {
     setSelectedImages(images);
     setSelectedImageIndex(index);
@@ -185,7 +206,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t('comments.title')} ({comments.length})</Text>
+        <Text style={styles.title}>{t('comments.title')}</Text>
         {!isOffline && (
           <TouchableOpacity
             style={styles.addButton}
@@ -247,6 +268,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
               currentUserId={userId}
               onDeleteComment={handleDeleteComment}
               onImagePress={handleImagePress}
+              onHideComment={handleHideComment}
             />
           ))
         )}
