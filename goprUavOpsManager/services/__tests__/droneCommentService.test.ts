@@ -105,7 +105,7 @@ describe('DroneCommentService', () => {
       expect(mockUserService.getUserDisplayName).toHaveBeenCalledWith('user-1');
       expect(mockImageService.processImages).toHaveBeenCalledWith(
         mockDroneCommentCreateData.images,
-        'droneComments/images',
+        'droneComments/images/drone-1',
         expect.any(String)
       );
       expect(mockDroneCommentRepository.createDroneComment).toHaveBeenCalled();
