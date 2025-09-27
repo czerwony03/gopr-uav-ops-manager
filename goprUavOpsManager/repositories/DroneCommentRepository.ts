@@ -276,7 +276,7 @@ export class DroneCommentRepository {
       // Remove the extra document if we have one
       const comments = docs
         .slice(0, queryLimit)
-        .map((doc: any) => this.convertFromFirestore(doc.id, doc.data()));
+        .map((doc: any) => this.convertFromFirestore(doc.id, doc.data));
 
       // Get the last document snapshot for pagination
       let lastDocumentSnapshot = null;
