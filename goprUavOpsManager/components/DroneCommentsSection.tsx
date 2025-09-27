@@ -97,7 +97,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
       setLoading(false);
       setRefreshing(false);
     }
-  }, [droneId, userRole, userId, isOffline, t]);
+  }, [droneId, userRole, userId, isOffline, t, lastDocumentSnapshot]);
 
   const handleRefresh = useCallback(() => {
     loadComments(true);
