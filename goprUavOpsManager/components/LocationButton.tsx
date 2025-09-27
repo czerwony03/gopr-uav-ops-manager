@@ -34,11 +34,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Platform,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { LocationService } from '@/services/locationService';
+import { useCrossPlatformAlert } from './CrossPlatformAlert';
 
 interface LocationButtonProps {
   onLocationReceived: (location: string) => void;
@@ -52,6 +52,7 @@ const LocationButton: React.FC<LocationButtonProps> = ({
   style 
 }) => {
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
   const [loading, setLoading] = useState(false);
 
   const handleLocationPress = async () => {
@@ -95,7 +96,7 @@ const LocationButton: React.FC<LocationButtonProps> = ({
       if (Platform.OS === 'web') {
         alert(errorMessage);
       } else {
-        Alert.alert(t('location.errorTitle'), errorMessage);
+        crossPlatformAlert.showAlert({ title: t('location.errorTitle'), message: errorMessage });
       }
     } finally {
       setLoading(false);

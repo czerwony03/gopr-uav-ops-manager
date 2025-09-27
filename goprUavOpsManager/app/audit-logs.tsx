@@ -17,6 +17,7 @@ import { AuditLogService } from '@/services/auditLogService';
 import { AuditLog, AuditLogQuery, PaginatedAuditLogResponse, AuditEntityType, AuditAction } from '@/types/AuditLog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
+import { useTranslation } from 'react-i18next';
 
 export default function AuditLogsScreen() {
   const insets = useSafeAreaInsets();
@@ -25,7 +26,8 @@ export default function AuditLogsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [paginationData, setPaginationData] = useState<PaginatedAuditLogResponse | null>(null);
   const crossPlatformAlert = useCrossPlatformAlert();
-  
+  const { t } = useTranslation('common');
+
   // Filter states
   const [filters, setFilters] = useState<AuditLogQuery>({
     pageSize: 10,
@@ -227,62 +229,62 @@ export default function AuditLogsScreen() {
         >
           <Ionicons name={showFilters ? "chevron-up" : "chevron-down"} size={20} color="#007AFF" />
           <Text style={styles.toggleFiltersText}>
-            {showFilters ? 'Hide Filters' : 'Show Filters'}
+            {showFilters ? t('filters.hideFilters') : t('filters.showFilters')}
           </Text>
         </TouchableOpacity>
 
         {showFilters && (
           <View style={styles.filtersContent}>
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>Entity Type:</Text>
+              <Text style={styles.filterLabel}>{t('filters.entityType')}</Text>
               <View style={styles.pickerContainer}>
                 <Picker
                   selectedValue={filters.entityType || ''}
                   style={styles.picker}
                   onValueChange={(value) => setFilters({...filters, entityType: value as AuditEntityType || undefined})}
                 >
-                  <Picker.Item label="All" value="" />
-                  <Picker.Item label="Drone" value="drone" />
-                  <Picker.Item label="Flight" value="flight" />
-                  <Picker.Item label="Procedure/Checklist" value="procedureChecklist" />
-                  <Picker.Item label="User" value="user" />
+                  <Picker.Item label={t('filters.all')} value="" />
+                  <Picker.Item label={t('filters.entityTypes.drone')} value="drone" />
+                  <Picker.Item label={t('filters.entityTypes.flight')} value="flight" />
+                  <Picker.Item label={t('filters.entityTypes.procedureChecklist')} value="procedureChecklist" />
+                  <Picker.Item label={t('filters.entityTypes.user')} value="user" />
                 </Picker>
               </View>
             </View>
 
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>Action:</Text>
+              <Text style={styles.filterLabel}>{t('filters.action')}</Text>
               <View style={styles.pickerContainer}>
                 <Picker
                   selectedValue={filters.action || ''}
                   style={styles.picker}
                   onValueChange={(value) => setFilters({...filters, action: value as AuditAction || undefined})}
                 >
-                  <Picker.Item label="All" value="" />
-                  <Picker.Item label="Create" value="create" />
-                  <Picker.Item label="Edit" value="edit" />
-                  <Picker.Item label="Delete" value="delete" />
-                  <Picker.Item label="Restore" value="restore" />
-                  <Picker.Item label="View" value="view" />
-                  <Picker.Item label="Login" value="login" />
+                  <Picker.Item label={t('filters.all')} value="" />
+                  <Picker.Item label={t('filters.actions.create')} value="create" />
+                  <Picker.Item label={t('filters.actions.edit')} value="edit" />
+                  <Picker.Item label={t('filters.actions.delete')} value="delete" />
+                  <Picker.Item label={t('filters.actions.restore')} value="restore" />
+                  <Picker.Item label={t('filters.actions.view')} value="view" />
+                  <Picker.Item label={t('filters.actions.login')} value="login" />
                 </Picker>
               </View>
             </View>
 
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>User Email:</Text>
+              <Text style={styles.filterLabel}>{t('filters.userEmail')}</Text>
               <TextInput
                 style={styles.textInput}
                 value={filters.userEmail || ''}
                 onChangeText={(value) => setFilters({...filters, userEmail: value})}
-                placeholder="Enter user email..."
+                placeholder={t('filters.userEmail')}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
             </View>
 
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>Start Date:</Text>
+              <Text style={styles.filterLabel}>{t('filters.startDate')}</Text>
               <TextInput
                 style={styles.textInput}
                 value={startDateInput}
@@ -294,7 +296,7 @@ export default function AuditLogsScreen() {
             </View>
 
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>End Date:</Text>
+              <Text style={styles.filterLabel}>{t('filters.endDate')}</Text>
               <TextInput
                 style={styles.textInput}
                 value={endDateInput}

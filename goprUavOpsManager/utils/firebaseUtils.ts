@@ -44,6 +44,8 @@ if (isWeb()) {
     setDoc: webFirestore.setDoc,
     deleteDoc: webFirestore.deleteDoc,
     where: webFirestore.where,
+    or: webFirestore.or,
+    and: webFirestore.and,
     orderBy: webFirestore.orderBy,
     limit: webFirestore.limit,
     startAfter: webFirestore.startAfter,
@@ -84,6 +86,8 @@ if (isWeb()) {
     setDoc: rnFirestore.setDoc,
     deleteDoc: rnFirestore.deleteDoc,
     where: rnFirestore.where,
+    and: rnFirestore.and,
+    or: rnFirestore.or,
     orderBy: rnFirestore.orderBy,
     limit: rnFirestore.limit,
     startAfter: rnFirestore.startAfter,
@@ -317,6 +321,20 @@ export const createGoogleAuthProvider = () => {
  */
 export const where = (field: string, operator: any, value: any) => {
   return firestoreFunctions.where(field, operator, value);
+};
+
+/**
+ * Create a or constraint
+ */
+export const or = (...constraints: any[]) => {
+  return firestoreFunctions.or(...constraints);
+};
+
+/**
+ * Create a or constraint
+ */
+export const and = (...constraints: any[]) => {
+  return firestoreFunctions.and(...constraints);
 };
 
 /**
