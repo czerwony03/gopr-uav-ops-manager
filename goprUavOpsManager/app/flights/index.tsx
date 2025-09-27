@@ -447,14 +447,14 @@ export default function FlightsListScreen() {
         >
           <Ionicons name={showFilters ? "chevron-up" : "chevron-down"} size={20} color="#007AFF" />
           <Text style={styles.toggleFiltersText}>
-            {showFilters ? 'Hide Filters' : 'Show Filters'}
+            {showFilters ? t('filters.hideFilters') : t('filters.showFilters')}
           </Text>
         </TouchableOpacity>
 
         {showFilters ? (
           <View style={styles.filtersContent}>
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>Start Date:</Text>
+              <Text style={styles.filterLabel}>{t('filters.startDate')}</Text>
               <TextInput
                 style={styles.textInput}
                 value={startDateInput}
@@ -466,7 +466,7 @@ export default function FlightsListScreen() {
             </View>
 
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>End Date:</Text>
+              <Text style={styles.filterLabel}>{t('filters.endDate')}</Text>
               <TextInput
                 style={styles.textInput}
                 value={endDateInput}
@@ -478,14 +478,14 @@ export default function FlightsListScreen() {
             </View>
 
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>Category:</Text>
+              <Text style={styles.filterLabel}>{t('filters.category')}</Text>
               <View style={styles.pickerContainer}>
                 <Picker
                   selectedValue={filters.flightCategory || ''}
                   style={styles.picker}
                   onValueChange={(value) => setFilters({...filters, flightCategory: (value as FlightCategory) || undefined})}
                 >
-                  <Picker.Item label="All" value="" />
+                  <Picker.Item label={t('filters.all')} value="" />
                   {AVAILABLE_FLIGHT_CATEGORIES.map((category) => (
                     <Picker.Item key={category} label={category} value={category} />
                   ))}
@@ -494,14 +494,14 @@ export default function FlightsListScreen() {
             </View>
 
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>Activity:</Text>
+              <Text style={styles.filterLabel}>{t('filters.activity')}</Text>
               <View style={styles.pickerContainer}>
                 <Picker
                   selectedValue={filters.activityType || ''}
                   style={styles.picker}
                   onValueChange={(value) => setFilters({...filters, activityType: (value as ActivityType) || undefined})}
                 >
-                  <Picker.Item label="All" value="" />
+                  <Picker.Item label={t('filters.all')} value="" />
                   {AVAILABLE_ACTIVITY_TYPES.map((activity) => (
                     <Picker.Item key={activity} label={activity} value={activity} />
                   ))}
@@ -510,14 +510,14 @@ export default function FlightsListScreen() {
             </View>
 
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>Drone:</Text>
+              <Text style={styles.filterLabel}>{t('filters.drone')}</Text>
               <View style={styles.pickerContainer}>
                 <Picker
                   selectedValue={filters.droneId || ''}
                   style={styles.picker}
                   onValueChange={(value) => setFilters({...filters, droneId: value || undefined})}
                 >
-                  <Picker.Item label="All" value="" />
+                  <Picker.Item label={t('filters.all')} value="" />
                   {drones.map((drone) => (
                     <Picker.Item key={drone.id} label={DroneService.formatDroneName(drone)} value={drone.id} />
                   ))}
@@ -527,7 +527,7 @@ export default function FlightsListScreen() {
 
             {(user?.role === 'admin' || user?.role === 'manager') ? (
               <View style={styles.filterRow}>
-                <Text style={styles.filterLabel}>Pilot Email:</Text>
+                <Text style={styles.filterLabel}>{t('filters.pilotEmail')}</Text>
                 <TextInput
                   style={styles.textInput}
                   value={filters.userEmail || ''}
@@ -541,11 +541,11 @@ export default function FlightsListScreen() {
 
             <View style={styles.filterButtons}>
               <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
-                <Text style={styles.applyButtonText}>Apply Filters</Text>
+                <Text style={styles.applyButtonText}>{t('filters.applyFilters')}</Text>
               </TouchableOpacity>
               
               <TouchableOpacity style={styles.clearButton} onPress={clearFilters}>
-                <Text style={styles.clearButtonText}>Clear Filters</Text>
+                <Text style={styles.clearButtonText}>{t('filters.clearFilters')}</Text>
               </TouchableOpacity>
             </View>
           </View>

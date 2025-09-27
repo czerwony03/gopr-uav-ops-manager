@@ -213,7 +213,7 @@ Document ID: [auto-generated]
 Collection: auditLogs
 Document ID: [auto-generated]
 {
-  "entityType": "drone", // drone|flight|procedureChecklist
+  "entityType": "drone", // drone|flight|procedureChecklist|droneComment
   "entityId": "entity_document_id",
   "action": "edit", // create|edit|delete|restore|view
   "userId": "user_uid",
@@ -228,23 +228,28 @@ Document ID: [auto-generated]
 }
 ```
 
-#### Required Firestore Indexes
-
-The following composite indexes are required for optimal query performance:
-
-1. **Collection**: `flights`
-   - **Fields**: `userId` (Ascending), `date` (Descending), `startTime` (Descending)
-   - **Query scope**: Collection
-
-2. **Collection**: `procedures_checklists`
-   - **Fields**: `isDeleted` (Ascending), `createdAt` (Descending)
-   - **Query scope**: Collection
-
-3. **Collection**: `auditLogs`
-   - **Fields**: `timestamp` (Descending), `entityType` (Ascending)
-   - **Query scope**: Collection
-
-Create these indexes in the Firebase Console under Firestore Database → Indexes.
+#### Drone Comments Collection (`droneComments`)
+```
+Collection: droneComments
+Document ID: [auto-generated]
+{
+  "droneId": "drone_document_id", // Reference to drone
+  "userId": "user_uid", // Comment author's Firebase Auth UID
+  "userEmail": "user@example.com", // Comment author's email
+  "userName": "John Doe", // Comment author's display name
+  "content": "This drone performed excellently during the mountain rescue operation.",
+  "images": [ // Optional array of Firebase Storage URLs
+    "https://firebasestorage.googleapis.com/v0/b/project.appspot.com/o/droneComments%2Fimages%2FcommentId%2Fimage1.jpg",
+    "https://firebasestorage.googleapis.com/v0/b/project.appspot.com/o/droneComments%2Fimages%2FcommentId%2Fimage2.jpg"
+  ],
+  "visibility": "public", // "public" or "hidden" (hidden only visible to admin/manager)
+  "isDeleted": false, // Soft-delete flag for admin/manager removal
+  "deletedAt": null, // Timestamp when comment was deleted
+  "deletedBy": null, // User ID who deleted the comment
+  "createdAt": timestamp,
+  "updatedAt": timestamp // Optional, for future edit functionality
+}
+```
 
 ### 4. Firebase Configuration
 
@@ -260,105 +265,6 @@ const firebaseConfig = {
   appId: "your-app-id"
 };
 ```
-
-### 5. Security Rules (Production)
-
-For production, update your Firestore security rules to secure all collections:
-
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    
-    // Helper function to check if user is authenticated
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    // Helper function to get user role
-    function getUserRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-    }
-    
-    // Helper function to check if user is admin
-    function isAdmin() {
-      return isAuthenticated() && getUserRole() == 'admin';
-    }
-    
-    // Helper function to check if user is manager or admin
-    function isManagerOrAdmin() {
-      return isAuthenticated() && (getUserRole() == 'manager' || getUserRole() == 'admin');
-    }
-    
-    // Users collection
-    match /users/{userId} {
-      // Users can read their own document, managers and admins can read all
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isManagerOrAdmin());
-      // Managers and admins can update user documents, but only admins can change roles
-      allow create: if isAdmin();
-      allow update: if isManagerOrAdmin() && 
-        (isAdmin() || !request.resource.data.keys().hasAny(['role']));
-      // Only admins can delete user documents
-      allow delete: if isAdmin();
-    }
-    
-    // Drones collection
-    match /drones/{droneId} {
-      // All authenticated users can read non-deleted drones
-      // Admins can read all drones (including deleted)
-      allow read: if isAuthenticated() && 
-        (isAdmin() || resource.data.get('isDeleted', false) == false);
-      // Managers and admins can create/update drones
-      allow create, update: if isManagerOrAdmin();
-      // Only admins can delete (for restoration purposes)
-      allow delete: if isAdmin();
-    }
-    
-    // Flights collection  
-    match /flights/{flightId} {
-      // Users can read their own flights, managers/admins can read all
-      allow read: if isAuthenticated() && 
-        (isManagerOrAdmin() || resource.data.userId == request.auth.uid);
-      // Users can create/update their own flights, managers/admins can modify all
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && 
-        (isManagerOrAdmin() || resource.data.userId == request.auth.uid);
-      // No flight deletion in this version
-      allow delete: if false;
-    }
-    
-    // Procedures & Checklists collection
-    match /procedures_checklists/{procedureId} {
-      // All authenticated users can read non-deleted procedures
-      // Admins can read all procedures (including deleted)
-      allow read: if isAuthenticated() && 
-        (isAdmin() || resource.data.get('isDeleted', false) == false);
-      // Managers and admins can create/update procedures
-      allow create, update: if isManagerOrAdmin();
-      // Only admins can delete (for restoration purposes) 
-      allow delete: if isAdmin();
-    }
-    
-    // Audit Logs collection
-    match /auditLogs/{logId} {
-      // Only admins can read audit logs
-      allow read: if isAdmin();
-      // Only the system can write audit logs (via service account or admin SDK)
-      // In practice, audit logs are written by authenticated users through the app
-      allow create: if isAuthenticated();
-      // Audit logs should never be updated or deleted
-      allow update, delete: if false;
-    }
-  }
-}
-```
-
-**Important Security Notes:**
-- These rules enforce role-based access at the database level
-- Soft-deleted items are filtered out for non-admin users
-- Audit logs are read-only except for creation
-- Users can only access their own flights unless they are managers/admins
-- Admin users have full access to all collections
 
 ### 6. Google Workspace Authentication Setup
 

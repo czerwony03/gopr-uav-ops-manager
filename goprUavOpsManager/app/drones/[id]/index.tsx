@@ -22,6 +22,7 @@ import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import ImageGallery from '@/components/ImageGallery';
 import EquipmentChecklistModal from '@/components/EquipmentChecklistModal';
 import ImageViewer from '@/components/ImageViewer';
+import { DroneCommentsSection } from '@/components/DroneCommentsSection';
 
 export default function DroneDetailsScreen() {
   const [drone, setDrone] = useState<Drone | null>(null);
@@ -32,6 +33,8 @@ export default function DroneDetailsScreen() {
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedStorageImages, setSelectedStorageImages] = useState<string[]>([]);
+  // Draft comment content passed from EquipmentChecklistModal
+  const [commentDraft, setCommentDraft] = useState<string | null>(null);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const router = useRouter();
@@ -370,8 +373,8 @@ export default function DroneDetailsScreen() {
         <View style={styles.actionButtons}>
           {canModify ? (
             <>
-              <TouchableOpacity 
-                style={[styles.editButton, getDisabledStyle()]} 
+              <TouchableOpacity
+                style={[styles.editButton, getDisabledStyle()]}
                 onPress={handleEdit}
                 disabled={isButtonDisabled()}
               >
@@ -379,8 +382,8 @@ export default function DroneDetailsScreen() {
                   {t('droneDetails.editButton')}
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.deleteButton, getDisabledStyle()]} 
+              <TouchableOpacity
+                style={[styles.deleteButton, getDisabledStyle()]}
                 onPress={handleDelete}
                 disabled={isButtonDisabled()}
               >
@@ -392,8 +395,8 @@ export default function DroneDetailsScreen() {
           ) : null}
 
           {canRestore ? (
-            <TouchableOpacity 
-              style={[styles.restoreButton, getDisabledStyle()]} 
+            <TouchableOpacity
+              style={[styles.restoreButton, getDisabledStyle()]}
               onPress={handleRestore}
               disabled={isButtonDisabled()}
             >
@@ -403,6 +406,21 @@ export default function DroneDetailsScreen() {
             </TouchableOpacity>
           ) : null}
         </View>
+
+        {/* Comments section */}
+        {drone && user && (
+          <View style={styles.section}>
+            <DroneCommentsSection
+              droneId={drone.id}
+              userRole={user.role}
+              userId={user.uid}
+              userEmail={user.email}
+              isOffline={isButtonDisabled()}
+              openAddFormWithDraft={commentDraft}
+              onDraftHandled={() => setCommentDraft(null)}
+            />
+          </View>
+        )}
       </View>
     </ScrollView>
     
@@ -410,6 +428,12 @@ export default function DroneDetailsScreen() {
       visible={showEquipmentChecklist}
       equipmentStorages={drone?.equipmentStorages || []}
       onClose={() => setShowEquipmentChecklist(false)}
+      onReportMissing={(defaultComment) => {
+        // Close modal handled by modal; set draft so DroneCommentsSection opens add form with content
+        setShowEquipmentChecklist(false);
+        setCommentDraft(defaultComment);
+        // Optionally scroll to comments section or bring into view — left to layout
+      }}
     />
     
     <ImageViewer

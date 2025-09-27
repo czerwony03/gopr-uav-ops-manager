@@ -782,6 +782,10 @@
     "allItemsChecked": "All equipment items have been checked!",
     "reset": "Reset",
     "checklistNote": "This checklist is for personal verification only and is not saved.",
+    "reportMissing": "Report Missing Equipment",
+    "reportMissingIntro": "Reporting missing equipment:",
+    "reportMissingNone": "Nothing is missing.",
+    "reportMissingNoDrone": "Cannot report missing equipment - no drone identifier.",
     "validation": {
       "nameRequired": "Equipment name is required",
       "nameRequiredInStorage": "Equipment name is required in storage \"{{storageName}}\"",
@@ -801,6 +805,84 @@
     "addFirstStorage": "Add your first storage container using the button above",
     "validation": {
       "nameRequired": "Storage name is required"
+    }
+  },
+  "comments": {
+    "title": "Comments",
+    "addComment": "Add Comment",
+    "cancel": "Cancel",
+    "noComments": "No comments yet",
+    "beFirstToComment": "Be the first to add a comment about this drone",
+    "addCommentForm": {
+      "title": "Add Comment",
+      "contentPlaceholder": "Enter your comment...",
+      "attachImages": "Attach Images (Optional)",
+      "visibilityTitle": "Visibility",
+      "visibilityPublic": "Public",
+      "visibilityPublicDesc": "Visible to all users",
+      "visibilityHidden": "Hidden",
+      "visibilityHiddenDesc": "Only visible to managers and admins",
+      "submitButton": "Add Comment",
+      "submittingButton": "Submitting...",
+      "characterCount": "{{current}}/{{max}}"
+    },
+    "deleteConfirm": {
+      "title": "Delete Comment",
+      "message": "Are you sure you want to delete this comment? This action cannot be undone.",
+      "delete": "Delete",
+      "cancel": "Cancel"
+    },
+    "hideConfirm": {
+      "title": "Hide comment",
+      "message": "Are you sure you want to hide this comment?",
+      "hide": "Hide",
+      "cancel": "Cancel"
+    },
+    "messages": {
+      "commentAdded": "Comment added successfully",
+      "commentDeleted": "Comment deleted successfully",
+      "addCommentError": "Failed to add comment. Please try again.",
+      "deleteCommentError": "Failed to delete comment. Please try again.",
+      "hideCommentError": "Failed to hide the comment.",
+      "offlineError": "Comments require internet connection",
+      "loadError": "Failed to load comments. Please try again.",
+      "commentRemoved": "This comment has been removed.",
+      "loadingComments": "Loading comments...",
+      "loadMoreComments": "Load More Comments",
+      "enterComment": "Please enter a comment"
+    },
+    "visibility": {
+      "hidden": "Hidden",
+      "public": "Public"
+    },
+    "actions": {
+      "retry": "Retry"
+    }
+  },
+  "filters": {
+    "showFilters": "Show Filters",
+    "hideFilters": "Hide Filters",
+    "startDate": "Start Date:",
+    "endDate": "End Date:",
+    "category": "Category:",
+    "activity": "Activity:",
+    "entityType": "Entity Type:",
+    "action": "Action:",
+    "userEmail": "User Email:",
+    "all": "All",
+    "entityTypes": {
+      "drone": "Drone",
+      "flight": "Flight",
+      "procedureChecklist": "Procedure/Checklist",
+      "user": "User"
+    },
+    "actions": {
+      "create": "Create",
+      "edit": "Edit",
+      "delete": "Delete",
+      "restore": "Restore",
+      "view": "View",
+      "login": "Login"
     }
   }
 }
