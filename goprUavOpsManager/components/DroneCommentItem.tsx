@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, Image, StyleSheet, Alert } from 'react-na
 import { Ionicons } from '@expo/vector-icons';
 import { DroneComment } from '@/types/DroneComment';
 import { UserRole } from '@/types/UserRole';
-import { ImageViewer } from './ImageViewer';
 
 interface DroneCommentItemProps {
   comment: DroneComment;

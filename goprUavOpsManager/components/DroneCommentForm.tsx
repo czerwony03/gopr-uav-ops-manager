@@ -5,9 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   Alert,
-  Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CommentVisibility } from '@/types/DroneComment';

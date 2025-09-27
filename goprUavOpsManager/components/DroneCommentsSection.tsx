@@ -10,7 +10,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { DroneComment, CommentVisibility, PaginatedDroneCommentResponse } from '@/types/DroneComment';
+import { DroneComment, CommentVisibility } from '@/types/DroneComment';
 import { UserRole } from '@/types/UserRole';
 import { DroneCommentService } from '@/services/droneCommentService';
 import { DroneCommentItem } from './DroneCommentItem';
@@ -164,7 +164,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
 
   useEffect(() => {
     loadComments(true);
-  }, [droneId]);
+  }, [droneId, loadComments]);
 
   return (
     <View style={styles.container}>

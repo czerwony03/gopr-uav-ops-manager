@@ -40,14 +40,14 @@ export class DroneCommentService {
     userId: string, 
     userEmail?: string
   ): Promise<string> {
-    try {
-      // Check if user can create comments (all authenticated users can)
-      if (!userId) {
-        throw new Error('User authentication required to create comments');
-      }
+    // Check if user can create comments (all authenticated users can)
+    if (!userId) {
+      throw new Error('User authentication required to create comments');
+    }
 
+    try {
       // Get user display name for better UX
-      const userName = await UserService.getUserDisplayName(userId);
+      await UserService.getUserDisplayName(userId);
 
       // Process images if provided
       let processedImages: string[] = [];
