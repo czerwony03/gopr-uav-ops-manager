@@ -59,16 +59,26 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
     try {
       if (refresh) {
         setRefreshing(true);
+        setLastDocumentSnapshot(null); // Reset pagination on refresh
       } else {
         setLoading(true);
       }
       setError(null);
 
+      const currentSnapshot = refresh ? null : lastDocumentSnapshot;
+      console.log('Loading comments:', { refresh, hasSnapshot: !!currentSnapshot, droneId });
+
       const response = await DroneCommentService.getPaginatedDroneComments(droneId, userRole, userId, {
         limit: 5,
         orderBy: 'createdAt',
         orderDirection: 'desc',
-        ...(refresh ? {} : { lastDocumentSnapshot })
+        lastDocumentSnapshot: currentSnapshot
+      });
+
+      console.log('Response received:', { 
+        commentsCount: response.comments.length, 
+        hasNextPage: response.hasNextPage,
+        hasNewSnapshot: !!response.lastDocumentSnapshot
       });
 
       if (refresh) {
@@ -87,10 +97,9 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
       setLoading(false);
       setRefreshing(false);
     }
-  }, [droneId, userRole, isOffline, lastDocumentSnapshot]);
+  }, [droneId, userRole, userId, isOffline, t]);
 
   const handleRefresh = useCallback(() => {
-    setLastDocumentSnapshot(null);
     loadComments(true);
   }, [loadComments]);
 
@@ -158,11 +167,12 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
     setImageViewerVisible(true);
   };
 
-  const loadMoreComments = () => {
+  const loadMoreComments = useCallback(() => {
     if (hasNextPage && !loading) {
-      loadComments();
+      console.log('Loading more comments...');
+      loadComments(false); // false = append, don't refresh
     }
-  };
+  }, [hasNextPage, loading, loadComments]);
 
   useEffect(() => {
     loadComments(true);
