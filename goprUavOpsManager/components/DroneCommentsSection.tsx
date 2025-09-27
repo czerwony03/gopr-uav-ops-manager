@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -49,6 +49,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
   // Pagination state
   const [hasNextPage, setHasNextPage] = useState(false);
   const [lastDocumentSnapshot, setLastDocumentSnapshot] = useState<any>(null);
+  const lastDocumentSnapshotRef = useRef<any>(null);
 
   const loadComments = useCallback(async (refresh = false) => {
     if (isOffline) {
@@ -60,12 +61,13 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
       if (refresh) {
         setRefreshing(true);
         setLastDocumentSnapshot(null); // Reset pagination on refresh
+        lastDocumentSnapshotRef.current = null; // Also reset ref
       } else {
         setLoading(true);
       }
       setError(null);
 
-      const currentSnapshot = refresh ? null : lastDocumentSnapshot;
+      const currentSnapshot = refresh ? null : lastDocumentSnapshotRef.current;
       console.log('Loading comments:', { refresh, hasSnapshot: !!currentSnapshot, droneId });
 
       const response = await DroneCommentService.getPaginatedDroneComments(droneId, userRole, userId, {
@@ -89,6 +91,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
       
       setHasNextPage(response.hasNextPage);
       setLastDocumentSnapshot(response.lastDocumentSnapshot);
+      lastDocumentSnapshotRef.current = response.lastDocumentSnapshot; // Also update ref
 
     } catch (err) {
       console.error('Error loading comments:', err);
@@ -97,7 +100,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
       setLoading(false);
       setRefreshing(false);
     }
-  }, [droneId, userRole, userId, isOffline, t, lastDocumentSnapshot]);
+  }, [droneId, userRole, userId, isOffline, t]);
 
   const handleRefresh = useCallback(() => {
     loadComments(true);
