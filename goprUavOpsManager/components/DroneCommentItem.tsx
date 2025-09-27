@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { DroneComment } from '@/types/DroneComment';
 import { UserRole } from '@/types/UserRole';
 
@@ -19,16 +20,17 @@ export const DroneCommentItem: React.FC<DroneCommentItemProps> = ({
   onDeleteComment,
   onImagePress
 }) => {
+  const { t } = useTranslation('common');
   const canDelete = (userRole === 'admin' || userRole === 'manager') && !comment.isDeleted;
   
   const handleDelete = () => {
     Alert.alert(
-      'Delete Comment',
-      'Are you sure you want to delete this comment? This action cannot be undone.',
+      t('comments.deleteConfirm.title'),
+      t('comments.deleteConfirm.message'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('comments.deleteConfirm.cancel'), style: 'cancel' },
         { 
-          text: 'Delete', 
+          text: t('comments.deleteConfirm.delete'), 
           style: 'destructive',
           onPress: () => onDeleteComment(comment.id)
         }
@@ -62,7 +64,7 @@ export const DroneCommentItem: React.FC<DroneCommentItemProps> = ({
           <Text style={styles.commentDate}>{formatDate(comment.createdAt)}</Text>
           {getVisibilityIcon()}
           {comment.visibility === 'hidden' && (
-            <Text style={styles.visibilityLabel}>Hidden</Text>
+            <Text style={styles.visibilityLabel}>{t('comments.visibility.hidden')}</Text>
           )}
         </View>
         {canDelete && (
@@ -77,7 +79,7 @@ export const DroneCommentItem: React.FC<DroneCommentItemProps> = ({
         styles.commentContent,
         comment.isDeleted && styles.deletedContent
       ]}>
-        {comment.isDeleted ? 'This comment has been removed.' : comment.content}
+        {comment.isDeleted ? t('comments.messages.commentRemoved') : comment.content}
       </Text>
 
       {/* Comment images */}

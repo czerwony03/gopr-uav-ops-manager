@@ -802,5 +802,50 @@
     "validation": {
       "nameRequired": "Storage name is required"
     }
+  },
+  "comments": {
+    "title": "Comments",
+    "addComment": "Add Comment",
+    "cancel": "Cancel",
+    "noComments": "No comments yet",
+    "beFirstToComment": "Be the first to add a comment about this drone",
+    "addCommentForm": {
+      "title": "Add Comment",
+      "contentPlaceholder": "Enter your comment...",
+      "attachImages": "Attach Images (Optional)",
+      "visibilityTitle": "Visibility",
+      "visibilityPublic": "Public",
+      "visibilityPublicDesc": "Visible to all users",
+      "visibilityHidden": "Hidden",
+      "visibilityHiddenDesc": "Only visible to managers and admins",
+      "submitButton": "Add Comment",
+      "submittingButton": "Submitting...",
+      "characterCount": "{{current}}/{{max}}"
+    },
+    "deleteConfirm": {
+      "title": "Delete Comment",
+      "message": "Are you sure you want to delete this comment? This action cannot be undone.",
+      "delete": "Delete",
+      "cancel": "Cancel"
+    },
+    "messages": {
+      "commentAdded": "Comment added successfully",
+      "commentDeleted": "Comment deleted successfully",
+      "addCommentError": "Failed to add comment. Please try again.",
+      "deleteCommentError": "Failed to delete comment. Please try again.",
+      "offlineError": "Comments require internet connection",
+      "loadError": "Failed to load comments. Please try again.",
+      "commentRemoved": "This comment has been removed.",
+      "loadingComments": "Loading comments...",
+      "loadMoreComments": "Load More Comments",
+      "enterComment": "Please enter a comment"
+    },
+    "visibility": {
+      "hidden": "Hidden",
+      "public": "Public"
+    },
+    "actions": {
+      "retry": "Retry"
+    }
   }
 }

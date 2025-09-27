@@ -10,6 +10,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { DroneComment, CommentVisibility } from '@/types/DroneComment';
 import { UserRole } from '@/types/UserRole';
 import { DroneCommentService } from '@/services/droneCommentService';
@@ -32,6 +33,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
   userEmail,
   isOffline = false
 }) => {
+  const { t } = useTranslation('common');
   const [comments, setComments] = useState<DroneComment[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -50,7 +52,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
 
   const loadComments = useCallback(async (refresh = false) => {
     if (isOffline) {
-      setError('Comments require internet connection');
+      setError(t('comments.messages.offlineError'));
       return;
     }
 
@@ -63,7 +65,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
       setError(null);
 
       const response = await DroneCommentService.getPaginatedDroneComments(droneId, userRole, userId, {
-        limit: 20,
+        limit: 5,
         orderBy: 'createdAt',
         orderDirection: 'desc',
         ...(refresh ? {} : { lastDocumentSnapshot })
@@ -80,7 +82,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
 
     } catch (err) {
       console.error('Error loading comments:', err);
-      setError('Failed to load comments. Please try again.');
+      setError(t('comments.messages.loadError'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -94,7 +96,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
 
   const handleAddComment = async (content: string, images: string[], visibility: CommentVisibility) => {
     if (isOffline) {
-      Alert.alert('Offline', 'Comments require internet connection');
+      Alert.alert(t('common.error'), t('comments.messages.offlineError'));
       return;
     }
 
@@ -115,11 +117,11 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
       setShowAddForm(false);
       // Refresh comments list
       handleRefresh();
-      Alert.alert('Success', 'Comment added successfully');
+      Alert.alert(t('common.success'), t('comments.messages.commentAdded'));
 
     } catch (err) {
       console.error('Error adding comment:', err);
-      Alert.alert('Error', 'Failed to add comment. Please try again.');
+      Alert.alert(t('common.error'), t('comments.messages.addCommentError'));
     } finally {
       setSubmitting(false);
     }
@@ -127,7 +129,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
 
   const handleDeleteComment = async (commentId: string) => {
     if (isOffline) {
-      Alert.alert('Offline', 'Comments require internet connection');
+      Alert.alert(t('common.error'), t('comments.messages.offlineError'));
       return;
     }
 
@@ -143,10 +145,10 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
         )
       );
 
-      Alert.alert('Success', 'Comment deleted successfully');
+      Alert.alert(t('common.success'), t('comments.messages.commentDeleted'));
     } catch (err) {
       console.error('Error deleting comment:', err);
-      Alert.alert('Error', 'Failed to delete comment. Please try again.');
+      Alert.alert(t('common.error'), t('comments.messages.deleteCommentError'));
     }
   };
 
@@ -169,7 +171,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Comments ({comments.length})</Text>
+        <Text style={styles.title}>{t('comments.title')} ({comments.length})</Text>
         {!isOffline && (
           <TouchableOpacity
             style={styles.addButton}
@@ -181,7 +183,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
               color="#4CAF50" 
             />
             <Text style={styles.addButtonText}>
-              {showAddForm ? 'Cancel' : 'Add Comment'}
+              {showAddForm ? t('comments.cancel') : t('comments.addComment')}
             </Text>
           </TouchableOpacity>
         )}
@@ -201,7 +203,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity onPress={() => loadComments(true)} style={styles.retryButton}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+            <Text style={styles.retryButtonText}>{t('comments.actions.retry')}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -217,9 +219,9 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
         {comments.length === 0 && !loading ? (
           <View style={styles.emptyState}>
             <Ionicons name="chatbubbles-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyStateText}>No comments yet</Text>
+            <Text style={styles.emptyStateText}>{t('comments.noComments')}</Text>
             <Text style={styles.emptyStateSubtext}>
-              Be the first to add a comment about this drone
+              {t('comments.beFirstToComment')}
             </Text>
           </View>
         ) : (
@@ -245,7 +247,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
             {loading ? (
               <ActivityIndicator size="small" color="#4CAF50" />
             ) : (
-              <Text style={styles.loadMoreText}>Load More Comments</Text>
+              <Text style={styles.loadMoreText}>{t('comments.messages.loadMoreComments')}</Text>
             )}
           </TouchableOpacity>
         )}
@@ -253,7 +255,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
         {loading && comments.length === 0 && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#4CAF50" />
-            <Text style={styles.loadingText}>Loading comments...</Text>
+            <Text style={styles.loadingText}>{t('comments.messages.loadingComments')}</Text>
           </View>
         )}
       </ScrollView>

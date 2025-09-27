@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { CommentVisibility } from '@/types/DroneComment';
 import MultiImagePicker from './MultiImagePicker';
 
@@ -22,13 +23,14 @@ export const DroneCommentForm: React.FC<DroneCommentFormProps> = ({
   onCancel,
   isSubmitting = false
 }) => {
+  const { t } = useTranslation('common');
   const [content, setContent] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [visibility, setVisibility] = useState<CommentVisibility>('public');
 
   const handleSubmit = async () => {
     if (!content.trim()) {
-      Alert.alert('Error', 'Please enter a comment');
+      Alert.alert(t('common.error'), t('comments.messages.enterComment'));
       return;
     }
 
@@ -40,7 +42,7 @@ export const DroneCommentForm: React.FC<DroneCommentFormProps> = ({
       setVisibility('public');
     } catch (error) {
       console.error('Error submitting comment:', error);
-      Alert.alert('Error', 'Failed to submit comment. Please try again.');
+      Alert.alert(t('common.error'), t('comments.messages.addCommentError'));
     }
   };
 
@@ -50,25 +52,25 @@ export const DroneCommentForm: React.FC<DroneCommentFormProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add Comment</Text>
+      <Text style={styles.title}>{t('comments.addCommentForm.title')}</Text>
       
       {/* Comment text input */}
       <TextInput
         style={styles.textInput}
         value={content}
         onChangeText={setContent}
-        placeholder="Enter your comment..."
+        placeholder={t('comments.addCommentForm.contentPlaceholder')}
         multiline
         numberOfLines={4}
         textAlignVertical="top"
         maxLength={1000}
       />
       
-      <Text style={styles.characterCount}>{content.length}/1000</Text>
+      <Text style={styles.characterCount}>{t('comments.addCommentForm.characterCount', { current: content.length, max: 1000 })}</Text>
 
       {/* Image picker */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Attach Images (Optional)</Text>
+        <Text style={styles.sectionTitle}>{t('comments.addCommentForm.attachImages')}</Text>
         <MultiImagePicker
           images={images}
           onImagesChange={handleImagePicked}
@@ -78,7 +80,7 @@ export const DroneCommentForm: React.FC<DroneCommentFormProps> = ({
 
       {/* Visibility selector */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Visibility</Text>
+        <Text style={styles.sectionTitle}>{t('comments.addCommentForm.visibilityTitle')}</Text>
         <View style={styles.visibilityOptions}>
           <TouchableOpacity
             style={[
@@ -93,8 +95,8 @@ export const DroneCommentForm: React.FC<DroneCommentFormProps> = ({
               color={visibility === 'public' ? '#4CAF50' : '#666'} 
             />
             <View style={styles.optionContent}>
-              <Text style={styles.optionTitle}>Public</Text>
-              <Text style={styles.optionDescription}>Visible to all users</Text>
+              <Text style={styles.optionTitle}>{t('comments.addCommentForm.visibilityPublic')}</Text>
+              <Text style={styles.optionDescription}>{t('comments.addCommentForm.visibilityPublicDesc')}</Text>
             </View>
           </TouchableOpacity>
 
@@ -111,8 +113,8 @@ export const DroneCommentForm: React.FC<DroneCommentFormProps> = ({
               color={visibility === 'hidden' ? '#4CAF50' : '#666'} 
             />
             <View style={styles.optionContent}>
-              <Text style={styles.optionTitle}>Hidden</Text>
-              <Text style={styles.optionDescription}>Only visible to managers and admins</Text>
+              <Text style={styles.optionTitle}>{t('comments.addCommentForm.visibilityHidden')}</Text>
+              <Text style={styles.optionDescription}>{t('comments.addCommentForm.visibilityHiddenDesc')}</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -125,7 +127,7 @@ export const DroneCommentForm: React.FC<DroneCommentFormProps> = ({
           onPress={onCancel}
           disabled={isSubmitting}
         >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+          <Text style={styles.cancelButtonText}>{t('comments.cancel')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -134,9 +136,9 @@ export const DroneCommentForm: React.FC<DroneCommentFormProps> = ({
           disabled={isSubmitting || !content.trim()}
         >
           {isSubmitting ? (
-            <Text style={styles.submitButtonText}>Submitting...</Text>
+            <Text style={styles.submitButtonText}>{t('comments.addCommentForm.submittingButton')}</Text>
           ) : (
-            <Text style={styles.submitButtonText}>Add Comment</Text>
+            <Text style={styles.submitButtonText}>{t('comments.addCommentForm.submitButton')}</Text>
           )}
         </TouchableOpacity>
       </View>

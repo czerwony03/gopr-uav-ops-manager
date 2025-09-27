@@ -802,5 +802,50 @@
     "validation": {
       "nameRequired": "Nazwa schowka jest wymagana"
     }
+  },
+  "comments": {
+    "title": "Komentarze",
+    "addComment": "Dodaj komentarz",
+    "cancel": "Anuluj",
+    "noComments": "Brak komentarzy",
+    "beFirstToComment": "Bądź pierwszym, który doda komentarz o tym dronie",
+    "addCommentForm": {
+      "title": "Dodaj komentarz",
+      "contentPlaceholder": "Wprowadź swój komentarz...",
+      "attachImages": "Załącz zdjęcia (opcjonalne)",
+      "visibilityTitle": "Widoczność",
+      "visibilityPublic": "Publiczny",
+      "visibilityPublicDesc": "Widoczny dla wszystkich użytkowników",
+      "visibilityHidden": "Ukryty",
+      "visibilityHiddenDesc": "Widoczny tylko dla menedżerów i administratorów",
+      "submitButton": "Dodaj komentarz",
+      "submittingButton": "Dodawanie...",
+      "characterCount": "{{current}}/{{max}}"
+    },
+    "deleteConfirm": {
+      "title": "Usuń komentarz",
+      "message": "Czy na pewno chcesz usunąć ten komentarz? Ta akcja nie może zostać cofnięta.",
+      "delete": "Usuń",
+      "cancel": "Anuluj"
+    },
+    "messages": {
+      "commentAdded": "Komentarz dodany pomyślnie",
+      "commentDeleted": "Komentarz usunięty pomyślnie",
+      "addCommentError": "Nie udało się dodać komentarza. Spróbuj ponownie.",
+      "deleteCommentError": "Nie udało się usunąć komentarza. Spróbuj ponownie.",
+      "offlineError": "Komentarze wymagają połączenia internetowego",
+      "loadError": "Nie udało się wczytać komentarzy. Spróbuj ponownie.",
+      "commentRemoved": "Ten komentarz został usunięty.",
+      "loadingComments": "Ładowanie komentarzy...",
+      "loadMoreComments": "Załaduj więcej komentarzy",
+      "enterComment": "Proszę wprowadzić komentarz"
+    },
+    "visibility": {
+      "hidden": "Ukryty",
+      "public": "Publiczny"
+    },
+    "actions": {
+      "retry": "Ponów"
+    }
   }
 }

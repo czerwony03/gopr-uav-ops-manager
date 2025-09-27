@@ -59,7 +59,7 @@ export class DroneCommentRepository {
       // Add ordering and limit
       const orderField = queryParams?.orderBy || 'createdAt';
       const orderDir = queryParams?.orderDirection || 'desc';
-      const queryLimit = queryParams?.limit || 20;
+      const queryLimit = queryParams?.limit || 5;
 
       q = createQuery(
         commentsCollection,
@@ -209,7 +209,7 @@ export class DroneCommentRepository {
       const comments = await this.getDroneComments(droneId, userRole, userId, queryParams);
       
       // For pagination, we check if there are more results by fetching one extra
-      const hasNextPage = comments.length === (queryParams?.limit || 20);
+      const hasNextPage = comments.length === (queryParams?.limit || 5);
       
       // Get the last document snapshot for next page
       let lastDocumentSnapshot = null;
