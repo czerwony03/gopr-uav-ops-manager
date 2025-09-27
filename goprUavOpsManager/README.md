@@ -213,7 +213,7 @@ Document ID: [auto-generated]
 Collection: auditLogs
 Document ID: [auto-generated]
 {
-  "entityType": "drone", // drone|flight|procedureChecklist
+  "entityType": "drone", // drone|flight|procedureChecklist|droneComment
   "entityId": "entity_document_id",
   "action": "edit", // create|edit|delete|restore|view
   "userId": "user_uid",
@@ -225,6 +225,29 @@ Document ID: [auto-generated]
   "applicationPlatform": "web", // web|ios|android
   "applicationVersion": "1.0.0",
   "commitHash": "abc123def" // optional git commit hash
+}
+```
+
+#### Drone Comments Collection (`droneComments`)
+```
+Collection: droneComments
+Document ID: [auto-generated]
+{
+  "droneId": "drone_document_id", // Reference to drone
+  "userId": "user_uid", // Comment author's Firebase Auth UID
+  "userEmail": "user@example.com", // Comment author's email
+  "userName": "John Doe", // Comment author's display name
+  "content": "This drone performed excellently during the mountain rescue operation.",
+  "images": [ // Optional array of Firebase Storage URLs
+    "https://firebasestorage.googleapis.com/v0/b/project.appspot.com/o/droneComments%2Fimages%2FcommentId%2Fimage1.jpg",
+    "https://firebasestorage.googleapis.com/v0/b/project.appspot.com/o/droneComments%2Fimages%2FcommentId%2Fimage2.jpg"
+  ],
+  "visibility": "public", // "public" or "hidden" (hidden only visible to admin/manager)
+  "isDeleted": false, // Soft-delete flag for admin/manager removal
+  "deletedAt": null, // Timestamp when comment was deleted
+  "deletedBy": null, // User ID who deleted the comment
+  "createdAt": timestamp,
+  "updatedAt": timestamp // Optional, for future edit functionality
 }
 ```
 
@@ -242,6 +265,14 @@ The following composite indexes are required for optimal query performance:
 
 3. **Collection**: `auditLogs`
    - **Fields**: `timestamp` (Descending), `entityType` (Ascending)
+   - **Query scope**: Collection
+
+4. **Collection**: `droneComments`
+   - **Fields**: `droneId` (Ascending), `isDeleted` (Ascending), `createdAt` (Descending)
+   - **Query scope**: Collection
+
+5. **Collection**: `droneComments`
+   - **Fields**: `droneId` (Ascending), `isDeleted` (Ascending), `visibility` (Ascending), `createdAt` (Descending)
    - **Query scope**: Collection
 
 Create these indexes in the Firebase Console under Firestore Database → Indexes.
@@ -349,6 +380,34 @@ service cloud.firestore {
       // Audit logs should never be updated or deleted
       allow update, delete: if false;
     }
+    
+    // Drone Comments collection
+    match /droneComments/{commentId} {
+      // Read access based on user role and comment visibility
+      // - Regular users: can read public, non-deleted comments
+      // - Managers/Admins: can read all non-deleted comments (public and hidden)
+      // - Admins: can read all comments including deleted ones
+      allow read: if isAuthenticated() && (
+        (isAdmin()) || 
+        (isManagerOrAdmin() && resource.data.get('isDeleted', false) == false) ||
+        (resource.data.get('isDeleted', false) == false && resource.data.visibility == 'public')
+      );
+      
+      // All authenticated users can create comments
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.keys().hasAll(['droneId', 'content', 'visibility', 'userId']) &&
+        request.resource.data.visibility in ['public', 'hidden'];
+      
+      // Users can update their own comments, admins/managers can update any comment
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        isManagerOrAdmin()
+      );
+      
+      // Only managers and admins can soft-delete comments
+      allow delete: if isManagerOrAdmin();
+    }
   }
 }
 ```
@@ -359,6 +418,71 @@ service cloud.firestore {
 - Audit logs are read-only except for creation
 - Users can only access their own flights unless they are managers/admins
 - Admin users have full access to all collections
+- Drone comments visibility is controlled by user roles and comment settings
+
+### 5.2. Firebase Storage Security Rules
+
+For production, update your Firebase Storage security rules to secure uploaded files:
+
+```javascript
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to get user role from Firestore
+    function getUserRole() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+    
+    // Helper function to check if user is manager or admin
+    function isManagerOrAdmin() {
+      return isAuthenticated() && (getUserRole() == 'manager' || getUserRole() == 'admin');
+    }
+    
+    // Drone images - managers and admins can upload/modify
+    match /drones/images/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isManagerOrAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Procedure/Checklist images - managers and admins can upload/modify
+    match /procedures_checklists/images/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isManagerOrAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Drone comment images - any authenticated user can upload, but only to their own comment
+    match /droneComments/images/{commentId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+        request.auth.uid != null &&
+        resource == null; // Only allow creating new files, not overwriting
+      allow delete: if isManagerOrAdmin() || 
+        (isAuthenticated() && 
+         firestore.get(/databases/(default)/documents/droneComments/$(commentId)).data.userId == request.auth.uid);
+    }
+  }
+}
+```
+
+**Important Storage Notes:**
+- All image access requires authentication
+- Only managers/admins can upload drone and procedure images
+- Any authenticated user can upload images to their own comments
+- Comment images are organized by comment ID for security
+- Admins can delete any images, users can only delete their own comment images
 
 ### 6. Google Workspace Authentication Setup
 

@@ -22,6 +22,7 @@ import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import ImageGallery from '@/components/ImageGallery';
 import EquipmentChecklistModal from '@/components/EquipmentChecklistModal';
 import ImageViewer from '@/components/ImageViewer';
+import { DroneCommentsSection } from '@/components/DroneCommentsSection';
 
 export default function DroneDetailsScreen() {
   const [drone, setDrone] = useState<Drone | null>(null);
@@ -366,6 +367,19 @@ export default function DroneDetailsScreen() {
             ) : null}
           </View>
         ) : null}
+
+        {/* Comments section */}
+        {drone && user && (
+          <View style={styles.section}>
+            <DroneCommentsSection
+              droneId={drone.id}
+              userRole={user.role}
+              userId={user.uid}
+              userEmail={user.email}
+              isOffline={isButtonDisabled()}
+            />
+          </View>
+        )}
 
         <View style={styles.actionButtons}>
           {canModify ? (
