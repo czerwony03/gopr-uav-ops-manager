@@ -16,18 +16,25 @@ interface DroneCommentFormProps {
   onSubmit: (content: string, images: string[], visibility: CommentVisibility) => Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
+  initialContent?: string; // new optional prop to prefill the comment text
 }
 
 export const DroneCommentForm: React.FC<DroneCommentFormProps> = ({
   onSubmit,
   onCancel,
-  isSubmitting = false
+  isSubmitting = false,
+  initialContent = ''
 }) => {
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(initialContent);
   const [images, setImages] = useState<string[]>([]);
   const [visibility, setVisibility] = useState<CommentVisibility>('public');
+
+  // If parent changes initialContent, update local content
+  React.useEffect(() => {
+    setContent(initialContent || '');
+  }, [initialContent]);
 
   const handleSubmit = async () => {
     if (!content.trim()) {

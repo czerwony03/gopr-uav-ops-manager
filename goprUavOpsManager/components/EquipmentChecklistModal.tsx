@@ -17,6 +17,8 @@ interface EquipmentChecklistModalProps {
   visible: boolean;
   equipmentStorages: EquipmentStorage[];
   onClose: () => void;
+  // callback wywoływany po wyborze "Zgłoś braki"; argument to domyślny tekst komentarza
+  onReportMissing?: (defaultComment: string) => void;
 }
 
 interface ChecklistState {
@@ -27,6 +29,7 @@ export default function EquipmentChecklistModal({
   visible,
   equipmentStorages,
   onClose,
+  onReportMissing,
 }: EquipmentChecklistModalProps) {
   const { t } = useTranslation('common');
   const [checkedItems, setCheckedItems] = useState<ChecklistState>({});
@@ -65,6 +68,27 @@ export default function EquipmentChecklistModal({
 
   const handleResetChecklist = () => {
     setCheckedItems({});
+  };
+
+  const handleReportMissing = () => {
+    // Build list of missing items (those not checked)
+    const missing = allItems.filter(item => !checkedItems[item.id]);
+
+    let defaultComment: string;
+    if (missing.length === 0) {
+      defaultComment = t('equipment.reportMissingNone');
+    } else {
+      const lines = missing.map(mi => `- ${mi.name}${mi.quantity ? ` (x${mi.quantity})` : ''}`);
+      defaultComment = `${t('equipment.reportMissingIntro')}\n${lines.join('\n')}`;
+    }
+
+    // Close modal first
+    onClose();
+
+    // Then notify parent to open comment creation UI with prefilled text
+    if (onReportMissing) {
+      onReportMissing(defaultComment);
+    }
   };
 
   return (
@@ -195,6 +219,11 @@ export default function EquipmentChecklistModal({
           <Text style={styles.footerNote}>
             {t('equipment.checklistNote')}
           </Text>
+
+          <TouchableOpacity style={styles.reportMissingButton} onPress={handleReportMissing}>
+            <Ionicons name="alert-circle-outline" size={18} color="#D7263D" style={{ marginRight: 6 }} />
+            <Text style={styles.reportMissingText}>{t('equipment.reportMissing')}</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     </Modal>
@@ -396,5 +425,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 2,
+  },
+  reportMissingButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: '#fff3f3',
+    borderWidth: 1,
+    borderColor: '#D7263D',
+    marginTop: 8,
+  },
+  reportMissingText: {
+    fontSize: 14,
+    color: '#D7263D',
+    fontWeight: '500',
   },
 });

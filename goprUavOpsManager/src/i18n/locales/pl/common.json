@@ -782,6 +782,10 @@
     "allItemsChecked": "Wszystkie elementy wyposażenia zostały sprawdzone!",
     "reset": "Resetuj",
     "checklistNote": "Ta lista kontrolna służy wyłącznie do osobistej weryfikacji i nie jest zapisywana.",
+    "reportMissing": "Zgłoś braki",
+    "reportMissingIntro": "Zgłaszam brakujące elementy wyposażenia:",
+    "reportMissingNone": "Nie znaleziono braków w wyposażeniu.",
+    "reportMissingNoDrone": "Nie można zgłosić braków — brak identyfikatora drona.",
     "validation": {
       "nameRequired": "Nazwa wyposażenia jest wymagana",
       "nameRequiredInStorage": "Nazwa wyposażenia jest wymagana w schowku \"{{storageName}}\"",

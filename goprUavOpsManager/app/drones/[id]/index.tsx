@@ -33,6 +33,8 @@ export default function DroneDetailsScreen() {
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedStorageImages, setSelectedStorageImages] = useState<string[]>([]);
+  // Draft comment content passed from EquipmentChecklistModal
+  const [commentDraft, setCommentDraft] = useState<string | null>(null);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const router = useRouter();
@@ -414,6 +416,8 @@ export default function DroneDetailsScreen() {
               userId={user.uid}
               userEmail={user.email}
               isOffline={isButtonDisabled()}
+              openAddFormWithDraft={commentDraft}
+              onDraftHandled={() => setCommentDraft(null)}
             />
           </View>
         )}
@@ -424,6 +428,12 @@ export default function DroneDetailsScreen() {
       visible={showEquipmentChecklist}
       equipmentStorages={drone?.equipmentStorages || []}
       onClose={() => setShowEquipmentChecklist(false)}
+      onReportMissing={(defaultComment) => {
+        // Close modal handled by modal; set draft so DroneCommentsSection opens add form with content
+        setShowEquipmentChecklist(false);
+        setCommentDraft(defaultComment);
+        // Optionally scroll to comments section or bring into view — left to layout
+      }}
     />
     
     <ImageViewer

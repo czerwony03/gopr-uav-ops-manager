@@ -24,6 +24,10 @@ interface DroneCommentsSectionProps {
   userId: string;
   userEmail?: string;
   isOffline?: boolean;
+  // Optional prop: when non-null, open add-comment form with this draft content
+  openAddFormWithDraft?: string | null;
+  // Callback to notify parent that draft has been consumed/handled
+  onDraftHandled?: () => void;
 }
 
 export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
@@ -31,7 +35,9 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
   userRole,
   userId,
   userEmail,
-  isOffline = false
+  isOffline = false,
+  openAddFormWithDraft = null,
+  onDraftHandled,
 }) => {
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
@@ -39,6 +45,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [draftContent, setDraftContent] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -107,6 +114,18 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
     loadComments(true);
   }, [loadComments]);
 
+  // When parent requests opening add form with a draft, open it and set content
+  useEffect(() => {
+    if (openAddFormWithDraft) {
+      setDraftContent(openAddFormWithDraft);
+      setShowAddForm(true);
+      // notify parent that draft was received (optional)
+      if (onDraftHandled) {
+        onDraftHandled();
+      }
+    }
+  }, [openAddFormWithDraft, onDraftHandled]);
+
   const handleAddComment = async (content: string, images: string[], visibility: CommentVisibility) => {
     if (isOffline) {
       crossPlatformAlert.showAlert({ title: t('common.error'), message: t('comments.messages.offlineError') });
@@ -128,6 +147,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
       );
 
       setShowAddForm(false);
+      setDraftContent('');
       // Refresh comments list
       handleRefresh();
       crossPlatformAlert.showAlert({ title: t('common.success'), message: t('comments.messages.commentAdded') });
@@ -228,8 +248,9 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
       {showAddForm && !isOffline && (
         <DroneCommentForm
           onSubmit={handleAddComment}
-          onCancel={() => setShowAddForm(false)}
+          onCancel={() => { setShowAddForm(false); setDraftContent(''); }}
           isSubmitting={submitting}
+          initialContent={draftContent}
         />
       )}
 

@@ -782,6 +782,10 @@
     "allItemsChecked": "All equipment items have been checked!",
     "reset": "Reset",
     "checklistNote": "This checklist is for personal verification only and is not saved.",
+    "reportMissing": "Report Missing Equipment",
+    "reportMissingIntro": "Reporting missing equipment:",
+    "reportMissingNone": "Nothing is missing.",
+    "reportMissingNoDrone": "Cannot report missing equipment - no drone identifier.",
     "validation": {
       "nameRequired": "Equipment name is required",
       "nameRequiredInStorage": "Equipment name is required in storage \"{{storageName}}\"",
