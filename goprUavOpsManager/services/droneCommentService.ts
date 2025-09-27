@@ -6,18 +6,6 @@ import { ImageService } from '@/services/imageService';
 import { UserService } from '@/services/userService';
 
 export class DroneCommentService {
-  
-  /**
-   * Get all comments for a drone with role-based filtering
-   */
-  static async getDroneComments(droneId: string, userRole: UserRole, queryParams?: Partial<DroneCommentQuery>): Promise<DroneComment[]> {
-    try {
-      return await DroneCommentRepository.getDroneComments(droneId, userRole, queryParams);
-    } catch (error) {
-      console.error('Error in DroneCommentService.getDroneComments:', error);
-      throw error;
-    }
-  }
 
   /**
    * Get a single comment by ID
@@ -271,11 +259,12 @@ export class DroneCommentService {
    */
   static async getPaginatedDroneComments(
     droneId: string, 
-    userRole: UserRole, 
+    userRole: UserRole,
+    userId: string,
     queryParams?: Partial<DroneCommentQuery>
   ): Promise<PaginatedDroneCommentResponse> {
     try {
-      return await DroneCommentRepository.getPaginatedDroneComments(droneId, userRole, queryParams);
+      return await DroneCommentRepository.getPaginatedDroneComments(droneId, userRole, userId, queryParams);
     } catch (error) {
       console.error('Error in DroneCommentService.getPaginatedDroneComments:', error);
       throw error;

@@ -140,6 +140,7 @@ service cloud.firestore {
       // - Managers/Admins: can read all non-deleted comments (public and hidden)
       // - Admins: can read all comments including deleted ones
       allow read: if isSignedIn() && resource.data.visibility == 'public' && !resource.data.isDeleted;
+      allow read: if isSignedIn() && resource.data.visibility == 'hidden' && !resource.data.isDeleted && resource.data.userId == request.auth.uid;
       allow read: if isManager() && !resource.data.isDeleted;
       allow read: if isAdmin();
       

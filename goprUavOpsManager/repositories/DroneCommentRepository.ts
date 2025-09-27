@@ -8,6 +8,8 @@ import {
   updateDocument,
   createQuery,
   where,
+  or,
+  and,
   orderBy,
   getDocs,
   getDocsArray,
@@ -22,7 +24,7 @@ export class DroneCommentRepository {
   /**
    * Get all comments for a drone with role-based filtering
    */
-  static async getDroneComments(droneId: string, userRole: UserRole, queryParams?: Partial<DroneCommentQuery>): Promise<DroneComment[]> {
+  static async getDroneComments(droneId: string, userRole: UserRole, userId: string, queryParams?: Partial<DroneCommentQuery>): Promise<DroneComment[]> {
     try {
       const commentsCollection = getCollection(this.COLLECTION_NAME);
       let q;
@@ -44,7 +46,13 @@ export class DroneCommentRepository {
         // Regular users only see public, non-deleted comments
         conditions.push(
           where('isDeleted', '==', false),
-          where('visibility', '==', 'public')
+          or(
+            where('visibility', '==', 'public'),
+            and(
+              where('visibility', '==', 'hidden'),
+              where('userId', '==', userId || '')
+            )
+          ),
         );
       }
 
@@ -55,7 +63,7 @@ export class DroneCommentRepository {
 
       q = createQuery(
         commentsCollection,
-        ...conditions,
+        and(...conditions),
         orderBy(orderField, orderDir),
         limit(queryLimit)
       );
@@ -196,9 +204,9 @@ export class DroneCommentRepository {
   /**
    * Get paginated comments for a drone
    */
-  static async getPaginatedDroneComments(droneId: string, userRole: UserRole, queryParams?: Partial<DroneCommentQuery>): Promise<PaginatedDroneCommentResponse> {
+  static async getPaginatedDroneComments(droneId: string, userRole: UserRole, userId: string, queryParams?: Partial<DroneCommentQuery>): Promise<PaginatedDroneCommentResponse> {
     try {
-      const comments = await this.getDroneComments(droneId, userRole, queryParams);
+      const comments = await this.getDroneComments(droneId, userRole, userId, queryParams);
       
       // For pagination, we check if there are more results by fetching one extra
       const hasNextPage = comments.length === (queryParams?.limit || 20);

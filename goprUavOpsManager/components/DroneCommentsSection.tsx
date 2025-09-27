@@ -62,7 +62,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
       }
       setError(null);
 
-      const response = await DroneCommentService.getPaginatedDroneComments(droneId, userRole, {
+      const response = await DroneCommentService.getPaginatedDroneComments(droneId, userRole, userId, {
         limit: 20,
         orderBy: 'createdAt',
         orderDirection: 'desc',

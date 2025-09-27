@@ -70,34 +70,6 @@ describe('DroneCommentService', () => {
     jest.clearAllMocks();
   });
 
-  describe('getDroneComments', () => {
-    it('should fetch drone comments successfully', async () => {
-      mockDroneCommentRepository.getDroneComments.mockResolvedValue([mockComment]);
-
-      const result = await DroneCommentService.getDroneComments('drone-1', UserRole.USER);
-
-      expect(result).toEqual([mockComment]);
-      expect(mockDroneCommentRepository.getDroneComments).toHaveBeenCalledWith(
-        'drone-1', 
-        UserRole.USER, 
-        undefined
-      );
-    });
-
-    it('should pass query parameters correctly', async () => {
-      const queryParams = { limit: 10, orderBy: 'createdAt' as const };
-      mockDroneCommentRepository.getDroneComments.mockResolvedValue([]);
-
-      await DroneCommentService.getDroneComments('drone-1', UserRole.ADMIN, queryParams);
-
-      expect(mockDroneCommentRepository.getDroneComments).toHaveBeenCalledWith(
-        'drone-1',
-        UserRole.ADMIN,
-        queryParams
-      );
-    });
-  });
-
   describe('getDroneComment', () => {
     it('should fetch a single comment successfully', async () => {
       mockDroneCommentRepository.getDroneComment.mockResolvedValue(mockComment);
@@ -301,13 +273,15 @@ describe('DroneCommentService', () => {
 
       const result = await DroneCommentService.getPaginatedDroneComments(
         'drone-1',
-        UserRole.USER
+        UserRole.USER,
+        'user-1'
       );
 
       expect(result).toEqual(mockResponse);
       expect(mockDroneCommentRepository.getPaginatedDroneComments).toHaveBeenCalledWith(
         'drone-1',
         UserRole.USER,
+        'user-1',
         undefined
       );
     });
