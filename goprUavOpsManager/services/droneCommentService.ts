@@ -44,7 +44,7 @@ export class DroneCommentService {
         const tempId = Date.now().toString();
         processedImages = await ImageService.processImages(
           commentData.images,
-          'droneComments/images',
+          `droneComments/images/${ commentData.droneId }`,
           tempId
         );
       }
@@ -59,18 +59,6 @@ export class DroneCommentService {
         userId, 
         userEmail
       );
-
-      // Update comment with actual ID in image paths if needed
-      if (processedImages.length > 0) {
-        const updatedImages = processedImages.map(url => 
-          url.replace(`/droneComments/images/${Date.now().toString()}`, 
-                     `/droneComments/images/${docId}`)
-        );
-        
-        await DroneCommentRepository.updateDroneComment(docId, {
-          images: updatedImages
-        }, userId);
-      }
 
       // Add to audit log
       await AuditLogService.createAuditLog({
@@ -99,9 +87,9 @@ export class DroneCommentService {
    * Update an existing drone comment (future enhancement)
    */
   static async updateDroneComment(
-    id: string, 
-    commentData: DroneCommentUpdateData, 
-    userRole: UserRole, 
+    id: string,
+    commentData: DroneCommentUpdateData,
+    userRole: UserRole,
     userId: string,
     userEmail?: string
   ): Promise<void> {
@@ -113,10 +101,10 @@ export class DroneCommentService {
       }
 
       // Check permissions - only comment owner or admin/manager can update
-      const canUpdate = currentComment.userId === userId || 
-                       userRole === 'admin' || 
+      const canUpdate = currentComment.userId === userId ||
+                       userRole === 'admin' ||
                        userRole === 'manager';
-      
+
       if (!canUpdate) {
         throw new Error('Permission denied: Cannot update this comment');
       }
@@ -126,7 +114,7 @@ export class DroneCommentService {
       if (commentData.images !== undefined) {
         processedImages = await ImageService.processImages(
           commentData.images,
-          'droneComments/images',
+          `droneComments/images/${ currentComment.droneId }`,
           id
         );
       }

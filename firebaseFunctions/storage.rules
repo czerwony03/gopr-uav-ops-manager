@@ -17,9 +17,9 @@ service firebase.storage {
       allow write: if request.auth != null && request.auth.token.role in ['manager', 'admin'];
     }
 
-    match /droneComments/images/{commentId}/{fileName} {
+    match /droneComments/images/{droneId}/{fileName} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && resource == null;
+      allow write: if request.auth != null;
       allow delete: if request.auth != null && request.auth.token.role in ['manager', 'admin'];
     }
 
