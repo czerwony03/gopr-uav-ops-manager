@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { changeLanguage, getCurrentLanguage, getAvailableLanguages } from '../i18n';
-import { useCrossPlatformAlert } from '../../components/CrossPlatformAlert';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 interface LanguageSelectorProps {
   style?: any;
@@ -24,16 +24,16 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ style }) => 
           // Show success message in the selected language
           crossPlatformAlert.showAlert({
             title: lang.code === 'pl' ? 'Sukces' : 'Success',
-            message: lang.code === 'pl' 
-              ? 'Język został zmieniony' 
+            message: lang.code === 'pl'
+              ? 'Język został zmieniony'
               : 'Language has been changed'
           });
         } catch (error) {
           console.error('Error changing language:', error);
           crossPlatformAlert.showAlert({
             title: lang.code === 'pl' ? 'Błąd' : 'Error',
-            message: lang.code === 'pl' 
-              ? 'Nie udało się zmienić języka' 
+            message: lang.code === 'pl'
+              ? 'Nie udało się zmienić języka'
               : 'Failed to change language'
           });
         }

@@ -854,5 +854,31 @@
     "actions": {
       "retry": "Retry"
     }
+  },
+  "filters": {
+    "showFilters": "Show Filters",
+    "hideFilters": "Hide Filters",
+    "startDate": "Start Date:",
+    "endDate": "End Date:",
+    "category": "Category:",
+    "activity": "Activity:",
+    "entityType": "Entity Type:",
+    "action": "Action:",
+    "userEmail": "User Email:",
+    "all": "All",
+    "entityTypes": {
+      "drone": "Drone",
+      "flight": "Flight",
+      "procedureChecklist": "Procedure/Checklist",
+      "user": "User"
+    },
+    "actions": {
+      "create": "Create",
+      "edit": "Edit",
+      "delete": "Delete",
+      "restore": "Restore",
+      "view": "View",
+      "login": "Login"
+    }
   }
 }

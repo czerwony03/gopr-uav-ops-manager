@@ -855,5 +855,31 @@
     "actions": {
       "retry": "Ponów"
     }
+  },
+  "filters": {
+    "showFilters": "Pokaż filtry",
+    "hideFilters": "Ukryj filtry",
+    "startDate": "Data od:",
+    "endDate": "Data do:",
+    "category": "Kategoria:",
+    "activity": "Aktywność:",
+    "entityType": "Typ encji:",
+    "action": "Akcja:",
+    "userEmail": "E-mail użytkownika:",
+    "all": "Wszystkie",
+    "entityTypes": {
+      "drone": "Dron",
+      "flight": "Lot",
+      "procedureChecklist": "Procedura/Lista",
+      "user": "Użytkownik"
+    },
+    "actions": {
+      "create": "Utwórz",
+      "edit": "Edytuj",
+      "delete": "Usuń",
+      "restore": "Przywróć",
+      "view": "Podgląd",
+      "login": "Logowanie"
+    }
   }
 }
