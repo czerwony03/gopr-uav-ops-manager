@@ -37,12 +37,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Platform,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { LocationService, LocationCoordinates } from '@/services/locationService';
 import { CoordinateUtils } from '@/utils/coordinateUtils';
+import { useCrossPlatformAlert } from './CrossPlatformAlert';
 import InteractiveMapSelector from './InteractiveMapSelector';
 
 interface LocationSelectorProps {
@@ -90,6 +90,7 @@ export default function LocationSelector({
   required = false,
 }: LocationSelectorProps) {
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [mapSelectorVisible, setMapSelectorVisible] = useState(false);
 
@@ -122,7 +123,7 @@ export default function LocationSelector({
       if (Platform.OS === 'web') {
         alert(errorMessage);
       } else {
-        Alert.alert(t('location.errorTitle'), errorMessage);
+        crossPlatformAlert.showAlert({ title: t('location.errorTitle'), message: errorMessage });
       }
     } finally {
       setIsLoadingLocation(false);

@@ -6,12 +6,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { CategoryFormData } from '@/types/Category';
+import { useCrossPlatformAlert } from './CrossPlatformAlert';
 
 // Available colors for categories
 const AVAILABLE_COLORS = [
@@ -32,6 +32,7 @@ export interface CategoryFormProps {
 
 export default function CategoryForm({ mode, initialData, onSave, onCancel, loading = false }: CategoryFormProps) {
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
   const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
     description: '',
@@ -84,10 +85,10 @@ export default function CategoryForm({ mode, initialData, onSave, onCancel, load
       });
     } catch (error) {
       console.error('Error saving category:', error);
-      Alert.alert(
-        t('common.error'),
-        error instanceof Error ? error.message : t('categories.form.errors.saveFailed')
-      );
+      crossPlatformAlert.showAlert({
+        title: t('common.error'),
+        message: error instanceof Error ? error.message : t('categories.form.errors.saveFailed')
+      });
     } finally {
       setSaving(false);
     }

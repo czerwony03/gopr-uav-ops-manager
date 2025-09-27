@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { DroneComment } from '@/types/DroneComment';
 import { UserRole } from '@/types/UserRole';
+import { useCrossPlatformAlert } from './CrossPlatformAlert';
 
 interface DroneCommentItemProps {
   comment: DroneComment;
@@ -21,13 +22,14 @@ export const DroneCommentItem: React.FC<DroneCommentItemProps> = ({
   onImagePress
 }) => {
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
   const canDelete = (userRole === 'admin' || userRole === 'manager') && !comment.isDeleted;
   
   const handleDelete = () => {
-    Alert.alert(
-      t('comments.deleteConfirm.title'),
-      t('comments.deleteConfirm.message'),
-      [
+    crossPlatformAlert.showAlert({
+      title: t('comments.deleteConfirm.title'),
+      message: t('comments.deleteConfirm.message'),
+      buttons: [
         { text: t('comments.deleteConfirm.cancel'), style: 'cancel' },
         { 
           text: t('comments.deleteConfirm.delete'), 
@@ -35,7 +37,7 @@ export const DroneCommentItem: React.FC<DroneCommentItemProps> = ({
           onPress: () => onDeleteComment(comment.id)
         }
       ]
-    );
+    });
   };
 
   const formatDate = (date: Date) => {

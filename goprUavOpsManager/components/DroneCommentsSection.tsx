@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
-  Alert,
   ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { DroneComment, CommentVisibility } from '@/types/DroneComment';
 import { UserRole } from '@/types/UserRole';
 import { DroneCommentService } from '@/services/droneCommentService';
+import { useCrossPlatformAlert } from './CrossPlatformAlert';
 import { DroneCommentItem } from './DroneCommentItem';
 import { DroneCommentForm } from './DroneCommentForm';
 import ImageViewer from './ImageViewer';
@@ -34,6 +34,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
   isOffline = false
 }) => {
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
   const [comments, setComments] = useState<DroneComment[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -108,7 +109,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
 
   const handleAddComment = async (content: string, images: string[], visibility: CommentVisibility) => {
     if (isOffline) {
-      Alert.alert(t('common.error'), t('comments.messages.offlineError'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('comments.messages.offlineError') });
       return;
     }
 
@@ -129,11 +130,11 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
       setShowAddForm(false);
       // Refresh comments list
       handleRefresh();
-      Alert.alert(t('common.success'), t('comments.messages.commentAdded'));
+      crossPlatformAlert.showAlert({ title: t('common.success'), message: t('comments.messages.commentAdded') });
 
     } catch (err) {
       console.error('Error adding comment:', err);
-      Alert.alert(t('common.error'), t('comments.messages.addCommentError'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('comments.messages.addCommentError') });
     } finally {
       setSubmitting(false);
     }
@@ -141,7 +142,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
 
   const handleDeleteComment = async (commentId: string) => {
     if (isOffline) {
-      Alert.alert(t('common.error'), t('comments.messages.offlineError'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('comments.messages.offlineError') });
       return;
     }
 
@@ -157,10 +158,10 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
         )
       );
 
-      Alert.alert(t('common.success'), t('comments.messages.commentDeleted'));
+      crossPlatformAlert.showAlert({ title: t('common.success'), message: t('comments.messages.commentDeleted') });
     } catch (err) {
       console.error('Error deleting comment:', err);
-      Alert.alert(t('common.error'), t('comments.messages.deleteCommentError'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('comments.messages.deleteCommentError') });
     }
   };
 

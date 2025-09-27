@@ -5,11 +5,11 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { CommentVisibility } from '@/types/DroneComment';
+import { useCrossPlatformAlert } from './CrossPlatformAlert';
 import MultiImagePicker from './MultiImagePicker';
 
 interface DroneCommentFormProps {
@@ -24,13 +24,14 @@ export const DroneCommentForm: React.FC<DroneCommentFormProps> = ({
   isSubmitting = false
 }) => {
   const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
   const [content, setContent] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [visibility, setVisibility] = useState<CommentVisibility>('public');
 
   const handleSubmit = async () => {
     if (!content.trim()) {
-      Alert.alert(t('common.error'), t('comments.messages.enterComment'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('comments.messages.enterComment') });
       return;
     }
 
@@ -42,7 +43,7 @@ export const DroneCommentForm: React.FC<DroneCommentFormProps> = ({
       setVisibility('public');
     } catch (error) {
       console.error('Error submitting comment:', error);
-      Alert.alert(t('common.error'), t('comments.messages.addCommentError'));
+      crossPlatformAlert.showAlert({ title: t('common.error'), message: t('comments.messages.addCommentError') });
     }
   };
 
