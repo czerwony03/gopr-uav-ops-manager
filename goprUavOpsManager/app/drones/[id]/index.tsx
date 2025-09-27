@@ -368,6 +368,43 @@ export default function DroneDetailsScreen() {
           </View>
         ) : null}
 
+        <View style={styles.actionButtons}>
+          {canModify ? (
+            <>
+              <TouchableOpacity
+                style={[styles.editButton, getDisabledStyle()]}
+                onPress={handleEdit}
+                disabled={isButtonDisabled()}
+              >
+                <Text style={[styles.editButtonText, isButtonDisabled() && { color: '#999' }]}>
+                  {t('droneDetails.editButton')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.deleteButton, getDisabledStyle()]}
+                onPress={handleDelete}
+                disabled={isButtonDisabled()}
+              >
+                <Text style={[styles.deleteButtonText, isButtonDisabled() && { color: '#999' }]}>
+                  {t('droneDetails.deleteButton')}
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : null}
+
+          {canRestore ? (
+            <TouchableOpacity
+              style={[styles.restoreButton, getDisabledStyle()]}
+              onPress={handleRestore}
+              disabled={isButtonDisabled()}
+            >
+              <Text style={[styles.restoreButtonText, isButtonDisabled() && { color: '#999' }]}>
+                {t('droneDetails.restoreButton')}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
         {/* Comments section */}
         {drone && user && (
           <View style={styles.section}>
@@ -380,43 +417,6 @@ export default function DroneDetailsScreen() {
             />
           </View>
         )}
-
-        <View style={styles.actionButtons}>
-          {canModify ? (
-            <>
-              <TouchableOpacity 
-                style={[styles.editButton, getDisabledStyle()]} 
-                onPress={handleEdit}
-                disabled={isButtonDisabled()}
-              >
-                <Text style={[styles.editButtonText, isButtonDisabled() && { color: '#999' }]}>
-                  {t('droneDetails.editButton')}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.deleteButton, getDisabledStyle()]} 
-                onPress={handleDelete}
-                disabled={isButtonDisabled()}
-              >
-                <Text style={[styles.deleteButtonText, isButtonDisabled() && { color: '#999' }]}>
-                  {t('droneDetails.deleteButton')}
-                </Text>
-              </TouchableOpacity>
-            </>
-          ) : null}
-
-          {canRestore ? (
-            <TouchableOpacity 
-              style={[styles.restoreButton, getDisabledStyle()]} 
-              onPress={handleRestore}
-              disabled={isButtonDisabled()}
-            >
-              <Text style={[styles.restoreButtonText, isButtonDisabled() && { color: '#999' }]}>
-                {t('droneDetails.restoreButton')}
-              </Text>
-            </TouchableOpacity>
-          ) : null}
-        </View>
       </View>
     </ScrollView>
     
