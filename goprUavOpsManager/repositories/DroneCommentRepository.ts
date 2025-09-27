@@ -256,7 +256,7 @@ export class DroneCommentRepository {
         q = createQuery(
           commentsCollection,
           ...baseQuery,
-          startAfter(queryParams.lastDocumentSnapshot),
+          startAfter(queryParams.lastDocumentSnapshot.data[orderField]),
           limit(queryLimit + 1) // Get one extra to check if there are more
         );
       } else {
