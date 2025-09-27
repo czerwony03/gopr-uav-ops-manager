@@ -259,8 +259,8 @@ export class DroneCommentService {
    */
   static async getPaginatedDroneComments(
     droneId: string, 
-    userRole: UserRole,
-    userId: string,
+    userRole: UserRole, 
+    userId?: string,
     queryParams?: Partial<DroneCommentQuery>
   ): Promise<PaginatedDroneCommentResponse> {
     try {

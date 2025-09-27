@@ -204,19 +204,85 @@ export class DroneCommentRepository {
   /**
    * Get paginated comments for a drone
    */
-  static async getPaginatedDroneComments(droneId: string, userRole: UserRole, userId: string, queryParams?: Partial<DroneCommentQuery>): Promise<PaginatedDroneCommentResponse> {
+  static async getPaginatedDroneComments(droneId: string, userRole: UserRole, userId?: string, queryParams?: Partial<DroneCommentQuery>): Promise<PaginatedDroneCommentResponse> {
     try {
-      const comments = await this.getDroneComments(droneId, userRole, userId, queryParams);
+      const commentsCollection = getCollection(this.COLLECTION_NAME);
+      let q;
+
+      const conditions = [
+        where('droneId', '==', droneId)
+      ];
+
+      // Role-based visibility filtering
+      if (userRole === 'admin') {
+        // Admin can see all comments including soft-deleted ones if requested
+        if (!queryParams?.includeDeleted) {
+          conditions.push(where('isDeleted', '==', false));
+        }
+      } else if (userRole === 'manager') {
+        // Manager can see all non-deleted comments (public and hidden)
+        conditions.push(where('isDeleted', '==', false));
+      } else {
+        // Regular users can see public comments and their own hidden comments
+        conditions.push(where('isDeleted', '==', false));
+        if (userId) {
+          conditions.push(
+            or(
+              where('visibility', '==', 'public'),
+              and(
+                where('visibility', '==', 'hidden'),
+                where('userId', '==', userId)
+              )
+            )
+          );
+        } else {
+          conditions.push(where('visibility', '==', 'public'));
+        }
+      }
+
+      // Add ordering and limit
+      const orderField = queryParams?.orderBy || 'createdAt';
+      const orderDir = queryParams?.orderDirection || 'desc';
+      const queryLimit = queryParams?.limit || 5;
+
+      // Build query with conditions
+      const baseQuery = [
+        and(...conditions),
+        orderBy(orderField, orderDir),
+      ];
+
+      // Handle pagination with startAfter
+      if (queryParams?.lastDocumentSnapshot) {
+        q = createQuery(
+          commentsCollection,
+          ...baseQuery,
+          startAfter(queryParams.lastDocumentSnapshot),
+          limit(queryLimit + 1) // Get one extra to check if there are more
+        );
+      } else {
+        q = createQuery(
+          commentsCollection,
+          ...baseQuery,
+          limit(queryLimit + 1) // Get one extra to check if there are more
+        );
+      }
+
+      const snapshot = await getDocs(q);
+      const docs = getDocsArray(snapshot);
       
-      // For pagination, we check if there are more results by fetching one extra
-      const hasNextPage = comments.length === (queryParams?.limit || 5);
+      // Check if we have more than the requested limit
+      const hasNextPage = docs.length > queryLimit;
       
-      // Get the last document snapshot for next page
+      // Remove the extra document if we have one
+      const comments = docs
+        .slice(0, queryLimit)
+        .map((doc: any) => this.convertFromFirestore(doc.id, doc.data()));
+
+      // Get the last document snapshot for pagination
       let lastDocumentSnapshot = null;
       if (hasNextPage && comments.length > 0) {
-        // This would need the actual Firestore document snapshot, not just the data
-        // For now, we'll implement basic pagination
-        lastDocumentSnapshot = comments[comments.length - 1].id;
+        // Use the last document from our results (before we sliced off the extra)
+        lastDocumentSnapshot = docs[queryLimit - 1];
       }
 
       return {
