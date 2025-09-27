@@ -280,9 +280,10 @@ export class DroneCommentRepository {
 
       // Get the last document snapshot for pagination
       let lastDocumentSnapshot = null;
-      if (hasNextPage && comments.length > 0) {
-        // Use the last document from our results (before we sliced off the extra)
-        lastDocumentSnapshot = docs[queryLimit - 1];
+      if (comments.length > 0) {
+        // Always use the last document from the actual results we're returning
+        // This is the document we want to start after for the next page
+        lastDocumentSnapshot = docs[comments.length - 1];
       }
 
       return {
