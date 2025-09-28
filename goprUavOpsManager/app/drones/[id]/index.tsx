@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -41,6 +41,8 @@ export default function DroneDetailsScreen() {
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
+  const scrollViewRef = useRef<ScrollView | null>(null);
+  const [commentBoxTargetY, setCommentBoxTargetY] = useState<number>(0);
 
   useEffect(() => {
     const fetchDrone = async () => {
@@ -222,7 +224,7 @@ export default function DroneDetailsScreen() {
         headerTitleStyle: { fontWeight: 'bold' },
       }} />
       <SafeAreaView style={styles.container}>
-      <ScrollView>
+      <ScrollView ref={scrollViewRef}>
       <View style={[styles.card, drone.isDeleted && styles.deletedCard]}>
         <View style={styles.header}>
           <Text style={styles.title}>{DroneService.formatDroneName(drone)}</Text>
@@ -409,7 +411,13 @@ export default function DroneDetailsScreen() {
 
         {/* Comments section */}
         {drone && user && (
-          <View style={styles.section}>
+          <View
+            style={styles.section}
+            onLayout={(event) => {
+              const { y } = event.nativeEvent.layout;
+              setCommentBoxTargetY(y);
+            }}
+          >
             <DroneCommentsSection
               droneId={drone.id}
               userRole={user.role}
@@ -429,10 +437,9 @@ export default function DroneDetailsScreen() {
       equipmentStorages={drone?.equipmentStorages || []}
       onClose={() => setShowEquipmentChecklist(false)}
       onReportMissing={(defaultComment) => {
-        // Close modal handled by modal; set draft so DroneCommentsSection opens add form with content
         setShowEquipmentChecklist(false);
         setCommentDraft(defaultComment);
-        // Optionally scroll to comments section or bring into view — left to layout
+        setTimeout(() => scrollViewRef.current?.scrollTo({ y: commentBoxTargetY, animated: true }), 500)
       }}
     />
     
