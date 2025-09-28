@@ -18,6 +18,7 @@ import { AuditLog, AuditLogQuery, PaginatedAuditLogResponse, AuditEntityType, Au
 import { useAuth } from '@/contexts/AuthContext';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useTranslation } from 'react-i18next';
+import WebCompatibleDatePicker from '@/components/WebCompatibleDatePicker';
 
 export default function AuditLogsScreen() {
   const insets = useSafeAreaInsets();
@@ -284,26 +285,20 @@ export default function AuditLogsScreen() {
             </View>
 
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>{t('filters.startDate')}</Text>
-              <TextInput
-                style={styles.textInput}
+              <WebCompatibleDatePicker
+                label={t('filters.startDate')}
                 value={startDateInput}
-                onChangeText={setStartDateInput}
+                onDateChange={setStartDateInput}
                 placeholder="YYYY-MM-DD"
-                autoCapitalize="none"
-                autoCorrect={false}
               />
             </View>
 
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>{t('filters.endDate')}</Text>
-              <TextInput
-                style={styles.textInput}
+              <WebCompatibleDatePicker
+                label={t('filters.endDate')}
                 value={endDateInput}
-                onChangeText={setEndDateInput}
+                onDateChange={setEndDateInput}
                 placeholder="YYYY-MM-DD"
-                autoCapitalize="none"
-                autoCorrect={false}
               />
             </View>
 
