@@ -863,12 +863,16 @@
   "filters": {
     "showFilters": "Pokaż filtry",
     "hideFilters": "Ukryj filtry",
+    "applyFilters": "Filtruj",
+    "clearFilters": "Wyczyść",
     "startDate": "Data od:",
     "endDate": "Data do:",
     "category": "Kategoria:",
+    "drone": "Dron:",
     "activity": "Aktywność:",
     "entityType": "Typ encji:",
     "action": "Akcja:",
+    "pilotEmail": "E-mail pilota:",
     "userEmail": "E-mail użytkownika:",
     "all": "Wszystkie",
     "entityTypes": {

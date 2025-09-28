@@ -862,12 +862,16 @@
   "filters": {
     "showFilters": "Show Filters",
     "hideFilters": "Hide Filters",
+    "applyFilters": "Apply Filters",
+    "clearFilters": "Clear Filters",
     "startDate": "Start Date:",
     "endDate": "End Date:",
     "category": "Category:",
+    "drone": "Drone:",
     "activity": "Activity:",
     "entityType": "Entity Type:",
     "action": "Action:",
+    "pilotEmail": "Pilot Email:",
     "userEmail": "User Email:",
     "all": "All",
     "entityTypes": {
