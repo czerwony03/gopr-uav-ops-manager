@@ -25,6 +25,7 @@ import { formatFlightDurationCompact } from '@/src/utils/flightUtils';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
+import WebCompatibleDatePicker from '@/components/WebCompatibleDatePicker';
 
 export default function FlightsListScreen() {
   const { user } = useAuth();
@@ -454,26 +455,20 @@ export default function FlightsListScreen() {
         {showFilters ? (
           <View style={styles.filtersContent}>
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>{t('filters.startDate')}</Text>
-              <TextInput
-                style={styles.textInput}
+              <WebCompatibleDatePicker
+                label={t('filters.startDate')}
                 value={startDateInput}
-                onChangeText={setStartDateInput}
+                onDateChange={setStartDateInput}
                 placeholder="YYYY-MM-DD"
-                autoCapitalize="none"
-                autoCorrect={false}
               />
             </View>
 
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>{t('filters.endDate')}</Text>
-              <TextInput
-                style={styles.textInput}
+              <WebCompatibleDatePicker
+                label={t('filters.endDate')}
                 value={endDateInput}
-                onChangeText={setEndDateInput}
+                onDateChange={setEndDateInput}
                 placeholder="YYYY-MM-DD"
-                autoCapitalize="none"
-                autoCorrect={false}
               />
             </View>
 
