@@ -70,14 +70,14 @@ export default function AdminOverrideModal({
       const filtered = allUsers
         .filter(user => 
           user.email.toLowerCase().includes(query.toLowerCase()) ||
-          (user.firstName && user.firstName.toLowerCase().includes(query.toLowerCase())) ||
+          (user.firstname && user.firstname.toLowerCase().includes(query.toLowerCase())) ||
           (user.surname && user.surname.toLowerCase().includes(query.toLowerCase()))
         )
         .slice(0, 10) // Limit results
         .map(user => ({
           uid: user.uid,
           email: user.email,
-          displayName: UserService.formatDisplayName(user.firstName, user.surname, user.email)
+          displayName: UserService.formatDisplayName(user.firstname, user.surname, user.email)
         }));
       
       setSearchResults(filtered);

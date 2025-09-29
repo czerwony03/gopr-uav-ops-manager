@@ -232,7 +232,7 @@ export default function DroneClaimSection({
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <>
-                    <Ionicons name="unlock-outline" size={16} color="#fff" />
+                    <Ionicons name="lock-open-outline" size={16} color="#fff" />
                     <Text style={styles.buttonText}>
                       {activeClaim.userId === currentUserId ? t('droneClaims.releaseClaim') : t('droneClaims.forceRelease')}
                     </Text>
