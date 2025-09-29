@@ -192,11 +192,11 @@ export default function AdminOverrideModal({
             {t('droneClaims.overridingFor')}: <Text style={styles.droneName}>{droneName}</Text>
           </Text>
           
-          {currentClaimOwner && (
+          {currentClaimOwner ? (
             <Text style={styles.currentOwner}>
               {t('droneClaims.currentOwner')}: {currentClaimOwner}
             </Text>
-          )}
+          ) : null}
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('droneClaims.overrideOptions')}</Text>

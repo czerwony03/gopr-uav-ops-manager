@@ -117,7 +117,7 @@ export class DroneClaimRepository {
         return null;
       }
 
-      return this.convertFromFirestore(id, claimSnapshot.data());
+      return this.convertFromFirestore(id, claimSnapshot.data);
     } catch (error) {
       console.error('Error fetching drone claim:', error);
       throw new Error('Failed to fetch drone claim');

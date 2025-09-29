@@ -4,7 +4,7 @@ export interface DroneClaim {
   userId: string;
   userEmail: string;
   startTime: Date;
-  endTime?: Date; // undefined means currently active claim
+  endTime?: Date | null;
   createdAt: Date;
   updatedAt?: Date;
   createdBy: string; // user ID who created the claim

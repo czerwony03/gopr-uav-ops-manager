@@ -139,7 +139,7 @@ service cloud.firestore {
       allow read: if isSignedIn();
 
       // Users can create claims for themselves on shareable drones
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isManager() || isAdmin());
 
       // Claim owner can update their own claim (to release it)
       // Managers and admins can update any claim (for overrides)

@@ -63,7 +63,8 @@ export class DroneClaimService {
         droneId,
         userId,
         userEmail: email,
-        startTime: new Date()
+        startTime: new Date(),
+        endTime: null,
       }, userId);
 
       // Create audit log
@@ -197,7 +198,8 @@ export class DroneClaimService {
           droneId,
           userId: newUserId,
           userEmail: newUserEmail,
-          startTime: new Date()
+          startTime: new Date(),
+          endTime: null,
         }, adminUserId);
 
         // Create audit log for new claim
