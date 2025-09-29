@@ -1,8 +1,8 @@
 // Entity types that can be audited
-export type AuditEntityType = 'drone' | 'flight' | 'procedureChecklist' | 'user' | 'category' | 'droneComment';
+export type AuditEntityType = 'drone' | 'flight' | 'procedureChecklist' | 'user' | 'category' | 'droneComment' | 'droneClaim';
 
 // Actions that can be performed on entities
-export type AuditAction = 'create' | 'edit' | 'delete' | 'restore' | 'view' | 'login' | 'soft_delete' | 'update' | 'hide';
+export type AuditAction = 'create' | 'edit' | 'delete' | 'restore' | 'view' | 'login' | 'soft_delete' | 'update' | 'hide' | 'release' | 'admin_override' | 'admin_override_end' | 'admin_override_create';
 
 // Application platforms
 export type ApplicationPlatform = 'web' | 'ios' | 'android';

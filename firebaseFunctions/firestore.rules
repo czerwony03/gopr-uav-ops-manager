@@ -132,6 +132,28 @@ service cloud.firestore {
     }
 
     // =========================
+    // DRONE CLAIMS COLLECTION
+    // =========================
+    match /droneClaims/{claimId} {
+      // All authenticated users can read claim data (for transparency)
+      allow read: if isSignedIn();
+
+      // Users can create claims for themselves on shareable drones
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isManager() || isAdmin());
+
+      // Claim owner can update their own claim (to release it)
+      // Managers and admins can update any claim (for overrides)
+      allow update: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        isManager() || 
+        isAdmin()
+      );
+
+      // Only managers and admins can delete claims (cleanup operations)
+      allow delete: if isManager() || isAdmin();
+    }
+
+    // =========================
     // DRONE COMMENTS COLLECTION
     // =========================
     match /droneComments/{commentId} {

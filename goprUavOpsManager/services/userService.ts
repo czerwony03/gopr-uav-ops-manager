@@ -138,4 +138,30 @@ export class UserService {
   static async updateLastLogin(uid: string): Promise<void> {
     await UserRepository.updateLastLogin(uid);
   }
+
+  // Get all users (admin-only operation for search functionality)
+  static async getAllUsers(): Promise<User[]> {
+    try {
+      // This should only be used for admin operations like user search
+      return await UserRepository.getUsers();
+    } catch (error) {
+      console.error('Error fetching all users:', error);
+      throw new Error('Failed to fetch users');
+    }
+  }
+
+  // Format display name from user data
+  static formatDisplayName(firstName?: string | null, surname?: string | null, email?: string): string {
+    if (firstName && surname) {
+      return `${firstName} ${surname}`;
+    } else if (firstName) {
+      return firstName;
+    } else if (surname) {
+      return surname;
+    } else if (email) {
+      return email;
+    } else {
+      return 'Unknown User';
+    }
+  }
 }
