@@ -482,7 +482,32 @@
     "droneUpdated": "Drone updated successfully",
     "droneCreated": "Drone created successfully",
     "failedToUpdate": "Failed to update drone",
-    "failedToCreate": "Failed to create drone"
+    "failedToCreate": "Failed to create drone",
+    "shareable": "Shareable Drone",
+    "shareableDescription": "Allow users to claim and use this drone"
+  },
+  "droneClaims": {
+    "claimStatus": "Claim Status",
+    "viewHistory": "View History",
+    "ownedBy": "Owned by: {{owner}}",
+    "claimedSince": "Claimed on {{date}} at {{time}} ({{duration}})",
+    "available": "Available for claiming",
+    "claimDrone": "Claim this drone",
+    "releaseClaim": "Release claim",
+    "forceRelease": "Force release",
+    "adminOverride": "Admin Override",
+    "adminOverrideNotImplemented": "Admin override functionality will be implemented soon",
+    "droneClaimedSuccess": "Drone claimed successfully",
+    "droneReleasedSuccess": "Drone claim released successfully",
+    "failedToClaim": "Failed to claim drone",
+    "failedToRelease": "Failed to release claim",
+    "failedToLoadHistory": "Failed to load claim history",
+    "claimHistory": "Claim History",
+    "noClaimHistory": "No claim history available",
+    "active": "Active",
+    "completed": "Completed",
+    "ongoing": "Ongoing",
+    "claimPeriod": "{{start}} {{startTime}} - {{end}} {{endTime}} ({{duration}})"
   },
   "imageForm": {
     "permissionRequired": "Permission Required",

@@ -40,6 +40,7 @@ export interface Drone {
   maxSpeed: number; // in km/h
   userManual?: string; // URL to user manual document
   additionalInfo?: string; // Additional information about the drone
+  shareable?: boolean; // Whether this drone can be claimed by users
   images?: string[]; // Array of image URLs
   equipmentList?: DroneEquipmentItem[]; // Array of equipment items (deprecated, for migration)
   equipmentStorages?: EquipmentStorage[]; // Array of equipment storages (new structure)

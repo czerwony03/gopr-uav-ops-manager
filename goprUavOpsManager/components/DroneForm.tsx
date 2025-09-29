@@ -61,6 +61,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
     maxSpeed: 0,
     userManual: '',
     additionalInfo: '',
+    shareable: false,
     images: [],
     equipmentStorages: [],
   };
@@ -418,6 +419,26 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
               numberOfLines={4}
               textAlignVertical="top"
             />
+
+            <View style={styles.checkboxContainer}>
+              <TouchableOpacity
+                style={styles.checkbox}
+                onPress={() => updateFormData('shareable', !formData.shareable)}
+                disabled={loading}
+              >
+                <View style={[styles.checkboxBox, formData.shareable && styles.checkboxBoxChecked]}>
+                  {formData.shareable && (
+                    <Ionicons name="checkmark" size={16} color="#fff" />
+                  )}
+                </View>
+                <Text style={styles.checkboxLabel}>
+                  {t('droneForm.shareable')}
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.checkboxDescription}>
+                {t('droneForm.shareableDescription')}
+              </Text>
+            </View>
           </View>
 
           <View style={styles.section}>
@@ -618,5 +639,39 @@ const styles = StyleSheet.create({
   emptySubtext: {
     fontSize: 14,
     color: '#999',
+  },
+  checkboxContainer: {
+    marginTop: 16,
+  },
+  checkbox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  checkboxBox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#ddd',
+    borderRadius: 3,
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  checkboxBoxChecked: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  checkboxLabel: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+  checkboxDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 32,
+    fontStyle: 'italic',
   },
 });

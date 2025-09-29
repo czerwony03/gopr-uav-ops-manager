@@ -482,7 +482,32 @@
     "droneUpdated": "Dron został pomyślnie zaktualizowany",
     "droneCreated": "Dron został pomyślnie utworzony",
     "failedToUpdate": "Nie udało się zaktualizować drona",
-    "failedToCreate": "Nie udało się utworzyć drona"
+    "failedToCreate": "Nie udało się utworzyć drona",
+    "shareable": "Dron współdzielony",
+    "shareableDescription": "Pozwól użytkownikom rezerwować i używać tego drona"
+  },
+  "droneClaims": {
+    "claimStatus": "Status rezerwacji",
+    "viewHistory": "Zobacz historię",
+    "ownedBy": "Właściciel: {{owner}}",
+    "claimedSince": "Zarezerwowany {{date}} o {{time}} ({{duration}})",
+    "available": "Dostępny do rezerwacji",
+    "claimDrone": "Zarezerwuj drona",
+    "releaseClaim": "Zwolnij rezerwację",
+    "forceRelease": "Wymuś zwolnienie",
+    "adminOverride": "Nadpisanie administratora",
+    "adminOverrideNotImplemented": "Funkcja nadpisywania administratora zostanie wkrótce zaimplementowana",
+    "droneClaimedSuccess": "Dron został pomyślnie zarezerwowany",
+    "droneReleasedSuccess": "Rezerwacja drona została pomyślnie zwolniona",
+    "failedToClaim": "Nie udało się zarezerwować drona",
+    "failedToRelease": "Nie udało się zwolnić rezerwacji",
+    "failedToLoadHistory": "Nie udało się załadować historii rezerwacji",
+    "claimHistory": "Historia rezerwacji",
+    "noClaimHistory": "Brak historii rezerwacji",
+    "active": "Aktywna",
+    "completed": "Zakończona",
+    "ongoing": "Trwająca",
+    "claimPeriod": "{{start}} {{startTime}} - {{end}} {{endTime}} ({{duration}})"
   },
   "imageForm": {
     "permissionRequired": "Wymagane uprawnienia",

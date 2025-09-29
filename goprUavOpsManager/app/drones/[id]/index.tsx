@@ -23,12 +23,17 @@ import ImageGallery from '@/components/ImageGallery';
 import EquipmentChecklistModal from '@/components/EquipmentChecklistModal';
 import ImageViewer from '@/components/ImageViewer';
 import { DroneCommentsSection } from '@/components/DroneCommentsSection';
+import DroneClaimSection from '@/components/DroneClaimSection';
+import { DroneClaimService } from '@/services/droneClaimService';
+import { DroneClaim } from '@/types/DroneClaim';
 
 export default function DroneDetailsScreen() {
   const [drone, setDrone] = useState<Drone | null>(null);
   const [loading, setLoading] = useState(true);
   const [createdByName, setCreatedByName] = useState<string>('');
   const [updatedByName, setUpdatedByName] = useState<string>('');
+  const [currentClaim, setCurrentClaim] = useState<DroneClaim | null>(null);
+  const [claimOwnerName, setClaimOwnerName] = useState<string>('');
   const [showEquipmentChecklist, setShowEquipmentChecklist] = useState(false);
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -62,6 +67,21 @@ export default function DroneDetailsScreen() {
         }
         setDrone(droneData);
         
+        // Fetch current claim if drone is shareable
+        if (droneData.shareable) {
+          try {
+            const claim = await DroneClaimService.getActiveClaim(id);
+            setCurrentClaim(claim);
+            if (claim) {
+              const ownerName = await UserService.getUserDisplayName(claim.userId);
+              setClaimOwnerName(ownerName);
+            }
+          } catch (error) {
+            console.error('Error fetching drone claim:', error);
+            // Don't fail the whole screen if claim loading fails
+          }
+        }
+        
         // Fetch user names for audit trail
         if (droneData.createdBy) {
           const createdName = await UserService.getUserDisplayName(droneData.createdBy);
@@ -93,6 +113,23 @@ export default function DroneDetailsScreen() {
 
     fetchDrone();
   }, [id, user, router, t]);
+
+  const refreshClaimData = useCallback(async () => {
+    if (!id || !drone?.shareable) return;
+    
+    try {
+      const claim = await DroneClaimService.getActiveClaim(id);
+      setCurrentClaim(claim);
+      if (claim) {
+        const ownerName = await UserService.getUserDisplayName(claim.userId);
+        setClaimOwnerName(ownerName);
+      } else {
+        setClaimOwnerName('');
+      }
+    } catch (error) {
+      console.error('Error refreshing claim data:', error);
+    }
+  }, [id, drone?.shareable]);
 
   const handleEdit = () => {
     if (!drone || isButtonDisabled()) return;
@@ -240,9 +277,28 @@ export default function DroneDetailsScreen() {
           <Text style={styles.detail}>{t('droneDetails.callSign')}: {drone.callSign}</Text>
           <Text style={styles.detail}>{t('droneDetails.registration')}: {drone.registrationNumber}</Text>
           <Text style={styles.detail}>{t('droneDetails.equipmentRegistration')}: {drone.equipmentRegistrationNumber}</Text>
-          <Text style={styles.detail}>{t('droneDetails.location')}: {drone.location}</Text>
+          <Text style={styles.detail}>
+            {t('droneDetails.location')}: {drone.location}
+            {currentClaim && claimOwnerName && (
+              <Text style={styles.ownerInfo}> ({t('droneClaims.ownedBy', { owner: claimOwnerName })})</Text>
+            )}
+          </Text>
           <Text style={styles.detail}>{t('droneDetails.insurance')}: {drone.insurance}</Text>
         </View>
+
+        {/* Drone Claim Section */}
+        {drone.shareable && user && (
+          <DroneClaimSection
+            droneId={drone.id}
+            droneName={DroneService.formatDroneName(drone)}
+            isShareable={drone.shareable}
+            currentUserId={user.uid}
+            currentUserRole={user.role}
+            currentUserEmail={user.email}
+            disabled={isButtonDisabled()}
+            onClaimChanged={refreshClaimData}
+          />
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('droneDetails.operationalInfo')}</Text>
@@ -682,6 +738,11 @@ const styles = StyleSheet.create({
   emptyStorageText: {
     fontSize: 14,
     color: '#666',
+    fontStyle: 'italic',
+  },
+  ownerInfo: {
+    color: '#28a745',
+    fontWeight: '500',
     fontStyle: 'italic',
   },
 });
