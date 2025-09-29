@@ -253,7 +253,28 @@ describe('DroneClaimService', () => {
       expect(mockAuditLogService.createAuditLog).toHaveBeenCalledTimes(2);
     });
 
-    it('should reject override for non-admin user', async () => {
+    it('should allow manager to override claim', async () => {
+      const MANAGER_ACCOUNT = { uid: 'manager-123', email: 'manager@test.com' };
+      
+      const newClaimId = await DroneClaimService.adminOverrideClaim(
+        'drone-123',
+        'new-user-123',
+        MANAGER_ACCOUNT.uid,
+        UserRole.MANAGER,
+        MANAGER_ACCOUNT.email
+      );
+
+      expect(newClaimId).toBe('new-claim-123');
+      expect(mockDroneClaimRepository.updateClaim).toHaveBeenCalledWith(
+        'claim-123',
+        expect.objectContaining({ endTime: expect.any(Date) }),
+        MANAGER_ACCOUNT.uid
+      );
+      expect(mockDroneClaimRepository.createClaim).toHaveBeenCalled();
+      expect(mockAuditLogService.createAuditLog).toHaveBeenCalledTimes(2);
+    });
+
+    it('should reject override for non-admin/manager user', async () => {
       await expect(
         DroneClaimService.adminOverrideClaim(
           'drone-123',
@@ -344,6 +365,16 @@ describe('DroneClaimService', () => {
         mockClaim,
         TEST_ACCOUNTS.ADMIN.uid,
         UserRole.ADMIN
+      );
+
+      expect(result).toBe(true);
+    });
+
+    it('should allow manager to modify any claim', () => {
+      const result = DroneClaimService.canModifyClaim(
+        mockClaim,
+        'manager-123',
+        UserRole.MANAGER
       );
 
       expect(result).toBe(true);

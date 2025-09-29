@@ -15,10 +15,10 @@ export class DroneClaimService {
   }
 
   /**
-   * Check if user can override claims (admin only)
+   * Check if user can override claims (admin and manager)
    */
   private static canOverrideClaims(userRole: UserRole): boolean {
-    return userRole === 'admin';
+    return userRole === 'admin' || userRole === 'manager';
   }
 
   /**

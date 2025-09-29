@@ -173,8 +173,8 @@ export default function DroneClaimSection({
 
   const isDisabled = disabled || isButtonDisabled() || actionLoading;
   const canClaim = isShareable && !activeClaim;
-  const canRelease = activeClaim && (activeClaim.userId === currentUserId || currentUserRole === 'admin');
-  const canOverride = activeClaim && currentUserRole === 'admin';
+  const canRelease = activeClaim && (activeClaim.userId === currentUserId || currentUserRole === 'admin' || currentUserRole === 'manager');
+  const canOverride = activeClaim && (currentUserRole === 'admin' || currentUserRole === 'manager');
 
   if (!isShareable) {
     return null; // Don't show claim section for non-shareable drones
