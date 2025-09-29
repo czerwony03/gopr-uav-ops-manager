@@ -93,53 +93,79 @@ export default function DroneClaimSection({
   };
 
   const handleClaimDrone = async () => {
-    try {
-      setActionLoading(true);
-      await DroneClaimService.claimDrone(droneId, currentUserId, currentUserRole, currentUserEmail);
-      
-      crossPlatformAlert.showAlert({
-        title: t('common.success'),
-        message: t('droneClaims.droneClaimedSuccess'),
-        buttons: [{ text: t('common.ok') }]
-      });
-      
-      await loadActiveClaim();
-      onClaimChanged?.();
-    } catch (error: any) {
-      crossPlatformAlert.showAlert({
-        title: t('common.error'),
-        message: error.message || t('droneClaims.failedToClaim'),
-        buttons: [{ text: t('common.ok') }]
-      });
-    } finally {
-      setActionLoading(false);
-    }
+    // Show confirmation alert before claiming
+    crossPlatformAlert.showAlert({
+      title: t('droneClaims.confirmClaim'),
+      message: t('droneClaims.confirmClaimMessage', { droneName }),
+      buttons: [
+        { text: t('common.cancel'), style: 'cancel' },
+        { 
+          text: t('droneClaims.claimDrone'), 
+          onPress: async () => {
+            try {
+              setActionLoading(true);
+              await DroneClaimService.claimDrone(droneId, currentUserId, currentUserRole, currentUserEmail);
+              
+              crossPlatformAlert.showAlert({
+                title: t('common.success'),
+                message: t('droneClaims.droneClaimedSuccess'),
+                buttons: [{ text: t('common.ok') }]
+              });
+              
+              await loadActiveClaim();
+              onClaimChanged?.();
+            } catch (error: any) {
+              crossPlatformAlert.showAlert({
+                title: t('common.error'),
+                message: error.message || t('droneClaims.failedToClaim'),
+                buttons: [{ text: t('common.ok') }]
+              });
+            } finally {
+              setActionLoading(false);
+            }
+          }
+        }
+      ]
+    });
   };
 
   const handleReleaseClaim = async () => {
     if (!activeClaim) return;
 
-    try {
-      setActionLoading(true);
-      await DroneClaimService.releaseClaim(activeClaim.id, currentUserId, currentUserRole, currentUserEmail);
-      
-      crossPlatformAlert.showAlert({
-        title: t('common.success'),
-        message: t('droneClaims.droneReleasedSuccess'),
-        buttons: [{ text: t('common.ok') }]
-      });
-      
-      await loadActiveClaim();
-      onClaimChanged?.();
-    } catch (error: any) {
-      crossPlatformAlert.showAlert({
-        title: t('common.error'),
-        message: error.message || t('droneClaims.failedToRelease'),
-        buttons: [{ text: t('common.ok') }]
-      });
-    } finally {
-      setActionLoading(false);
-    }
+    // Show confirmation alert before releasing
+    crossPlatformAlert.showAlert({
+      title: t('droneClaims.confirmRelease'),
+      message: t('droneClaims.confirmReleaseMessage', { droneName }),
+      buttons: [
+        { text: t('common.cancel'), style: 'cancel' },
+        { 
+          text: t('droneClaims.releaseClaim'), 
+          onPress: async () => {
+            try {
+              setActionLoading(true);
+              await DroneClaimService.releaseClaim(activeClaim.id, currentUserId, currentUserRole, currentUserEmail);
+              
+              crossPlatformAlert.showAlert({
+                title: t('common.success'),
+                message: t('droneClaims.droneReleasedSuccess'),
+                buttons: [{ text: t('common.ok') }]
+              });
+              
+              await loadActiveClaim();
+              onClaimChanged?.();
+            } catch (error: any) {
+              crossPlatformAlert.showAlert({
+                title: t('common.error'),
+                message: error.message || t('droneClaims.failedToRelease'),
+                buttons: [{ text: t('common.ok') }]
+              });
+            } finally {
+              setActionLoading(false);
+            }
+          }
+        }
+      ]
+    });
   };
 
   const handleAdminOverride = () => {
@@ -172,7 +198,7 @@ export default function DroneClaimSection({
   };
 
   const isDisabled = disabled || isButtonDisabled() || actionLoading;
-  const canClaim = isShareable && !activeClaim;
+  const canClaim = isShareable && !activeClaim && currentUserId; // Only show if no active claim and user is logged in
   const canRelease = activeClaim && (activeClaim.userId === currentUserId || currentUserRole === 'admin' || currentUserRole === 'manager');
   const canOverride = activeClaim && (currentUserRole === 'admin' || currentUserRole === 'manager');
 
@@ -274,6 +300,18 @@ export default function DroneClaimSection({
                   <Text style={styles.buttonText}>{t('droneClaims.claimDrone')}</Text>
                 </>
               )}
+            </TouchableOpacity>
+          )}
+
+          {/* Admin/Manager override functionality even when no active claim */}
+          {(currentUserRole === 'admin' || currentUserRole === 'manager') && (
+            <TouchableOpacity
+              style={[styles.button, styles.overrideButton, isDisabled && getDisabledStyle()]}
+              onPress={handleAdminOverride}
+              disabled={isDisabled}
+            >
+              <Ionicons name="person-add-outline" size={16} color="#fff" />
+              <Text style={styles.buttonText}>{t('droneClaims.assignDrone')}</Text>
             </TouchableOpacity>
           )}
         </View>

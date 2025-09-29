@@ -519,7 +519,12 @@
     "claimEndedSuccess": "Rezerwacja została pomyślnie zakończona",
     "overrideFailed": "Nie udało się nadpisać rezerwacji",
     "droneAssignedSuccess": "Dron został pomyślnie przypisany do {{user}}",
-    "assignToDrone": "Przypisz do tego drona"
+    "assignToDrone": "Przypisz do tego drona",
+    "confirmClaim": "Potwierdź rezerwację",
+    "confirmClaimMessage": "Czy na pewno chcesz zarezerwować {{droneName}}?",
+    "confirmRelease": "Potwierdź zwolnienie",
+    "confirmReleaseMessage": "Czy na pewno chcesz zwolnić rezerwację {{droneName}}?",
+    "assignDrone": "Przypisz drona"
   },
   "imageForm": {
     "permissionRequired": "Wymagane uprawnienia",

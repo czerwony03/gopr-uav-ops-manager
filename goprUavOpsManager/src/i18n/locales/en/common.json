@@ -519,7 +519,12 @@
     "claimEndedSuccess": "Claim ended successfully",
     "overrideFailed": "Failed to override claim",
     "droneAssignedSuccess": "Drone assigned to {{user}} successfully",
-    "assignToDrone": "Assign to this drone"
+    "assignToDrone": "Assign to this drone",
+    "confirmClaim": "Confirm Claim",
+    "confirmClaimMessage": "Are you sure you want to claim {{droneName}}?",
+    "confirmRelease": "Confirm Release",
+    "confirmReleaseMessage": "Are you sure you want to release the claim on {{droneName}}?",
+    "assignDrone": "Assign Drone"
   },
   "imageForm": {
     "permissionRequired": "Permission Required",
