@@ -507,7 +507,19 @@
     "active": "Active",
     "completed": "Completed",
     "ongoing": "Ongoing",
-    "claimPeriod": "{{start}} {{startTime}} - {{end}} {{endTime}} ({{duration}})"
+    "claimPeriod": "{{start}} {{startTime}} - {{end}} {{endTime}} ({{duration}})",
+    "userSearchError": "Failed to search users",
+    "overridingFor": "Overriding claim for",
+    "currentOwner": "Current owner",
+    "overrideOptions": "Override Options",
+    "endClaimOnly": "End current claim only",
+    "assignToNewUser": "Assign to New User",
+    "searchUsers": "Search users by name or email...",
+    "selectUserFirst": "Please select a user first",
+    "claimEndedSuccess": "Claim ended successfully",
+    "overrideFailed": "Failed to override claim",
+    "droneAssignedSuccess": "Drone assigned to {{user}} successfully",
+    "assignToDrone": "Assign to this drone"
   },
   "imageForm": {
     "permissionRequired": "Permission Required",

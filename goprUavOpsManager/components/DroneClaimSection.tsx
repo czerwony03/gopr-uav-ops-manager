@@ -17,6 +17,7 @@ import { DroneClaimService } from '@/services/droneClaimService';
 import { UserService } from '@/services/userService';
 import { useCrossPlatformAlert } from './CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import AdminOverrideModal from './AdminOverrideModal';
 
 interface DroneClaimSectionProps {
   droneId: string;
@@ -47,6 +48,7 @@ export default function DroneClaimSection({
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showAdminOverride, setShowAdminOverride] = useState(false);
   const [claimHistory, setClaimHistory] = useState<DroneClaim[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [ownerName, setOwnerName] = useState<string>('');
@@ -141,13 +143,27 @@ export default function DroneClaimSection({
   };
 
   const handleAdminOverride = () => {
-    // TODO: Implement admin override functionality
-    // This will need a more complex UI for selecting new user
-    crossPlatformAlert.showAlert({
-      title: t('droneClaims.adminOverride'),
-      message: t('droneClaims.adminOverrideNotImplemented'),
-      buttons: [{ text: t('common.ok') }]
-    });
+    setShowAdminOverride(true);
+  };
+
+  const handleAdminOverrideAction = async (newUserId: string | null) => {
+    try {
+      setActionLoading(true);
+      await DroneClaimService.adminOverrideClaim(
+        droneId,
+        newUserId,
+        currentUserId,
+        currentUserRole,
+        currentUserEmail
+      );
+      
+      await loadActiveClaim();
+      onClaimChanged?.();
+    } catch (error: any) {
+      throw error; // Let the modal handle the error display
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const showClaimHistory = () => {
@@ -299,6 +315,16 @@ export default function DroneClaimSection({
           )}
         </View>
       </Modal>
+
+      {/* Admin Override Modal */}
+      <AdminOverrideModal
+        visible={showAdminOverride}
+        droneId={droneId}
+        droneName={droneName}
+        currentClaimOwner={ownerName}
+        onClose={() => setShowAdminOverride(false)}
+        onOverride={handleAdminOverrideAction}
+      />
     </View>
   );
 }

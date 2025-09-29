@@ -507,7 +507,19 @@
     "active": "Aktywna",
     "completed": "Zakończona",
     "ongoing": "Trwająca",
-    "claimPeriod": "{{start}} {{startTime}} - {{end}} {{endTime}} ({{duration}})"
+    "claimPeriod": "{{start}} {{startTime}} - {{end}} {{endTime}} ({{duration}})",
+    "userSearchError": "Nie udało się wyszukać użytkowników",
+    "overridingFor": "Nadpisywanie rezerwacji dla",
+    "currentOwner": "Obecny właściciel",
+    "overrideOptions": "Opcje nadpisania",
+    "endClaimOnly": "Zakończ tylko obecną rezerwację",
+    "assignToNewUser": "Przypisz do nowego użytkownika",
+    "searchUsers": "Szukaj użytkowników po nazwie lub e-mailu...",
+    "selectUserFirst": "Najpierw wybierz użytkownika",
+    "claimEndedSuccess": "Rezerwacja została pomyślnie zakończona",
+    "overrideFailed": "Nie udało się nadpisać rezerwacji",
+    "droneAssignedSuccess": "Dron został pomyślnie przypisany do {{user}}",
+    "assignToDrone": "Przypisz do tego drona"
   },
   "imageForm": {
     "permissionRequired": "Wymagane uprawnienia",
