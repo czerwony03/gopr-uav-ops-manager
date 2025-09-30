@@ -26,6 +26,7 @@ import { DroneCommentsSection } from '@/components/DroneCommentsSection';
 import DroneClaimSection from '@/components/DroneClaimSection';
 import { DroneClaimService } from '@/services/droneClaimService';
 import { DroneClaim } from '@/types/DroneClaim';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 export default function DroneDetailsScreen() {
   const [drone, setDrone] = useState<Drone | null>(null);
@@ -48,6 +49,7 @@ export default function DroneDetailsScreen() {
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const scrollViewRef = useRef<ScrollView | null>(null);
   const [commentBoxTargetY, setCommentBoxTargetY] = useState<number>(0);
+  const responsive = useResponsiveLayout();
 
   useEffect(() => {
     const fetchDrone = async () => {
@@ -261,16 +263,35 @@ export default function DroneDetailsScreen() {
         headerTitleStyle: { fontWeight: 'bold' },
       }} />
       <SafeAreaView style={styles.container}>
-      <ScrollView ref={scrollViewRef}>
-      <View style={[styles.card, drone.isDeleted && styles.deletedCard]}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{DroneService.formatDroneName(drone)}</Text>
-          {drone.isDeleted && user?.role === 'admin' ? (
-            <View style={styles.deletedBadge}>
-              <Text style={styles.deletedBadgeText}>{t('droneDetails.deleted')}</Text>
+      <ScrollView 
+        ref={scrollViewRef}
+        contentContainerStyle={[
+          styles.scrollContent,
+          responsive.isDesktop && {
+            paddingHorizontal: responsive.spacing.large,
+            alignItems: 'center',
+          }
+        ]}
+      >
+        {/* Content wrapper for max-width on desktop */}
+        <View style={[
+          responsive.isDesktop && {
+            width: '100%',
+            maxWidth: responsive.maxContentWidth,
+          }
+        ]}>
+          <View style={[styles.card, drone.isDeleted && styles.deletedCard]}>
+            <View style={styles.header}>
+              <Text style={[
+                styles.title,
+                { fontSize: responsive.fontSize.title }
+              ]}>{DroneService.formatDroneName(drone)}</Text>
+              {drone.isDeleted && user?.role === 'admin' ? (
+                <View style={styles.deletedBadge}>
+                  <Text style={styles.deletedBadgeText}>{t('droneDetails.deleted')}</Text>
+                </View>
+              ) : null}
             </View>
-          ) : null}
-        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('droneDetails.basicInfo')}</Text>
@@ -346,7 +367,7 @@ export default function DroneDetailsScreen() {
             <ImageGallery
               images={drone.images}
               title={t('droneDetails.images')}
-              numColumns={2}
+              numColumns={responsive.imageGridColumns}
               containerStyle={styles.imageGalleryContainer}
             />
           </View>
@@ -381,17 +402,41 @@ export default function DroneDetailsScreen() {
                 {storage.items.length > 0 ? (
                   <View style={styles.equipmentGrid}>
                     {storage.items.map((item) => (
-                      <View key={item.id} style={styles.equipmentItem}>
+                      <View 
+                        key={item.id} 
+                        style={[
+                          styles.equipmentItem,
+                          responsive.isDesktop && {
+                            minWidth: `${(100 / responsive.equipmentGridColumns) - 3}%`,
+                            maxWidth: `${(100 / responsive.equipmentGridColumns) - 3}%`,
+                          }
+                        ]}
+                      >
                         {item.image && (
                           <TouchableOpacity
                             onPress={() => handleEquipmentImagePress(storage.id, item.image!)}
                             activeOpacity={0.8}
                           >
-                            <Image source={{ uri: item.image }} style={styles.equipmentImage} />
+                            <Image 
+                              source={{ uri: item.image }} 
+                              style={[
+                                styles.equipmentImage,
+                                responsive.isDesktop && {
+                                  width: 64,
+                                  height: 64,
+                                }
+                              ]} 
+                            />
                           </TouchableOpacity>
                         )}
-                        <Text style={styles.equipmentName}>{item.name}</Text>
-                        <Text style={styles.equipmentQuantity}>
+                        <Text style={[
+                          styles.equipmentName,
+                          { fontSize: responsive.fontSize.body }
+                        ]}>{item.name}</Text>
+                        <Text style={[
+                          styles.equipmentQuantity,
+                          { fontSize: responsive.fontSize.small }
+                        ]}>
                           {t('equipment.quantity')}: {item.quantity}
                         </Text>
                       </View>
@@ -486,6 +531,7 @@ export default function DroneDetailsScreen() {
           </View>
         )}
       </View>
+      </View>
     </ScrollView>
     
     <EquipmentChecklistModal
@@ -515,6 +561,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  scrollContent: {
     padding: 16,
   },
   loadingContainer: {
