@@ -21,6 +21,7 @@ import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { calculateFlightDuration } from '@/src/utils/flightUtils';
 import { MapUtils } from '@/utils/mapUtils';
 import { EmbeddedLocationMap } from '@/components/EmbeddedLocationMap';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 export default function FlightDetailsScreen() {
   const { t } = useTranslation('common');
@@ -33,6 +34,7 @@ export default function FlightDetailsScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const crossPlatformAlert = useCrossPlatformAlert();
+  const responsive = useResponsiveLayout();
 
   useEffect(() => {
     const fetchFlight = async () => {
@@ -177,11 +179,29 @@ export default function FlightDetailsScreen() {
         headerTitleStyle: { fontWeight: 'bold' },
       }} />
       <SafeAreaView style={styles.container}>
-        <ScrollView>
-          <View style={styles.card}>
-            <View style={styles.header}>
-              <Text style={styles.title}>{t('flightDetails.title')}</Text>
-            </View>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            responsive.isDesktop && {
+              paddingHorizontal: responsive.spacing.large,
+              alignItems: 'center',
+            }
+          ]}
+        >
+          {/* Content wrapper for max-width on desktop */}
+          <View style={[
+            responsive.isDesktop && {
+              width: '100%',
+              maxWidth: responsive.maxContentWidth,
+            }
+          ]}>
+            <View style={styles.card}>
+              <View style={styles.header}>
+                <Text style={[
+                  styles.title,
+                  { fontSize: responsive.fontSize.title }
+                ]}>{t('flightDetails.title')}</Text>
+              </View>
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{t('flightDetails.basicInfo')}</Text>
@@ -281,6 +301,7 @@ export default function FlightDetailsScreen() {
               </TouchableOpacity>
             </View>
           </View>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </>
@@ -291,6 +312,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  scrollContent: {
+    padding: 16,
   },
   loadingContainer: {
     flex: 1,
