@@ -156,7 +156,7 @@ export default function Index() {
               const disabled = isNavigationDisabled(button.route);
               
               // Calculate button width based on columns
-              const buttonWidth = responsive.isDesktop 
+              const buttonWidth: `${number}%` = responsive.isDesktop
                 ? `${(100 / responsive.navigationGridColumns) - 2}%` 
                 : '48%';
               
