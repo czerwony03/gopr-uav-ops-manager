@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { useWindowDimensions } from 'react-native';
 
 /**
@@ -41,9 +40,9 @@ export function useResponsiveLayout() {
 
   // Spacing values
   const spacing = {
-    small: isDesktop ? 12 : 8,
-    medium: isDesktop ? 20 : 16,
-    large: isDesktop ? 32 : 24,
+    small: isDesktop ? 12 : 6,
+    medium: isDesktop ? 20 : 12,
+    large: isDesktop ? 32 : 20,
   };
 
   // Font sizes
