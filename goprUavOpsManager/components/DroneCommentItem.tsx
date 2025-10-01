@@ -80,13 +80,15 @@ export const DroneCommentItem: React.FC<DroneCommentItemProps> = ({
           <Text style={styles.authorName}>
             {comment.userName || comment.userEmail || 'Unknown User'}
           </Text>
-          <Text style={styles.commentDate}>{formatDate(comment.createdAt)}</Text>
-          {getVisibilityIcon()}
-          {comment.visibility === 'hidden' && (
-            <Text style={styles.visibilityLabel}>{t('comments.visibility.hidden')}</Text>
-          )}
+          <View style={styles.commentMeta}>
+            <Text style={styles.commentDate}>{formatDate(comment.createdAt)}</Text>
+            {getVisibilityIcon()}
+            {comment.visibility === 'hidden' && (
+              <Text style={styles.visibilityLabel}>{t('comments.visibility.hidden')}</Text>
+            )}
+          </View>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={styles.actionButtons}>
           {canHide && (
             <TouchableOpacity onPress={handleHide} style={styles.deleteButton}>
               <Ionicons name="eye-off-outline" size={20} color="#FF9800" />
@@ -154,24 +156,28 @@ const styles = StyleSheet.create({
   commentHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 8,
   },
   authorInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
     flex: 1,
+    gap: 4,
   },
   authorName: {
     fontSize: 14,
     fontWeight: 'bold',
     color: '#333',
-    marginRight: 8,
+  },
+  commentMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   commentDate: {
     fontSize: 12,
     color: '#666',
-    marginRight: 8,
   },
   visibilityIcon: {
     marginRight: 4,
@@ -180,6 +186,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#666',
     fontStyle: 'italic',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
   },
   deleteButton: {
     padding: 4,

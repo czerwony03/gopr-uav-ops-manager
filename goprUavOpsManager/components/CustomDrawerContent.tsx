@@ -8,12 +8,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { signOut } from '@/utils/firebaseUtils';
 import { useTranslation } from 'react-i18next';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 export function CustomDrawerContent(props: any) {
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
   const { isNavigationDisabled, getDisabledStyle } = useOfflineButtons();
+  const responsive = useResponsiveLayout();
 
   const handleLogout = async () => {
     try {

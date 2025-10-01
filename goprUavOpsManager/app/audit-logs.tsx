@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useTranslation } from 'react-i18next';
 import WebCompatibleDatePicker from '@/components/WebCompatibleDatePicker';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 export default function AuditLogsScreen() {
   const insets = useSafeAreaInsets();
@@ -28,6 +29,7 @@ export default function AuditLogsScreen() {
   const [paginationData, setPaginationData] = useState<PaginatedAuditLogResponse | null>(null);
   const crossPlatformAlert = useCrossPlatformAlert();
   const { t } = useTranslation('common');
+  const responsive = useResponsiveLayout();
 
   // Filter states
   const [filters, setFilters] = useState<AuditLogQuery>({
@@ -413,49 +415,72 @@ export default function AuditLogsScreen() {
       <Stack.Screen options={{ title: 'Audit Logs' }} />
       
       <ScrollView 
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom + 20, 20) }]}
+        contentContainerStyle={[
+          styles.scrollContent, 
+          { paddingBottom: Math.max(insets.bottom + 20, 20) },
+          responsive.isDesktop && {
+            paddingHorizontal: responsive.spacing.large,
+            alignItems: 'center',
+          }
+        ]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>System Audit Trail</Text>
-          <Text style={styles.subtitle}>
-            {paginationData ? `${paginationData.totalCount} total entries` : 'Loading...'}
-          </Text>
-        </View>
-
-        {renderFilterControls()}
-        
-        {/* Top Pagination Controls */}
-        {renderPaginationControls()}
-
-        {auditLogs.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="document-text-outline" size={48} color="#9E9E9E" />
-            <Text style={styles.emptyText}>No audit logs found</Text>
+        {/* Content wrapper for max-width on desktop */}
+        <View style={[
+          responsive.isDesktop && {
+            width: '100%',
+            maxWidth: responsive.maxContentWidth,
+          }
+        ]}>
+          <View style={styles.header}>
+            <Text style={[
+              styles.title,
+              { fontSize: responsive.fontSize.title }
+            ]}>System Audit Trail</Text>
+            <Text style={[
+              styles.subtitle,
+              { fontSize: responsive.fontSize.body }
+            ]}>
+              {paginationData ? `${paginationData.totalCount} total entries` : 'Loading...'}
+            </Text>
           </View>
-        ) : (
-          <View style={styles.logsList}>
-            {auditLogs.map((log, _index) => (
-              <View key={log.id} style={styles.logItem}>
-                <View style={styles.logHeader}>
-                  <View style={styles.actionBadge}>
-                    {getActionIcon(log.action)}
-                    <Text style={[styles.actionText, { color: getActionColor(log.action) }]}>
-                      {log.action.toUpperCase()}
+
+          {renderFilterControls()}
+          
+          {/* Top Pagination Controls */}
+          {renderPaginationControls()}
+
+          {auditLogs.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="document-text-outline" size={48} color="#9E9E9E" />
+              <Text style={[
+                styles.emptyText,
+                { fontSize: responsive.fontSize.subtitle }
+              ]}>No audit logs found</Text>
+            </View>
+          ) : (
+            <View style={styles.logsList}>
+              {auditLogs.map((log, _index) => (
+                <View key={log.id} style={styles.logItem}>
+                  <View style={styles.logHeader}>
+                    <View style={styles.actionBadge}>
+                      {getActionIcon(log.action)}
+                      <Text style={[styles.actionText, { color: getActionColor(log.action) }]}>
+                        {log.action.toUpperCase()}
+                      </Text>
+                    </View>
+                    <Text style={styles.timestamp}>
+                      {formatTimestamp(log.timestamp)}
                     </Text>
                   </View>
-                  <Text style={styles.timestamp}>
-                    {formatTimestamp(log.timestamp)}
-                  </Text>
-                </View>
-                
-                <View style={styles.logDetails}>
-                  <Text style={styles.entityType}>
-                    {getEntityTypeDisplay(log.entityType)}
-                  </Text>
-                  <Text style={styles.description}>
+                  
+                  <View style={styles.logDetails}>
+                    <Text style={styles.entityType}>
+                      {getEntityTypeDisplay(log.entityType)}
+                    </Text>
+                    <Text style={styles.description}>
                     {log.details || `${log.action} ${log.entityType}`}
                   </Text>
                   <Text style={styles.user}>
@@ -479,6 +504,7 @@ export default function AuditLogsScreen() {
 
         {/* Bottom Pagination Controls */}
         {renderPaginationControls()}
+        </View>
       </ScrollView>
     </View>
   );
@@ -519,13 +545,11 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 14,
     color: '#666',
   },
   logsList: {

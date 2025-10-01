@@ -481,6 +481,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
     marginTop: 8,
   },
@@ -491,7 +492,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 6,
-    minWidth: 120,
+    flex: 1,
+    minWidth: 140,
     justifyContent: 'center',
   },
   claimButton: {

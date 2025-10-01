@@ -20,6 +20,7 @@ import { getDocument, updateDocument } from '@/utils/firebaseUtils';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 interface UserData {
   id: string;
@@ -35,6 +36,7 @@ export default function UsersListScreen() {
   const { t } = useTranslation('common');
   const { isConnected } = useNetworkStatus();
   const { isButtonDisabled } = useOfflineButtons();
+  const responsive = useResponsiveLayout();
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -182,30 +184,53 @@ export default function UsersListScreen() {
         message={t('offline.noConnection')}
       />
       
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('users.management')}</Text>
-        <Text style={styles.subtitle}>{t('users.manageRolesPermissions')}</Text>
-        {/* Temporarily hidden - create functionality not implemented yet
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => router.push('/users/create')}
-        >
-          <Text style={styles.addButtonText}>{t('userForm.createTitle')}</Text>
-        </TouchableOpacity>
-        */}
-      </View>
-
-      <FlatList
-        data={users}
-        renderItem={renderUserItem}
-        keyExtractor={(item) => item.id}
-        style={styles.list}
-        contentContainerStyle={{ paddingBottom: 24 }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      {/* Content wrapper for max-width on desktop */}
+      <View style={[
+        styles.contentWrapper,
+        responsive.isDesktop && {
+          maxWidth: responsive.maxContentWidth,
+          width: '100%',
+          alignSelf: 'center',
+          paddingHorizontal: responsive.spacing.large,
         }
-        showsVerticalScrollIndicator={false}
-      />
+      ]}>
+        <View style={[
+          styles.header,
+          { paddingHorizontal: responsive.isDesktop ? 0 : 16 }
+        ]}>
+          <Text style={[
+            styles.title,
+            { fontSize: responsive.fontSize.title }
+          ]}>{t('users.management')}</Text>
+          <Text style={[
+            styles.subtitle,
+            { fontSize: responsive.fontSize.body }
+          ]}>{t('users.manageRolesPermissions')}</Text>
+          {/* Temporarily hidden - create functionality not implemented yet
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => router.push('/users/create')}
+          >
+            <Text style={styles.addButtonText}>{t('userForm.createTitle')}</Text>
+          </TouchableOpacity>
+          */}
+        </View>
+
+        <FlatList
+          data={users}
+          renderItem={renderUserItem}
+          keyExtractor={(item) => item.id}
+          style={styles.list}
+          contentContainerStyle={[
+            { paddingBottom: 24 },
+            { paddingHorizontal: responsive.isDesktop ? 0 : 16 }
+          ]}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -215,6 +240,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
     paddingBottom: 24,
+  },
+  contentWrapper: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -245,18 +273,17 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
+    paddingTop: 16,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
   title: {
-    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 16,
     color: '#666',
     marginBottom: 16,
   },

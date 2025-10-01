@@ -20,6 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import { useLocalSearchParams } from 'expo-router';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 interface ProcedureFormProps {
   mode: 'create' | 'edit';
@@ -35,6 +36,7 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
   const crossPlatformAlert = useCrossPlatformAlert();
   const { user } = useAuth();
   const params = useLocalSearchParams();
+  const responsive = useResponsiveLayout();
 
   // State for categories
   const [categories, setCategories] = useState<Category[]>([]);
@@ -247,14 +249,34 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
-        <View style={styles.card}>
-          <Text style={styles.title}>
+      <ScrollView 
+        contentContainerStyle={[
+          styles.scrollContent,
+          responsive.isDesktop && {
+            paddingHorizontal: responsive.spacing.large,
+            alignItems: 'center',
+          }
+        ]}
+      >
+        <View style={[
+          styles.card,
+          responsive.isDesktop && {
+            maxWidth: responsive.maxFormWidth,
+            width: '100%',
+          }
+        ]}>
+          <Text style={[
+            styles.title,
+            { fontSize: responsive.fontSize.title }
+          ]}>
             {mode === 'create' ? t('procedureForm.create') : t('procedureForm.update')}
           </Text>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('procedureForm.header')}</Text>
+            <Text style={[
+              styles.sectionTitle,
+              { fontSize: responsive.fontSize.subtitle }
+            ]}>{t('procedureForm.header')}</Text>
             
             <Text style={styles.label}>{t('procedureForm.title')} *</Text>
             <TextInput
@@ -482,9 +504,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  card: {
-    margin: 16,
+  scrollContent: {
     padding: 16,
+  },
+  card: {
+    padding: 20,
     backgroundColor: '#fff',
     borderRadius: 8,
     shadowColor: '#000',
@@ -497,7 +521,6 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   title: {
-    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
@@ -513,7 +536,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
