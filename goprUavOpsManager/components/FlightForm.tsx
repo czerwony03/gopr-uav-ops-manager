@@ -285,7 +285,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
       >
         <View style={[
           responsive.isDesktop && {
-            maxWidth: responsive.maxContentWidth,
+            maxWidth: responsive.maxFormWidth,
             width: '100%',
           }
         ]}>

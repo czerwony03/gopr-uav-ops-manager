@@ -205,7 +205,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
         <View style={[
           styles.card,
           responsive.isDesktop && {
-            maxWidth: responsive.maxContentWidth,
+            maxWidth: responsive.maxFormWidth,
             width: '100%',
           }
         ]}>

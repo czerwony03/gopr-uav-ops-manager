@@ -133,7 +133,7 @@ export default function CategoryForm({ mode, initialData, onSave, onCancel, load
       <View style={[
         styles.form,
         responsive.isDesktop && {
-          maxWidth: responsive.maxContentWidth,
+          maxWidth: responsive.maxFormWidth,
           width: '100%',
         }
       ]}>

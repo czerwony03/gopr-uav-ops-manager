@@ -16,6 +16,11 @@ const BREAKPOINTS = {
 const MAX_CONTENT_WIDTH = 1200;
 
 /**
+ * Maximum width for forms and detail views (narrower for better readability)
+ */
+const MAX_FORM_WIDTH = 800;
+
+/**
  * Hook for responsive layout management
  * Provides consistent breakpoint detection and layout values across the app
  */
@@ -53,9 +58,9 @@ export function useResponsiveLayout() {
     subtitle: isDesktop ? 20 : 18,
   };
 
-  // Modal/Form widths
+  // Modal/Form widths - narrower for better readability and UX
   const modalWidth = isDesktop ? Math.min(800, width * 0.8) : width;
-  const formWidth = isDesktop ? Math.min(700, width * 0.7) : width;
+  const formWidth = isDesktop ? Math.min(MAX_FORM_WIDTH, width * 0.7) : width;
 
   return {
     width,
@@ -75,5 +80,6 @@ export function useResponsiveLayout() {
     formWidth,
     breakpoints: BREAKPOINTS,
     maxContentWidth: MAX_CONTENT_WIDTH,
+    maxFormWidth: MAX_FORM_WIDTH,
   };
 }

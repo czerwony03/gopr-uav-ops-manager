@@ -261,7 +261,7 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
         <View style={[
           styles.card,
           responsive.isDesktop && {
-            maxWidth: responsive.maxContentWidth,
+            maxWidth: responsive.maxFormWidth,
             width: '100%',
           }
         ]}>
