@@ -23,6 +23,7 @@ import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 export default function CategoryProceduresScreen() {
   const [procedures, setProcedures] = useState<ProcedureChecklist[]>([]);
@@ -37,6 +38,7 @@ export default function CategoryProceduresScreen() {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
+  const responsive = useResponsiveLayout();
 
   // Filter procedures based on search query
   const filteredProcedures = useMemo(() => {
@@ -267,45 +269,72 @@ export default function CategoryProceduresScreen() {
         message={t('offline.noConnection')}
       />
       
-      <View style={styles.header}>
-        <View style={styles.categoryInfo}>
-          <View style={styles.categoryTitleRow}>
-            {category.color && (
-              <View style={[styles.colorIndicator, { backgroundColor: category.color }]} />
+      {/* Content wrapper for max-width on desktop */}
+      <View style={[
+        styles.contentWrapper,
+        responsive.isDesktop && {
+          maxWidth: responsive.maxContentWidth,
+          width: '100%',
+          alignSelf: 'center',
+          paddingHorizontal: responsive.spacing.large,
+        }
+      ]}>
+        <View style={styles.header}>
+          <View style={styles.categoryInfo}>
+            <View style={styles.categoryTitleRow}>
+              {category.color && (
+                <View style={[styles.colorIndicator, { backgroundColor: category.color }]} />
+              )}
+              <Text style={[
+                styles.categoryTitle,
+                { fontSize: responsive.fontSize.title }
+              ]}>{category.name}</Text>
+            </View>
+            {category.description && (
+              <Text style={[
+                styles.categoryDescription,
+                { fontSize: responsive.fontSize.body }
+              ]}>{category.description}</Text>
             )}
-            <Text style={styles.categoryTitle}>{category.name}</Text>
-          </View>
-          {category.description && (
-            <Text style={styles.categoryDescription}>{category.description}</Text>
-          )}
-          <Text style={styles.procedureCount}>
-            {procedures.length} {procedures.length === 1 ? t('procedures.itemSingle') : t('procedures.itemPlural')}
-          </Text>
-        </View>
-        
-        {canModifyProcedures && (
-          <TouchableOpacity 
-            style={[styles.addButton, getDisabledStyle()]} 
-            onPress={handleCreateProcedure}
-            disabled={isButtonDisabled()}
-          >
-            <Ionicons name="add" size={24} color={isButtonDisabled() ? "#999" : "#fff"} />
-            <Text style={[styles.addButtonText, isButtonDisabled() && { color: '#999' }]}>
-              {t('procedures.addNew')}
+            <Text style={styles.procedureCount}>
+              {procedures.length} {procedures.length === 1 ? t('procedures.itemSingle') : t('procedures.itemPlural')}
             </Text>
-          </TouchableOpacity>
-        )}
-      </View>
+          </View>
+          
+          {canModifyProcedures && (
+            <TouchableOpacity 
+              style={[
+                styles.addButton, 
+                getDisabledStyle(),
+                responsive.isDesktop && {
+                  paddingHorizontal: 24,
+                  paddingVertical: 12,
+                }
+              ]} 
+              onPress={handleCreateProcedure}
+              disabled={isButtonDisabled()}
+            >
+              <Ionicons name="add" size={24} color={isButtonDisabled() ? "#999" : "#fff"} />
+              <Text style={[
+                styles.addButtonText, 
+                isButtonDisabled() && { color: '#999' },
+                { fontSize: responsive.fontSize.body }
+              ]}>
+                {t('procedures.addNew')}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
-      {/* Search Box */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBox}>
-          <Ionicons name="search-outline" size={20} color="#666" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder={t('procedures.searchPlaceholder')}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
+        {/* Search Box */}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBox}>
+            <Ionicons name="search-outline" size={20} color="#666" style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={t('procedures.searchPlaceholder')}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
             clearButtonMode="while-editing"
           />
           {searchQuery.length > 0 && (
@@ -357,6 +386,7 @@ export default function CategoryProceduresScreen() {
           contentContainerStyle={styles.listContainer}
         />
       )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -365,6 +395,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  contentWrapper: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -430,13 +463,11 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   categoryTitle: {
-    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
     flex: 1,
   },
   categoryDescription: {
-    fontSize: 14,
     color: '#666',
     marginBottom: 4,
   },
