@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { CategoryFormData } from '@/types/Category';
 import { useCrossPlatformAlert } from './CrossPlatformAlert';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 // Available colors for categories
 const AVAILABLE_COLORS = [
@@ -33,6 +34,7 @@ export interface CategoryFormProps {
 export default function CategoryForm({ mode, initialData, onSave, onCancel, loading = false }: CategoryFormProps) {
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
+  const responsive = useResponsiveLayout();
   const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
     description: '',
@@ -118,8 +120,23 @@ export default function CategoryForm({ mode, initialData, onSave, onCancel, load
   );
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <View style={styles.form}>
+    <ScrollView 
+      style={styles.container} 
+      contentContainerStyle={[
+        styles.contentContainer,
+        responsive.isDesktop && {
+          paddingHorizontal: responsive.spacing.large,
+          alignItems: 'center',
+        }
+      ]}
+    >
+      <View style={[
+        styles.form,
+        responsive.isDesktop && {
+          maxWidth: responsive.maxContentWidth,
+          width: '100%',
+        }
+      ]}>
         {/* Name Field */}
         <View style={styles.section}>
           <Text style={styles.label}>
