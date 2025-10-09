@@ -14,6 +14,7 @@ import { User } from '@/types/User';
 import { UserService } from '@/services/userService';
 import UserComponent from '@/components/UserComponent';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 export default function UserDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,6 +24,7 @@ export default function UserDetailsScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const crossPlatformAlert = useCrossPlatformAlert();
+  const responsive = useResponsiveLayout();
 
   const fetchUserDetails = useCallback(async () => {
     if (!currentUser || !id) return;
@@ -79,12 +81,28 @@ export default function UserDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <UserComponent
-          user={user}
-          mode="detail"
-          showDetailActions={true}
-        />
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          responsive.isDesktop && {
+            paddingHorizontal: responsive.spacing.large,
+            alignItems: 'center',
+          }
+        ]}
+      >
+        <View style={[
+          responsive.isDesktop && {
+            maxWidth: responsive.maxFormWidth,
+            width: '100%',
+          }
+        ]}>
+          <UserComponent
+            user={user}
+            mode="detail"
+            showDetailActions={true}
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

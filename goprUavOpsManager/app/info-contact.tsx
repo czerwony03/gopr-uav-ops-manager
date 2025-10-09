@@ -5,11 +5,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ApplicationMetadata } from "@/utils/applicationMetadata";
 import { useConsole } from '@/contexts/ConsoleContext';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 export default function InfoContact() {
   const { t } = useTranslation('common');
   const insets = useSafeAreaInsets();
   const { showConsole } = useConsole();
+  const responsive = useResponsiveLayout();
   const [tapCount, setTapCount] = useState(0);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
@@ -61,71 +63,104 @@ export default function InfoContact() {
   return (
     <ScrollView 
       style={styles.container} 
-      contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom + 32, 32) }]}
+      contentContainerStyle={[
+        styles.scrollContent, 
+        { paddingBottom: Math.max(insets.bottom + 32, 32) },
+        responsive.isDesktop && {
+          paddingHorizontal: responsive.spacing.large,
+          alignItems: 'center',
+        }
+      ]}
     >
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('contact.title')}</Text>
-      </View>
-
-      <View style={styles.logoContainer}>
-        <TouchableOpacity 
-          onPress={handleLogoPress}
-          activeOpacity={0.7}
-          style={styles.logoTouchable}
-        >
-          <Image 
-            source={require('../assets/images/redmed-logo.png')}
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
-          {tapCount > 0 && tapCount < 7 ? (
-            <View style={styles.tapIndicator}>
-              <Text style={styles.tapIndicatorText}>{tapCount}/7</Text>
-            </View>
-          ) : null}
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.infoCard}>
-        <Text style={styles.sectionTitle}>{t('contact.about')}</Text>
-        <Text style={styles.description}>
-          {t('contact.aboutDescription')}
-        </Text>
-      </View>
-
-      <View style={styles.infoCard}>
-        <Text style={styles.sectionTitle}>{t('contact.contactInfo')}</Text>
-        
-        <View style={styles.contactItem}>
-          <Ionicons name="business-outline" size={20} color="#0066CC" />
-          <Text style={styles.contactLabel}>{t('contact.company')}</Text>
-          <Text style={styles.contactValue}>{t('contact.companyName')}</Text>
+      {/* Content wrapper for max-width on desktop */}
+      <View style={[
+        responsive.isDesktop && {
+          width: '100%',
+          maxWidth: responsive.maxContentWidth,
+        }
+      ]}>
+        <View style={styles.header}>
+          <Text style={[
+            styles.title,
+            { fontSize: responsive.fontSize.title }
+          ]}>{t('contact.title')}</Text>
         </View>
 
-        <TouchableOpacity 
-          style={styles.contactItem}
-          onPress={() => handleEmailPress('m.wronski@bieszczady.gopr.pl')}
-        >
-          <Ionicons name="mail-outline" size={20} color="#0066CC" />
-          <Text style={styles.contactLabel}>{t('contact.generalContact')}</Text>
-          <Text style={[styles.contactValue, styles.linkText]}>m.wronski@bieszczady.gopr.pl</Text>
-        </TouchableOpacity>
+        <View style={styles.logoContainer}>
+          <TouchableOpacity 
+            onPress={handleLogoPress}
+            activeOpacity={0.7}
+            style={styles.logoTouchable}
+          >
+            <Image 
+              source={require('../assets/images/redmed-logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+            {tapCount > 0 && tapCount < 7 ? (
+              <View style={styles.tapIndicator}>
+                <Text style={styles.tapIndicatorText}>{tapCount}/7</Text>
+              </View>
+            ) : null}
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity 
-          style={styles.contactItem}
-          onPress={() => handleEmailPress('admin@redmed.dev')}
-        >
-          <Ionicons name="person-outline" size={20} color="#0066CC" />
+        <View style={styles.infoCard}>
+          <Text style={[
+            styles.sectionTitle,
+            { fontSize: responsive.fontSize.subtitle }
+          ]}>{t('contact.about')}</Text>
+          <Text style={[
+            styles.description,
+            { fontSize: responsive.fontSize.body }
+          ]}>
+            {t('contact.aboutDescription')}
+          </Text>
+        </View>
+
+        <View style={styles.infoCard}>
+          <Text style={[
+            styles.sectionTitle,
+            { fontSize: responsive.fontSize.subtitle }
+          ]}>{t('contact.contactInfo')}</Text>
+          
+          <View style={styles.contactItem}>
+            <Ionicons name="business-outline" size={20} color="#0066CC" />
+            <Text style={styles.contactLabel}>{t('contact.company')}</Text>
+            <Text style={styles.contactValue}>{t('contact.companyName')}</Text>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.contactItem}
+            onPress={() => handleEmailPress('m.wronski@bieszczady.gopr.pl')}
+          >
+            <Ionicons name="mail-outline" size={20} color="#0066CC" />
+            <Text style={styles.contactLabel}>{t('contact.generalContact')}</Text>
+            <Text style={[styles.contactValue, styles.linkText]}>m.wronski@bieszczady.gopr.pl</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.contactItem}
+            onPress={() => handleEmailPress('admin@redmed.dev')}
+          >
+            <Ionicons name="person-outline" size={20} color="#0066CC" />
           <Text style={styles.contactLabel}>{t('contact.technicalContact')}</Text>
           <Text style={[styles.contactValue, styles.linkText]}>admin@redmed.dev</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.infoCard}>
-        <Text style={styles.sectionTitle}>{t('contact.applicationInfo')}</Text>
-        <Text style={styles.description}>
+        <Text style={[
+          styles.sectionTitle,
+          { fontSize: responsive.fontSize.subtitle }
+        ]}>{t('contact.applicationInfo')}</Text>
+        <Text style={[
+          styles.description,
+          { fontSize: responsive.fontSize.body }
+        ]}>
           {t('contact.versionInfo', { version: ApplicationMetadata.getMetadata().applicationVersion, commitHash: ApplicationMetadata.getMetadata().commitHash })}
         </Text>
+      </View>
       </View>
     </ScrollView>
   );
@@ -145,7 +180,6 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   title: {
-    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
   },
@@ -193,13 +227,11 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   sectionTitle: {
-    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 15,
   },
   description: {
-    fontSize: 16,
     color: '#666',
     lineHeight: 24,
   },

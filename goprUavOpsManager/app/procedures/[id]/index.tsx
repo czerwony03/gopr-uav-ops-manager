@@ -24,6 +24,7 @@ import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
 import { ImageCacheService } from '@/utils/imageCache';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 export default function ProcedureDetailsScreen() {
   const [checklist, setChecklist] = useState<ProcedureChecklist | null>(null);
@@ -41,6 +42,7 @@ export default function ProcedureDetailsScreen() {
   const { t } = useTranslation('common');
   const router = useRouter();
   const crossPlatformAlert = useCrossPlatformAlert();
+  const responsive = useResponsiveLayout();
 
   const fetchChecklist = useCallback(async () => {
     if (!user || !id) return;
@@ -364,78 +366,122 @@ export default function ProcedureDetailsScreen() {
       />
       
       {/* Single ScrollView containing all content */}
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <Text style={styles.title}>{checklist.title}</Text>
-            {checklist.description ? (
-              <Text style={styles.description}>{checklist.description}</Text>
-            ) : null}
-            
-            <View style={styles.metadata}>
-              <Text style={styles.metadataText}>
-                {checklist.items.length} {checklist.items.length === 1 ? t('procedures.items') : t('procedures.itemsPlural')}
-              </Text>
-              {checklist.createdAt ? (
-                <Text style={styles.metadataText}>
-                  {t('procedures.created')} {checklist.createdAt.toLocaleDateString()} {checklist.createdAt.toLocaleTimeString()}
-                  {createdByName && ` ${t('procedures.by')} ${createdByName}`}
-                </Text>
+      <ScrollView 
+        style={styles.scrollContainer} 
+        contentContainerStyle={[
+          styles.scrollContent,
+          responsive.isDesktop && {
+            paddingHorizontal: responsive.spacing.large,
+            alignItems: 'center',
+          }
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Content wrapper for max-width on desktop */}
+        <View style={[
+          responsive.isDesktop && {
+            width: '100%',
+            maxWidth: responsive.maxContentWidth,
+          }
+        ]}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <Text style={[
+                styles.title,
+                { fontSize: responsive.fontSize.title }
+              ]}>{checklist.title}</Text>
+              {checklist.description ? (
+                <Text style={[
+                  styles.description,
+                  { fontSize: responsive.fontSize.body }
+                ]}>{checklist.description}</Text>
               ) : null}
-              {checklist.updatedAt ? (
+              
+              <View style={styles.metadata}>
                 <Text style={styles.metadataText}>
-                  {t('procedures.updated')} {checklist.updatedAt.toLocaleDateString()} {checklist.updatedAt.toLocaleTimeString()}
-                  {updatedByName && ` ${t('procedures.by')} ${updatedByName}`}
+                  {checklist.items.length} {checklist.items.length === 1 ? t('procedures.items') : t('procedures.itemsPlural')}
                 </Text>
-              ) : null}
+                {checklist.createdAt ? (
+                  <Text style={styles.metadataText}>
+                    {t('procedures.created')} {checklist.createdAt.toLocaleDateString()} {checklist.createdAt.toLocaleTimeString()}
+                    {createdByName && ` ${t('procedures.by')} ${createdByName}`}
+                  </Text>
+                ) : null}
+                {checklist.updatedAt ? (
+                  <Text style={styles.metadataText}>
+                    {t('procedures.updated')} {checklist.updatedAt.toLocaleDateString()} {checklist.updatedAt.toLocaleTimeString()}
+                    {updatedByName && ` ${t('procedures.by')} ${updatedByName}`}
+                  </Text>
+                ) : null}
+              </View>
             </View>
+
+            {/* Status badge for deleted items (admin only) */}
+            {checklist.isDeleted && user?.role === 'admin' && (
+              <View style={styles.deletedBadge}>
+                <Text style={styles.deletedBadgeText}>{t('procedures.deleted')}</Text>
+              </View>
+            )}
           </View>
 
-          {/* Status badge for deleted items (admin only) */}
-          {checklist.isDeleted && user?.role === 'admin' && (
-            <View style={styles.deletedBadge}>
-              <Text style={styles.deletedBadgeText}>{t('procedures.deleted')}</Text>
-            </View>
-          )}
-        </View>
+          {/* Action buttons */}
+          {canModifyChecklists && (
+            <View style={styles.actionButtons}>
+              {!checklist.isDeleted && (
+                <>
+                  <TouchableOpacity 
+                    style={[
+                      styles.editButton, 
+                      getDisabledStyle(),
+                      responsive.isDesktop && {
+                        paddingHorizontal: 24,
+                        paddingVertical: 12,
+                      }
+                    ]} 
+                    onPress={handleEdit}
+                    disabled={isButtonDisabled()}
+                  >
+                    <Ionicons name="create-outline" size={20} color={isButtonDisabled() ? "#999" : "#fff"} />
+                    <Text style={[styles.editButtonText, isButtonDisabled() && { color: '#999' }]}>
+                      {t('procedures.edit')}
+                    </Text>
+                  </TouchableOpacity>
 
-        {/* Action buttons */}
-        {canModifyChecklists && (
-          <View style={styles.actionButtons}>
-            {!checklist.isDeleted && (
-              <>
+                  <TouchableOpacity 
+                    style={[
+                      styles.deleteButton, 
+                      getDisabledStyle(),
+                      responsive.isDesktop && {
+                        paddingHorizontal: 24,
+                        paddingVertical: 12,
+                      }
+                    ]} 
+                    onPress={handleDelete}
+                    disabled={isButtonDisabled()}
+                  >
+                    <Ionicons name="trash-outline" size={20} color={isButtonDisabled() ? "#999" : "#fff"} />
+                    <Text style={[styles.deleteButtonText, isButtonDisabled() && { color: '#999' }]}>
+                      {t('procedures.delete.button')}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              {user?.role === 'admin' && checklist.isDeleted && (
                 <TouchableOpacity 
-                  style={[styles.editButton, getDisabledStyle()]} 
-                  onPress={handleEdit}
+                  style={[
+                    styles.restoreButton, 
+                    getDisabledStyle(),
+                    responsive.isDesktop && {
+                      paddingHorizontal: 24,
+                      paddingVertical: 12,
+                    }
+                  ]} 
+                  onPress={handleRestore}
                   disabled={isButtonDisabled()}
                 >
-                  <Ionicons name="create-outline" size={20} color={isButtonDisabled() ? "#999" : "#fff"} />
-                  <Text style={[styles.editButtonText, isButtonDisabled() && { color: '#999' }]}>
-                    {t('procedures.edit')}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  style={[styles.deleteButton, getDisabledStyle()]} 
-                  onPress={handleDelete}
-                  disabled={isButtonDisabled()}
-                >
-                  <Ionicons name="trash-outline" size={20} color={isButtonDisabled() ? "#999" : "#fff"} />
-                  <Text style={[styles.deleteButtonText, isButtonDisabled() && { color: '#999' }]}>
-                    {t('procedures.delete.button')}
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
-
-            {user?.role === 'admin' && checklist.isDeleted && (
-              <TouchableOpacity 
-                style={[styles.restoreButton, getDisabledStyle()]} 
-                onPress={handleRestore}
-                disabled={isButtonDisabled()}
-              >
-                <Ionicons name="refresh-outline" size={20} color={isButtonDisabled() ? "#999" : "#fff"} />
+                  <Ionicons name="refresh-outline" size={20} color={isButtonDisabled() ? "#999" : "#fff"} />
                 <Text style={[styles.restoreButtonText, isButtonDisabled() && { color: '#999' }]}>
                   {t('procedures.restore.button')}
                 </Text>
@@ -449,6 +495,7 @@ export default function ProcedureDetailsScreen() {
           {checklist.items
             .sort((a, b) => a.number - b.number)
             .map((item, index) => renderChecklistItem(item, index))}
+        </View>
         </View>
       </ScrollView>
 
@@ -471,6 +518,9 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
   },
   loadingContainer: {
     flex: 1,
@@ -525,13 +575,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 8,
   },
   description: {
-    fontSize: 16,
     color: '#666',
     marginBottom: 8,
     lineHeight: 22,

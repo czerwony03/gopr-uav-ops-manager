@@ -21,6 +21,7 @@ import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 export default function ProceduresListScreen() {
   const [checklists, setChecklists] = useState<ProcedureChecklist[]>([]);
@@ -34,6 +35,7 @@ export default function ProceduresListScreen() {
   const router = useRouter();
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
+  const responsive = useResponsiveLayout();
 
   // Filter checklists based on search query
   const filteredChecklists = useMemo(() => {
@@ -244,28 +246,52 @@ export default function ProceduresListScreen() {
         message={!isConnected ? t('offline.noConnection') : t('offline.viewingCachedData')}
       />
       
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('procedures.title')}</Text>
-        
-        {canModifyChecklists && (
-          <TouchableOpacity 
-            style={[styles.addButton, getDisabledStyle()]} 
-            onPress={handleCreateChecklist}
-            disabled={isButtonDisabled()}
-          >
-            <Ionicons name="add" size={24} color={isButtonDisabled() ? "#999" : "#fff"} />
-            <Text style={[styles.addButtonText, isButtonDisabled() && { color: '#999' }]}>
-              {t('procedures.addNew')}
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      {/* Content wrapper for max-width on desktop */}
+      <View style={[
+        styles.contentWrapper,
+        responsive.isDesktop && {
+          maxWidth: responsive.maxContentWidth,
+          width: '100%',
+          alignSelf: 'center',
+          paddingHorizontal: responsive.spacing.large,
+        }
+      ]}>
+        <View style={styles.header}>
+          <Text style={[
+            styles.title,
+            { fontSize: responsive.fontSize.title }
+          ]}>{t('procedures.title')}</Text>
+          
+          {canModifyChecklists && (
+            <TouchableOpacity 
+              style={[
+                styles.addButton, 
+                getDisabledStyle(),
+                responsive.isDesktop && {
+                  paddingHorizontal: 24,
+                  paddingVertical: 12,
+                }
+              ]} 
+              onPress={handleCreateChecklist}
+              disabled={isButtonDisabled()}
+            >
+              <Ionicons name="add" size={24} color={isButtonDisabled() ? "#999" : "#fff"} />
+              <Text style={[
+                styles.addButtonText, 
+                isButtonDisabled() && { color: '#999' },
+                { fontSize: responsive.fontSize.body }
+              ]}>
+                {t('procedures.addNew')}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
-      {/* Search Box */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBox}>
-          <Ionicons name="search-outline" size={20} color="#666" style={styles.searchIcon} />
-          <TextInput
+        {/* Search Box */}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBox}>
+            <Ionicons name="search-outline" size={20} color="#666" style={styles.searchIcon} />
+            <TextInput
             style={styles.searchInput}
             placeholder={t('procedures.searchPlaceholder')}
             value={searchQuery}
@@ -321,6 +347,7 @@ export default function ProceduresListScreen() {
           contentContainerStyle={styles.listContainer}
         />
       )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -329,6 +356,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  contentWrapper: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -350,7 +380,6 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e0e0e0',
   },
   title: {
-    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
   },
