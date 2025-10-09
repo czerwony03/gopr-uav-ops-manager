@@ -332,54 +332,37 @@ export default function CategoriesListScreen() {
             </Text>
           </View>
         ) : (
-          <FlatList
-            data={[
-              // Special "View All" item as first item
-              {
-                id: '__view_all__',
-                name: t('procedures.viewAll'),
-                description: t('procedures.allProcedures'),
-                procedureCount: 0,
-                color: '#0066CC',
-                isViewAll: true,
-              } as CategoryWithCount & { isViewAll: boolean },
-              ...categories
-            ]}
-            renderItem={({ item }) => {
-              if ('isViewAll' in item && item.isViewAll) {
-                return (
-                  <TouchableOpacity 
-                    style={styles.viewAllCard}
-                    onPress={handleViewAllProcedures}
-                  >
-                    <View style={[styles.categoryColorBar, { backgroundColor: item.color }]} />
-                    <View style={styles.categoryCardContent}>
-                      <View style={styles.categoryCardHeader}>
-                        <Text style={styles.categoryCardTitle}>
-                          {item.name}
-                        </Text>
-                    </View>
-                    <Text style={styles.categoryCardDescription}>
-                      {item.description}
-                    </Text>
-                    <View style={styles.viewAllIcon}>
-                      <Ionicons name="list-outline" size={24} color="#0066CC" />
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              );
-            }
-            return renderCategoryItem({ item });
-          }}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          contentContainerStyle={styles.listContainer}
-        />
-      )}
+          <>
+            {/* Full-width "All Procedures" button at the top */}
+            <TouchableOpacity 
+              style={styles.allProceduresButton}
+              onPress={handleViewAllProcedures}
+            >
+              <Ionicons name="list-outline" size={24} color="#fff" />
+              <View style={styles.allProceduresTextContainer}>
+                <Text style={styles.allProceduresTitle}>
+                  {t('procedures.viewAll')}
+                </Text>
+                <Text style={styles.allProceduresSubtitle}>
+                  {t('procedures.allProcedures')}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="#fff" />
+            </TouchableOpacity>
+
+            <FlatList
+              data={categories}
+              renderItem={renderCategoryItem}
+              keyExtractor={(item) => item.id}
+              numColumns={2}
+              columnWrapperStyle={styles.row}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
+              contentContainerStyle={styles.listContainer}
+            />
+          </>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -458,12 +441,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F44336',
   },
-  viewAllCard: {
-    backgroundColor: '#f8f9ff',
-    borderRadius: 12,
-    marginBottom: 12,
-    flex: 0.48,
-    minHeight: 120,
+  allProceduresButton: {
+    backgroundColor: '#0066CC',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginHorizontal: 12,
+    marginTop: 12,
+    marginBottom: 8,
+    borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -471,10 +459,20 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
-    elevation: 5,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: '#0066CC',
+    elevation: 3,
+  },
+  allProceduresTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  allProceduresTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  allProceduresSubtitle: {
+    fontSize: 12,
+    color: '#e3f2fd',
   },
   categoryColorBar: {
     height: 4,
@@ -533,10 +531,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     minWidth: 28,
     alignItems: 'center',
-  },
-  viewAllIcon: {
-    alignSelf: 'center',
-    marginTop: 8,
   },
   emptyContainer: {
     flex: 1,
