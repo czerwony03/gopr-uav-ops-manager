@@ -279,6 +279,15 @@ export default function CategoryProceduresScreen() {
           paddingHorizontal: responsive.spacing.large,
         }
       ]}>
+        {/* All Procedures Button - 100% wide, half height */}
+        <TouchableOpacity 
+          style={styles.allProceduresButton} 
+          onPress={() => router.push('/procedures/procedures')}
+        >
+          <Ionicons name="list-outline" size={20} color="#0066CC" />
+          <Text style={styles.allProceduresButtonText}>{t('procedures.viewAll')}</Text>
+        </TouchableOpacity>
+
         <View style={styles.header}>
           <View style={styles.categoryInfo}>
             <View style={styles.categoryTitleRow}>
@@ -398,6 +407,22 @@ const styles = StyleSheet.create({
   },
   contentWrapper: {
     flex: 1,
+  },
+  allProceduresButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    width: '100%',
+  },
+  allProceduresButtonText: {
+    color: '#0066CC',
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: 8,
   },
   loadingContainer: {
     flex: 1,
