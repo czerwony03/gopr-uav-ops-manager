@@ -28,6 +28,7 @@ import {
   AVAILABLE_OPERATION_TYPES,
   AVAILABLE_ACTIVITY_TYPES
 } from '@/types/Flight';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 export interface FlightFormData {
   location: string;
@@ -59,6 +60,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
   const { t } = useTranslation('common');
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const crossPlatformAlert = useCrossPlatformAlert();
+  const responsive = useResponsiveLayout();
 
   const [dronesLoading, setDronesLoading] = useState(true);
   const [drones, setDrones] = useState<Drone[]>([]);
@@ -270,14 +272,28 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAwareScrollView
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[
+          styles.contentContainer,
+          responsive.isDesktop && {
+            paddingHorizontal: responsive.spacing.large,
+            alignItems: 'center',
+          }
+        ]}
         enableOnAndroid
         extraScrollHeight={20}
         keyboardShouldPersistTaps="handled"
       >
-        <View>
+        <View style={[
+          responsive.isDesktop && {
+            maxWidth: responsive.maxFormWidth,
+            width: '100%',
+          }
+        ]}>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('flightForm.basicInfo')}</Text>
+            <Text style={[
+              styles.sectionTitle,
+              { fontSize: responsive.fontSize.subtitle }
+            ]}>{t('flightForm.basicInfo')}</Text>
 
             {/* Location Selector Component */}
             <LocationSelector
@@ -563,7 +579,6 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   sectionTitle: {
-    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
     color: '#333',

@@ -36,6 +36,30 @@ module.exports = {
       },
       setupFilesAfterEnv: ['<rootDir>/services/__tests__/setup.ts'],
     },
+    // Utils tests with jsdom environment
+    {
+      displayName: 'utils',
+      testEnvironment: 'jsdom',
+      roots: ['<rootDir>/utils'],
+      testMatch: ['<rootDir>/utils/**/__tests__/**/*.test.(ts|tsx)'],
+      collectCoverageFrom: [
+        'utils/**/*.{ts,tsx}',
+        '!utils/**/__tests__/**',
+        '!utils/**/*.d.ts',
+      ],
+      moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/$1',
+        'react-native$': '<rootDir>/services/__tests__/__mocks__/react-native.js',
+      },
+      transform: {
+        '^.+\\.(ts|tsx)$': ['ts-jest', {
+          tsconfig: {
+            jsx: 'react-jsx',
+          },
+        }],
+      },
+      setupFilesAfterEnv: ['<rootDir>/utils/__tests__/setup.js'],
+    },
     // App tests with jsdom environment
     {
       displayName: 'app',

@@ -9,6 +9,7 @@ import WebCompatibleDatePicker from './WebCompatibleDatePicker';
 import {getAvailableLanguages} from '@/src/i18n';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import { useCrossPlatformAlert } from './CrossPlatformAlert';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 interface UserFormProps {
   mode: 'create' | 'edit';
@@ -23,6 +24,7 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
   const { t } = useTranslation('common');
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const crossPlatformAlert = useCrossPlatformAlert();
+  const responsive = useResponsiveLayout();
 
   // Default form data
   const defaultFormData: UserFormData = {
@@ -167,14 +169,34 @@ export default function UserForm({ mode, initialData, onSave, onCancel, loading 
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
-        <View style={styles.card}>
-          <Text style={styles.title}>
+      <ScrollView 
+        contentContainerStyle={[
+          styles.scrollContent,
+          responsive.isDesktop && {
+            paddingHorizontal: responsive.spacing.large,
+            alignItems: 'center',
+          }
+        ]}
+      >
+        <View style={[
+          styles.card,
+          responsive.isDesktop && {
+            maxWidth: responsive.maxFormWidth,
+            width: '100%',
+          }
+        ]}>
+          <Text style={[
+            styles.title,
+            { fontSize: responsive.fontSize.title }
+          ]}>
             {mode === 'create' ? t('userForm.createTitle') : t('userForm.editTitle')}
           </Text>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('userForm.basicInfo')}</Text>
+            <Text style={[
+              styles.sectionTitle,
+              { fontSize: responsive.fontSize.subtitle }
+            ]}>{t('userForm.basicInfo')}</Text>
             
             <Text style={styles.label}>{t('userForm.email')} *</Text>
             <TextInput
@@ -384,9 +406,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  card: {
-    margin: 16,
+  scrollContent: {
     padding: 16,
+  },
+  card: {
+    padding: 20,
     backgroundColor: '#fff',
     borderRadius: 8,
     shadowColor: '#000',
@@ -399,7 +423,6 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   title: {
-    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
@@ -409,7 +432,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 12,
     color: '#333',

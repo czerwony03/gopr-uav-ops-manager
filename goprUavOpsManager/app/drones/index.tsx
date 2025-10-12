@@ -18,6 +18,7 @@ import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 export default function DronesListScreen() {
   const [drones, setDrones] = useState<Drone[]>([]);
@@ -29,6 +30,7 @@ export default function DronesListScreen() {
   const crossPlatformAlert = useCrossPlatformAlert();
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const { isConnected } = useNetworkStatus();
+  const responsive = useResponsiveLayout();
 
   const fetchDrones = useCallback(async () => {
     if (!user) return;
@@ -234,42 +236,79 @@ export default function DronesListScreen() {
         message={t('offline.noConnection')}
       />
       
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('drones.title')}</Text>
-        {canCreateDrones ? (
-          <TouchableOpacity 
-            style={[styles.createButton, getDisabledStyle()]} 
-            onPress={handleCreateDrone}
-            disabled={isButtonDisabled()}
-          >
-            <Text style={[styles.createButtonText, isButtonDisabled() && { color: '#999' }]}>
-              + {t('drones.add')}
-            </Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
-
-      {drones.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>{t('drones.noDronesFound')}</Text>
-          <Text style={styles.emptySubtext}>
-            {canCreateDrones 
-              ? t('drones.addFirstDrone')
-              : t('drones.noDronesAvailable')
-            }
-          </Text>
+      {/* Content wrapper for max-width on desktop */}
+      <View style={[
+        styles.contentWrapper,
+        responsive.isDesktop && {
+          maxWidth: responsive.maxContentWidth,
+          width: '100%',
+          alignSelf: 'center',
+          paddingHorizontal: responsive.spacing.large,
+        }
+      ]}>
+        <View style={[
+          styles.header,
+          { paddingHorizontal: responsive.isDesktop ? 0 : 16 }
+        ]}>
+          <Text style={[
+            styles.title,
+            { fontSize: responsive.fontSize.title }
+          ]}>{t('drones.title')}</Text>
+          {canCreateDrones ? (
+            <TouchableOpacity 
+              style={[
+                styles.createButton, 
+                getDisabledStyle(),
+                responsive.isDesktop && {
+                  paddingHorizontal: 24,
+                  paddingVertical: 12,
+                }
+              ]} 
+              onPress={handleCreateDrone}
+              disabled={isButtonDisabled()}
+            >
+              <Text style={[
+                styles.createButtonText, 
+                isButtonDisabled() && { color: '#999' },
+                { fontSize: responsive.fontSize.body }
+              ]}>
+                + {t('drones.add')}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
-      ) : (
-        <FlatList
-          data={drones}
-          renderItem={renderDroneItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContainer}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        />
-      )}
+
+        {drones.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={[
+              styles.emptyText,
+              { fontSize: responsive.fontSize.subtitle }
+            ]}>{t('drones.noDronesFound')}</Text>
+            <Text style={[
+              styles.emptySubtext,
+              { fontSize: responsive.fontSize.body }
+            ]}>
+              {canCreateDrones 
+                ? t('drones.addFirstDrone')
+                : t('drones.noDronesAvailable')
+              }
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={drones}
+            renderItem={renderDroneItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={[
+              styles.listContainer,
+              { paddingHorizontal: responsive.isDesktop ? 0 : 16 }
+            ]}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          />
+        )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -278,16 +317,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-    padding: 16,
+  },
+  contentWrapper: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+    paddingTop: 16,
   },
   title: {
-    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
   },
@@ -300,7 +341,6 @@ const styles = StyleSheet.create({
   createButtonText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 14,
   },
   loadingContainer: {
     flex: 1,
@@ -318,13 +358,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: 18,
     fontWeight: 'bold',
     color: '#666',
     marginBottom: 8,
   },
   emptySubtext: {
-    fontSize: 14,
     color: '#999',
     textAlign: 'center',
     paddingHorizontal: 32,

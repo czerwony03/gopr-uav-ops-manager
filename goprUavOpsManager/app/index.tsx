@@ -9,6 +9,7 @@ import { UserRole } from "@/types/UserRole";
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useOfflineButtons } from "@/utils/useOfflineButtons";
+import { useResponsiveLayout } from "@/utils/useResponsiveLayout";
 
 export default function Index() {
   const { user, loading } = useAuth();
@@ -16,6 +17,7 @@ export default function Index() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isNavigationDisabled, getDisabledStyle } = useOfflineButtons();
+  const responsive = useResponsiveLayout();
 
   console.log('[Index] Component render - user:', user?.uid, 'loading:', loading);
 
@@ -111,47 +113,87 @@ export default function Index() {
     <View style={styles.container}>
       <ScrollView 
         style={styles.scrollView}
-        contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top, 20) }]}
+        contentContainerStyle={[
+          styles.scrollContent, 
+          { 
+            paddingTop: Math.max(insets.top, 20),
+            paddingHorizontal: responsive.isDesktop ? responsive.spacing.large : responsive.spacing.medium,
+            alignItems: responsive.isDesktop ? 'center' : 'stretch'
+          }
+        ]}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>{t('dashboard.title')}</Text>
-          <Text style={styles.welcomeText}>{t('dashboard.welcome')}, {user.email}</Text>
-        </View>
+        {/* Content wrapper for max-width on desktop */}
+        <View style={[
+          styles.contentWrapper,
+          responsive.isDesktop && {
+            width: '100%',
+            maxWidth: responsive.maxContentWidth,
+            alignSelf: 'center'
+          }
+        ]}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={[
+              styles.title,
+              { fontSize: responsive.fontSize.title }
+            ]}>{t('dashboard.title')}</Text>
+            <Text style={[
+              styles.welcomeText,
+              { fontSize: responsive.fontSize.body }
+            ]}>{t('dashboard.welcome')}, {user.email}</Text>
+          </View>
 
-        {/* Navigation Grid */}
-        <View style={styles.navigationGrid}>
-          {navigationButtons.map((button) => {
-            const isProceduresRoute = button.route.startsWith('/procedures');
-            const disabled = isNavigationDisabled(button.route);
-            
-            return (
-              <TouchableOpacity
-                key={button.key}
-                style={[
-                  styles.navigationButton, 
-                  { backgroundColor: button.color },
-                  getDisabledStyle(isProceduresRoute)
-                ]}
-                onPress={() => handleNavigation(button.route)}
-                activeOpacity={disabled ? 1 : 0.7}
-                disabled={disabled}
-              >
-                <View style={styles.buttonContent}>
-                  <Ionicons 
-                    name={button.icon as any} 
-                    size={48} 
-                    color={disabled ? "#999" : "#FFFFFF"} 
-                    style={styles.buttonIcon}
-                  />
-                  <Text style={[
-                    styles.buttonText, 
-                    disabled && { color: '#999' }
-                  ]}>{button.title}</Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
+          {/* Navigation Grid */}
+          <View style={[
+            styles.navigationGrid,
+            { 
+              justifyContent: responsive.isDesktop ? 'flex-start' : 'space-between',
+              gap: responsive.spacing.medium
+            }
+          ]}>
+            {navigationButtons.map((button) => {
+              const isProceduresRoute = button.route.startsWith('/procedures');
+              const disabled = isNavigationDisabled(button.route);
+              
+              // Calculate button width based on columns
+              const buttonWidth: `${number}%` = responsive.isDesktop
+                ? `${(100 / responsive.navigationGridColumns) - 2}%` 
+                : '48%';
+              
+              return (
+                <TouchableOpacity
+                  key={button.key}
+                  style={[
+                    styles.navigationButton, 
+                    { 
+                      backgroundColor: button.color,
+                      width: buttonWidth,
+                      minHeight: responsive.isDesktop ? 180 : undefined,
+                      padding: responsive.spacing.medium
+                    },
+                    getDisabledStyle(isProceduresRoute)
+                  ]}
+                  onPress={() => handleNavigation(button.route)}
+                  activeOpacity={disabled ? 1 : 0.7}
+                  disabled={disabled}
+                >
+                  <View style={styles.buttonContent}>
+                    <Ionicons 
+                      name={button.icon as any} 
+                      size={responsive.isDesktop ? 64 : 48} 
+                      color={disabled ? "#999" : "#FFFFFF"} 
+                      style={[styles.buttonIcon, { marginBottom: responsive.spacing.small }]}
+                    />
+                    <Text style={[
+                      styles.buttonText, 
+                      disabled && { color: '#999' },
+                      { fontSize: responsive.fontSize.body, fontWeight: 'bold' }
+                    ]}>{button.title}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
       </ScrollView>
       
@@ -169,8 +211,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
     paddingBottom: 20,
+  },
+  contentWrapper: {
+    width: '100%',
   },
   loadingContainer: {
     flex: 1,
@@ -188,24 +232,20 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   title: {
-    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 10,
     textAlign: 'center',
   },
   welcomeText: {
-    fontSize: 16,
     color: '#666',
     textAlign: 'center',
   },
   navigationGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
   },
   navigationButton: {
-    width: '48%', // Always 2 columns
     aspectRatio: 1, // Make buttons square
     borderRadius: 20,
     marginBottom: 20,
@@ -222,15 +262,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
   buttonIcon: {
-    marginBottom: 12,
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
     textAlign: 'center',
     lineHeight: 20,
   },

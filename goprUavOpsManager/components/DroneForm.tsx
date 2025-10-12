@@ -16,6 +16,7 @@ import { useCrossPlatformAlert } from './CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import MultiImagePicker from './MultiImagePicker';
 import EquipmentStorageForm from './EquipmentStorageForm';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 export type DroneFormData = Omit<Drone, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'isDeleted' | 'createdBy' | 'updatedBy'>;
 
@@ -31,6 +32,7 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
   const { t } = useTranslation('common');
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const crossPlatformAlert = useCrossPlatformAlert();
+  const responsive = useResponsiveLayout();
 
   // Default form data
   const defaultFormData: DroneFormData = {
@@ -191,9 +193,26 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
-        <View style={styles.card}>
-          <Text style={styles.title}>
+      <ScrollView 
+        contentContainerStyle={[
+          styles.scrollContent,
+          responsive.isDesktop && {
+            paddingHorizontal: responsive.spacing.large,
+            alignItems: 'center',
+          }
+        ]}
+      >
+        <View style={[
+          styles.card,
+          responsive.isDesktop && {
+            maxWidth: responsive.maxFormWidth,
+            width: '100%',
+          }
+        ]}>
+          <Text style={[
+            styles.title,
+            { fontSize: responsive.fontSize.title }
+          ]}>
             {mode === 'create' ? t('drones.addDrone') : t('drones.editDrone')}
           </Text>
 
@@ -517,9 +536,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  card: {
-    margin: 16,
+  scrollContent: {
     padding: 16,
+  },
+  card: {
+    padding: 20,
     backgroundColor: '#fff',
     borderRadius: 8,
     shadowColor: '#000',
@@ -532,7 +553,6 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   title: {
-    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',

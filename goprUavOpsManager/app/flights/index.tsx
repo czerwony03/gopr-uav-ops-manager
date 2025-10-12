@@ -26,6 +26,7 @@ import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
 import WebCompatibleDatePicker from '@/components/WebCompatibleDatePicker';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 export default function FlightsListScreen() {
   const { user } = useAuth();
@@ -34,6 +35,7 @@ export default function FlightsListScreen() {
   const crossPlatformAlert = useCrossPlatformAlert();
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const { isConnected } = useNetworkStatus();
+  const responsive = useResponsiveLayout();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -567,35 +569,62 @@ export default function FlightsListScreen() {
       />
       
       <ScrollView>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={[styles.addButton, getDisabledStyle()]} 
-            onPress={handleAddFlight}
-            disabled={isButtonDisabled()}
-          >
-            <Text style={[styles.addButtonText, isButtonDisabled() && { color: '#999' }]}>
-              + {t('flights.add')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {renderFilterControls()}
-
-        {flights.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>{t('flights.noFlightsFound')}</Text>
-            <Text style={styles.emptySubtext}>
-              {t('flights.tapAddFlightToStart')}
-            </Text>
+        {/* Content wrapper for max-width on desktop */}
+        <View style={[
+          styles.contentWrapper,
+          responsive.isDesktop && {
+            maxWidth: responsive.maxContentWidth,
+            width: '100%',
+            alignSelf: 'center',
+            paddingHorizontal: responsive.spacing.large,
+          }
+        ]}>
+          <View style={styles.header}>
+            <TouchableOpacity 
+              style={[
+                styles.addButton, 
+                getDisabledStyle(),
+                responsive.isDesktop && {
+                  paddingHorizontal: 24,
+                  paddingVertical: 12,
+                }
+              ]} 
+              onPress={handleAddFlight}
+              disabled={isButtonDisabled()}
+            >
+              <Text style={[
+                styles.addButtonText, 
+                isButtonDisabled() && { color: '#999' },
+                { fontSize: responsive.fontSize.body }
+              ]}>
+                + {t('flights.add')}
+              </Text>
+            </TouchableOpacity>
           </View>
-        ) : (
-          <>
-            <FlatList
-              data={flights}
-              renderItem={renderFlightItem}
-              keyExtractor={(item) => item.id}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+
+          {renderFilterControls()}
+
+          {flights.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={[
+                styles.emptyText,
+                { fontSize: responsive.fontSize.subtitle }
+              ]}>{t('flights.noFlightsFound')}</Text>
+              <Text style={[
+                styles.emptySubtext,
+                { fontSize: responsive.fontSize.body }
+              ]}>
+                {t('flights.tapAddFlightToStart')}
+              </Text>
+            </View>
+          ) : (
+            <>
+              <FlatList
+                data={flights}
+                renderItem={renderFlightItem}
+                keyExtractor={(item) => item.id}
+                refreshControl={
+                  <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
               contentContainerStyle={styles.listContainer}
               nestedScrollEnabled={true}
@@ -603,6 +632,7 @@ export default function FlightsListScreen() {
             {renderPaginationControls()}
           </>
         )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -612,6 +642,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  contentWrapper: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
