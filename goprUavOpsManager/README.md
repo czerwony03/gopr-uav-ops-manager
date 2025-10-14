@@ -15,6 +15,7 @@ This is an [Expo](https://expo.dev) project for managing UAV operations with Fir
 - **Drone Registry**: Complete drone inventory management with detailed specifications, soft-delete, and role-based access control
 - **User Management**: Admin-only user profile management with detailed information including qualifications, licenses, and operator data
 - **Procedures & Checklists**: Create and manage operational procedures with image support, checklist items, and file attachments (manager/admin only)
+- **Reports**: Comprehensive reporting module with flight and drone summaries, filtering, and export capabilities (XLSX/PDF)
 
 ### Advanced Features
 - **Audit Logging**: Comprehensive audit trail for all CRUD operations across all entities with user tracking and change details
@@ -23,6 +24,8 @@ This is an [Expo](https://expo.dev) project for managing UAV operations with Fir
 - **Image Upload**: Firebase Storage integration for procedure images
 - **Form Validation**: Comprehensive client-side validation and error handling
 - **Platform Detection**: Automatic detection of web/iOS/Android platforms for audit logging
+- **Report Generation**: Generate detailed flight and drone summaries with filtering by time range, user, and drone
+- **Export Functionality**: Export reports to XLSX (Excel) or PDF format with sharing capabilities
 
 ### User Interface
 - **Role-based Navigation**: Dynamic drawer menu based on user permissions
@@ -453,8 +456,9 @@ For mobile platforms (Android/iOS), the app now uses React Native Firebase with 
 - **Flights**: Flight management (all users)
 - **Drones**: Drone registry (all users)
 - **Procedures & Checklists**: Operational procedures (all users)
+- **Reports**: Flight and drone summary reports with export (all users)
 - **Info & Contact**: Application information (all users)
-- **Users**: User management (admin only)
+- **Users**: User management (admin and manager)
 - **Audit Logs**: System audit trail (admin only)
 
 ### Screen Hierarchy
@@ -472,7 +476,9 @@ For mobile platforms (Android/iOS), the app now uses React Native Firebase with 
 │   ├── procedures-checklists-list.tsx
 │   ├── procedures-checklist-details.tsx
 │   └── procedures-checklist-form.tsx
-├── Users (admin only)
+├── Reports (all users)
+│   └── index.tsx (reports dashboard)
+├── Users (admin and manager)
 │   ├── users-list.tsx
 │   ├── user-details.tsx
 │   └── user-form.tsx
@@ -481,6 +487,31 @@ For mobile platforms (Android/iOS), the app now uses React Native Firebase with 
 └── Info & Contact
     └── info-contact.tsx
 ```
+
+### Reports Module
+
+The Reports module provides comprehensive flight and drone analytics with export capabilities:
+
+**Flight Summary Reports:**
+- Total flights, total duration, and average duration
+- Breakdown by user (admin/manager only), drone, and month
+- Filtering by time range (all time, month, year, custom range)
+- Filtering by user, drone, flight category, and activity type
+
+**Drone Summary Reports:**
+- Total flights and flight hours per drone
+- Last flight date and average flight duration
+- Flight breakdown by category and activity type
+- Sorting by total flight duration
+
+**Export Options:**
+- XLSX (Excel) format with multiple sheets for detailed breakdowns
+- PDF format with formatted tables and summaries
+- Cross-platform sharing (web, iOS, Android)
+
+**Access Control:**
+- Admin and Manager: View all reports with full filtering options
+- Users: View only their own flight summaries
 
 ## Testing Accounts Setup
 
