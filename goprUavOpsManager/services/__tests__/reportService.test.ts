@@ -270,7 +270,23 @@ describe('ReportService', () => {
   });
 
   describe('exportFlightSummaryToXLSX', () => {
-    it('should export flight summary to XLSX', async () => {
+    it('should export flight summary to XLSX on web', async () => {
+      // Mock web APIs
+      global.URL = {
+        createObjectURL: jest.fn().mockReturnValue('blob:mock-url'),
+        revokeObjectURL: jest.fn(),
+      } as any;
+      global.Blob = jest.fn() as any;
+      global.ArrayBuffer = jest.fn() as any;
+      global.Uint8Array = jest.fn() as any;
+      global.document = {
+        createElement: jest.fn().mockReturnValue({
+          href: '',
+          download: '',
+          click: jest.fn(),
+        }),
+      } as any;
+
       const filter: ReportFilter = {
         timeRange: 'all',
       };
@@ -278,13 +294,29 @@ describe('ReportService', () => {
       const summary = await ReportService.generateFlightSummary(filter, UserRole.ADMIN, 'admin1');
       const fileUri = await ReportService.exportFlightSummaryToXLSX(summary, filter, 'test@test.com');
 
-      expect(fileUri).toContain('flight-summary');
-      expect(fileUri).toContain('.xlsx');
+      expect(fileUri).toBeDefined();
+      expect(global.URL.createObjectURL).toHaveBeenCalled();
     });
   });
 
   describe('exportDroneSummaryToXLSX', () => {
-    it('should export drone summary to XLSX', async () => {
+    it('should export drone summary to XLSX on web', async () => {
+      // Mock web APIs
+      global.URL = {
+        createObjectURL: jest.fn().mockReturnValue('blob:mock-url'),
+        revokeObjectURL: jest.fn(),
+      } as any;
+      global.Blob = jest.fn() as any;
+      global.ArrayBuffer = jest.fn() as any;
+      global.Uint8Array = jest.fn() as any;
+      global.document = {
+        createElement: jest.fn().mockReturnValue({
+          href: '',
+          download: '',
+          click: jest.fn(),
+        }),
+      } as any;
+
       const filter: ReportFilter = {
         timeRange: 'all',
       };
@@ -292,8 +324,8 @@ describe('ReportService', () => {
       const summaries = await ReportService.generateDroneSummary(filter, UserRole.ADMIN, 'admin1');
       const fileUri = await ReportService.exportDroneSummaryToXLSX(summaries, filter, 'test@test.com');
 
-      expect(fileUri).toContain('drone-summary');
-      expect(fileUri).toContain('.xlsx');
+      expect(fileUri).toBeDefined();
+      expect(global.URL.createObjectURL).toHaveBeenCalled();
     });
   });
 

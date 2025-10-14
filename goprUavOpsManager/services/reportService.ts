@@ -421,9 +421,47 @@ export class ReportService {
       XLSX.utils.book_append_sheet(workbook, monthSheet, 'By Month');
     }
 
-    // Generate file
+    // Platform-specific file generation
+    if (Platform.OS === 'web') {
+      return this.exportWorkbookToXLSXWeb(workbook, `flight-summary-${new Date().toISOString().split('T')[0]}.xlsx`);
+    } else {
+      return this.exportWorkbookToXLSXMobile(workbook, `flight-summary-${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+  }
+
+  /**
+   * Export workbook to XLSX on web platform
+   */
+  private static exportWorkbookToXLSXWeb(workbook: XLSX.WorkBook, filename: string): string {
+    // Generate binary string
+    const wbout = XLSX.write(workbook, { type: 'binary', bookType: 'xlsx' });
+    
+    // Convert to blob
+    const buf = new ArrayBuffer(wbout.length);
+    const view = new Uint8Array(buf);
+    for (let i = 0; i < wbout.length; i++) {
+      view[i] = wbout.charCodeAt(i) & 0xFF;
+    }
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    
+    // Create download link
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    
+    // Clean up
+    URL.revokeObjectURL(url);
+    
+    return url;
+  }
+
+  /**
+   * Export workbook to XLSX on mobile platform
+   */
+  private static async exportWorkbookToXLSXMobile(workbook: XLSX.WorkBook, filename: string): Promise<string> {
     const wbout = XLSX.write(workbook, { type: 'base64', bookType: 'xlsx' });
-    const filename = `flight-summary-${new Date().toISOString().split('T')[0]}.xlsx`;
     const fileUri = FileSystem.documentDirectory + filename;
 
     await FileSystem.writeAsStringAsync(fileUri, wbout, {
@@ -469,16 +507,12 @@ export class ReportService {
     const droneSheet = XLSX.utils.aoa_to_sheet(droneData);
     XLSX.utils.book_append_sheet(workbook, droneSheet, 'Drone Details');
 
-    // Generate file
-    const wbout = XLSX.write(workbook, { type: 'base64', bookType: 'xlsx' });
-    const filename = `drone-summary-${new Date().toISOString().split('T')[0]}.xlsx`;
-    const fileUri = FileSystem.documentDirectory + filename;
-
-    await FileSystem.writeAsStringAsync(fileUri, wbout, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-
-    return fileUri;
+    // Platform-specific file generation
+    if (Platform.OS === 'web') {
+      return this.exportWorkbookToXLSXWeb(workbook, `drone-summary-${new Date().toISOString().split('T')[0]}.xlsx`);
+    } else {
+      return this.exportWorkbookToXLSXMobile(workbook, `drone-summary-${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
   }
 
   /**
