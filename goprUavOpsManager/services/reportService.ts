@@ -182,7 +182,7 @@ export class ReportService {
     const flightsByUser: FlightSummary['flightsByUser'] = [];
     for (const [userId, userData] of userMap.entries()) {
       try {
-        const user = await UserService.getUser(userId);
+        const user = await UserService.getUser(userId, userRole, currentUserId);
         userData.userName = user ? `${user.firstname || ''} ${user.surname || ''}`.trim() || 'Unknown' : 'Unknown';
       } catch {
         userData.userName = 'Unknown';
