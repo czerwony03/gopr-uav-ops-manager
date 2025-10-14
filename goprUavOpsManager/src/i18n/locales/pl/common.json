@@ -33,6 +33,7 @@
     "drones": "Drony",
     "users": "Użytkownicy",
     "procedures": "Procedury i listy kontrolne",
+    "reports": "Raporty",
     "info": "Informacje i kontakt",
     "auditLogs": "Logi aplikacji"
   },
@@ -930,6 +931,38 @@
       "restore": "Przywróć",
       "view": "Podgląd",
       "login": "Logowanie"
+    }
+  },
+  "reports": {
+    "title": "Raporty",
+    "reportType": "Typ raportu",
+    "flightSummary": "Podsumowanie lotów",
+    "droneSummary": "Podsumowanie dronów",
+    "timeRange": "Zakres czasowy",
+    "timeRangeAll": "Cały czas",
+    "timeRangeMonth": "Miesiąc",
+    "timeRangeYear": "Rok",
+    "selectMonth": "Wybierz miesiąc",
+    "selectYear": "Wybierz rok",
+    "filterByUser": "Filtruj według użytkownika",
+    "filterByDrone": "Filtruj według drona",
+    "allUsers": "Wszyscy użytkownicy",
+    "allDrones": "Wszystkie drony",
+    "generateReport": "Wygeneruj raport",
+    "totalFlights": "Łączna liczba lotów",
+    "totalDuration": "Łączny czas",
+    "averageDuration": "Średni czas",
+    "byUser": "Loty według użytkownika",
+    "byDrone": "Loty według drona",
+    "byMonth": "Loty według miesiąca",
+    "flights": "loty",
+    "lastFlight": "Ostatni lot",
+    "exportAs": "Eksportuj jako",
+    "exportSuccess": "Raport wyeksportowany pomyślnie",
+    "errors": {
+      "generateFailed": "Nie udało się wygenerować raportu",
+      "exportFailed": "Nie udało się wyeksportować raportu",
+      "noData": "Brak danych do eksportu. Najpierw wygeneruj raport."
     }
   }
 }

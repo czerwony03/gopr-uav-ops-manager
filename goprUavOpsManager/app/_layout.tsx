@@ -145,6 +145,17 @@ function RootLayoutNavigation() {
           }}
         />
         <Drawer.Screen
+          name="reports"
+          options={{
+            title: t('reports.title'),
+            headerShown: false,
+            drawerLabel: t('nav.reports'),
+            drawerIcon: ({ color, size }) => (
+              <Ionicons name="analytics-outline" size={size} color={color} />
+            ),
+          }}
+        />
+        <Drawer.Screen
           name="info-contact"
           options={{
             title: t('nav.info'),

@@ -33,6 +33,7 @@
     "drones": "Drones",
     "users": "Users",
     "procedures": "Procedures & Checklists",
+    "reports": "Reports",
     "info": "Info & Contact",
     "auditLogs": "Audit Logs"
   },
@@ -929,6 +930,38 @@
       "restore": "Restore",
       "view": "View",
       "login": "Login"
+    }
+  },
+  "reports": {
+    "title": "Reports",
+    "reportType": "Report Type",
+    "flightSummary": "Flight Summary",
+    "droneSummary": "Drone Summary",
+    "timeRange": "Time Range",
+    "timeRangeAll": "All Time",
+    "timeRangeMonth": "Month",
+    "timeRangeYear": "Year",
+    "selectMonth": "Select Month",
+    "selectYear": "Select Year",
+    "filterByUser": "Filter by User",
+    "filterByDrone": "Filter by Drone",
+    "allUsers": "All Users",
+    "allDrones": "All Drones",
+    "generateReport": "Generate Report",
+    "totalFlights": "Total Flights",
+    "totalDuration": "Total Duration",
+    "averageDuration": "Average Duration",
+    "byUser": "Flights by User",
+    "byDrone": "Flights by Drone",
+    "byMonth": "Flights by Month",
+    "flights": "flights",
+    "lastFlight": "Last Flight",
+    "exportAs": "Export As",
+    "exportSuccess": "Report exported successfully",
+    "errors": {
+      "generateFailed": "Failed to generate report",
+      "exportFailed": "Failed to export report",
+      "noData": "No data to export. Please generate a report first."
     }
   }
 }
