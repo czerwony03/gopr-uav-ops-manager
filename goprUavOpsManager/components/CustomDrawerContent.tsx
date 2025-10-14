@@ -123,6 +123,16 @@ export function CustomDrawerContent(props: any) {
             style={styles.drawerItem}
           />
 
+          <DrawerItem
+            label={t('nav.reports')}
+            onPress={() => handleNavigation('/reports')}
+            icon={({color, size}) => (
+              <Ionicons name="analytics-outline" size={size} color={color}/>
+            )}
+            labelStyle={styles.drawerLabel}
+            style={styles.drawerItem}
+          />
+
           {/* Users menu item - only visible to admins */}
           {(user.role === 'admin' || user.role === 'manager') && (
             <DrawerItem

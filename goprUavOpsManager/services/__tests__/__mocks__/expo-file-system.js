@@ -10,6 +10,11 @@ const makeDirectoryAsync = jest.fn();
 const getInfoAsync = jest.fn();
 const downloadAsync = jest.fn();
 
+const EncodingType = {
+  UTF8: 'utf8',
+  Base64: 'base64',
+};
+
 module.exports = {
   documentDirectory,
   cacheDirectory,
@@ -21,4 +26,5 @@ module.exports = {
   makeDirectoryAsync,
   getInfoAsync,
   downloadAsync,
+  EncodingType,
 };

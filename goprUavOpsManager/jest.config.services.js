@@ -15,6 +15,8 @@ module.exports = {
     'expo-file-system': '<rootDir>/services/__tests__/__mocks__/expo-file-system.js',
     'expo-location': '<rootDir>/services/__tests__/__mocks__/expo-location.js',
     'expo-image-manipulator': '<rootDir>/services/__tests__/__mocks__/expo-image-manipulator.js',
+    'expo-sharing': '<rootDir>/services/__tests__/__mocks__/expo-sharing.js',
+    'react-native-html-to-pdf': '<rootDir>/services/__tests__/__mocks__/react-native-html-to-pdf.js',
     'firebase/firestore': '<rootDir>/services/__tests__/__mocks__/firebase-firestore.js',
     'firebase/app': '<rootDir>/services/__tests__/__mocks__/firebase-app.js',
     'firebase/auth': '<rootDir>/services/__tests__/__mocks__/firebase-auth.js',
