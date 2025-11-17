@@ -9,13 +9,17 @@ import {
   TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Link } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Picker } from '@react-native-picker/picker';
 import { Task, TaskStatus } from '@/types/Task';
+import { Drone } from '@/types/Drone';
+import { ProcedureChecklist } from '@/types/ProcedureChecklist';
 import { useAuth } from '@/contexts/AuthContext';
 import { TaskService } from '@/services/taskService';
 import { UserService } from '@/services/userService';
+import { DroneService } from '@/services/droneService';
+import { ProcedureChecklistService } from '@/services/procedureChecklistService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 
@@ -24,6 +28,8 @@ export default function TaskDetailsScreen() {
   const [loading, setLoading] = useState(true);
   const [createdByName, setCreatedByName] = useState<string>('');
   const [assignedToName, setAssignedToName] = useState<string>('');
+  const [drone, setDrone] = useState<Drone | null>(null);
+  const [procedure, setProcedure] = useState<ProcedureChecklist | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [newStatus, setNewStatus] = useState<TaskStatus>('not_started');
   const [statusUpdateText, setStatusUpdateText] = useState<string>('');
@@ -61,6 +67,28 @@ export default function TaskDetailsScreen() {
       if (taskData.assignedTo) {
         const assignedName = await UserService.getUserDisplayName(taskData.assignedTo);
         setAssignedToName(assignedName);
+      }
+      
+      // Fetch drone data if attached
+      if (taskData.droneId) {
+        try {
+          const droneData = await DroneService.getDrone(taskData.droneId, user.role);
+          setDrone(droneData);
+        } catch (error) {
+          console.error('Error fetching drone:', error);
+          // Don't fail the whole task load if drone fetch fails
+        }
+      }
+      
+      // Fetch procedure data if attached
+      if (taskData.procedureId) {
+        try {
+          const procedureData = await ProcedureChecklistService.getProcedureChecklist(taskData.procedureId, user.role);
+          setProcedure(procedureData);
+        } catch (error) {
+          console.error('Error fetching procedure:', error);
+          // Don't fail the whole task load if procedure fetch fails
+        }
       }
     } catch (error) {
       console.error('Error fetching task:', error);
@@ -231,13 +259,31 @@ export default function TaskDetailsScreen() {
           {task.droneId && (
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>{t('tasks.attachedToDrone')}:</Text>
-              <Text style={styles.detailValue}>{task.droneId}</Text>
+              {drone ? (
+                <Link href={`/drones/${task.droneId}`} asChild>
+                  <TouchableOpacity>
+                    <Text style={styles.linkText}>
+                      {drone.name} ({drone.inventoryCode})
+                    </Text>
+                  </TouchableOpacity>
+                </Link>
+              ) : (
+                <Text style={styles.detailValue}>{task.droneId}</Text>
+              )}
             </View>
           )}
           {task.procedureId && (
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>{t('tasks.attachedToProcedure')}:</Text>
-              <Text style={styles.detailValue}>{task.procedureId}</Text>
+              {procedure ? (
+                <Link href={`/procedures/${task.procedureId}`} asChild>
+                  <TouchableOpacity>
+                    <Text style={styles.linkText}>{procedure.title}</Text>
+                  </TouchableOpacity>
+                </Link>
+              ) : (
+                <Text style={styles.detailValue}>{task.procedureId}</Text>
+              )}
             </View>
           )}
         </View>
@@ -427,6 +473,12 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: 14,
     color: '#333',
+    flex: 1,
+  },
+  linkText: {
+    fontSize: 14,
+    color: '#0066CC',
+    textDecorationLine: 'underline',
     flex: 1,
   },
   inputLabel: {
