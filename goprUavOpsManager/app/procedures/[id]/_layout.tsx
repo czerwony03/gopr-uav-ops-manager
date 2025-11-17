@@ -22,6 +22,12 @@ export default function ProcedureIdLayout() {
           title: t('procedureForm.editTitle'),
         }}
       />
+      <Stack.Screen
+        name="execute"
+        options={{
+          title: t('procedures.execute.title'),
+        }}
+      />
     </Stack>
   );
 }
