@@ -656,6 +656,16 @@
     },
     "errors": {
       "fetchFailed": "Nie udało się pobrać procedur/list kontrolnych"
+    },
+    "execute": {
+      "button": "Wykonaj",
+      "title": "Wykonaj procedurę",
+      "step": "Krok {{current}} z {{total}}",
+      "previous": "Poprzedni",
+      "next": "Następny",
+      "finish": "Zakończ",
+      "started": "Rozpoczęto wykonywanie procedury",
+      "completed": "Wykonywanie procedury zakończone"
     }
   },
   "categories": {

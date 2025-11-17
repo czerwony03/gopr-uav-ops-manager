@@ -656,6 +656,16 @@
     },
     "errors": {
       "fetchFailed": "Failed to fetch procedures/checklists"
+    },
+    "execute": {
+      "button": "Execute",
+      "title": "Execute Procedure",
+      "step": "Step {{current}} of {{total}}",
+      "previous": "Previous",
+      "next": "Next",
+      "finish": "Finish",
+      "started": "Procedure execution started",
+      "completed": "Procedure execution completed"
     }
   },
   "categories": {

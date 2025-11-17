@@ -426,6 +426,26 @@ export default function ProcedureDetailsScreen() {
           </View>
 
           {/* Action buttons */}
+          {!checklist.isDeleted && (
+            <View style={styles.actionButtons}>
+              <TouchableOpacity 
+                style={[
+                  styles.executeButton,
+                  responsive.isDesktop && {
+                    paddingHorizontal: 24,
+                    paddingVertical: 12,
+                  }
+                ]} 
+                onPress={() => router.push(`/procedures/${checklist.id}/execute`)}
+              >
+                <Ionicons name="play-outline" size={20} color="#fff" />
+                <Text style={styles.executeButtonText}>
+                  {t('procedures.execute.button')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {canModifyChecklists && (
             <View style={styles.actionButtons}>
               {!checklist.isDeleted && (
@@ -609,6 +629,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  executeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF9800',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  executeButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    marginLeft: 4,
   },
   editButton: {
     flexDirection: 'row',
