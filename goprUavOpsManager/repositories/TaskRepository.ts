@@ -15,6 +15,7 @@ import {
   and,
   or,
 } from '@/utils/firebaseUtils';
+import { filterUndefinedProperties } from '@/utils/filterUndefinedProperties';
 
 export class TaskRepository {
   private static readonly TASKS_COLLECTION = 'tasks';
@@ -189,14 +190,14 @@ export class TaskRepository {
   ): Promise<string> {
     try {
       const now = timestampNow();
-      const docRef = await addDocument(getCollection(this.TASKS_COLLECTION), {
+      const docRef = await addDocument(getCollection(this.TASKS_COLLECTION), filterUndefinedProperties({
         ...taskData,
         status: taskData.status || 'not_started',
         isDeleted: false,
         createdAt: now,
         updatedAt: now,
         createdBy: userId,
-      });
+      }));
 
       return docRef.id;
     } catch (error) {
@@ -212,10 +213,10 @@ export class TaskRepository {
     try {
       const taskRef = getDocument(this.TASKS_COLLECTION, id);
 
-      await updateDocument(taskRef, {
+      await updateDocument(taskRef, filterUndefinedProperties({
         ...taskData,
         updatedAt: timestampNow(),
-      });
+      }));
     } catch (error) {
       console.error('Error updating task:', error);
       throw new Error('Failed to update task');
@@ -245,7 +246,7 @@ export class TaskRepository {
         updateData.finishedAt = timestampNow();
       }
 
-      await updateDocument(taskRef, updateData);
+      await updateDocument(taskRef, filterUndefinedProperties(updateData));
     } catch (error) {
       console.error('Error updating task status:', error);
       throw new Error('Failed to update task status');
@@ -360,14 +361,14 @@ export class TaskRepository {
   ): Promise<string> {
     try {
       const now = timestampNow();
-      const docRef = await addDocument(getCollection(this.TEMPLATES_COLLECTION), {
+      const docRef = await addDocument(getCollection(this.TEMPLATES_COLLECTION), filterUndefinedProperties({
         ...templateData,
         isDeleted: false,
         createdAt: now,
         updatedAt: now,
         createdBy: userId,
         updatedBy: userId,
-      });
+      }));
 
       return docRef.id;
     } catch (error) {
@@ -383,11 +384,11 @@ export class TaskRepository {
     try {
       const templateRef = getDocument(this.TEMPLATES_COLLECTION, id);
 
-      await updateDocument(templateRef, {
+      await updateDocument(templateRef, filterUndefinedProperties({
         ...templateData,
         updatedAt: timestampNow(),
         updatedBy: userId,
-      });
+      }));
     } catch (error) {
       console.error('Error updating template:', error);
       throw new Error('Failed to update template');
