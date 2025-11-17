@@ -224,7 +224,7 @@ export default function TasksListScreen() {
         
         <Text style={styles.taskDescription} numberOfLines={2}>{item.description}</Text>
         
-        {item.droneId && (
+        {item.droneId ? (
           <View style={styles.taskDetailRow}>
             <Text style={styles.taskDetail}>{t('tasks.attachedToDrone')}: </Text>
             {drone ? (
@@ -239,8 +239,8 @@ export default function TasksListScreen() {
               <Text style={styles.taskDetail}>{item.droneId}</Text>
             )}
           </View>
-        )}
-        {item.procedureId && (
+        ) : null}
+        {item.procedureId ? (
           <View style={styles.taskDetailRow}>
             <Text style={styles.taskDetail}>{t('tasks.attachedToProcedure')}: </Text>
             {procedure ? (
@@ -253,29 +253,29 @@ export default function TasksListScreen() {
               <Text style={styles.taskDetail}>{item.procedureId}</Text>
             )}
           </View>
-        )}
+        ) : null}
         
         <Text style={styles.taskDetail}>
           {t('tasks.created')}: {formatDate(item.createdAt)}
         </Text>
         
-        {item.startedAt && (
+        {item.startedAt ? (
           <Text style={styles.taskDetail}>
             {t('tasks.started')}: {formatDate(item.startedAt)}
           </Text>
-        )}
+        ) : null}
         
-        {item.finishedAt && (
+        {item.finishedAt ? (
           <Text style={styles.taskDetail}>
             {t('tasks.finished')}: {formatDate(item.finishedAt)}
           </Text>
-        )}
+        ) : null}
 
-        {item.statusUpdateText && (
+        {item.statusUpdateText ? (
           <Text style={styles.statusUpdateText}>
             {t('tasks.statusUpdate')}: {item.statusUpdateText}
           </Text>
-        )}
+        ) : null}
 
         <View style={styles.actionButtons}>
           <Link href={`/tasks/${item.id}`} asChild>
@@ -298,7 +298,7 @@ export default function TasksListScreen() {
           )}
 
           {/* Delete button for admins/managers */}
-          {user && TaskService.canModifyTasks(user.role) && !item.isDeleted && (
+          {user && TaskService.canModifyTasks(user.role) && !item.isDeleted ? (
             <TouchableOpacity 
               style={[styles.deleteButton, getDisabledStyle()]} 
               onPress={() => handleDeleteTask(item)}
@@ -308,7 +308,7 @@ export default function TasksListScreen() {
                 {t('common.delete')}
               </Text>
             </TouchableOpacity>
-          )}
+          ) : null}
         </View>
       </View>
     );
