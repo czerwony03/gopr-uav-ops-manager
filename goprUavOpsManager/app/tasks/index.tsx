@@ -12,8 +12,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Task, TaskFilter } from '@/types/Task';
+import { Drone } from '@/types/Drone';
+import { ProcedureChecklist } from '@/types/ProcedureChecklist';
 import { useAuth } from '@/contexts/AuthContext';
 import { TaskService } from '@/services/taskService';
+import { DroneService } from '@/services/droneService';
+import { ProcedureChecklistService } from '@/services/procedureChecklistService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
@@ -25,6 +29,8 @@ export default function TasksListScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<TaskFilter>('unassigned');
+  const [drones, setDrones] = useState<Map<string, Drone>>(new Map());
+  const [procedures, setProcedures] = useState<Map<string, ProcedureChecklist>>(new Map());
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
@@ -54,6 +60,46 @@ export default function TasksListScreen() {
       }
       
       setTasks(tasksList);
+      
+      // Fetch drone and procedure data for tasks
+      const droneMap = new Map<string, Drone>();
+      const procedureMap = new Map<string, ProcedureChecklist>();
+      
+      // Collect unique drone and procedure IDs
+      const droneIds = new Set<string>();
+      const procedureIds = new Set<string>();
+      
+      tasksList.forEach(task => {
+        if (task.droneId) droneIds.add(task.droneId);
+        if (task.procedureId) procedureIds.add(task.procedureId);
+      });
+      
+      // Fetch drones
+      for (const droneId of droneIds) {
+        try {
+          const drone = await DroneService.getDrone(droneId, user.role);
+          if (drone) {
+            droneMap.set(droneId, drone);
+          }
+        } catch (error) {
+          console.error(`Error fetching drone ${droneId}:`, error);
+        }
+      }
+      
+      // Fetch procedures
+      for (const procedureId of procedureIds) {
+        try {
+          const procedure = await ProcedureChecklistService.getProcedureChecklist(procedureId, user.role);
+          if (procedure) {
+            procedureMap.set(procedureId, procedure);
+          }
+        } catch (error) {
+          console.error(`Error fetching procedure ${procedureId}:`, error);
+        }
+      }
+      
+      setDrones(droneMap);
+      setProcedures(procedureMap);
     } catch (error) {
       console.error('Error fetching tasks:', error);
       crossPlatformAlert.showAlert({
@@ -163,81 +209,110 @@ export default function TasksListScreen() {
     return new Date(date).toLocaleDateString();
   };
 
-  const renderTaskItem = ({ item }: { item: Task }) => (
-    <View style={[styles.taskCard, item.isDeleted && styles.deletedCard]}>
-      <View style={styles.taskHeader}>
-        <Text style={styles.taskTitle}>{item.title}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: TaskService.getStatusColor(item.status) }]}>
-          <Text style={styles.statusBadgeText}>{TaskService.formatTaskStatus(item.status)}</Text>
+  const renderTaskItem = ({ item }: { item: Task }) => {
+    const drone = item.droneId ? drones.get(item.droneId) : null;
+    const procedure = item.procedureId ? procedures.get(item.procedureId) : null;
+    
+    return (
+      <View style={[styles.taskCard, item.isDeleted && styles.deletedCard]}>
+        <View style={styles.taskHeader}>
+          <Text style={styles.taskTitle}>{item.title}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: TaskService.getStatusColor(item.status) }]}>
+            <Text style={styles.statusBadgeText}>{TaskService.formatTaskStatus(item.status)}</Text>
+          </View>
+        </View>
+        
+        <Text style={styles.taskDescription} numberOfLines={2}>{item.description}</Text>
+        
+        {item.droneId && (
+          <View style={styles.taskDetailRow}>
+            <Text style={styles.taskDetail}>{t('tasks.attachedToDrone')}: </Text>
+            {drone ? (
+              <Link href={`/drones/${item.droneId}`} asChild>
+                <TouchableOpacity>
+                  <Text style={styles.linkText}>
+                    {drone.name} ({drone.inventoryCode})
+                  </Text>
+                </TouchableOpacity>
+              </Link>
+            ) : (
+              <Text style={styles.taskDetail}>{item.droneId}</Text>
+            )}
+          </View>
+        )}
+        {item.procedureId && (
+          <View style={styles.taskDetailRow}>
+            <Text style={styles.taskDetail}>{t('tasks.attachedToProcedure')}: </Text>
+            {procedure ? (
+              <Link href={`/procedures/${item.procedureId}`} asChild>
+                <TouchableOpacity>
+                  <Text style={styles.linkText}>{procedure.title}</Text>
+                </TouchableOpacity>
+              </Link>
+            ) : (
+              <Text style={styles.taskDetail}>{item.procedureId}</Text>
+            )}
+          </View>
+        )}
+        
+        <Text style={styles.taskDetail}>
+          {t('tasks.created')}: {formatDate(item.createdAt)}
+        </Text>
+        
+        {item.startedAt && (
+          <Text style={styles.taskDetail}>
+            {t('tasks.started')}: {formatDate(item.startedAt)}
+          </Text>
+        )}
+        
+        {item.finishedAt && (
+          <Text style={styles.taskDetail}>
+            {t('tasks.finished')}: {formatDate(item.finishedAt)}
+          </Text>
+        )}
+
+        {item.statusUpdateText && (
+          <Text style={styles.statusUpdateText}>
+            {t('tasks.statusUpdate')}: {item.statusUpdateText}
+          </Text>
+        )}
+
+        <View style={styles.actionButtons}>
+          <Link href={`/tasks/${item.id}`} asChild>
+            <TouchableOpacity style={styles.viewButton}>
+              <Text style={styles.viewButtonText}>{t('tasks.viewDetails')}</Text>
+            </TouchableOpacity>
+          </Link>
+
+          {/* Self-assign button for unassigned tasks with selfSign enabled */}
+          {!item.assignedTo && item.selfSign && (
+            <TouchableOpacity 
+              style={[styles.assignButton, getDisabledStyle()]} 
+              onPress={() => handleSelfAssign(item)}
+              disabled={isButtonDisabled()}
+            >
+              <Text style={[styles.assignButtonText, isButtonDisabled() && { color: '#999' }]}>
+                {t('tasks.selfAssign')}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Delete button for admins/managers */}
+          {user && TaskService.canModifyTasks(user.role) && !item.isDeleted && (
+            <TouchableOpacity 
+              style={[styles.deleteButton, getDisabledStyle()]} 
+              onPress={() => handleDeleteTask(item)}
+              disabled={isButtonDisabled()}
+            >
+              <Text style={[styles.deleteButtonText, isButtonDisabled() && { color: '#999' }]}>
+                {t('common.delete')}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
-      
-      <Text style={styles.taskDescription} numberOfLines={2}>{item.description}</Text>
-      
-      {item.droneId && (
-        <Text style={styles.taskDetail}>{t('tasks.attachedToDrone')}: {item.droneId}</Text>
-      )}
-      {item.procedureId && (
-        <Text style={styles.taskDetail}>{t('tasks.attachedToProcedure')}: {item.procedureId}</Text>
-      )}
-      
-      <Text style={styles.taskDetail}>
-        {t('tasks.created')}: {formatDate(item.createdAt)}
-      </Text>
-      
-      {item.startedAt && (
-        <Text style={styles.taskDetail}>
-          {t('tasks.started')}: {formatDate(item.startedAt)}
-        </Text>
-      )}
-      
-      {item.finishedAt && (
-        <Text style={styles.taskDetail}>
-          {t('tasks.finished')}: {formatDate(item.finishedAt)}
-        </Text>
-      )}
-
-      {item.statusUpdateText && (
-        <Text style={styles.statusUpdateText}>
-          {t('tasks.statusUpdate')}: {item.statusUpdateText}
-        </Text>
-      )}
-
-      <View style={styles.actionButtons}>
-        <Link href={`/tasks/${item.id}`} asChild>
-          <TouchableOpacity style={styles.viewButton}>
-            <Text style={styles.viewButtonText}>{t('tasks.viewDetails')}</Text>
-          </TouchableOpacity>
-        </Link>
-
-        {/* Self-assign button for unassigned tasks with selfSign enabled */}
-        {!item.assignedTo && item.selfSign && (
-          <TouchableOpacity 
-            style={[styles.assignButton, getDisabledStyle()]} 
-            onPress={() => handleSelfAssign(item)}
-            disabled={isButtonDisabled()}
-          >
-            <Text style={[styles.assignButtonText, isButtonDisabled() && { color: '#999' }]}>
-              {t('tasks.selfAssign')}
-            </Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Delete button for admins/managers */}
-        {user && TaskService.canModifyTasks(user.role) && !item.isDeleted && (
-          <TouchableOpacity 
-            style={[styles.deleteButton, getDisabledStyle()]} 
-            onPress={() => handleDeleteTask(item)}
-            disabled={isButtonDisabled()}
-          >
-            <Text style={[styles.deleteButtonText, isButtonDisabled() && { color: '#999' }]}>
-              {t('common.delete')}
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -402,6 +477,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     marginBottom: 4,
+  },
+  taskDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  linkText: {
+    fontSize: 12,
+    color: '#0066CC',
+    textDecorationLine: 'underline',
   },
   statusUpdateText: {
     fontSize: 12,
