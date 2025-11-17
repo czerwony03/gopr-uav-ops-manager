@@ -18,7 +18,7 @@ import {
 
 export class TaskRepository {
   private static readonly TASKS_COLLECTION = 'tasks';
-  private static readonly TEMPLATES_COLLECTION = 'task_templates';
+  private static readonly TEMPLATES_COLLECTION = 'taskTemplates';
 
   /**
    * Convert Firestore document to Task object
@@ -125,7 +125,7 @@ export class TaskRepository {
       const allTasks = getDocsArray(snapshot).map((doc: any) => this.convertTaskFromFirestore(doc.id, doc.data));
       
       // Filter unassigned tasks client-side
-      return allTasks.filter(task => !task.assignedTo);
+      return allTasks.filter((task: any) => !task.assignedTo);
     } catch (error) {
       console.error('Error fetching unassigned tasks:', error);
       throw new Error('Failed to fetch unassigned tasks');
@@ -153,9 +153,9 @@ export class TaskRepository {
 
       // Filter by finished status if needed
       if (!includeFinished) {
-        return tasks.filter(task => task.status !== 'done' && task.status !== 'not_finished');
+        return tasks.filter((task: any) => task.status !== 'done' && task.status !== 'not_finished');
       }
-      return tasks.filter(task => task.status === 'done' || task.status === 'not_finished');
+      return tasks.filter((task: any) => task.status === 'done' || task.status === 'not_finished');
     } catch (error) {
       console.error('Error fetching user tasks:', error);
       throw new Error('Failed to fetch user tasks');
