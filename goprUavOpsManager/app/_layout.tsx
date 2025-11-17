@@ -150,6 +150,17 @@ function RootLayoutNavigation() {
             }}
           />
           <Drawer.Screen
+            name="tasks"
+            options={{
+              title: t('tasks.title'),
+              headerShown: false,
+              drawerLabel: t('nav.tasks'),
+              drawerIcon: ({ color, size }) => (
+                <Ionicons name="checkmark-done-outline" size={size} color={color} />
+              ),
+            }}
+          />
+          <Drawer.Screen
             name="info-contact"
             options={{
               title: t('nav.info'),
