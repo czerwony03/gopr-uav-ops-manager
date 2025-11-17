@@ -22,6 +22,7 @@ import { DroneService } from '@/services/droneService';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 export default function TaskDetailsScreen() {
   const [task, setTask] = useState<Task | null>(null);
@@ -39,6 +40,7 @@ export default function TaskDetailsScreen() {
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
+  const responsive = useResponsiveLayout();
 
   const fetchTask = useCallback(async () => {
     if (!id || !user) return;
@@ -226,85 +228,188 @@ export default function TaskDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={[
+          styles.content,
+          responsive.isDesktop && {
+            maxWidth: responsive.maxFormWidth,
+            alignSelf: 'center',
+            width: '100%',
+            paddingHorizontal: responsive.spacing.large,
+          }
+        ]}
+      >
         {/* Task Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>{task.title}</Text>
+        <View style={[
+          styles.header,
+          responsive.isDesktop && {
+            marginBottom: responsive.spacing.large,
+          }
+        ]}>
+          <Text style={[
+            styles.title,
+            { fontSize: responsive.fontSize.title }
+          ]}>{task.title}</Text>
           <View style={[styles.statusBadge, { backgroundColor: TaskService.getStatusColor(task.status) }]}>
-            <Text style={styles.statusBadgeText}>{TaskService.formatTaskStatus(task.status)}</Text>
+            <Text style={[
+              styles.statusBadgeText,
+              { fontSize: responsive.fontSize.small }
+            ]}>{TaskService.formatTaskStatus(task.status)}</Text>
           </View>
         </View>
 
         {/* Task Description */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('tasks.description')}</Text>
-          <Text style={styles.description}>{task.description}</Text>
+        <View style={[
+          styles.section,
+          responsive.isDesktop && {
+            padding: responsive.spacing.large,
+          }
+        ]}>
+          <Text style={[
+            styles.sectionTitle,
+            { fontSize: responsive.fontSize.subtitle }
+          ]}>{t('tasks.description')}</Text>
+          <Text style={[
+            styles.description,
+            { fontSize: responsive.fontSize.body }
+          ]}>{task.description}</Text>
         </View>
 
         {/* Task Details */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('tasks.details')}</Text>
+        <View style={[
+          styles.section,
+          responsive.isDesktop && {
+            padding: responsive.spacing.large,
+          }
+        ]}>
+          <Text style={[
+            styles.sectionTitle,
+            { fontSize: responsive.fontSize.subtitle }
+          ]}>{t('tasks.details')}</Text>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>{t('tasks.createdBy')}:</Text>
-            <Text style={styles.detailValue}>{createdByName || t('common.unknown')}</Text>
+            <Text style={[
+              styles.detailLabel,
+              { fontSize: responsive.fontSize.small }
+            ]}>{t('tasks.createdBy')}:</Text>
+            <Text style={[
+              styles.detailValue,
+              { fontSize: responsive.fontSize.small }
+            ]}>{createdByName || t('common.unknown')}</Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>{t('tasks.assignedTo')}:</Text>
-            <Text style={styles.detailValue}>{assignedToName || t('tasks.unassigned')}</Text>
+            <Text style={[
+              styles.detailLabel,
+              { fontSize: responsive.fontSize.small }
+            ]}>{t('tasks.assignedTo')}:</Text>
+            <Text style={[
+              styles.detailValue,
+              { fontSize: responsive.fontSize.small }
+            ]}>{assignedToName || t('tasks.unassigned')}</Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>{t('tasks.selfSignEnabled')}:</Text>
-            <Text style={styles.detailValue}>{task.selfSign ? t('common.yes') : t('common.no')}</Text>
+            <Text style={[
+              styles.detailLabel,
+              { fontSize: responsive.fontSize.small }
+            ]}>{t('tasks.selfSignEnabled')}:</Text>
+            <Text style={[
+              styles.detailValue,
+              { fontSize: responsive.fontSize.small }
+            ]}>{task.selfSign ? t('common.yes') : t('common.no')}</Text>
           </View>
           {task.droneId ? (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{t('tasks.attachedToDrone')}:</Text>
+              <Text style={[
+                styles.detailLabel,
+                { fontSize: responsive.fontSize.small }
+              ]}>{t('tasks.attachedToDrone')}:</Text>
               {drone ? (
                 <Link href={`/drones/${task.droneId}`} asChild>
                   <TouchableOpacity>
-                    <Text style={styles.linkText}>
+                    <Text style={[
+                      styles.linkText,
+                      { fontSize: responsive.fontSize.small }
+                    ]}>
                       {drone.name} ({drone.inventoryCode})
                     </Text>
                   </TouchableOpacity>
                 </Link>
               ) : (
-                <Text style={styles.detailValue}>{task.droneId}</Text>
+                <Text style={[
+                  styles.detailValue,
+                  { fontSize: responsive.fontSize.small }
+                ]}>{task.droneId}</Text>
               )}
             </View>
           ) : null}
           {task.procedureId ? (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{t('tasks.attachedToProcedure')}:</Text>
+              <Text style={[
+                styles.detailLabel,
+                { fontSize: responsive.fontSize.small }
+              ]}>{t('tasks.attachedToProcedure')}:</Text>
               {procedure ? (
                 <Link href={`/procedures/${task.procedureId}`} asChild>
                   <TouchableOpacity>
-                    <Text style={styles.linkText}>{procedure.title}</Text>
+                    <Text style={[
+                      styles.linkText,
+                      { fontSize: responsive.fontSize.small }
+                    ]}>{procedure.title}</Text>
                   </TouchableOpacity>
                 </Link>
               ) : (
-                <Text style={styles.detailValue}>{task.procedureId}</Text>
+                <Text style={[
+                  styles.detailValue,
+                  { fontSize: responsive.fontSize.small }
+                ]}>{task.procedureId}</Text>
               )}
             </View>
           ) : null}
         </View>
 
         {/* Timestamps */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('tasks.timeline')}</Text>
+        <View style={[
+          styles.section,
+          responsive.isDesktop && {
+            padding: responsive.spacing.large,
+          }
+        ]}>
+          <Text style={[
+            styles.sectionTitle,
+            { fontSize: responsive.fontSize.subtitle }
+          ]}>{t('tasks.timeline')}</Text>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>{t('tasks.created')}:</Text>
-            <Text style={styles.detailValue}>{formatDate(task.createdAt)}</Text>
+            <Text style={[
+              styles.detailLabel,
+              { fontSize: responsive.fontSize.small }
+            ]}>{t('tasks.created')}:</Text>
+            <Text style={[
+              styles.detailValue,
+              { fontSize: responsive.fontSize.small }
+            ]}>{formatDate(task.createdAt)}</Text>
           </View>
           {task.startedAt ? (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{t('tasks.started')}:</Text>
-              <Text style={styles.detailValue}>{formatDate(task.startedAt)}</Text>
+              <Text style={[
+                styles.detailLabel,
+                { fontSize: responsive.fontSize.small }
+              ]}>{t('tasks.started')}:</Text>
+              <Text style={[
+                styles.detailValue,
+                { fontSize: responsive.fontSize.small }
+              ]}>{formatDate(task.startedAt)}</Text>
             </View>
           ) : null}
           {task.finishedAt ? (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{t('tasks.finished')}:</Text>
-              <Text style={styles.detailValue}>{formatDate(task.finishedAt)}</Text>
+              <Text style={[
+                styles.detailLabel,
+                { fontSize: responsive.fontSize.small }
+              ]}>{t('tasks.finished')}:</Text>
+              <Text style={[
+                styles.detailValue,
+                { fontSize: responsive.fontSize.small }
+              ]}>{formatDate(task.finishedAt)}</Text>
             </View>
           ) : null}
         </View>

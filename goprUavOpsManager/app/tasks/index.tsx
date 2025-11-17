@@ -214,59 +214,84 @@ export default function TasksListScreen() {
     const procedure = item.procedureId ? procedures.get(item.procedureId) : null;
     
     return (
-      <View style={[styles.taskCard, item.isDeleted && styles.deletedCard]}>
+      <View style={[
+        styles.taskCard, 
+        item.isDeleted && styles.deletedCard,
+        responsive.isDesktop && {
+          padding: responsive.spacing.large,
+        }
+      ]}>
         <View style={styles.taskHeader}>
-          <Text style={styles.taskTitle}>{item.title}</Text>
+          <Text style={[
+            styles.taskTitle,
+            { fontSize: responsive.fontSize.subtitle }
+          ]}>{item.title}</Text>
           <View style={[styles.statusBadge, { backgroundColor: TaskService.getStatusColor(item.status) }]}>
-            <Text style={styles.statusBadgeText}>{TaskService.formatTaskStatus(item.status)}</Text>
+            <Text style={[
+              styles.statusBadgeText,
+              { fontSize: responsive.fontSize.small }
+            ]}>{TaskService.formatTaskStatus(item.status)}</Text>
           </View>
         </View>
         
-        <Text style={styles.taskDescription} numberOfLines={2}>{item.description}</Text>
+        <Text style={[
+          styles.taskDescription,
+          { fontSize: responsive.fontSize.small }
+        ]} numberOfLines={2}>{item.description}</Text>
         
         {item.droneId ? (
           <View style={styles.taskDetailRow}>
-            <Text style={styles.taskDetail}>{t('tasks.attachedToDrone')}: </Text>
+            <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
+              {t('tasks.attachedToDrone')}: 
+            </Text>
             {drone ? (
               <Link href={`/drones/${item.droneId}`} asChild>
                 <TouchableOpacity>
-                  <Text style={styles.linkText}>
+                  <Text style={[styles.linkText, { fontSize: responsive.fontSize.small }]}>
                     {drone.name} ({drone.inventoryCode})
                   </Text>
                 </TouchableOpacity>
               </Link>
             ) : (
-              <Text style={styles.taskDetail}>{item.droneId}</Text>
+              <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
+                {item.droneId}
+              </Text>
             )}
           </View>
         ) : null}
         {item.procedureId ? (
           <View style={styles.taskDetailRow}>
-            <Text style={styles.taskDetail}>{t('tasks.attachedToProcedure')}: </Text>
+            <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
+              {t('tasks.attachedToProcedure')}: 
+            </Text>
             {procedure ? (
               <Link href={`/procedures/${item.procedureId}`} asChild>
                 <TouchableOpacity>
-                  <Text style={styles.linkText}>{procedure.title}</Text>
+                  <Text style={[styles.linkText, { fontSize: responsive.fontSize.small }]}>
+                    {procedure.title}
+                  </Text>
                 </TouchableOpacity>
               </Link>
             ) : (
-              <Text style={styles.taskDetail}>{item.procedureId}</Text>
+              <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
+                {item.procedureId}
+              </Text>
             )}
           </View>
         ) : null}
         
-        <Text style={styles.taskDetail}>
+        <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
           {t('tasks.created')}: {formatDate(item.createdAt)}
         </Text>
         
         {item.startedAt ? (
-          <Text style={styles.taskDetail}>
+          <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
             {t('tasks.started')}: {formatDate(item.startedAt)}
           </Text>
         ) : null}
         
         {item.finishedAt ? (
-          <Text style={styles.taskDetail}>
+          <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
             {t('tasks.finished')}: {formatDate(item.finishedAt)}
           </Text>
         ) : null}
@@ -326,68 +351,124 @@ export default function TasksListScreen() {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <OfflineInfoBar visible={!isConnected} />
       
-      {/* Filter Tabs */}
-      <View style={styles.filterContainer}>
-        <TouchableOpacity
-          style={[styles.filterTab, activeFilter === 'unassigned' && styles.activeFilterTab]}
-          onPress={() => setActiveFilter('unassigned')}
-        >
-          <Text style={[styles.filterTabText, activeFilter === 'unassigned' && styles.activeFilterTabText]}>
-            {t('tasks.unassigned')}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.filterTab, activeFilter === 'my_open' && styles.activeFilterTab]}
-          onPress={() => setActiveFilter('my_open')}
-        >
-          <Text style={[styles.filterTabText, activeFilter === 'my_open' && styles.activeFilterTabText]}>
-            {t('tasks.myOpen')}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.filterTab, activeFilter === 'my_finished' && styles.activeFilterTab]}
-          onPress={() => setActiveFilter('my_finished')}
-        >
-          <Text style={[styles.filterTabText, activeFilter === 'my_finished' && styles.activeFilterTabText]}>
-            {t('tasks.myFinished')}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <FlatList
-        data={tasks}
-        renderItem={renderTaskItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      {/* Main Content Container with max width for desktop */}
+      <View style={[
+        styles.mainContent,
+        responsive.isDesktop && {
+          maxWidth: responsive.maxContentWidth,
+          width: '100%',
+          alignSelf: 'center',
         }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>{t('tasks.noTasks')}</Text>
-          </View>
-        }
-      />
-
-      {/* Action Buttons */}
-      {user && TaskService.canModifyTasks(user.role) && (
-        <View style={styles.fabContainer}>
+      ]}>
+        {/* Filter Tabs */}
+        <View style={styles.filterContainer}>
           <TouchableOpacity
-            style={[styles.fab, getDisabledStyle()]}
-            onPress={handleManageTemplates}
-            disabled={isButtonDisabled()}
+            style={[styles.filterTab, activeFilter === 'unassigned' && styles.activeFilterTab]}
+            onPress={() => setActiveFilter('unassigned')}
           >
-            <Text style={styles.fabText}>{t('tasks.templates')}</Text>
+            <Text style={[
+              styles.filterTabText, 
+              activeFilter === 'unassigned' && styles.activeFilterTabText,
+              { fontSize: responsive.fontSize.small }
+            ]}>
+              {t('tasks.unassigned')}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.fab, styles.fabPrimary, getDisabledStyle()]}
-            onPress={handleCreateTask}
-            disabled={isButtonDisabled()}
+            style={[styles.filterTab, activeFilter === 'my_open' && styles.activeFilterTab]}
+            onPress={() => setActiveFilter('my_open')}
           >
-            <Text style={styles.fabTextPrimary}>{t('tasks.createTask')}</Text>
+            <Text style={[
+              styles.filterTabText, 
+              activeFilter === 'my_open' && styles.activeFilterTabText,
+              { fontSize: responsive.fontSize.small }
+            ]}>
+              {t('tasks.myOpen')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterTab, activeFilter === 'my_finished' && styles.activeFilterTab]}
+            onPress={() => setActiveFilter('my_finished')}
+          >
+            <Text style={[
+              styles.filterTabText, 
+              activeFilter === 'my_finished' && styles.activeFilterTabText,
+              { fontSize: responsive.fontSize.small }
+            ]}>
+              {t('tasks.myFinished')}
+            </Text>
           </TouchableOpacity>
         </View>
-      )}
+
+        <FlatList
+          data={tasks}
+          renderItem={renderTaskItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={[
+            styles.listContent,
+            { padding: responsive.spacing.medium }
+          ]}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={[styles.emptyText, { fontSize: responsive.fontSize.body }]}>
+                {t('tasks.noTasks')}
+              </Text>
+            </View>
+          }
+        />
+
+        {/* Action Buttons */}
+        {user && TaskService.canModifyTasks(user.role) && (
+          <View style={[
+            styles.fabContainer,
+            responsive.isDesktop && {
+              flexDirection: 'row',
+              bottom: responsive.spacing.large,
+              right: responsive.spacing.large,
+            }
+          ]}>
+            <TouchableOpacity
+              style={[
+                styles.fab, 
+                getDisabledStyle(),
+                responsive.isDesktop && {
+                  paddingHorizontal: responsive.spacing.large,
+                  paddingVertical: responsive.spacing.medium,
+                }
+              ]}
+              onPress={handleManageTemplates}
+              disabled={isButtonDisabled()}
+            >
+              <Text style={[
+                styles.fabText,
+                { fontSize: responsive.fontSize.small }
+              ]}>{t('tasks.templates')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.fab, 
+                styles.fabPrimary, 
+                getDisabledStyle(),
+                responsive.isDesktop && {
+                  paddingHorizontal: responsive.spacing.large,
+                  paddingVertical: responsive.spacing.medium,
+                  marginLeft: responsive.spacing.medium,
+                }
+              ]}
+              onPress={handleCreateTask}
+              disabled={isButtonDisabled()}
+            >
+              <Text style={[
+                styles.fabTextPrimary,
+                { fontSize: responsive.fontSize.small }
+              ]}>{t('tasks.createTask')}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -396,6 +477,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  mainContent: {
+    flex: 1,
   },
   centered: {
     flex: 1,
