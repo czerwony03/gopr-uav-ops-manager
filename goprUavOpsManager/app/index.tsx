@@ -80,7 +80,7 @@ export default function Index() {
       key: 'tasks',
       title: t('dashboard.navigation.tasks'),
       icon: 'create-outline',
-      route: '/task',
+      route: '/tasks',
       color: '#9C27B0',
       show: true
     },
