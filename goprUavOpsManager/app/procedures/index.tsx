@@ -23,6 +23,7 @@ import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
+import {useSync} from "@/contexts/SyncContext";
 
 interface CategoryWithCount extends Category {
   procedureCount: number;
@@ -39,16 +40,29 @@ export default function CategoriesListScreen() {
   const { t } = useTranslation('common');
   const crossPlatformAlert = useCrossPlatformAlert();
   const responsive = useResponsiveLayout();
+  const { setSyncing } = useSync();
 
   const fetchCategories = useCallback(async () => {
     if (!user) return;
     
     try {
       // Check if cache should be updated based on timestamps before fetching
-      await Promise.all([
-        OfflineCategoryService.preDownloadCategories(user.role),
-        OfflineProcedureChecklistService.preDownloadProcedures(user.role),
-      ]);
+      try {
+        console.log('[AuthContext] Starting background data sync');
+        setSyncing(true);
+
+        await Promise.all([
+          OfflineCategoryService.preDownloadCategories(user.role),
+          OfflineProcedureChecklistService.preDownloadProcedures(user.role),
+        ]);
+
+        console.log('[AuthContext] ✅ Background data sync completed');
+      } catch (error) {
+        console.error('[AuthContext] Error during background data sync:', error);
+        // Don't block login process if background sync fails
+      } finally {
+        setSyncing(false);
+      }
 
       // Fetch categories using cache-first approach for instant loading
       const categoriesData = await OfflineCategoryService.getCategories(user.role);
