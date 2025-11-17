@@ -119,6 +119,10 @@ export default function ProceduresListScreen() {
     router.push(`/procedures/${checklist.id}`);
   };
 
+  const handleExecuteChecklist = (checklist: ProcedureChecklist) => {
+    router.push(`/procedures/${checklist.id}/execute`);
+  };
+
   const handleDeleteChecklist = async (checklist: ProcedureChecklist) => {
     if (!user || isButtonDisabled()) return;
 
@@ -192,6 +196,16 @@ export default function ProceduresListScreen() {
           <Ionicons name="eye-outline" size={20} color="#0066CC" />
           <Text style={styles.actionButtonText}>{t('common.view')}</Text>
         </TouchableOpacity>
+
+        {!item.isDeleted && (
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={() => handleExecuteChecklist(item)}
+          >
+            <Ionicons name="play-outline" size={20} color="#FF9800" />
+            <Text style={[styles.actionButtonText, { color: '#FF9800' }]}>{t('procedures.execute.button')}</Text>
+          </TouchableOpacity>
+        )}
 
         {canModifyChecklists && !item.isDeleted && (
           <>

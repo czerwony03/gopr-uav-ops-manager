@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import ImageZoom from 'react-native-image-pan-zoom';
 import { Image } from 'expo-image';
+import ImageViewer from '@/components/ImageViewer';
 import { ProcedureChecklist, ChecklistItem } from '@/types/ProcedureChecklist';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
@@ -36,6 +37,7 @@ export default function ProcedureExecuteScreen() {
   const [isFromCache, setIsFromCache] = useState(false);
   const [cachedImageUri, setCachedImageUri] = useState<string>('');
   const [executionStartTime] = useState<Date>(new Date());
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const { isConnected } = useNetworkStatus();
@@ -197,6 +199,12 @@ export default function ProcedureExecuteScreen() {
     }
   };
 
+  const handleImagePress = useCallback(() => {
+    if (cachedImageUri) {
+      setImageViewerVisible(true);
+    }
+  }, [cachedImageUri]);
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -252,7 +260,11 @@ export default function ProcedureExecuteScreen() {
       <View style={styles.content}>
         {/* Image viewer with zoom */}
         {currentItem.image && cachedImageUri ? (
-          <View style={styles.imageContainer}>
+          <TouchableOpacity 
+            style={styles.imageContainer}
+            onPress={handleImagePress}
+            activeOpacity={0.9}
+          >
             {Platform.OS === 'web' ? (
               // For web, use a simpler approach without ImageZoom
               <Image
@@ -274,6 +286,7 @@ export default function ProcedureExecuteScreen() {
                 maxScale={3}
                 enableDoubleClickZoom={true}
                 doubleClickInterval={250}
+                onClick={handleImagePress}
                 style={styles.imageZoom}
               >
                 <Image
@@ -284,7 +297,7 @@ export default function ProcedureExecuteScreen() {
                 />
               </ImageZoom>
             )}
-          </View>
+          </TouchableOpacity>
         ) : null}
 
         {/* Item details */}
@@ -391,6 +404,16 @@ export default function ProcedureExecuteScreen() {
           </TouchableOpacity>
         )}
       </View>
+
+      {/* Image Viewer Modal */}
+      {currentItem?.image && cachedImageUri && (
+        <ImageViewer
+          images={[{ uri: cachedImageUri }]}
+          imageIndex={0}
+          visible={imageViewerVisible}
+          onRequestClose={() => setImageViewerVisible(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }

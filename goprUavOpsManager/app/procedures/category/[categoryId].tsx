@@ -129,6 +129,10 @@ export default function CategoryProceduresScreen() {
     router.push(`/procedures/${procedure.id}`);
   };
 
+  const handleExecuteProcedure = (procedure: ProcedureChecklist) => {
+    router.push(`/procedures/${procedure.id}/execute`);
+  };
+
   const handleDeleteProcedure = async (procedure: ProcedureChecklist) => {
     if (!user || isButtonDisabled()) return;
 
@@ -202,6 +206,16 @@ export default function CategoryProceduresScreen() {
           <Ionicons name="eye-outline" size={20} color="#0066CC" />
           <Text style={styles.actionButtonText}>{t('common.view')}</Text>
         </TouchableOpacity>
+
+        {!item.isDeleted && (
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={() => handleExecuteProcedure(item)}
+          >
+            <Ionicons name="play-outline" size={20} color="#FF9800" />
+            <Text style={[styles.actionButtonText, { color: '#FF9800' }]}>{t('procedures.execute.button')}</Text>
+          </TouchableOpacity>
+        )}
 
         {canModifyProcedures && !item.isDeleted && (
           <>
