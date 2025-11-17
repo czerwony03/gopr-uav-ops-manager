@@ -205,6 +205,70 @@
       "density": "SPARSE_ALL"
     },
     {
+      "collectionGroup": "droneClaims",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "droneId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "endTime",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startTime",
+          "order": "DESCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "droneClaims",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "droneId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startTime",
+          "order": "DESCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "droneClaims",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "endTime",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startTime",
+          "order": "DESCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "droneClaims",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startTime",
+          "order": "DESCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
       "collectionGroup": "droneComments",
       "queryScope": "COLLECTION",
       "fields": [
@@ -570,64 +634,49 @@
       "density": "SPARSE_ALL"
     },
     {
-      "collectionGroup": "droneClaims",
-      "queryScope": "COLLECTION", 
+      "collectionGroup": "tasks",
+      "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "droneId",
+          "fieldPath": "assignedTo",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "endTime",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "startTime",
+          "fieldPath": "createdAt",
           "order": "DESCENDING"
         }
       ],
       "density": "SPARSE_ALL"
     },
     {
-      "collectionGroup": "droneClaims",
+      "collectionGroup": "tasks",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "droneId",
+          "fieldPath": "assignedTo",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "startTime",
+          "fieldPath": "isDeleted",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
           "order": "DESCENDING"
         }
       ],
       "density": "SPARSE_ALL"
     },
     {
-      "collectionGroup": "droneClaims",
+      "collectionGroup": "tasks",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "userId",
+          "fieldPath": "isDeleted",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "startTime",
-          "order": "DESCENDING"
-        }
-      ],
-      "density": "SPARSE_ALL"
-    },
-    {
-      "collectionGroup": "droneClaims",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "endTime",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "startTime",
+          "fieldPath": "createdAt",
           "order": "DESCENDING"
         }
       ],
