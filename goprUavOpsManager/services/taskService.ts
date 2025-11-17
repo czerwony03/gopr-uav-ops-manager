@@ -119,27 +119,27 @@ export class TaskService {
       throw new Error('Insufficient permissions to create task');
     }
 
+    // Get the template
+    const template = await TaskRepository.getTemplate(templateId);
+    if (!template) {
+      throw new Error('Template not found');
+    }
+
+    if (template.isDeleted && !this.canViewDeletedTasks(userRole)) {
+      throw new Error('Template not found');
+    }
+
+    // Create task from template with optional overrides
+    const formData: TaskFormData = {
+      title: overrides?.title || template.title,
+      description: overrides?.description || template.description,
+      selfSign: overrides?.selfSign !== undefined ? overrides.selfSign : template.selfSign || false,
+      assignedTo: overrides?.assignedTo,
+      droneId: overrides?.droneId,
+      procedureId: overrides?.procedureId,
+    };
+
     try {
-      // Get the template
-      const template = await TaskRepository.getTemplate(templateId);
-      if (!template) {
-        throw new Error('Template not found');
-      }
-
-      if (template.isDeleted && !this.canViewDeletedTasks(userRole)) {
-        throw new Error('Template not found');
-      }
-
-      // Create task from template with optional overrides
-      const formData: TaskFormData = {
-        title: overrides?.title || template.title,
-        description: overrides?.description || template.description,
-        selfSign: overrides?.selfSign !== undefined ? overrides.selfSign : template.selfSign || false,
-        assignedTo: overrides?.assignedTo,
-        droneId: overrides?.droneId,
-        procedureId: overrides?.procedureId,
-      };
-
       return await this.createTask(formData, userRole, userId);
     } catch (error) {
       console.error('Error creating task from template:', error);
@@ -206,21 +206,21 @@ export class TaskService {
     userRole: UserRole,
     userId: string
   ): Promise<void> {
+    // Get current task
+    const currentTask = await TaskRepository.getTask(id);
+    if (!currentTask) {
+      throw new Error('Task not found');
+    }
+
+    // Check permissions
+    const isAdminOrManager = this.canModifyTasks(userRole);
+    const isAssignedUser = currentTask.assignedTo === userId;
+
+    if (!isAdminOrManager && !isAssignedUser) {
+      throw new Error('Insufficient permissions to update task status');
+    }
+
     try {
-      // Get current task
-      const currentTask = await TaskRepository.getTask(id);
-      if (!currentTask) {
-        throw new Error('Task not found');
-      }
-
-      // Check permissions
-      const isAdminOrManager = this.canModifyTasks(userRole);
-      const isAssignedUser = currentTask.assignedTo === userId;
-
-      if (!isAdminOrManager && !isAssignedUser) {
-        throw new Error('Insufficient permissions to update task status');
-      }
-
       // Update status
       await TaskRepository.updateTaskStatus(id, statusUpdate.status, statusUpdate.statusUpdateText);
 
@@ -291,23 +291,23 @@ export class TaskService {
     id: string,
     userId: string
   ): Promise<void> {
+    // Get current task
+    const currentTask = await TaskRepository.getTask(id);
+    if (!currentTask) {
+      throw new Error('Task not found');
+    }
+
+    // Check if self-sign is enabled
+    if (!currentTask.selfSign) {
+      throw new Error('Self-assignment is not enabled for this task');
+    }
+
+    // Check if task is already assigned
+    if (currentTask.assignedTo) {
+      throw new Error('Task is already assigned');
+    }
+
     try {
-      // Get current task
-      const currentTask = await TaskRepository.getTask(id);
-      if (!currentTask) {
-        throw new Error('Task not found');
-      }
-
-      // Check if self-sign is enabled
-      if (!currentTask.selfSign) {
-        throw new Error('Self-assignment is not enabled for this task');
-      }
-
-      // Check if task is already assigned
-      if (currentTask.assignedTo) {
-        throw new Error('Task is already assigned');
-      }
-
       await TaskRepository.assignTask(id, userId);
 
       // Create audit log entry
