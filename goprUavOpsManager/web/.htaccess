@@ -2,6 +2,11 @@
   RewriteEngine On
   RewriteBase /
 
+  # Do not rewrite _expo/* or assets/*
+  RewriteCond %{REQUEST_URI} ^/_expo/ [NC,OR]
+  RewriteCond %{REQUEST_URI} ^/assets/ [NC]
+  RewriteRule ^ - [L]
+
   # Don’t rewrite requests for existing files or directories
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
