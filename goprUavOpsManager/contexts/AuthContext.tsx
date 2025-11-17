@@ -12,6 +12,7 @@ import {
 } from '@/utils/firebaseUtils';
 import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
 import { OfflineCategoryService } from '@/services/offlineCategoryService';
+import { useSync } from './SyncContext';
 
 /**
  * AuthContext - Firebase Authentication State Management
@@ -63,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoadingUserData, setIsLoadingUserData] = useState(false);
+  const { setSyncing } = useSync();
 
   const loadFullUserData = useCallback(async (firebaseUser: any): Promise<UserData | null> => {
     if (isLoadingUserData) {
@@ -183,6 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setTimeout(async () => {
               try {
                 console.log('[AuthContext] Starting background data sync');
+                setSyncing(true);
                 
                 // Background sync for procedures and categories
                 await Promise.all([
@@ -194,6 +197,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               } catch (error) {
                 console.error('[AuthContext] Error during background data sync:', error);
                 // Don't block login process if background sync fails
+              } finally {
+                setSyncing(false);
               }
             }, 100); // Defer by 100ms to let UI render first
           }
@@ -209,10 +214,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(fallbackUserData);
           
           // Defer pre-download of procedures to not block login flow
-          setTimeout(() => {
-            OfflineProcedureChecklistService.preDownloadProcedures(fallbackUserData.role).catch(error => {
+          setTimeout(async () => {
+            try {
+              setSyncing(true);
+              await OfflineProcedureChecklistService.preDownloadProcedures(fallbackUserData.role);
+            } catch (error) {
               console.error('[AuthContext] Error pre-downloading procedures with fallback user:', error);
-            });
+            } finally {
+              setSyncing(false);
+            }
           }, 100); // Defer by 100ms to let UI render first
         }
       } else {

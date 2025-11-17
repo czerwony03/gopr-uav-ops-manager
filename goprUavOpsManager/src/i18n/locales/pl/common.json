@@ -791,6 +791,9 @@
     "noConnection": "Brak połączenia z internetem - wyświetlanie danych z pamięci podręcznej",
     "viewingCachedData": "Wyświetlanie danych z pamięci podręcznej"
   },
+  "sync": {
+    "syncingData": "Synchronizacja danych w tle..."
+  },
   "location": {
     "error": "Nie można pobrać lokalizacji. Spróbuj ponownie.",
     "errorTitle": "Błąd lokalizacji",
