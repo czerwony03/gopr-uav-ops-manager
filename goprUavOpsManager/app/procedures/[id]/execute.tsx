@@ -3,6 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
+  ScrollView,
   ActivityIndicator,
   TouchableOpacity,
   Linking,
@@ -257,7 +258,14 @@ export default function ProcedureExecuteScreen() {
       </View>
 
       {/* Main content area */}
-      <View style={styles.content}>
+      <ScrollView 
+        style={styles.content}
+        contentContainerStyle={[
+          styles.scrollContent,
+          responsive.isDesktop && { paddingHorizontal: responsive.spacing.large }
+        ]}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Image viewer with zoom */}
         {currentItem.image && cachedImageUri ? (
           <TouchableOpacity 
@@ -301,10 +309,7 @@ export default function ProcedureExecuteScreen() {
         ) : null}
 
         {/* Item details */}
-        <View style={[
-          styles.detailsContainer,
-          responsive.isDesktop && { paddingHorizontal: responsive.spacing.large }
-        ]}>
+        <View style={styles.detailsContainer}>
           <View style={styles.itemHeader}>
             <View style={styles.itemNumber}>
               <Text style={styles.itemNumberText}>{currentItem.number}</Text>
@@ -344,7 +349,7 @@ export default function ProcedureExecuteScreen() {
             </TouchableOpacity>
           )}
         </View>
-      </View>
+      </ScrollView>
 
       {/* Navigation buttons */}
       <View style={[
@@ -490,6 +495,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+  },
   imageContainer: {
     backgroundColor: '#000',
     width: '100%',
@@ -509,7 +517,6 @@ const styles = StyleSheet.create({
   detailsContainer: {
     backgroundColor: '#fff',
     padding: 16,
-    flex: 1,
   },
   itemHeader: {
     flexDirection: 'row',
