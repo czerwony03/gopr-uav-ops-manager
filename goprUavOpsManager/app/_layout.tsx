@@ -3,15 +3,17 @@ import { Drawer } from 'expo-router/drawer';
 import Head from 'expo-router/head';
 import { Stack } from 'expo-router';
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { SyncProvider, useSync } from "@/contexts/SyncContext";
 import { ConsoleProvider } from "@/contexts/ConsoleContext";
 import { CustomDrawerContent } from "@/components/CustomDrawerContent";
 import ConsoleModal from "@/components/ConsoleModal";
+import SyncInfoBar from "@/components/SyncInfoBar";
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import * as Sentry from '@sentry/react-native';
 import { captureConsoleIntegration } from '@sentry/core';
 import { CrossPlatformAlertProvider } from '@/components/CrossPlatformAlert';
-import { useEffect } from 'react';
+import { useEffect, Fragment } from 'react';
 import '@/src/i18n';
 
 Sentry.init({
@@ -43,6 +45,7 @@ Sentry.init({
 
 function RootLayoutNavigation() {
   const { user, loading } = useAuth();
+  const { isSyncing } = useSync();
   const { t } = useTranslation('common');
 
   // Update Sentry user context when authentication state changes
@@ -75,8 +78,108 @@ function RootLayoutNavigation() {
   // If user is authenticated, show drawer navigation
   if (user) {
     return (
-      <Drawer
-        drawerContent={CustomDrawerContent}
+      <Fragment>
+        <SyncInfoBar visible={isSyncing} />
+        <Drawer
+          drawerContent={CustomDrawerContent}
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: '#0066CC',
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+            drawerActiveBackgroundColor: '#e3f2fd',
+            drawerActiveTintColor: '#0066CC',
+            drawerInactiveTintColor: '#666',
+          }}
+        >
+          <Drawer.Screen
+            name="index"
+            options={{
+              title: "GOPR UAV Ops Manager",
+              drawerLabel: t('nav.home'),
+              drawerIcon: ({ color, size }) => (
+                <Ionicons name="home-outline" size={size} color={color} />
+              ),
+            }}
+          />
+          <Drawer.Screen
+            name="flights"
+            options={{
+              title: t('flights.title'),
+              headerShown: false,
+              drawerLabel: t('nav.flights'),
+              drawerIcon: ({ color, size }) => (
+                <Ionicons name="airplane-outline" size={size} color={color} />
+              ),
+            }}
+          />
+          <Drawer.Screen
+            name="drones"
+            options={{
+              title: t('drones.title'),
+              headerShown: false,
+              drawerLabel: t('nav.drones'),
+              drawerIcon: ({ color, size }) => (
+                <Ionicons name="hardware-chip-outline" size={size} color={color} />
+              ),
+            }}
+          />
+          <Drawer.Screen
+            name="users"
+            options={{
+              title: t('users.title'),
+              headerShown: false,
+              drawerLabel: t('nav.users'),
+              drawerIcon: ({ color, size }) => (
+                <Ionicons name="people-outline" size={size} color={color} />
+              ),
+            }}
+          />
+          <Drawer.Screen
+            name="procedures"
+            options={{
+              title: t('procedures.title'),
+              headerShown: false,
+              drawerLabel: t('nav.procedures'),
+              drawerIcon: ({ color, size }) => (
+                <Ionicons name="clipboard-outline" size={size} color={color} />
+              ),
+            }}
+          />
+          <Drawer.Screen
+            name="info-contact"
+            options={{
+              title: t('nav.info'),
+              drawerLabel: t('nav.info'),
+              drawerIcon: ({ color, size }) => (
+                <Ionicons name="information-circle-outline" size={size} color={color} />
+              ),
+            }}
+          />
+          <Drawer.Screen
+            name="audit-logs"
+            options={{
+              title: t('nav.auditLogs'),
+              drawerLabel: t('nav.auditLogs'),
+              drawerIcon: ({ color, size }) => (
+                <Ionicons name="document-text-outline" size={size} color={color} />
+              ),
+              drawerItemStyle: { display: 'none' }, // Hidden by default, visibility controlled in CustomDrawerContent
+            }}
+          />
+        </Drawer>
+      </Fragment>
+    );
+  }
+
+  // If user is not authenticated, show simple stack navigation
+  return (
+    <Fragment>
+      <SyncInfoBar visible={isSyncing} />
+      <Stack
         screenOptions={{
           headerStyle: {
             backgroundColor: '#0066CC',
@@ -85,116 +188,22 @@ function RootLayoutNavigation() {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-          drawerActiveBackgroundColor: '#e3f2fd',
-          drawerActiveTintColor: '#0066CC',
-          drawerInactiveTintColor: '#666',
         }}
       >
-        <Drawer.Screen
+        <Stack.Screen
           name="index"
           options={{
             title: "GOPR UAV Ops Manager",
-            drawerLabel: t('nav.home'),
-            drawerIcon: ({ color, size }) => (
-              <Ionicons name="home-outline" size={size} color={color} />
-            ),
           }}
         />
-        <Drawer.Screen
-          name="flights"
-          options={{
-            title: t('flights.title'),
-            headerShown: false,
-            drawerLabel: t('nav.flights'),
-            drawerIcon: ({ color, size }) => (
-              <Ionicons name="airplane-outline" size={size} color={color} />
-            ),
-          }}
-        />
-        <Drawer.Screen
-          name="drones"
-          options={{
-            title: t('drones.title'),
-            headerShown: false,
-            drawerLabel: t('nav.drones'),
-            drawerIcon: ({ color, size }) => (
-              <Ionicons name="hardware-chip-outline" size={size} color={color} />
-            ),
-          }}
-        />
-        <Drawer.Screen
-          name="users"
-          options={{
-            title: t('users.title'),
-            headerShown: false,
-            drawerLabel: t('nav.users'),
-            drawerIcon: ({ color, size }) => (
-              <Ionicons name="people-outline" size={size} color={color} />
-            ),
-          }}
-        />
-        <Drawer.Screen
-          name="procedures"
-          options={{
-            title: t('procedures.title'),
-            headerShown: false,
-            drawerLabel: t('nav.procedures'),
-            drawerIcon: ({ color, size }) => (
-              <Ionicons name="clipboard-outline" size={size} color={color} />
-            ),
-          }}
-        />
-        <Drawer.Screen
+        <Stack.Screen
           name="info-contact"
           options={{
             title: t('nav.info'),
-            drawerLabel: t('nav.info'),
-            drawerIcon: ({ color, size }) => (
-              <Ionicons name="information-circle-outline" size={size} color={color} />
-            ),
           }}
         />
-        <Drawer.Screen
-          name="audit-logs"
-          options={{
-            title: t('nav.auditLogs'),
-            drawerLabel: t('nav.auditLogs'),
-            drawerIcon: ({ color, size }) => (
-              <Ionicons name="document-text-outline" size={size} color={color} />
-            ),
-            drawerItemStyle: { display: 'none' }, // Hidden by default, visibility controlled in CustomDrawerContent
-          }}
-        />
-      </Drawer>
-    );
-  }
-
-  // If user is not authenticated, show simple stack navigation
-  return (
-    <Stack
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#0066CC',
-        },
-        headerTintColor: '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-      }}
-    >
-      <Stack.Screen
-        name="index"
-        options={{
-          title: "GOPR UAV Ops Manager",
-        }}
-      />
-      <Stack.Screen
-        name="info-contact"
-        options={{
-          title: t('nav.info'),
-        }}
-      />
-    </Stack>
+      </Stack>
+    </Fragment>
   );
 }
 
@@ -234,12 +243,14 @@ export default Sentry.wrap(function RootLayout() {
         <meta name="google" content="notranslate"/>
       </Head>
       <ConsoleProvider>
-        <AuthProvider>
-          <CrossPlatformAlertProvider>
-            <RootLayoutNavigation />
-            <ConsoleModal />
-          </CrossPlatformAlertProvider>
-        </AuthProvider>
+        <SyncProvider>
+          <AuthProvider>
+            <CrossPlatformAlertProvider>
+              <RootLayoutNavigation />
+              <ConsoleModal />
+            </CrossPlatformAlertProvider>
+          </AuthProvider>
+        </SyncProvider>
       </ConsoleProvider>
     </GestureHandlerRootView>
   );
