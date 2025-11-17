@@ -955,7 +955,7 @@
     }
   },
   "tasks": {
-    "title": "Zadania",
+    "titleHeader": "Zadania",
     "taskDetails": "Szczegóły zadania",
     "createTask": "Utwórz zadanie",
     "editTask": "Edytuj zadanie",

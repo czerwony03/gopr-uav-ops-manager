@@ -152,7 +152,7 @@ function RootLayoutNavigation() {
           <Drawer.Screen
             name="tasks"
             options={{
-              title: t('tasks.title'),
+              title: t('tasks.titleHeader'),
               headerShown: false,
               drawerLabel: t('nav.tasks'),
               drawerIcon: ({ color, size }) => (

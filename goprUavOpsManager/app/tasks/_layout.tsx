@@ -1,8 +1,11 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
+import { TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function TasksLayout() {
   const { t } = useTranslation('common');
+  const router = useRouter();
 
   return (
     <Stack
@@ -19,7 +22,24 @@ export default function TasksLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: t('tasks.title'),
+          title: t('tasks.titleHeader'),
+          headerStyle: { backgroundColor: '#0066CC' },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold' },
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => {
+                if (router.canGoBack()) {
+                  router.back();
+                } else {
+                  router.replace('/');
+                }
+              }}
+              style={{ paddingHorizontal: 8 }}
+            >
+              <Ionicons name="chevron-back" size={24} color="#fff" />
+            </TouchableOpacity>
+          ),
         }}
       />
       <Stack.Screen
