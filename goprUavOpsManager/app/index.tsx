@@ -77,10 +77,10 @@ export default function Index() {
       show: true
     },
     {
-      key: 'profile',
-      title: t('dashboard.navigation.profile'),
-      icon: 'person-outline',
-      route: `/users/${user.uid}`,
+      key: 'tasks',
+      title: t('dashboard.navigation.tasks'),
+      icon: 'create-outline',
+      route: '/task',
       color: '#9C27B0',
       show: true
     },

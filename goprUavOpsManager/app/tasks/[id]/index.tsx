@@ -256,7 +256,7 @@ export default function TaskDetailsScreen() {
             <Text style={styles.detailLabel}>{t('tasks.selfSignEnabled')}:</Text>
             <Text style={styles.detailValue}>{task.selfSign ? t('common.yes') : t('common.no')}</Text>
           </View>
-          {task.droneId && (
+          {task.droneId ? (
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>{t('tasks.attachedToDrone')}:</Text>
               {drone ? (
@@ -271,8 +271,8 @@ export default function TaskDetailsScreen() {
                 <Text style={styles.detailValue}>{task.droneId}</Text>
               )}
             </View>
-          )}
-          {task.procedureId && (
+          ) : null}
+          {task.procedureId ? (
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>{t('tasks.attachedToProcedure')}:</Text>
               {procedure ? (
@@ -285,7 +285,7 @@ export default function TaskDetailsScreen() {
                 <Text style={styles.detailValue}>{task.procedureId}</Text>
               )}
             </View>
-          )}
+          ) : null}
         </View>
 
         {/* Timestamps */}
@@ -295,22 +295,22 @@ export default function TaskDetailsScreen() {
             <Text style={styles.detailLabel}>{t('tasks.created')}:</Text>
             <Text style={styles.detailValue}>{formatDate(task.createdAt)}</Text>
           </View>
-          {task.startedAt && (
+          {task.startedAt ? (
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>{t('tasks.started')}:</Text>
               <Text style={styles.detailValue}>{formatDate(task.startedAt)}</Text>
             </View>
-          )}
-          {task.finishedAt && (
+          ) : null}
+          {task.finishedAt ? (
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>{t('tasks.finished')}:</Text>
               <Text style={styles.detailValue}>{formatDate(task.finishedAt)}</Text>
             </View>
-          )}
+          ) : null}
         </View>
 
         {/* Status Update Section */}
-        {canUpdateStatus() && (
+        {canUpdateStatus() ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('tasks.updateStatus')}</Text>
             
@@ -351,20 +351,20 @@ export default function TaskDetailsScreen() {
               )}
             </TouchableOpacity>
           </View>
-        )}
+        ) : null}
 
         {/* Current Status Update Text */}
-        {task.statusUpdateText && (
+        {task.statusUpdateText ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('tasks.currentStatusUpdate')}</Text>
             <Text style={styles.statusUpdateDisplay}>{task.statusUpdateText}</Text>
           </View>
-        )}
+        ) : null}
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
           {/* Self-assign button */}
-          {!task.assignedTo && task.selfSign && (
+          {!task.assignedTo && task.selfSign ? (
             <TouchableOpacity
               style={[styles.button, styles.successButton, getDisabledStyle()]}
               onPress={handleSelfAssign}
@@ -372,10 +372,10 @@ export default function TaskDetailsScreen() {
             >
               <Text style={styles.buttonText}>{t('tasks.selfAssign')}</Text>
             </TouchableOpacity>
-          )}
+          ) : null}
 
           {/* Edit and Delete buttons for admins/managers */}
-          {user && TaskService.canModifyTasks(user.role) && !task.isDeleted && (
+          {user && TaskService.canModifyTasks(user.role) && !task.isDeleted ? (
             <>
               <TouchableOpacity
                 style={[styles.button, styles.secondaryButton, getDisabledStyle()]}
@@ -392,7 +392,7 @@ export default function TaskDetailsScreen() {
                 <Text style={styles.buttonText}>{t('common.delete')}</Text>
               </TouchableOpacity>
             </>
-          )}
+          ) : null}
         </View>
       </ScrollView>
     </SafeAreaView>
