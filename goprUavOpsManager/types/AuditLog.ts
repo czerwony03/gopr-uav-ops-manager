@@ -2,7 +2,7 @@
 export type AuditEntityType = 'drone' | 'flight' | 'procedureChecklist' | 'user' | 'category' | 'droneComment' | 'droneClaim';
 
 // Actions that can be performed on entities
-export type AuditAction = 'create' | 'edit' | 'delete' | 'restore' | 'view' | 'login' | 'soft_delete' | 'update' | 'hide' | 'release' | 'admin_override' | 'admin_override_end' | 'admin_override_create';
+export type AuditAction = 'create' | 'edit' | 'delete' | 'restore' | 'view' | 'login' | 'soft_delete' | 'update' | 'hide' | 'release' | 'admin_override' | 'admin_override_end' | 'admin_override_create' | 'execute_start' | 'execute_finish';
 
 // Application platforms
 export type ApplicationPlatform = 'web' | 'ios' | 'android';
