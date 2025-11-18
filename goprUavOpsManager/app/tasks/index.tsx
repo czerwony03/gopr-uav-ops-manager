@@ -398,6 +398,21 @@ export default function TasksListScreen() {
               {t('tasks.myFinished')}
             </Text>
           </TouchableOpacity>
+          {/* All Tasks tab - only for admin/manager */}
+          {user && TaskService.canModifyTasks(user.role) && (
+            <TouchableOpacity
+              style={[styles.filterTab, activeFilter === 'all' && styles.activeFilterTab]}
+              onPress={() => setActiveFilter('all')}
+            >
+              <Text style={[
+                styles.filterTabText, 
+                activeFilter === 'all' && styles.activeFilterTabText,
+                { fontSize: responsive.fontSize.small }
+              ]}>
+                {t('tasks.allTasks')}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <FlatList
