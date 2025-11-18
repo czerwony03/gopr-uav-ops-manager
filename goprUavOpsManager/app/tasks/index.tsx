@@ -30,7 +30,7 @@ export default function TasksListScreen() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<TaskFilter>('unassigned');
+  const [activeFilter, setActiveFilter] = useState<TaskFilter>('my_open');
   const [drones, setDrones] = useState<Map<string, Drone>>(new Map());
   const [procedures, setProcedures] = useState<Map<string, ProcedureChecklist>>(new Map());
   const [users, setUsers] = useState<Map<string, UserPublicInfo>>(new Map());
