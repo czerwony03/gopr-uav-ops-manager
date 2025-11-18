@@ -14,10 +14,12 @@ import { useTranslation } from 'react-i18next';
 import { Task, TaskFilter } from '@/types/Task';
 import { Drone } from '@/types/Drone';
 import { ProcedureChecklist } from '@/types/ProcedureChecklist';
+import { UserPublicInfo } from '@/types/User';
 import { useAuth } from '@/contexts/AuthContext';
 import { TaskService } from '@/services/taskService';
 import { DroneService } from '@/services/droneService';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
+import { UserService } from '@/services/userService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
@@ -31,6 +33,7 @@ export default function TasksListScreen() {
   const [activeFilter, setActiveFilter] = useState<TaskFilter>('unassigned');
   const [drones, setDrones] = useState<Map<string, Drone>>(new Map());
   const [procedures, setProcedures] = useState<Map<string, ProcedureChecklist>>(new Map());
+  const [users, setUsers] = useState<Map<string, UserPublicInfo>>(new Map());
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation('common');
@@ -64,14 +67,17 @@ export default function TasksListScreen() {
       // Fetch drone and procedure data for tasks
       const droneMap = new Map<string, Drone>();
       const procedureMap = new Map<string, ProcedureChecklist>();
+      const userMap = new Map<string, UserPublicInfo>();
       
-      // Collect unique drone and procedure IDs
+      // Collect unique drone, procedure and user IDs
       const droneIds = new Set<string>();
       const procedureIds = new Set<string>();
+      const userIds = new Set<string>();
       
       tasksList.forEach(task => {
         if (task.droneId) droneIds.add(task.droneId);
         if (task.procedureId) procedureIds.add(task.procedureId);
+        if (task.assignedTo) userIds.add(task.assignedTo);
       });
       
       // Fetch drones
@@ -98,8 +104,21 @@ export default function TasksListScreen() {
         }
       }
       
+      // Fetch assigned users
+      for (const userId of userIds) {
+        try {
+          const userInfo = await UserService.getUserPublicInfo(userId);
+          if (userInfo) {
+            userMap.set(userId, userInfo);
+          }
+        } catch (error) {
+          console.error(`Error fetching user ${userId}:`, error);
+        }
+      }
+      
       setDrones(droneMap);
       setProcedures(procedureMap);
+      setUsers(userMap);
     } catch (error) {
       console.error('Error fetching tasks:', error);
       crossPlatformAlert.showAlert({
@@ -212,6 +231,8 @@ export default function TasksListScreen() {
   const renderTaskItem = ({ item }: { item: Task }) => {
     const drone = item.droneId ? drones.get(item.droneId) : null;
     const procedure = item.procedureId ? procedures.get(item.procedureId) : null;
+    const assignedUser = item.assignedTo ? users.get(item.assignedTo) : null;
+    const isAdminOrManager = user && TaskService.canModifyTasks(user.role);
     
     return (
       <View style={[
@@ -238,6 +259,18 @@ export default function TasksListScreen() {
           styles.taskDescription,
           { fontSize: responsive.fontSize.small }
         ]} numberOfLines={2}>{item.description}</Text>
+        
+        {/* Show assigned user for admin/manager */}
+        {isAdminOrManager && item.assignedTo ? (
+          <View style={styles.taskDetailRow}>
+            <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
+              {t('tasks.assignedTo')}: 
+            </Text>
+            <Text style={[styles.taskDetailValue, { fontSize: responsive.fontSize.small }]}>
+              {assignedUser ? assignedUser.displayName : item.assignedTo}
+            </Text>
+          </View>
+        ) : null}
         
         {item.droneId ? (
           <View style={styles.taskDetailRow}>
@@ -576,6 +609,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     marginBottom: 4,
+  },
+  taskDetailValue: {
+    fontSize: 12,
+    color: '#333',
+    marginLeft: 4,
   },
   taskDetailRow: {
     flexDirection: 'row',
