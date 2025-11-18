@@ -1,0 +1,711 @@
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+  RefreshControl,
+  TouchableOpacity,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Link, useRouter, useFocusEffect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { Task, TaskFilter } from '@/types/Task';
+import { Drone } from '@/types/Drone';
+import { ProcedureChecklist } from '@/types/ProcedureChecklist';
+import { UserPublicInfo } from '@/types/User';
+import { useAuth } from '@/contexts/AuthContext';
+import { TaskService } from '@/services/taskService';
+import { DroneService } from '@/services/droneService';
+import { ProcedureChecklistService } from '@/services/procedureChecklistService';
+import { UserService } from '@/services/userService';
+import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
+import { useOfflineButtons } from '@/utils/useOfflineButtons';
+import { useNetworkStatus } from '@/utils/useNetworkStatus';
+import OfflineInfoBar from '@/components/OfflineInfoBar';
+import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
+
+export default function TasksListScreen() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<TaskFilter>('my_open');
+  const [drones, setDrones] = useState<Map<string, Drone>>(new Map());
+  const [procedures, setProcedures] = useState<Map<string, ProcedureChecklist>>(new Map());
+  const [users, setUsers] = useState<Map<string, UserPublicInfo>>(new Map());
+  const { user } = useAuth();
+  const router = useRouter();
+  const { t } = useTranslation('common');
+  const crossPlatformAlert = useCrossPlatformAlert();
+  const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
+  const { isConnected } = useNetworkStatus();
+  const responsive = useResponsiveLayout();
+
+  const fetchTasks = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      let tasksList: Task[] = [];
+      
+      switch (activeFilter) {
+        case 'unassigned':
+          tasksList = await TaskService.getUnassignedTasks(user.role);
+          break;
+        case 'my_open':
+          tasksList = await TaskService.getUserTasks(user.uid, user.role, false);
+          break;
+        case 'my_finished':
+          tasksList = await TaskService.getUserTasks(user.uid, user.role, true);
+          break;
+        default:
+          tasksList = await TaskService.getTasks(user.role);
+      }
+      
+      setTasks(tasksList);
+      
+      // Fetch drone and procedure data for tasks
+      const droneMap = new Map<string, Drone>();
+      const procedureMap = new Map<string, ProcedureChecklist>();
+      const userMap = new Map<string, UserPublicInfo>();
+      
+      // Collect unique drone, procedure and user IDs
+      const droneIds = new Set<string>();
+      const procedureIds = new Set<string>();
+      const userIds = new Set<string>();
+      
+      tasksList.forEach(task => {
+        if (task.droneId) droneIds.add(task.droneId);
+        if (task.procedureId) procedureIds.add(task.procedureId);
+        if (task.assignedTo) userIds.add(task.assignedTo);
+      });
+      
+      // Fetch drones
+      for (const droneId of droneIds) {
+        try {
+          const drone = await DroneService.getDrone(droneId, user.role);
+          if (drone) {
+            droneMap.set(droneId, drone);
+          }
+        } catch (error) {
+          console.error(`Error fetching drone ${droneId}:`, error);
+        }
+      }
+      
+      // Fetch procedures
+      for (const procedureId of procedureIds) {
+        try {
+          const procedure = await ProcedureChecklistService.getProcedureChecklist(procedureId, user.role);
+          if (procedure) {
+            procedureMap.set(procedureId, procedure);
+          }
+        } catch (error) {
+          console.error(`Error fetching procedure ${procedureId}:`, error);
+        }
+      }
+      
+      // Fetch assigned users
+      for (const userId of userIds) {
+        try {
+          const userInfo = await UserService.getUserPublicInfo(userId);
+          if (userInfo) {
+            userMap.set(userId, userInfo);
+          }
+        } catch (error) {
+          console.error(`Error fetching user ${userId}:`, error);
+        }
+      }
+      
+      setDrones(droneMap);
+      setProcedures(procedureMap);
+      setUsers(userMap);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      crossPlatformAlert.showAlert({
+        title: t('common.error'), 
+        message: t('tasks.errors.fetchFailed')
+      });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [user, activeFilter, t]);
+
+  // Authentication check - redirect if not logged in
+  useEffect(() => {
+    if (!user) {
+      router.replace('/');
+      return;
+    }
+  }, [user, router]);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
+
+  // Refresh tasks when the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        fetchTasks();
+      }
+    }, [fetchTasks, user])
+  );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchTasks();
+  };
+
+  const handleCreateTask = () => {
+    if (!isButtonDisabled()) {
+      router.push('/tasks/create');
+    }
+  };
+
+  const handleManageTemplates = () => {
+    if (!isButtonDisabled()) {
+      router.push('/tasks/templates');
+    }
+  };
+
+  const handleSelfAssign = async (task: Task) => {
+    if (!user || isButtonDisabled()) return;
+
+    crossPlatformAlert.showAlert({
+      title: t('tasks.selfAssignTitle'),
+      message: t('tasks.selfAssignConfirmation', { title: task.title }),
+      buttons: [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('tasks.selfAssign'),
+          onPress: async () => {
+            try {
+              await TaskService.selfAssignTask(task.id, user.uid);
+              await fetchTasks(); // Refresh the list
+              crossPlatformAlert.showAlert({ title: t('common.success'), message: t('tasks.selfAssignSuccess') });
+            } catch (error) {
+              console.error('Error self-assigning task:', error);
+              crossPlatformAlert.showAlert({ 
+                title: t('common.error'), 
+                message: error instanceof Error ? error.message : t('tasks.errors.selfAssignFailed')
+              });
+            }
+          },
+        },
+      ]
+    });
+  };
+
+  const handleDeleteTask = async (task: Task) => {
+    if (!user || isButtonDisabled()) return;
+
+    crossPlatformAlert.showAlert({
+      title: t('tasks.deleteTitle'),
+      message: t('tasks.deleteConfirmation', { title: task.title }),
+      buttons: [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await TaskService.deleteTask(task.id, user.role, user.uid);
+              await fetchTasks(); // Refresh the list
+              crossPlatformAlert.showAlert({ title: t('common.success'), message: t('tasks.deleteSuccess') });
+            } catch (error) {
+              console.error('Error deleting task:', error);
+              crossPlatformAlert.showAlert({ title: t('common.error'), message: t('tasks.errors.deleteFailed') });
+            }
+          },
+        },
+      ]
+    });
+  };
+
+  const formatDate = (date?: Date): string => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString();
+  };
+
+  const renderTaskItem = ({ item }: { item: Task }) => {
+    const drone = item.droneId ? drones.get(item.droneId) : null;
+    const procedure = item.procedureId ? procedures.get(item.procedureId) : null;
+    const assignedUser = item.assignedTo ? users.get(item.assignedTo) : null;
+    const isAdminOrManager = user && TaskService.canModifyTasks(user.role);
+    
+    return (
+      <View style={[
+        styles.taskCard, 
+        item.isDeleted && styles.deletedCard,
+        responsive.isDesktop && {
+          padding: responsive.spacing.large,
+        }
+      ]}>
+        <View style={styles.taskHeader}>
+          <Text style={[
+            styles.taskTitle,
+            { fontSize: responsive.fontSize.subtitle }
+          ]}>{item.title}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: TaskService.getStatusColor(item.status) }]}>
+            <Text style={[
+              styles.statusBadgeText,
+              { fontSize: responsive.fontSize.small }
+            ]}>{TaskService.formatTaskStatus(item.status)}</Text>
+          </View>
+        </View>
+        
+        <Text style={[
+          styles.taskDescription,
+          { fontSize: responsive.fontSize.small }
+        ]} numberOfLines={2}>{item.description}</Text>
+        
+        {/* Show assigned user for admin/manager */}
+        {isAdminOrManager && item.assignedTo ? (
+          <View style={styles.taskDetailRow}>
+            <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
+              {t('tasks.assignedTo')}: 
+            </Text>
+            <Text style={[styles.taskDetailValue, { fontSize: responsive.fontSize.small }]}>
+              {assignedUser ? assignedUser.displayName : item.assignedTo}
+            </Text>
+          </View>
+        ) : null}
+        
+        {item.droneId ? (
+          <View style={styles.taskDetailRow}>
+            <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
+              {t('tasks.attachedToDrone')}: 
+            </Text>
+            {drone ? (
+              <Link href={`/drones/${item.droneId}`} asChild>
+                <TouchableOpacity>
+                  <Text style={[styles.linkText, { fontSize: responsive.fontSize.small }]}>
+                    {drone.name} ({drone.inventoryCode})
+                  </Text>
+                </TouchableOpacity>
+              </Link>
+            ) : (
+              <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
+                {item.droneId}
+              </Text>
+            )}
+          </View>
+        ) : null}
+        {item.procedureId ? (
+          <View style={styles.taskDetailRow}>
+            <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
+              {t('tasks.attachedToProcedure')}: 
+            </Text>
+            {procedure ? (
+              <Link href={`/procedures/${item.procedureId}`} asChild>
+                <TouchableOpacity>
+                  <Text style={[styles.linkText, { fontSize: responsive.fontSize.small }]}>
+                    {procedure.title}
+                  </Text>
+                </TouchableOpacity>
+              </Link>
+            ) : (
+              <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
+                {item.procedureId}
+              </Text>
+            )}
+          </View>
+        ) : null}
+        
+        <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
+          {t('tasks.created')}: {formatDate(item.createdAt)}
+        </Text>
+        
+        {item.startedAt ? (
+          <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
+            {t('tasks.started')}: {formatDate(item.startedAt)}
+          </Text>
+        ) : null}
+        
+        {item.finishedAt ? (
+          <Text style={[styles.taskDetail, { fontSize: responsive.fontSize.small }]}>
+            {t('tasks.finished')}: {formatDate(item.finishedAt)}
+          </Text>
+        ) : null}
+
+        {item.statusUpdateText ? (
+          <Text style={styles.statusUpdateText}>
+            {t('tasks.statusUpdate')}: {item.statusUpdateText}
+          </Text>
+        ) : null}
+
+        <View style={styles.actionButtons}>
+          <Link href={`/tasks/${item.id}`} asChild>
+            <TouchableOpacity style={styles.viewButton}>
+              <Text style={styles.viewButtonText}>{t('tasks.viewDetails')}</Text>
+            </TouchableOpacity>
+          </Link>
+
+          {/* Self-assign button for unassigned tasks with selfSign enabled */}
+          {!item.assignedTo && item.selfSign && (
+            <TouchableOpacity 
+              style={[styles.assignButton, getDisabledStyle()]} 
+              onPress={() => handleSelfAssign(item)}
+              disabled={isButtonDisabled()}
+            >
+              <Text style={[styles.assignButtonText, isButtonDisabled() && { color: '#999' }]}>
+                {t('tasks.selfAssign')}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Delete button for admins/managers */}
+          {user && TaskService.canModifyTasks(user.role) && !item.isDeleted ? (
+            <TouchableOpacity 
+              style={[styles.deleteButton, getDisabledStyle()]} 
+              onPress={() => handleDeleteTask(item)}
+              disabled={isButtonDisabled()}
+            >
+              <Text style={[styles.deleteButtonText, isButtonDisabled() && { color: '#999' }]}>
+                {t('common.delete')}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </View>
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#0066CC" />
+      </View>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container} edges={['bottom']}>
+      <OfflineInfoBar visible={!isConnected} />
+      
+      {/* Main Content Container with max width for desktop */}
+      <View style={[
+        styles.mainContent,
+        responsive.isDesktop && {
+          maxWidth: responsive.maxContentWidth,
+          width: '100%',
+          alignSelf: 'center',
+        }
+      ]}>
+        {/* Filter Tabs */}
+        <View style={styles.filterContainer}>
+          <TouchableOpacity
+            style={[styles.filterTab, activeFilter === 'unassigned' && styles.activeFilterTab]}
+            onPress={() => setActiveFilter('unassigned')}
+          >
+            <Text style={[
+              styles.filterTabText, 
+              activeFilter === 'unassigned' && styles.activeFilterTabText,
+              { fontSize: responsive.fontSize.small }
+            ]}>
+              {t('tasks.unassigned')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterTab, activeFilter === 'my_open' && styles.activeFilterTab]}
+            onPress={() => setActiveFilter('my_open')}
+          >
+            <Text style={[
+              styles.filterTabText, 
+              activeFilter === 'my_open' && styles.activeFilterTabText,
+              { fontSize: responsive.fontSize.small }
+            ]}>
+              {t('tasks.myOpen')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterTab, activeFilter === 'my_finished' && styles.activeFilterTab]}
+            onPress={() => setActiveFilter('my_finished')}
+          >
+            <Text style={[
+              styles.filterTabText, 
+              activeFilter === 'my_finished' && styles.activeFilterTabText,
+              { fontSize: responsive.fontSize.small }
+            ]}>
+              {t('tasks.myFinished')}
+            </Text>
+          </TouchableOpacity>
+          {/* All Tasks tab - only for admin/manager */}
+          {user && TaskService.canModifyTasks(user.role) && (
+            <TouchableOpacity
+              style={[styles.filterTab, activeFilter === 'all' && styles.activeFilterTab]}
+              onPress={() => setActiveFilter('all')}
+            >
+              <Text style={[
+                styles.filterTabText, 
+                activeFilter === 'all' && styles.activeFilterTabText,
+                { fontSize: responsive.fontSize.small }
+              ]}>
+                {t('tasks.allTasks')}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <FlatList
+          data={tasks}
+          renderItem={renderTaskItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={[
+            styles.listContent,
+            { padding: responsive.spacing.medium }
+          ]}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={[styles.emptyText, { fontSize: responsive.fontSize.body }]}>
+                {t('tasks.noTasks')}
+              </Text>
+            </View>
+          }
+        />
+
+        {/* Action Buttons */}
+        {user && TaskService.canModifyTasks(user.role) && (
+          <View style={[
+            styles.fabContainer,
+            responsive.isDesktop && {
+              flexDirection: 'row',
+              bottom: responsive.spacing.large,
+              right: responsive.spacing.large,
+            }
+          ]}>
+            <TouchableOpacity
+              style={[
+                styles.fab, 
+                getDisabledStyle(),
+                responsive.isDesktop && {
+                  paddingHorizontal: responsive.spacing.large,
+                  paddingVertical: responsive.spacing.medium,
+                }
+              ]}
+              onPress={handleManageTemplates}
+              disabled={isButtonDisabled()}
+            >
+              <Text style={[
+                styles.fabText,
+                { fontSize: responsive.fontSize.small }
+              ]}>{t('tasks.templates')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.fab, 
+                styles.fabPrimary, 
+                getDisabledStyle(),
+                responsive.isDesktop && {
+                  paddingHorizontal: responsive.spacing.large,
+                  paddingVertical: responsive.spacing.medium,
+                  marginLeft: responsive.spacing.medium,
+                }
+              ]}
+              onPress={handleCreateTask}
+              disabled={isButtonDisabled()}
+            >
+              <Text style={[
+                styles.fabTextPrimary,
+                { fontSize: responsive.fontSize.small }
+              ]}>{t('tasks.createTask')}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  mainContent: {
+    flex: 1,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  filterTab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  activeFilterTab: {
+    borderBottomColor: '#0066CC',
+  },
+  filterTabText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  activeFilterTabText: {
+    color: '#0066CC',
+    fontWeight: 'bold',
+  },
+  listContent: {
+    padding: 16,
+  },
+  taskCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  deletedCard: {
+    opacity: 0.6,
+    borderWidth: 1,
+    borderColor: '#F44336',
+  },
+  taskHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  taskTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    flex: 1,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  statusBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  taskDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  taskDetail: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 4,
+  },
+  taskDetailValue: {
+    fontSize: 12,
+    color: '#333',
+    marginLeft: 4,
+  },
+  taskDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  linkText: {
+    fontSize: 12,
+    color: '#0066CC',
+    textDecorationLine: 'underline',
+  },
+  statusUpdateText: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 8,
+  },
+  viewButton: {
+    flex: 1,
+    backgroundColor: '#0066CC',
+    paddingVertical: 8,
+    borderRadius: 4,
+    alignItems: 'center',
+  },
+  viewButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  assignButton: {
+    flex: 1,
+    backgroundColor: '#4CAF50',
+    paddingVertical: 8,
+    borderRadius: 4,
+    alignItems: 'center',
+  },
+  assignButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#F44336',
+    paddingVertical: 8,
+    borderRadius: 4,
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: '#F44336',
+    fontWeight: 'bold',
+  },
+  emptyContainer: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+  },
+  fabContainer: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    gap: 12,
+  },
+  fab: {
+    backgroundColor: '#666',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  fabPrimary: {
+    backgroundColor: '#0066CC',
+  },
+  fabText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  fabTextPrimary: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+});

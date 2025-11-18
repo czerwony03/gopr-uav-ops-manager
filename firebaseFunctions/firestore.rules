@@ -180,6 +180,24 @@ service cloud.firestore {
     }
 
     // =========================
+    // TASKS COLLECTION
+    // =========================
+    match /tasks/{taskId} {
+      allow read: if isSignedIn();
+      allow write: if isManager() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // =========================
+    // TASK TEMPLATES COLLECTION
+    // =========================
+    match /taskTemplates/{taskTemplateId} {
+      allow read: if isManager() || isAdmin();
+      allow write: if isManager() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // =========================
     // APP SETTINGS COLLECTION
     // =========================
     match /appsettings/{settingId} {
