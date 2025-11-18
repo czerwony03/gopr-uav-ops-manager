@@ -966,6 +966,7 @@
     "unassigned": "Unassigned",
     "myOpen": "My Open",
     "myFinished": "My Finished",
+    "allTasks": "All Tasks",
     "selfAssign": "Self Assign",
     "selfAssignTitle": "Self Assign Task",
     "selfAssignConfirmation": "Do you want to assign \"{{title}}\" to yourself?",

@@ -200,6 +200,8 @@ export default function TaskDetailsScreen() {
 
   const canUpdateStatus = useCallback(() => {
     if (!task || !user) return false;
+    // Do not allow status changes if task is unassigned
+    if (!task.assignedTo) return false;
     const isAdminOrManager = TaskService.canModifyTasks(user.role);
     const isAssignedUser = task.assignedTo === user.uid;
     return isAdminOrManager || isAssignedUser;

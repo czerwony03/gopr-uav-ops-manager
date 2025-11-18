@@ -967,6 +967,7 @@
     "unassigned": "Nieprzypisane",
     "myOpen": "Moje otwarte",
     "myFinished": "Moje zakończone",
+    "allTasks": "Wszystkie zadania",
     "selfAssign": "Przypisz do siebie",
     "selfAssignTitle": "Przypisz zadanie do siebie",
     "selfAssignConfirmation": "Czy chcesz przypisać \"{{title}}\" do siebie?",
