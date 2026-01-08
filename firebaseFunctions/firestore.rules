@@ -179,6 +179,24 @@ service cloud.firestore {
       allow delete: if isManager() || isAdmin();
     }
 
+    match /tasks/{taskId} {
+      allow read: if isSignedIn();
+      allow create: if isManager() || isAdmin();
+      allow update: if isSignedIn() && (
+        resource.data.assignedTo == request.auth.uid ||
+        (!('assignedTo' in resource.data) && resource.data.selfSign == true) ||
+        isManager() ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /taskTemplates/{taskTemplateId} {
+      allow read: if isManager() || isAdmin();
+      allow write: if isManager() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
     // =========================
     // APP SETTINGS COLLECTION
     // =========================
