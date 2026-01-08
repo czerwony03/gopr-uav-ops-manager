@@ -95,7 +95,17 @@ export default function CategoriesListScreen() {
         })
       );
 
-      setCategories(categoriesWithCount);
+      // Filter out the "Uncategorized" category if it's empty
+      const filteredCategories = categoriesWithCount.filter(category => {
+        // Keep all categories that are not the default "Uncategorized" category
+        if (category.id !== DEFAULT_CATEGORY_ID) {
+          return true;
+        }
+        // Only keep "Uncategorized" if it has procedures
+        return category.procedureCount > 0;
+      });
+
+      setCategories(filteredCategories);
     } catch (error) {
       console.error('Error fetching categories:', error);
       crossPlatformAlert.showAlert({
