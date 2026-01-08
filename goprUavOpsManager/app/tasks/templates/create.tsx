@@ -118,7 +118,7 @@ export default function CreateTemplateScreen() {
               onValueChange={(value) => setFormData(prev => ({ ...prev, selfSign: value }))}
             />
           </View>
-          <Text style={styles.helpText}>{t('tasks.selfSignHelp')}</Text>
+          <Text style={styles.helpText}>{t('tasks.selfAssignHelp')}</Text>
         </View>
 
         <View style={styles.actionButtons}>

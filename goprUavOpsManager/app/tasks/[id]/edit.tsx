@@ -216,7 +216,7 @@ export default function EditTaskScreen() {
               onValueChange={(value) => setFormData(prev => ({ ...prev, selfSign: value }))}
             />
           </View>
-          <Text style={styles.helpText}>{t('tasks.selfSignHelp')}</Text>
+          <Text style={styles.helpText}>{t('tasks.selfAssignHelp')}</Text>
         </View>
 
         {/* Assign To */}
