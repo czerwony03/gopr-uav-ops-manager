@@ -299,7 +299,6 @@ The app supports Google Workspace authentication restricted to the @bieszczady.g
    - For Android: Enter your package name and SHA-1 certificate fingerprint
    - **IMPORTANT**: Add the following redirect URI to your OAuth client configuration:
      - `dev.redmed.gopruavopsmanager://`
-   - Copy the Client ID and add it to your `.env` file as `EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID`
 
 **Critical Configuration Note**: 
 - The redirect URI `dev.redmed.gopruavopsmanager://` must be exactly configured in your Google Cloud Console OAuth client
@@ -362,9 +361,6 @@ For mobile platforms (Android/iOS), the app now uses React Native Firebase with 
    ```
 
 2. **Environment Variables**: Add the Google OAuth Web Client ID to your `.env` file:
-   ```
-   EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=your_web_oauth_client_id_here
-   ```
    Note: Use the **Web** Client ID from Google Cloud Console, not the mobile-specific one.
 
 3. **Google Cloud Console Setup**: 

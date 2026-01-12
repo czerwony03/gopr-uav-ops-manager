@@ -29,7 +29,7 @@ import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 // Configure Google Sign-In for mobile platforms
 if (Platform.OS !== 'web') {
   GoogleSignin.configure({
-    webClientId: 'autoDetect', // process.env.EXPO_PUBLIC_WEB_GOOGLE_OAUTH_CLIENT_ID!, // From Firebase Console
+    webClientId: process.env.EXPO_PUBLIC_WEB_GOOGLE_OAUTH_CLIENT_ID!, // From Firebase Console
     hostedDomain: 'bieszczady.gopr.pl', // Restrict to Google Workspace domain
   });
 }

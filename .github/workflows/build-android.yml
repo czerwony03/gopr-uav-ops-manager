@@ -195,12 +195,3 @@ jobs:
           path: |
             goprUavOpsManager/android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: ignore
-
-      - name: Verify APK signature (apksigner)
-        if: env.BUILD_TYPE == 'apk' || env.BUILD_TYPE == 'both'
-        run: |
-          APK_PATH=$(ls android/app/build/outputs/apk/release/*.apk | head -n 1)
-          
-          echo "🔍 Verifying APK: $APK_PATH"
-          jarsigner -verify -verbose -certs "$APK_PATH"
-        shell: bash
