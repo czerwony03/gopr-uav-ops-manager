@@ -133,15 +133,15 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Setup Gradle cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            goprUavOpsManager/android/.gradle/caches
-            goprUavOpsManager/android/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ env.ENVIRONMENT }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-${{ env.ENVIRONMENT }}
+      #- name: Setup Gradle cache
+      #  uses: actions/cache@v4
+      #  with:
+      #    path: |
+      #      goprUavOpsManager/android/.gradle/caches
+      #      goprUavOpsManager/android/.gradle/wrapper
+      #    key: ${{ runner.os }}-gradle-${{ env.ENVIRONMENT }}
+      #    restore-keys: |
+      #      ${{ runner.os }}-gradle-${{ env.ENVIRONMENT }}
 
       - name: Decode Keystore
         run: |
