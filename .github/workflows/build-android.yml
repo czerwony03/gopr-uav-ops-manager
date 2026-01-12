@@ -181,7 +181,7 @@ jobs:
         shell: bash
 
       - name: Signing report
-        if: env.BUILD_TYPE == 'aab' || env.BUILD_TYPE == 'both'
+        if: env.BUILD_TYPE == 'apk' || env.BUILD_TYPE == 'both'
         run: |
           cd android
           ./gradlew signingReport \
