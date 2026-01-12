@@ -137,8 +137,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
+            goprUavOpsManager/android/.gradle/caches
+            goprUavOpsManager/android/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ env.ENVIRONMENT }}
           restore-keys: |
             ${{ runner.os }}-gradle-${{ env.ENVIRONMENT }}
