@@ -20,7 +20,7 @@
       "edgeToEdgeEnabled": true,
       "googleServicesFile": "./google-services.json",
       "package": "dev.redmed.gopruavopsmanager",
-      "versionCode": 65,
+      "versionCode": 66,
       "intentFilters": [
         {
           "action": "VIEW",
