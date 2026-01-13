@@ -74,8 +74,6 @@ jobs:
         run: |
           echo "$GOOGLE_SERVICES_JSON" | base64 --decode > google-services.json
         shell: bash
-        env:
-          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
       - name: Set Git commit hash
         run: echo "EXPO_PUBLIC_GIT_COMMIT_HASH=${GITHUB_SHA}" >> $GITHUB_ENV

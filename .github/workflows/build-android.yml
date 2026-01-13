@@ -101,8 +101,6 @@ jobs:
           echo "$GOOGLE_SERVICES_JSON" | base64 --decode > google-services.json
           cat google-services.json
         shell: bash
-        env:
-          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
       - name: Prebuild
         run: npx expo prebuild --platform android
