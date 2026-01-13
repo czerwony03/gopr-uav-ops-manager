@@ -10,6 +10,14 @@ on:
         description: "EAS Hosting deploy alias"
         required: true
         default: "test"
+      environment:
+        description: "Choose environment"
+        required: true
+        default: "test"
+        type: choice
+        options:
+          - test
+          - prod
   workflow_run:
     workflows: [ "Automatic Version Bump" ]
     types:
@@ -26,7 +34,7 @@ jobs:
        (github.event.comment.body == '/build' || github.event.comment.body == '/build web') &&
        github.event.issue.pull_request != null)
     runs-on: ubuntu-latest
-    environment: test
+    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'test' }}
     concurrency:
       group: expo-web-deploy-${{ github.event.inputs.alias || 'test' }}
       cancel-in-progress: true
