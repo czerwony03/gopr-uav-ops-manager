@@ -28,10 +28,10 @@ import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 // Configure Google Sign-In for mobile platforms
 if (Platform.OS !== 'web') {
-  GoogleSignin.configure({
+  /*GoogleSignin.configure({
     webClientId: process.env.EXPO_PUBLIC_WEB_GOOGLE_OAUTH_CLIENT_ID!, // From Firebase Console
     hostedDomain: 'bieszczady.gopr.pl', // Restrict to Google Workspace domain
-  });
+  });*/
 }
 
 export default function LoginScreen() {
@@ -78,6 +78,7 @@ export default function LoginScreen() {
   const handleMobileGoogleLogin = async () => {
     try {
       // Check if Google Play Services are available
+      GoogleSignin.configure();
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
       
       // Get the user's ID token
