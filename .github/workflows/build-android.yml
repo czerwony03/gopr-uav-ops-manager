@@ -155,8 +155,7 @@ jobs:
 
       - name: Verify environment
         run: |
-          printenv > .env-verify
-          echo "$GITHUB_ENV" > .env-verify2
+          printenv | sort > .env-verify
         shell: bash
 
       - name: Build Release APK
