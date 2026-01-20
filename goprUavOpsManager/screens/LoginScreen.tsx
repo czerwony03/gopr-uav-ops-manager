@@ -23,16 +23,14 @@ import {
   getCurrentUser
 } from '@/utils/firebaseUtils';
 import {AuditLogService} from "@/services/auditLogService";
-import {User} from "@/types/User";
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 
 // Configure Google Sign-In for mobile platforms
 if (Platform.OS !== 'web') {
-  GoogleSignin.configure();
-  /*GoogleSignin.configure({
-    webClientId: process.env.EXPO_PUBLIC_WEB_GOOGLE_OAUTH_CLIENT_ID!, // From Firebase Console
-    hostedDomain: 'bieszczady.gopr.pl', // Restrict to Google Workspace domain
-  });*/
+  GoogleSignin.configure({
+    webClientId: process.env.EXPO_PUBLIC_WEB_GOOGLE_OAUTH_CLIENT_ID, // From Firebase Console
+    //hostedDomain: 'bieszczady.gopr.pl', // Restrict to Google Workspace domain
+  });
 }
 
 export default function LoginScreen() {
