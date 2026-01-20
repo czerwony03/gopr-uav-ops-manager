@@ -78,17 +78,23 @@ export default function LoginScreen() {
     try {
       // Check if Google Play Services are available
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      console.log('Play services available');
       
       // Get the user's ID token
       const signInResult = await GoogleSignin.signIn();
+      console.log('Google signIn completed:', signInResult);
       const idToken = signInResult.data?.idToken;
       
       if (!idToken) {
         throw new Error('No ID token received from Google Sign-In');
       }
+
+      console.log('Id token received from Google Sign-In:', idToken);
       
       // Create a Google credential with the token (React Native Firebase API)
       const googleCredential = GoogleAuthProvider.credential(idToken);
+
+      console.log('Google credential received:', googleCredential);
       
       // Sign in the user with the credential using React Native Firebase
       const firebaseResult = await signInWithCredential(googleCredential);
