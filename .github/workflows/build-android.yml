@@ -153,6 +153,11 @@ jobs:
           keytool -list -v -keystore android/app/my-release-key.keystore -storepass ${{ secrets.ANDROID_KEYSTORE_PASSWORD }} || true
         shell: bash
 
+      - name: Verify environment
+        run: |
+          printenv
+        shell: bash
+
       - name: Build Release APK
         if: env.BUILD_TYPE == 'apk' || env.BUILD_TYPE == 'both'
         run: |
