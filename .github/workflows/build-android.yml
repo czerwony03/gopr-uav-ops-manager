@@ -155,7 +155,7 @@ jobs:
 
       - name: Verify environment
         run: |
-          printenv
+          printenv > .env-verify
         shell: bash
 
       - name: Build Release APK
