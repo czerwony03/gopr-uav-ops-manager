@@ -29,7 +29,7 @@ import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 if (Platform.OS !== 'web') {
   GoogleSignin.configure({
     webClientId: process.env.EXPO_PUBLIC_WEB_GOOGLE_OAUTH_CLIENT_ID, // From Firebase Console
-    //hostedDomain: 'bieszczady.gopr.pl', // Restrict to Google Workspace domain
+    hostedDomain: 'bieszczady.gopr.pl', // Restrict to Google Workspace domain
   });
 }
 
@@ -88,8 +88,6 @@ export default function LoginScreen() {
       if (!idToken) {
         throw new Error('No ID token received from Google Sign-In');
       }
-
-      console.log('Id token received from Google Sign-In:', idToken);
       
       // Create a Google credential with the token (React Native Firebase API)
       const googleCredential = GoogleAuthProvider.credential(idToken);
