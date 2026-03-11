@@ -44,6 +44,35 @@ export default function ProcedureDetailsScreen() {
   const crossPlatformAlert = useCrossPlatformAlert();
   const responsive = useResponsiveLayout();
 
+  // Load cached images for procedure items
+  const loadCachedImages = useCallback(async (procedure: ProcedureChecklist) => {
+    try {
+      await ImageCacheService.initialize();
+      
+      const newCachedUris = new Map<string, string>();
+      
+      // Load cached images for all items that have images
+      await Promise.all(
+        procedure.items.map(async (item) => {
+          if (item.image) {
+            try {
+              const cachedUri = await ImageCacheService.getCachedImage(item.image);
+              newCachedUris.set(item.image, cachedUri);
+            } catch (error) {
+              console.error(`Error loading cached image for item ${item.id}:`, error);
+              // Fallback to original URI
+              newCachedUris.set(item.image, item.image);
+            }
+          }
+        })
+      );
+      
+      setCachedImageUris(newCachedUris);
+    } catch (error) {
+      console.error('Error loading cached images:', error);
+    }
+  }, []);
+
   const fetchChecklist = useCallback(async () => {
     if (!user || !id) return;
     
@@ -122,36 +151,7 @@ export default function ProcedureDetailsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [user, id, isConnected, router, t, crossPlatformAlert]);
-
-  // Load cached images for procedure items
-  const loadCachedImages = useCallback(async (procedure: ProcedureChecklist) => {
-    try {
-      await ImageCacheService.initialize();
-      
-      const newCachedUris = new Map<string, string>();
-      
-      // Load cached images for all items that have images
-      await Promise.all(
-        procedure.items.map(async (item) => {
-          if (item.image) {
-            try {
-              const cachedUri = await ImageCacheService.getCachedImage(item.image);
-              newCachedUris.set(item.image, cachedUri);
-            } catch (error) {
-              console.error(`Error loading cached image for item ${item.id}:`, error);
-              // Fallback to original URI
-              newCachedUris.set(item.image, item.image);
-            }
-          }
-        })
-      );
-      
-      setCachedImageUris(newCachedUris);
-    } catch (error) {
-      console.error('Error loading cached images:', error);
-    }
-  }, []);
+  }, [user, id, isConnected, router, t, crossPlatformAlert, loadCachedImages]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {

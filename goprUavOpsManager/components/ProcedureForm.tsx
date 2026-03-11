@@ -30,6 +30,13 @@ interface ProcedureFormProps {
   loading?: boolean;
 }
 
+const defaultFormData: ProcedureChecklistFormData = {
+  title: '',
+  description: '',
+  items: [],
+  categories: [],
+};
+
 export default function ProcedureForm({ mode, initialData, onSave, onCancel, loading = false }: ProcedureFormProps) {
   const { t } = useTranslation('common');
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
@@ -41,14 +48,6 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
   // State for categories
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
-
-  // Default form data
-  const defaultFormData: ProcedureChecklistFormData = {
-    title: '',
-    description: '',
-    items: [],
-    categories: [],
-  };
 
   const [formData, setFormData] = useState<ProcedureChecklistFormData>(initialData || defaultFormData);
 

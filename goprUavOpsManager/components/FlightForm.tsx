@@ -105,7 +105,7 @@ export default function FlightForm({ mode, initialData, onSave, onCancel, loadin
     } finally {
       setDronesLoading(false);
     }
-  }, [user]);
+  }, [user, crossPlatformAlert]);
 
   useEffect(() => {
     fetchDrones();

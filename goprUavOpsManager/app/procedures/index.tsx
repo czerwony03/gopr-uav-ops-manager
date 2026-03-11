@@ -16,7 +16,6 @@ import { Category, DEFAULT_CATEGORY_ID } from '@/types/Category';
 import { useAuth } from '@/contexts/AuthContext';
 import { CategoryService } from '@/services/categoryService';
 import { OfflineCategoryService } from '@/services/offlineCategoryService';
-import { ProcedureChecklistService } from '@/services/procedureChecklistService';
 import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
 import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useNetworkStatus } from '@/utils/useNetworkStatus';
@@ -116,7 +115,7 @@ export default function CategoriesListScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user, t, crossPlatformAlert]);
+  }, [user, t, crossPlatformAlert, setSyncing]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {

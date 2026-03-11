@@ -81,7 +81,7 @@ export default function EditTemplateScreen() {
     };
 
     loadData();
-  }, [id, user, router, t]);
+  }, [id, user, router, t, crossPlatformAlert]);
 
   const handleSave = async () => {
     if (!user || !id) return;

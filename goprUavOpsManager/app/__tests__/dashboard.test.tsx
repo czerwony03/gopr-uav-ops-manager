@@ -2,6 +2,9 @@
  * Dashboard Test - Tests the main dashboard functionality and role-based access
  */
 
+import { mockUsers } from './test-utils';
+import { UserRole } from '@/types/UserRole';
+
 // Mock the useAuth hook before importing the component
 const mockUseAuth = jest.fn();
 
@@ -44,8 +47,6 @@ jest.mock('@/utils/useOfflineButtons', () => ({
   }),
 }));
 
-import { mockUsers } from './test-utils';
-import { UserRole } from '@/types/UserRole';
 
 describe('Dashboard Role-Based Access Tests', () => {
   beforeEach(() => {

@@ -87,7 +87,7 @@ export default function FlightsListScreen() {
       }
       setRefreshing(false);
     }
-  }, [user, filters, t]);
+  }, [user, filters, t, crossPlatformAlert]);
 
   const fetchDrones = useCallback(async () => {
     if (!user) return;

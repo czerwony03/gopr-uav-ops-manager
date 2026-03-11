@@ -48,7 +48,7 @@ export default function DronesListScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user, t]);
+  }, [user, t, crossPlatformAlert]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {

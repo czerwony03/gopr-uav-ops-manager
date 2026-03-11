@@ -44,7 +44,7 @@ export default function CreateTemplateScreen() {
       });
       return;
     }
-  }, [user, router, t]);
+  }, [user, router, t, crossPlatformAlert]);
 
   const handleSave = async () => {
     if (!user) return;

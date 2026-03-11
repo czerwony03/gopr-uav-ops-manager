@@ -20,29 +20,28 @@ interface UserFormProps {
   currentUserRole?: UserRole;
 }
 
+const defaultFormData: UserFormData = {
+  email: '',
+  role: '' as UserRole, // Keep empty for placeholder, but handle display better
+  firstname: '',
+  surname: '',
+  phone: '',
+  residentialAddress: '',
+  language: '', // Keep empty for placeholder, but handle display better
+  operatorNumber: '',
+  operatorValidityDate: '',
+  pilotNumber: '',
+  pilotValidityDate: '',
+  licenseConversionNumber: '',
+  qualifications: [],
+  insurance: '',
+};
+
 export default function UserForm({ mode, initialData, onSave, onCancel, loading = false, currentUserRole }: UserFormProps) {
   const { t } = useTranslation('common');
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const crossPlatformAlert = useCrossPlatformAlert();
   const responsive = useResponsiveLayout();
-
-  // Default form data
-  const defaultFormData: UserFormData = {
-    email: '',
-    role: '' as UserRole, // Keep empty for placeholder, but handle display better
-    firstname: '',
-    surname: '',
-    phone: '',
-    residentialAddress: '',
-    language: '', // Keep empty for placeholder, but handle display better
-    operatorNumber: '',
-    operatorValidityDate: '',
-    pilotNumber: '',
-    pilotValidityDate: '',
-    licenseConversionNumber: '',
-    qualifications: [],
-    insurance: '',
-  };
 
   const [formData, setFormData] = useState<UserFormData>(initialData || defaultFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});

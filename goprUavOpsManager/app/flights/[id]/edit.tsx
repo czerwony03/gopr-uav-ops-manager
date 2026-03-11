@@ -79,7 +79,7 @@ export default function EditFlightScreen() {
     } finally {
       setLoading(false);
     }
-  }, [user, router, t]);
+  }, [user, router, t, crossPlatformAlert]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {
