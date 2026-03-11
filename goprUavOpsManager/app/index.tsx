@@ -21,6 +21,14 @@ export default function Index() {
 
   console.log('[Index] Component render - user:', user?.uid, 'loading:', loading);
 
+  // Must be before any early returns to follow Rules of Hooks
+  useEffect(() => {
+    if (user && (!user.firstname?.trim() || !user.surname?.trim())) {
+      console.log('[Index] Redirecting to profile edit - missing firstname or surname');
+      router.navigate(`/users/${user.uid}/edit`);
+    }
+  }, [user, router]);
+
   // The AuthContext already handles loading user data on auth state changes
   // No need to manually refresh here, which can cause infinite loops
 
@@ -41,14 +49,6 @@ export default function Index() {
 
   console.log('[Index] User authenticated, showing dashboard for:', user.uid);
 
-  // Check if user profile is complete and redirect if needed
-  useEffect(() => {
-    // Only check if user is authenticated and profile is incomplete
-    if (user && (!user.firstname?.trim() || !user.surname?.trim())) {
-      console.log('[Index] Redirecting to profile edit - missing firstname or surname');
-      router.navigate(`/users/${user.uid}/edit`);
-    }
-  }, [user, router]);
 
   // Navigation button configuration
   const navigationButtons = [
