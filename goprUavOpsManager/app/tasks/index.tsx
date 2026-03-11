@@ -129,7 +129,7 @@ export default function TasksListScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user, activeFilter, t]);
+  }, [user, activeFilter, t, crossPlatformAlert]);
 
   // Authentication check - redirect if not logged in
   useEffect(() => {

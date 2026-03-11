@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, RenderOptions } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AuthProvider, UserData } from '@/contexts/AuthContext';
+import { UserData } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/UserRole';
 
 // Mock user data for different roles
@@ -71,12 +71,7 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
 
 const AllTheProviders: React.FC<{ children: React.ReactNode; user?: UserData | null; loading?: boolean }> = ({
   children,
-  user = null,
-  loading = false,
 }) => {
-  // Mock the AuthContext
-  const mockAuthContext = createMockAuthContext(user, loading);
-  
   return (
     <SafeAreaProvider>
       {/* We'll need to mock AuthProvider since we can't easily override its context value */}

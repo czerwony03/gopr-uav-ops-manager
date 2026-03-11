@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Modal,
-  ScrollView,
   FlatList,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -53,12 +52,7 @@ export default function DroneClaimSection({
   const [historyLoading, setHistoryLoading] = useState(false);
   const [ownerName, setOwnerName] = useState<string>('');
 
-  // Load active claim
-  useEffect(() => {
-    loadActiveClaim();
-  }, [droneId]);
-
-  const loadActiveClaim = async () => {
+  const loadActiveClaim = useCallback(async () => {
     try {
       setLoading(true);
       const claim = await DroneClaimService.getActiveClaim(droneId);
@@ -73,7 +67,12 @@ export default function DroneClaimSection({
     } finally {
       setLoading(false);
     }
-  };
+  }, [droneId]);
+
+  // Load active claim
+  useEffect(() => {
+    loadActiveClaim();
+  }, [loadActiveClaim]);
 
   const loadClaimHistory = async () => {
     try {
@@ -377,12 +376,12 @@ function ClaimHistoryItem({ claim }: { claim: DroneClaim }) {
       try {
         const name = await UserService.getUserDisplayName(claim.userId);
         setOwnerName(name);
-      } catch (error) {
+      } catch {
         setOwnerName(claim.userEmail);
       }
     };
     loadOwnerName();
-  }, [claim.userId]);
+  }, [claim.userId, claim.userEmail]);
 
   const isActive = !claim.endTime;
   const duration = claim.endTime 

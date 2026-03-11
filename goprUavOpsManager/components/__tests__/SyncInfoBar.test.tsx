@@ -1,5 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
+import { ActivityIndicator } from 'react-native';
 import SyncInfoBar from '../SyncInfoBar';
 
 // Mock react-i18next
@@ -22,7 +23,6 @@ describe('SyncInfoBar', () => {
 
   it('should display ActivityIndicator when visible', () => {
     const { UNSAFE_getByType } = render(<SyncInfoBar visible={true} />);
-    const { ActivityIndicator } = require('react-native');
     expect(UNSAFE_getByType(ActivityIndicator)).toBeTruthy();
   });
 });

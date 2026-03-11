@@ -114,7 +114,7 @@ export default function DroneDetailsScreen() {
     }
 
     fetchDrone();
-  }, [id, user, router, t]);
+  }, [id, user, router, t, crossPlatformAlert]);
 
   const refreshClaimData = useCallback(async () => {
     if (!id || !drone?.shareable) return;

@@ -33,7 +33,7 @@ export default function CreateProcedureScreen() {
       });
       return;
     }
-  }, [user, router, t]);
+  }, [user, router, t, crossPlatformAlert]);
 
   const handleSave = async (formData: ProcedureChecklistFormData) => {
     if (!user) return;

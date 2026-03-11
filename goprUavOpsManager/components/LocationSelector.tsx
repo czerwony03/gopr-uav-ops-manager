@@ -128,7 +128,7 @@ export default function LocationSelector({
     } finally {
       setIsLoadingLocation(false);
     }
-  }, [disabled, isLoadingLocation, onCoordinatesChange, onLocationChange, autoUpdateLocation, t]);
+  }, [disabled, isLoadingLocation, onCoordinatesChange, onLocationChange, autoUpdateLocation, t, crossPlatformAlert]);
 
   // Handle coordinate changes and auto-update location
   const handleCoordinatesChange = useCallback(async (newCoordinates: string) => {

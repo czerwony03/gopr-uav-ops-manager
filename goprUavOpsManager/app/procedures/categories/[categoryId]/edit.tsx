@@ -78,7 +78,7 @@ export default function EditCategoryScreen() {
     };
 
     fetchCategory();
-  }, [user, categoryId, router, crossPlatformAlert, t]);
+  }, [user, categoryId, router, crossPlatformAlert, t, isConnected]);
 
   const handleSave = async (formData: CategoryFormData) => {
     if (!user || !categoryId) {

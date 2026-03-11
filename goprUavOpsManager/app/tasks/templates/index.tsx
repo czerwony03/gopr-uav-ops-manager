@@ -43,7 +43,7 @@ export default function TemplatesListScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user, t]);
+  }, [user, t, crossPlatformAlert]);
 
   useEffect(() => {
     if (!user) {

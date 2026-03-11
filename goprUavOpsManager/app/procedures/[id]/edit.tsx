@@ -52,7 +52,7 @@ export default function EditProcedureScreen() {
     } finally {
       setLoading(false);
     }
-  }, [user, router, t]);
+  }, [user, router, t, crossPlatformAlert]);
 
   useEffect(() => {
     // Check authentication first - redirect to login if not authenticated
@@ -78,7 +78,7 @@ export default function EditProcedureScreen() {
     } else {
       router.back();
     }
-  }, [user, router, t, fetchProcedure, id]);
+  }, [user, router, t, fetchProcedure, id, crossPlatformAlert]);
 
   const handleSave = async (formData: ProcedureChecklistFormData) => {
     if (!user || !id || typeof id !== 'string') return;

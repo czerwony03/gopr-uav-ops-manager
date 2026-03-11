@@ -20,6 +20,39 @@ import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
 
 export type DroneFormData = Omit<Drone, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'isDeleted' | 'createdBy' | 'updatedBy'>;
 
+const defaultFormData: DroneFormData = {
+  name: '',
+  inventoryCode: '',
+  location: '',
+  registrationNumber: '',
+  totalFlightTime: 0,
+  equipmentRegistrationNumber: '',
+  yearOfCommissioning: new Date().getFullYear(),
+  yearOfManufacture: new Date().getFullYear(),
+  insurance: '',
+  callSign: '',
+  weight: 0,
+  maxTakeoffWeight: 0,
+  operatingTime: 0,
+  range: 0,
+  dimensions: {
+    length: 0,
+    width: 0,
+    height: 0,
+  },
+  battery: {
+    type: '',
+    capacity: 0,
+    voltage: 0,
+  },
+  maxSpeed: 0,
+  userManual: '',
+  additionalInfo: '',
+  shareable: false,
+  images: [],
+  equipmentStorages: [],
+};
+
 interface DroneFormProps {
   mode: 'create' | 'edit';
   initialData?: DroneFormData;
@@ -33,40 +66,6 @@ export default function DroneForm({ mode, initialData, onSave, onCancel, loading
   const { isButtonDisabled, getDisabledStyle } = useOfflineButtons();
   const crossPlatformAlert = useCrossPlatformAlert();
   const responsive = useResponsiveLayout();
-
-  // Default form data
-  const defaultFormData: DroneFormData = {
-    name: '',
-    inventoryCode: '',
-    location: '',
-    registrationNumber: '',
-    totalFlightTime: 0,
-    equipmentRegistrationNumber: '',
-    yearOfCommissioning: new Date().getFullYear(),
-    yearOfManufacture: new Date().getFullYear(),
-    insurance: '',
-    callSign: '',
-    weight: 0,
-    maxTakeoffWeight: 0,
-    operatingTime: 0,
-    range: 0,
-    dimensions: {
-      length: 0,
-      width: 0,
-      height: 0,
-    },
-    battery: {
-      type: '',
-      capacity: 0,
-      voltage: 0,
-    },
-    maxSpeed: 0,
-    userManual: '',
-    additionalInfo: '',
-    shareable: false,
-    images: [],
-    equipmentStorages: [],
-  };
 
   const [formData, setFormData] = useState<DroneFormData>(initialData || defaultFormData);
 

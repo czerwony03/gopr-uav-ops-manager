@@ -104,7 +104,7 @@ export default function TaskDetailsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [id, user, router, t]);
+  }, [id, user, router, t, crossPlatformAlert]);
 
   useEffect(() => {
     // Check authentication first

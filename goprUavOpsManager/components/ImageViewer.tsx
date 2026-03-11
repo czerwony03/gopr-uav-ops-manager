@@ -117,7 +117,7 @@ export default function ImageViewer({
     };
 
     preloadAdjacentImages();
-  }, [currentIndex, visible, images]);
+  }, [currentIndex, visible, images, cachedImageUris]);
 
   React.useEffect(() => {
     setCurrentIndex(imageIndex);

@@ -56,7 +56,7 @@ export const DroneCommentsSection: React.FC<DroneCommentsSectionProps> = ({
   
   // Pagination state
   const [hasNextPage, setHasNextPage] = useState(false);
-  const [_lastDocumentSnapshot, setLastDocumentSnapshot] = useState<any>(null);
+  const [, setLastDocumentSnapshot] = useState<any>(null);
   const lastDocumentSnapshotRef = useRef<any>(null);
 
   const loadComments = useCallback(async (refresh = false) => {

@@ -37,7 +37,7 @@ export default function EditDroneScreen() {
     } finally {
       setLoading(false);
     }
-  }, [user, router, t]);
+  }, [user, router, t, crossPlatformAlert]);
 
   useEffect(() => {
     // Check authentication first - redirect to login if not authenticated
@@ -63,7 +63,7 @@ export default function EditDroneScreen() {
     } else {
       router.back();
     }
-  }, [user, router, t, fetchDrone, id]);
+  }, [user, router, t, fetchDrone, id, crossPlatformAlert]);
 
   const handleSave = async (formData: DroneFormData) => {
     if (!user || !id || typeof id !== 'string') return;

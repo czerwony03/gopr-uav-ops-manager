@@ -12,7 +12,6 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { UserService } from '@/services/userService';
-import { User } from '@/types/User';
 import { useCrossPlatformAlert } from './CrossPlatformAlert';
 
 interface AdminOverrideModalProps {

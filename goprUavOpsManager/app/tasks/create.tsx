@@ -92,7 +92,7 @@ export default function CreateTaskScreen() {
     };
 
     loadData();
-  }, [user, router, t]);
+  }, [user, router, t, crossPlatformAlert]);
 
   const handleTemplateChange = useCallback((templateId: string) => {
     setSelectedTemplate(templateId);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -118,7 +118,7 @@ export default function EditTaskScreen() {
     };
 
     loadData();
-  }, [id, user, router, t]);
+  }, [id, user, router, t, crossPlatformAlert]);
 
   const handleSave = async () => {
     if (!user || !id) return;
