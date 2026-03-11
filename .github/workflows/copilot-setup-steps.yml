@@ -13,16 +13,32 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    defaults:
-      run:
-        working-directory: goprUavOpsManager
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: "npm"
-      - name: Install JavaScript dependencies
+          cache-dependency-path: |
+            goprUavOpsManager/package-lock.json
+            firebaseFunctions/functions/package-lock.json
+
+      - name: Install app dependencies
+        working-directory: goprUavOpsManager
         run: npm ci
+
+      - name: Lint app
+        working-directory: goprUavOpsManager
+        run: npm run lint --if-present
+
+      - name: Install Firebase Functions dependencies
+        working-directory: firebaseFunctions/functions
+        run: npm ci
+
+      - name: Lint Firebase Functions
+        working-directory: firebaseFunctions/functions
+        run: npm run lint --if-present
+
