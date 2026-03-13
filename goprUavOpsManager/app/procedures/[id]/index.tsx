@@ -36,6 +36,8 @@ export default function ProcedureDetailsScreen() {
   const [updatedByName, setUpdatedByName] = useState<string>('');
   const [isFromCache, setIsFromCache] = useState(false);
   const [cachedImageUris, setCachedImageUris] = useState<Map<string, string>>(new Map());
+  // Tracks which top-level items have all their sub-items force-expanded
+  const [expandedItemIds, setExpandedItemIds] = useState<Set<string>>(new Set());
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const { isConnected } = useNetworkStatus();
@@ -132,7 +134,7 @@ export default function ProcedureDetailsScreen() {
       
       const newCachedUris = new Map<string, string>();
 
-      const collectSubItemImages = async (subItems: typeof procedure.items[0]['subItems']) => {
+      const recursiveCacheSubItemImages = async (subItems: typeof procedure.items[0]['subItems']) => {
         if (!subItems) return;
         await Promise.all(
           subItems.map(async (subItem) => {
@@ -144,7 +146,7 @@ export default function ProcedureDetailsScreen() {
                 newCachedUris.set(subItem.image, subItem.image);
               }
             }
-            await collectSubItemImages(subItem.subItems);
+            await recursiveCacheSubItemImages(subItem.subItems);
           })
         );
       };
@@ -162,7 +164,7 @@ export default function ProcedureDetailsScreen() {
               newCachedUris.set(item.image, item.image);
             }
           }
-          await collectSubItemImages(item.subItems);
+          await recursiveCacheSubItemImages(item.subItems);
         })
       );
       
@@ -319,7 +321,23 @@ export default function ProcedureDetailsScreen() {
     }
   }, [getImageIndex]);
 
-  const renderChecklistItem = (item: ChecklistItem, _index: number) => (
+  const renderChecklistItem = (item: ChecklistItem, _index: number) => {
+    const hasSubItems = item.subItems && item.subItems.length > 0;
+    const allExpanded = expandedItemIds.has(item.id);
+
+    const toggleExpandAll = () => {
+      setExpandedItemIds(prev => {
+        const next = new Set(prev);
+        if (next.has(item.id)) {
+          next.delete(item.id);
+        } else {
+          next.add(item.id);
+        }
+        return next;
+      });
+    };
+
+    return (
     <View key={item.id} style={styles.itemContainer}>
       <View style={styles.itemHeader}>
         <View style={styles.itemNumber}>
@@ -328,6 +346,20 @@ export default function ProcedureDetailsScreen() {
         <View style={styles.itemContent}>
           <Text style={styles.itemTopic}>{item.topic}</Text>
         </View>
+        {/* Expand/collapse all sub-items button */}
+        {hasSubItems && (
+          <TouchableOpacity
+            style={styles.expandAllButton}
+            onPress={toggleExpandAll}
+            accessibilityLabel={allExpanded ? t('procedures.subItems.collapseAll') : t('procedures.subItems.expandAll')}
+          >
+            <Ionicons
+              name={allExpanded ? 'contract-outline' : 'expand-outline'}
+              size={20}
+              color="#0066CC"
+            />
+          </TouchableOpacity>
+        )}
       </View>
 
       {item.image && (
@@ -349,15 +381,16 @@ export default function ProcedureDetailsScreen() {
       )}
 
       {/* Nested sub-items */}
-      {item.subItems && item.subItems.length > 0 && (
+      {hasSubItems && (
         <View style={styles.subItemsContainer}>
-          {item.subItems.map((subItem) => (
+          {item.subItems!.map((subItem) => (
             <SubItemRenderer
               key={subItem.id}
               item={subItem}
               depth={0}
               cachedImageUris={cachedImageUris}
               onImagePress={handleImagePress}
+              forceExpanded={allExpanded}
             />
           ))}
         </View>
@@ -384,6 +417,7 @@ export default function ProcedureDetailsScreen() {
       )}
     </View>
   );
+  };
 
   if (loading) {
     return (
@@ -779,6 +813,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+  },
+  expandAllButton: {
+    padding: 4,
+    marginLeft: 8,
   },
   itemImageContainer: {
     marginBottom: 12,

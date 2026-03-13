@@ -16,6 +16,12 @@ interface SubItemRendererProps {
   depth?: number;
   cachedImageUris?: Map<string, string>;
   onImagePress?: (uri: string) => void;
+  /**
+   * When `true`, this item and all its nested children are forced open
+   * regardless of the user's individual toggle state. Users can still
+   * manually collapse/expand individual items independently.
+   */
+  forceExpanded?: boolean;
 }
 
 export default function SubItemRenderer({
@@ -23,6 +29,7 @@ export default function SubItemRenderer({
   depth = 0,
   cachedImageUris,
   onImagePress,
+  forceExpanded = false,
 }: SubItemRendererProps) {
   const { t } = useTranslation('common');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -31,6 +38,9 @@ export default function SubItemRenderer({
   const isControlType = item.type === 'control';
   const hasChildren = item.subItems && item.subItems.length > 0;
   const isExpandable = hasChildren || item.content || item.control || item.image || item.link;
+
+  // Either the user has manually expanded this item OR the parent forced it open
+  const effectivelyExpanded = isExpanded || forceExpanded;
 
   const handleOpenLink = async (url: string) => {
     try {
@@ -57,7 +67,7 @@ export default function SubItemRenderer({
       >
         {isExpandable ? (
           <Ionicons
-            name={isExpanded ? 'chevron-down' : 'chevron-forward'}
+            name={effectivelyExpanded ? 'chevron-down' : 'chevron-forward'}
             size={16}
             color="#555"
             style={styles.chevron}
@@ -69,7 +79,7 @@ export default function SubItemRenderer({
       </TouchableOpacity>
 
       {/* Expanded content */}
-      {isExpanded && (
+      {effectivelyExpanded && (
         <View style={styles.expandedContent}>
           {/* Image */}
           {item.image && (
@@ -140,6 +150,7 @@ export default function SubItemRenderer({
                 depth={depth + 1}
                 cachedImageUris={cachedImageUris}
                 onImagePress={onImagePress}
+                forceExpanded={forceExpanded}
               />
             ))}
         </View>

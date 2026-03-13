@@ -40,6 +40,10 @@ export default function ProcedureExecuteScreen() {
   const [cachedImageUri, setCachedImageUri] = useState<string>('');
   const [executionStartTime] = useState<Date>(new Date());
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  // Expand-all toggle for sub-items of the current step
+  const [allSubItemsExpanded, setAllSubItemsExpanded] = useState(false);
+  // URI of the image currently shown in the ImageViewer (main item or sub-item)
+  const [viewerImageUri, setViewerImageUri] = useState<string>('');
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const { isConnected } = useNetworkStatus();
@@ -164,12 +168,14 @@ export default function ProcedureExecuteScreen() {
   const handlePrevious = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+      setAllSubItemsExpanded(false);
     }
   };
 
   const handleNext = () => {
     if (checklist && currentStep < checklist.items.length - 1) {
       setCurrentStep(currentStep + 1);
+      setAllSubItemsExpanded(false);
     }
   };
 
@@ -203,9 +209,17 @@ export default function ProcedureExecuteScreen() {
 
   const handleImagePress = useCallback(() => {
     if (cachedImageUri) {
+      setViewerImageUri(cachedImageUri);
       setImageViewerVisible(true);
     }
   }, [cachedImageUri]);
+
+  const handleSubItemImagePress = useCallback((uri: string) => {
+    if (uri) {
+      setViewerImageUri(uri);
+      setImageViewerVisible(true);
+    }
+  }, []);
 
   if (loading) {
     return (
@@ -321,6 +335,20 @@ export default function ProcedureExecuteScreen() {
             ]}>
               {currentItem.topic}
             </Text>
+            {/* Expand/collapse all sub-items button */}
+            {currentItem.subItems && currentItem.subItems.length > 0 && (
+              <TouchableOpacity
+                style={styles.expandAllButton}
+                onPress={() => setAllSubItemsExpanded(!allSubItemsExpanded)}
+                accessibilityLabel={allSubItemsExpanded ? t('procedures.subItems.collapseAll') : t('procedures.subItems.expandAll')}
+              >
+                <Ionicons
+                  name={allSubItemsExpanded ? 'contract-outline' : 'expand-outline'}
+                  size={20}
+                  color="#0066CC"
+                />
+              </TouchableOpacity>
+            )}
           </View>
 
           <Text style={[
@@ -338,7 +366,8 @@ export default function ProcedureExecuteScreen() {
                   key={subItem.id}
                   item={subItem}
                   depth={0}
-                  onImagePress={() => setImageViewerVisible(true)}
+                  onImagePress={handleSubItemImagePress}
+                  forceExpanded={allSubItemsExpanded}
                 />
               ))}
             </View>
@@ -425,15 +454,19 @@ export default function ProcedureExecuteScreen() {
         )}
       </View>
 
-      {/* Image Viewer Modal */}
-      {currentItem?.image && cachedImageUri && (
+      {/* Image Viewer Modal – shown when imageViewerVisible is true;
+           viewerImageUri holds either the main step image or a sub-item image */}
+      {imageViewerVisible && viewerImageUri ? (
         <ImageViewer
-          images={[{ uri: cachedImageUri }]}
+          images={[{ uri: viewerImageUri }]}
           imageIndex={0}
           visible={imageViewerVisible}
-          onRequestClose={() => setImageViewerVisible(false)}
+          onRequestClose={() => {
+            setImageViewerVisible(false);
+            setViewerImageUri('');
+          }}
         />
-      )}
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -556,6 +589,10 @@ const styles = StyleSheet.create({
     flex: 1,
     fontWeight: 'bold',
     color: '#333',
+  },
+  expandAllButton: {
+    padding: 4,
+    marginLeft: 8,
   },
   itemContent: {
     color: '#333',

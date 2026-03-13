@@ -673,7 +673,9 @@
     },
     "subItems": {
       "control": "Kontrola",
-      "requiredState": "Wymagany stan"
+      "requiredState": "Wymagany stan",
+      "expandAll": "Rozwiń wszystkie",
+      "collapseAll": "Zwiń wszystkie"
     }
   },
   "categories": {

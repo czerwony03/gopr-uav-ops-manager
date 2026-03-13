@@ -673,7 +673,9 @@
     },
     "subItems": {
       "control": "Control",
-      "requiredState": "Required state"
+      "requiredState": "Required state",
+      "expandAll": "Expand all",
+      "collapseAll": "Collapse all"
     }
   },
   "categories": {
