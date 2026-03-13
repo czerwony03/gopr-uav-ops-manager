@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import ImageZoom from 'react-native-image-pan-zoom';
 import { Image } from 'expo-image';
 import ImageViewer from '@/components/ImageViewer';
+import SubItemRenderer from '@/components/SubItemRenderer';
 import { ProcedureChecklist, ChecklistItem } from '@/types/ProcedureChecklist';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
@@ -329,6 +330,20 @@ export default function ProcedureExecuteScreen() {
             {currentItem.content}
           </Text>
 
+          {/* Nested sub-items */}
+          {currentItem.subItems && currentItem.subItems.length > 0 && (
+            <View style={styles.subItemsContainer}>
+              {currentItem.subItems.map((subItem) => (
+                <SubItemRenderer
+                  key={subItem.id}
+                  item={subItem}
+                  depth={0}
+                  onImagePress={() => setImageViewerVisible(true)}
+                />
+              ))}
+            </View>
+          )}
+
           {currentItem.link && (
             <TouchableOpacity 
               style={styles.linkButton} 
@@ -545,6 +560,10 @@ const styles = StyleSheet.create({
   itemContent: {
     color: '#333',
     lineHeight: 24,
+    marginBottom: 12,
+  },
+  subItemsContainer: {
+    marginTop: 4,
     marginBottom: 12,
   },
   linkButton: {

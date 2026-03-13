@@ -14,6 +14,7 @@ import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import ImageViewer from '../../../components/ImageViewer';
+import SubItemRenderer from '../../../components/SubItemRenderer';
 import { ProcedureChecklist, ChecklistItem } from '@/types/ProcedureChecklist';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
@@ -124,12 +125,29 @@ export default function ProcedureDetailsScreen() {
     }
   }, [user, id, isConnected, router, t, crossPlatformAlert]);
 
-  // Load cached images for procedure items
+  // Load cached images for procedure items (including sub-items recursively)
   const loadCachedImages = useCallback(async (procedure: ProcedureChecklist) => {
     try {
       await ImageCacheService.initialize();
       
       const newCachedUris = new Map<string, string>();
+
+      const collectSubItemImages = async (subItems: typeof procedure.items[0]['subItems']) => {
+        if (!subItems) return;
+        await Promise.all(
+          subItems.map(async (subItem) => {
+            if (subItem.image) {
+              try {
+                const cachedUri = await ImageCacheService.getCachedImage(subItem.image);
+                newCachedUris.set(subItem.image, cachedUri);
+              } catch {
+                newCachedUris.set(subItem.image, subItem.image);
+              }
+            }
+            await collectSubItemImages(subItem.subItems);
+          })
+        );
+      };
       
       // Load cached images for all items that have images
       await Promise.all(
@@ -144,6 +162,7 @@ export default function ProcedureDetailsScreen() {
               newCachedUris.set(item.image, item.image);
             }
           }
+          await collectSubItemImages(item.subItems);
         })
       );
       
@@ -260,15 +279,30 @@ export default function ProcedureDetailsScreen() {
 
   const canModifyChecklists = user?.role === 'manager' || user?.role === 'admin';
 
-  // Get all images from checklist items for the image viewer
+  // Collect all images from sub-items recursively
+  const collectSubItemImages = useCallback((subItems: ChecklistItem['subItems']): { uri: string }[] => {
+    if (!subItems) return [];
+    const images: { uri: string }[] = [];
+    subItems.forEach(subItem => {
+      if (subItem.image) images.push({ uri: subItem.image });
+      images.push(...collectSubItemImages(subItem.subItems));
+    });
+    return images;
+  }, []);
+
+  // Get all images from checklist items (including sub-items) for the image viewer
   const getImages = useCallback(() => {
     if (!checklist) return [];
     
-    return checklist.items
-      .filter(item => item.image)
+    const images: { uri: string }[] = [];
+    checklist.items
       .sort((a, b) => a.number - b.number)
-      .map(item => ({ uri: item.image! }));
-  }, [checklist]);
+      .forEach(item => {
+        if (item.image) images.push({ uri: item.image });
+        images.push(...collectSubItemImages(item.subItems));
+      });
+    return images;
+  }, [checklist, collectSubItemImages]);
 
   // Find the index of the selected image in the images array
   const getImageIndex = useCallback((selectedImage: string) => {
@@ -309,7 +343,25 @@ export default function ProcedureDetailsScreen() {
         </TouchableOpacity>
       )}
 
-      <Text style={styles.itemContentText}>{item.content}</Text>
+      {/* Flat content (old-style or items without sub-items) */}
+      {!item.subItems?.length && (
+        <Text style={styles.itemContentText}>{item.content}</Text>
+      )}
+
+      {/* Nested sub-items */}
+      {item.subItems && item.subItems.length > 0 && (
+        <View style={styles.subItemsContainer}>
+          {item.subItems.map((subItem) => (
+            <SubItemRenderer
+              key={subItem.id}
+              item={subItem}
+              depth={0}
+              cachedImageUris={cachedImageUris}
+              onImagePress={handleImagePress}
+            />
+          ))}
+        </View>
+      )}
 
       {item.link && (
         <TouchableOpacity 
@@ -742,6 +794,10 @@ const styles = StyleSheet.create({
     color: '#333',
     lineHeight: 24,
     marginBottom: 12,
+  },
+  subItemsContainer: {
+    marginTop: 8,
+    marginBottom: 8,
   },
   linkButton: {
     flexDirection: 'row',
