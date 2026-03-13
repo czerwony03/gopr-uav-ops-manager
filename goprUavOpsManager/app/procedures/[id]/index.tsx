@@ -125,7 +125,7 @@ export default function ProcedureDetailsScreen() {
     }
   }, [user, id, isConnected, router, t, crossPlatformAlert]);
 
-  // Load cached images for procedure items (including sub-items recursively)
+  // Load cached images for procedure items and their sub-items
   const loadCachedImages = useCallback(async (procedure: ProcedureChecklist) => {
     try {
       await ImageCacheService.initialize();

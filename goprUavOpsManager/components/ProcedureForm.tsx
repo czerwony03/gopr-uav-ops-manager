@@ -248,7 +248,7 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
         });
         return false;
       }
-      // Content is only required for flat items (without sub-items)
+      // Content is required unless the item has nested sub-items (which serve as an alternative to flat content)
       const hasSubItems = item.subItems && item.subItems.length > 0;
       if (!hasSubItems && !(item.content || '').trim()) {
         crossPlatformAlert.showAlert({ 
