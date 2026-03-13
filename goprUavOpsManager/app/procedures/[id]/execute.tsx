@@ -29,13 +29,9 @@ import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
 import { ImageCacheService } from '@/utils/imageCache';
 import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
+import { getAllSubItemIds } from '@/utils/checklistUtils';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-
-/** Recursively collect all sub-item ids from a nested sub-item tree. */
-function getAllSubItemIds(subItems: ChecklistSubItem[]): string[] {
-  return subItems.flatMap(s => [s.id, ...(s.subItems ? getAllSubItemIds(s.subItems) : [])]);
-}
 
 export default function ProcedureExecuteScreen() {
   const [checklist, setChecklist] = useState<ProcedureChecklist | null>(null);

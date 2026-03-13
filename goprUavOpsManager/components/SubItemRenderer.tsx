@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ChecklistSubItem } from '@/types/ProcedureChecklist';
+import { getAllSubItemIds } from '@/utils/checklistUtils';
 
 interface SubItemRendererProps {
   item: ChecklistSubItem;
@@ -54,6 +55,15 @@ export default function SubItemRenderer({
   // Completion mode is active when the parent passes completedSubItemIds
   const inCompletionMode = completedSubItemIds !== undefined;
   const isDone = inCompletionMode && completedSubItemIds!.has(item.id);
+
+  // Auto-collapse when all children (and their descendants) are marked done
+  useEffect(() => {
+    if (!hasChildren || !completedSubItemIds) return;
+    const allChildIds = getAllSubItemIds(item.subItems!);
+    if (allChildIds.length > 0 && allChildIds.every(id => completedSubItemIds.has(id))) {
+      setIsExpanded(false);
+    }
+  }, [completedSubItemIds, hasChildren, item.subItems]);
 
   const handleOpenLink = async (url: string) => {
     try {
