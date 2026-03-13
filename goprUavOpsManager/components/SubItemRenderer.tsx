@@ -28,7 +28,7 @@ interface SubItemRendererProps {
    */
   completedSubItemIds?: Set<string>;
   /** Called when the operator toggles the done state of a sub-item. */
-  onToggleSubItemDone?: (id: string) => void;
+  onToggleSubItemDone?: (item: ChecklistSubItem) => void;
 }
 
 export default function SubItemRenderer({
@@ -93,7 +93,7 @@ export default function SubItemRenderer({
         {inCompletionMode && (
           <TouchableOpacity
             style={styles.doneButton}
-            onPress={() => onToggleSubItemDone?.(item.id)}
+            onPress={() => onToggleSubItemDone?.(item)}
             accessibilityLabel={isDone ? t('procedures.execute.markNotDone') : t('procedures.execute.markDone')}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >

@@ -246,23 +246,27 @@ export default function ProcedureExecuteScreen() {
 
   /**
    * Toggle done state for a single sub-item (any nesting level).
-   * When ALL descendant sub-items of the parent checklist item become done,
-   * the parent item is automatically marked done and its sub-items are collapsed.
+   * - Also marks/unmarks all descendants of the toggled sub-item.
+   * - When ALL descendant sub-items of the parent checklist item become done,
+   *   the parent item is automatically marked done and its sub-items are collapsed.
    */
-  const handleToggleSubItemDone = useCallback((item: ChecklistItem, subItemId: string) => {
+  const handleToggleSubItemDone = useCallback((parentItem: ChecklistItem, subItem: ChecklistSubItem) => {
     setCompletedSubItems(prev => {
-      const nowDone = !prev.has(subItemId);
+      const nowDone = !prev.has(subItem.id);
+      // Collect the toggled sub-item plus all its descendants
+      const idsToChange = [subItem.id, ...getAllSubItemIds(subItem.subItems || [])];
       const next = new Set(prev);
-      if (nowDone) next.add(subItemId); else next.delete(subItemId);
+      if (nowDone) idsToChange.forEach(id => next.add(id));
+      else idsToChange.forEach(id => next.delete(id));
 
-      if (item.subItems?.length) {
-        const allIds = getAllSubItemIds(item.subItems);
+      if (parentItem.subItems?.length) {
+        const allIds = getAllSubItemIds(parentItem.subItems);
         const allDone = allIds.every(id => next.has(id));
         if (allDone) {
-          setCompletedItems(itemPrev => new Set([...itemPrev, item.id]));
+          setCompletedItems(itemPrev => new Set([...itemPrev, parentItem.id]));
           setAllSubItemsExpanded(false);
         } else {
-          setCompletedItems(itemPrev => { const s = new Set(itemPrev); s.delete(item.id); return s; });
+          setCompletedItems(itemPrev => { const s = new Set(itemPrev); s.delete(parentItem.id); return s; });
         }
       }
 
@@ -453,7 +457,7 @@ export default function ProcedureExecuteScreen() {
                   onImagePress={handleSubItemImagePress}
                   forceExpanded={allSubItemsExpanded}
                   completedSubItemIds={completedSubItems}
-                  onToggleSubItemDone={(subItemId) => handleToggleSubItemDone(currentItem, subItemId)}
+                  onToggleSubItemDone={(subItem) => handleToggleSubItemDone(currentItem, subItem)}
                 />
               ))}
             </View>
