@@ -669,7 +669,9 @@
       "next": "Next",
       "finish": "Finish",
       "started": "Procedure execution started",
-      "completed": "Procedure execution completed"
+      "completed": "Procedure execution completed",
+      "markDone": "Mark as done",
+      "markNotDone": "Unmark as done"
     },
     "subItems": {
       "control": "Control",

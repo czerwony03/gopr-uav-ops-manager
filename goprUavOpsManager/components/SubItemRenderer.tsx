@@ -22,6 +22,13 @@ interface SubItemRendererProps {
    * manually collapse/expand individual items independently.
    */
   forceExpanded?: boolean;
+  /**
+   * Set of sub-item ids that are marked as done. When provided, completion
+   * checkboxes are rendered (execute mode).
+   */
+  completedSubItemIds?: Set<string>;
+  /** Called when the operator toggles the done state of a sub-item. */
+  onToggleSubItemDone?: (id: string) => void;
 }
 
 export default function SubItemRenderer({
@@ -30,6 +37,8 @@ export default function SubItemRenderer({
   cachedImageUris,
   onImagePress,
   forceExpanded = false,
+  completedSubItemIds,
+  onToggleSubItemDone,
 }: SubItemRendererProps) {
   const { t } = useTranslation('common');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -41,6 +50,10 @@ export default function SubItemRenderer({
 
   // Either the user has manually expanded this item OR the parent forced it open
   const effectivelyExpanded = isExpanded || forceExpanded;
+
+  // Completion mode is active when the parent passes completedSubItemIds
+  const inCompletionMode = completedSubItemIds !== undefined;
+  const isDone = inCompletionMode && completedSubItemIds!.has(item.id);
 
   const handleOpenLink = async (url: string) => {
     try {
@@ -56,7 +69,7 @@ export default function SubItemRenderer({
   const indentStyle = depth > 0 ? { marginLeft: depth * 16 } : undefined;
 
   return (
-    <View style={[styles.container, indentStyle]}>
+    <View style={[styles.container, indentStyle, isDone && styles.containerDone]}>
       {/* Collapsible header row */}
       <TouchableOpacity
         style={styles.header}
@@ -75,7 +88,22 @@ export default function SubItemRenderer({
         ) : (
           <View style={styles.chevronPlaceholder} />
         )}
-        <Text style={styles.topic}>{item.topic}</Text>
+        <Text style={[styles.topic, isDone && styles.topicDone]}>{item.topic}</Text>
+        {/* Completion checkbox – only shown in execute mode */}
+        {inCompletionMode && (
+          <TouchableOpacity
+            style={styles.doneButton}
+            onPress={() => onToggleSubItemDone?.(item.id)}
+            accessibilityLabel={isDone ? t('procedures.execute.markNotDone') : t('procedures.execute.markDone')}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons
+              name={isDone ? 'checkmark-circle' : 'ellipse-outline'}
+              size={20}
+              color={isDone ? '#34C759' : '#aaa'}
+            />
+          </TouchableOpacity>
+        )}
       </TouchableOpacity>
 
       {/* Expanded content */}
@@ -151,6 +179,8 @@ export default function SubItemRenderer({
                 cachedImageUris={cachedImageUris}
                 onImagePress={onImagePress}
                 forceExpanded={forceExpanded}
+                completedSubItemIds={completedSubItemIds}
+                onToggleSubItemDone={onToggleSubItemDone}
               />
             ))}
         </View>
@@ -165,6 +195,9 @@ const styles = StyleSheet.create({
     borderLeftColor: '#d0d0d0',
     marginBottom: 4,
     marginLeft: 4,
+  },
+  containerDone: {
+    borderLeftColor: '#34C759',
   },
   header: {
     flexDirection: 'row',
@@ -183,6 +216,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#222',
+  },
+  topicDone: {
+    color: '#888',
+    textDecorationLine: 'line-through',
+  },
+  doneButton: {
+    marginLeft: 6,
   },
   expandedContent: {
     paddingLeft: 28,

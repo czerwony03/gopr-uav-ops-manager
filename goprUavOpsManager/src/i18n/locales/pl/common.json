@@ -669,7 +669,9 @@
       "next": "Następny",
       "finish": "Zakończ",
       "started": "Rozpoczęto wykonywanie procedury",
-      "completed": "Wykonywanie procedury zakończone"
+      "completed": "Wykonywanie procedury zakończone",
+      "markDone": "Oznacz jako wykonane",
+      "markNotDone": "Odznacz wykonanie"
     },
     "subItems": {
       "control": "Kontrola",
