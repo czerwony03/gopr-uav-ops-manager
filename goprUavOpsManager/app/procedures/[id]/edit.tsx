@@ -38,6 +38,7 @@ export default function EditProcedureScreen() {
             image: item.image,
             link: item.link,
             file: item.file,
+            subItems: item.subItems,
           })),
         };
         setInitialData(formData);
