@@ -29,7 +29,7 @@ import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
 import { ImageCacheService } from '@/utils/imageCache';
 import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
-import { getAllSubItemIds } from '@/utils/checklistUtils';
+import { getAllSubItemIds, propagateSubItemDoneState } from '@/utils/checklistUtils';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -256,6 +256,9 @@ export default function ProcedureExecuteScreen() {
       else idsToChange.forEach(id => next.delete(id));
 
       if (parentItem.subItems?.length) {
+        // Propagate done state to intermediate sub-items whose children are all done
+        propagateSubItemDoneState(parentItem.subItems, next);
+
         const allIds = getAllSubItemIds(parentItem.subItems);
         const allDone = allIds.every(id => next.has(id));
         if (allDone) {
