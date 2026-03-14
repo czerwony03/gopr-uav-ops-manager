@@ -1,5 +1,5 @@
 import {getStorageRef, uploadFile, getDownloadURL, deleteObject} from '@/utils/firebaseUtils';
-import {ChecklistItemFormData, ProcedureChecklist, ProcedureChecklistFormData} from '@/types/ProcedureChecklist';
+import {ChecklistItemFormData, ChecklistSubItemFormData, ProcedureChecklist, ProcedureChecklistFormData} from '@/types/ProcedureChecklist';
 import {AuditLogService} from './auditLogService';
 import {UserService} from './userService';
 import {ImageService} from './imageService';
@@ -265,10 +265,68 @@ export class ProcedureChecklistService {
         // Don't include blob URLs in the saved data
       }
 
+      // Recursively process sub-items if present
+      if (item.subItems && item.subItems.length > 0) {
+        processedItem.subItems = await this.processSubItems(item.subItems);
+      }
+
       processedItems.push(processedItem);
     }
 
     return processedItems;
+  }
+
+  // Recursively process sub-items, handling image uploads
+  private static async processSubItems(subItems: ChecklistSubItemFormData[]): Promise<any[]> {
+    const processedSubItems = [];
+
+    for (const subItem of subItems) {
+      const processedSubItem: any = {
+        id: subItem.id,
+        topic: subItem.topic,
+      };
+
+      if (subItem.type) {
+        processedSubItem.type = subItem.type;
+      }
+
+      if (subItem.content && subItem.content.trim()) {
+        processedSubItem.content = subItem.content;
+      }
+
+      if (subItem.control && subItem.control.trim()) {
+        processedSubItem.control = subItem.control;
+      }
+
+      if (subItem.requiredState && subItem.requiredState.trim()) {
+        processedSubItem.requiredState = subItem.requiredState;
+      }
+
+      if (subItem.link && subItem.link.trim()) {
+        processedSubItem.link = subItem.link;
+      }
+
+      // Handle image upload for sub-items
+      if (subItem.image && (subItem.image.startsWith('data:') || subItem.image.startsWith('file:'))) {
+        try {
+          const fileName = `${Date.now()}_${subItem.id}.jpg`;
+          processedSubItem.image = await this.uploadImage(subItem.image, fileName);
+        } catch (error) {
+          console.error('Error uploading image for sub-item:', subItem.id, error);
+        }
+      } else if (subItem.image && subItem.image.trim() && !subItem.image.startsWith('blob:')) {
+        processedSubItem.image = subItem.image;
+      }
+
+      // Recursively process nested sub-items
+      if (subItem.subItems && subItem.subItems.length > 0) {
+        processedSubItem.subItems = await this.processSubItems(subItem.subItems);
+      }
+
+      processedSubItems.push(processedSubItem);
+    }
+
+    return processedSubItems;
   }
 
   // Check if user can modify procedures/checklists

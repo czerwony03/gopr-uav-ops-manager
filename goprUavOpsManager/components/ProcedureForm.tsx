@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { ProcedureChecklistFormData, ChecklistItemFormData } from '@/types/ProcedureChecklist';
+import { ProcedureChecklistFormData, ChecklistItemFormData, ChecklistSubItemFormData } from '@/types/ProcedureChecklist';
 import { Category, DEFAULT_CATEGORY_ID } from '@/types/Category';
 import { CategoryService } from '@/services/categoryService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +21,7 @@ import { useCrossPlatformAlert } from '@/components/CrossPlatformAlert';
 import { useOfflineButtons } from '@/utils/useOfflineButtons';
 import { useLocalSearchParams } from 'expo-router';
 import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
+import SubItemForm from '@/components/SubItemForm';
 
 interface ProcedureFormProps {
   mode: 'create' | 'edit';
@@ -102,6 +103,31 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
       items: prev.items.map((item, i) => 
         i === index ? { ...item, [field]: value } : item
       )
+    }));
+  };
+
+  const updateItemSubItems = (itemIndex: number, subItems: ChecklistSubItemFormData[]) => {
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.map((item, i) =>
+        i === itemIndex ? { ...item, subItems } : item
+      ),
+    }));
+  };
+
+  const addSubItemToItem = (itemIndex: number) => {
+    const newSubItem: ChecklistSubItemFormData = {
+      id: `sub-${Date.now()}`,
+      topic: '',
+      type: 'simple',
+    };
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.map((item, i) =>
+        i === itemIndex
+          ? { ...item, subItems: [...(item.subItems || []), newSubItem] }
+          : item
+      ),
     }));
   };
 
@@ -222,7 +248,9 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
         });
         return false;
       }
-      if (!(item.content || '').trim()) {
+      // Content is required unless the item has nested sub-items (which serve as an alternative to flat content)
+      const hasSubItems = item.subItems && item.subItems.length > 0;
+      if (!hasSubItems && !(item.content || '').trim()) {
         crossPlatformAlert.showAlert({ 
           title: t('procedureForm.error'), 
           message: t('procedureForm.itemContentRequired', { number: i + 1 }) 
@@ -408,15 +436,20 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
                   placeholder={t('procedureForm.topicPlaceholder')}
                 />
 
-                <Text style={styles.label}>{t('procedureForm.content')} *</Text>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  value={item.content}
-                  onChangeText={(value) => updateItemFormData(index, 'content', value)}
-                  placeholder={t('procedureForm.contentPlaceholder')}
-                  multiline
-                  numberOfLines={4}
-                />
+                {/* Flat content – only shown when item has no sub-items */}
+                {!(item.subItems && item.subItems.length > 0) && (
+                  <>
+                    <Text style={styles.label}>{t('procedureForm.content')} *</Text>
+                    <TextInput
+                      style={[styles.input, styles.textArea]}
+                      value={item.content}
+                      onChangeText={(value) => updateItemFormData(index, 'content', value)}
+                      placeholder={t('procedureForm.contentPlaceholder')}
+                      multiline
+                      numberOfLines={4}
+                    />
+                  </>
+                )}
 
                 <Text style={styles.label}>{t('procedureForm.image')}</Text>
                 {item.image ? (
@@ -457,6 +490,39 @@ export default function ProcedureForm({ mode, initialData, onSave, onCancel, loa
                   onChangeText={(value) => updateItemFormData(index, 'link', value)}
                   placeholder={t('procedureForm.linkPlaceholder')}
                 />
+
+                {/* Sub-items section */}
+                <View style={styles.subItemsSectionHeader}>
+                  <Text style={styles.subItemsSectionTitle}>{t('procedureForm.subItems.title')}</Text>
+                  <TouchableOpacity
+                    style={styles.addSubItemButton}
+                    onPress={() => addSubItemToItem(index)}
+                  >
+                    <Ionicons name="add-circle-outline" size={20} color="#0066CC" />
+                    <Text style={styles.addSubItemText}>{t('procedureForm.subItems.add')}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {item.subItems && item.subItems.length > 0 && (
+                  <View style={styles.subItemsList}>
+                    {item.subItems.map((subItem, subIdx) => (
+                      <SubItemForm
+                        key={subItem.id}
+                        subItem={subItem}
+                        depth={0}
+                        onUpdate={(updated) => {
+                          const newSubItems = [...(item.subItems || [])];
+                          newSubItems[subIdx] = updated;
+                          updateItemSubItems(index, newSubItems);
+                        }}
+                        onRemove={() => {
+                          const newSubItems = (item.subItems || []).filter((_, i) => i !== subIdx);
+                          updateItemSubItems(index, newSubItems);
+                        }}
+                      />
+                    ))}
+                  </View>
+                )}
               </View>
             ))}
 
@@ -699,6 +765,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  // Sub-items section styles
+  subItemsSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  subItemsSectionTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+  },
+  addSubItemButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  addSubItemText: {
+    color: '#0066CC',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  subItemsList: {
+    marginBottom: 4,
   },
   // Category selection styles
   categoriesLoading: {

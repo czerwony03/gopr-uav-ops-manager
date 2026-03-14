@@ -572,7 +572,7 @@
     "capabilities": {
       "admin": [
         "Pełny dostęp do systemu",
-        "Zarządzanie użytkownikami", 
+        "Zarządzanie użytkownikami",
         "Wszystkie operacje",
         "Konfiguracja systemu"
       ],
@@ -593,7 +593,7 @@
     },
     "navigation": {
       "flights": "Zarządzanie lotami",
-      "drones": "Rejestr dronów", 
+      "drones": "Rejestr dronów",
       "procedures": "Procedury i listy kontrolne",
       "profile": "Mój profil",
       "users": "Zarządzanie użytkownikami",
@@ -669,7 +669,15 @@
       "next": "Następny",
       "finish": "Zakończ",
       "started": "Rozpoczęto wykonywanie procedury",
-      "completed": "Wykonywanie procedury zakończone"
+      "completed": "Wykonywanie procedury zakończone",
+      "markDone": "Oznacz jako wykonane",
+      "markNotDone": "Odznacz wykonanie"
+    },
+    "subItems": {
+      "control": "Kontrola",
+      "requiredState": "Wymagany stan",
+      "expandAll": "Rozwiń wszystkie",
+      "collapseAll": "Zwiń wszystkie"
     }
   },
   "categories": {
@@ -770,7 +778,27 @@
     "failedToPickImage": "Nie udało się wybrać obrazu",
     "success": "Sukces",
     "procedureCreated": "Procedura została utworzona pomyślnie",
-    "procedureUpdated": "Procedura została zaktualizowana"
+    "procedureUpdated": "Procedura została zaktualizowana",
+    "subItems": {
+      "title": "Subelementy",
+      "add": "Dodaj subelement",
+      "addNested": "Dodaj zagnieżdżony subelement",
+      "newSubItem": "Nowy subelement",
+      "type": "Typ",
+      "typeSimple": "Opis",
+      "typeControl": "Kontrola",
+      "control": "Kontrola",
+      "controlPlaceholder": "Wprowadź opis kontroli",
+      "requiredState": "Wymagany stan",
+      "requiredStatePlaceholder": "Wprowadź wymagany stan",
+      "confirmDelete": "Usuń subelement",
+      "confirmDeleteMessage": "Czy na pewno chcesz usunąć ten subelement?"
+    },
+    "confirmDelete": "Usuń element",
+    "confirmDeleteMessage": "Czy na pewno chcesz usunąć ten element?",
+    "itemsRequired": "Wymagany jest co najmniej jeden element",
+    "itemTopicRequired": "Element {{number}}: Temat jest wymagany",
+    "itemContentRequired": "Element {{number}}: Treść jest wymagana"
   },
   "contact": {
     "title": "Informacje i kontakt",

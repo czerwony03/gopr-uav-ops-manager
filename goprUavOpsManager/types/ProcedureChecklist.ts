@@ -1,3 +1,20 @@
+export type ChecklistItemType = 'simple' | 'control';
+
+export interface ChecklistSubItem {
+  id: string;
+  type?: ChecklistItemType; // default: 'simple'
+  topic: string;
+  // For 'simple' type
+  content?: string;
+  // For 'control' type
+  control?: string;
+  requiredState?: string;
+  image?: string; // URL to uploaded image
+  link?: string; // external link
+  // Recursive sub-items (nested)
+  subItems?: ChecklistSubItem[];
+}
+
 export interface ChecklistItem {
   id: string;
   topic: string;
@@ -6,6 +23,8 @@ export interface ChecklistItem {
   number: number; // order/sequence number
   link?: string; // external link
   file?: string; // URL to uploaded file
+  // Optional nested sub-items (new nested checklist support)
+  subItems?: ChecklistSubItem[];
 }
 
 export interface ProcedureChecklist {
@@ -30,6 +49,18 @@ export interface ProcedureChecklistFormData {
   categories?: string[]; // array of category IDs
 }
 
+export interface ChecklistSubItemFormData {
+  id: string;
+  type?: ChecklistItemType; // default: 'simple'
+  topic: string;
+  content?: string;
+  control?: string;
+  requiredState?: string;
+  image?: string; // URL or base64 for new images
+  link?: string;
+  subItems?: ChecklistSubItemFormData[];
+}
+
 export interface ChecklistItemFormData {
   id: string;
   topic: string;
@@ -38,4 +69,5 @@ export interface ChecklistItemFormData {
   number: number;
   link?: string; // Optional to match ChecklistItem
   file?: string; // URL or file reference
+  subItems?: ChecklistSubItemFormData[];
 }

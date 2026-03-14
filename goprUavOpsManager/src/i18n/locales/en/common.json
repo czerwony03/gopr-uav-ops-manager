@@ -593,7 +593,7 @@
     },
     "navigation": {
       "flights": "Flight Management",
-      "drones": "Drone Registry", 
+      "drones": "Drone Registry",
       "procedures": "Procedures & Checklists",
       "profile": "My Profile",
       "users": "User Management",
@@ -669,7 +669,15 @@
       "next": "Next",
       "finish": "Finish",
       "started": "Procedure execution started",
-      "completed": "Procedure execution completed"
+      "completed": "Procedure execution completed",
+      "markDone": "Mark as done",
+      "markNotDone": "Unmark as done"
+    },
+    "subItems": {
+      "control": "Control",
+      "requiredState": "Required state",
+      "expandAll": "Expand all",
+      "collapseAll": "Collapse all"
     }
   },
   "categories": {
@@ -770,7 +778,27 @@
     "failedToPickImage": "Failed to pick image",
     "success": "Success",
     "procedureCreated": "Procedure created successfully",
-    "procedureUpdated": "Procedure updated successfully"
+    "procedureUpdated": "Procedure updated successfully",
+    "subItems": {
+      "title": "Sub-items",
+      "add": "Add sub-item",
+      "addNested": "Add nested sub-item",
+      "newSubItem": "New sub-item",
+      "type": "Type",
+      "typeSimple": "Description",
+      "typeControl": "Control",
+      "control": "Control",
+      "controlPlaceholder": "Enter control description",
+      "requiredState": "Required state",
+      "requiredStatePlaceholder": "Enter required state",
+      "confirmDelete": "Delete sub-item",
+      "confirmDeleteMessage": "Are you sure you want to delete this sub-item?"
+    },
+    "confirmDelete": "Delete item",
+    "confirmDeleteMessage": "Are you sure you want to delete this item?",
+    "itemsRequired": "At least one item is required",
+    "itemTopicRequired": "Item {{number}}: Topic is required",
+    "itemContentRequired": "Item {{number}}: Content is required"
   },
   "contact": {
     "title": "Info & Contact",

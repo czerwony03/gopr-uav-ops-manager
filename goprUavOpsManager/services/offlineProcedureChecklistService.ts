@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ProcedureChecklist } from '@/types/ProcedureChecklist';
+import { ProcedureChecklist, ChecklistSubItem } from '@/types/ProcedureChecklist';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
 import { ImageCacheService } from '@/utils/imageCache';
 import { NetworkConnectivity } from '@/utils/networkConnectivity';
@@ -282,6 +282,14 @@ export class OfflineProcedureChecklistService {
   /**
    * Cache procedures data to AsyncStorage
    */
+  private static sanitizeSubItems(subItems: ChecklistSubItem[]): ChecklistSubItem[] {
+    return subItems.map(subItem => ({
+      ...subItem,
+      image: subItem.image && subItem.image.startsWith('blob:') ? undefined : subItem.image,
+      subItems: subItem.subItems ? this.sanitizeSubItems(subItem.subItems) : undefined,
+    }));
+  }
+
   private static async cacheProcedures(procedures: ProcedureChecklist[], userRole: UserRole): Promise<void> {
     try {
       // Validate and sanitize procedures before caching
@@ -292,7 +300,9 @@ export class OfflineProcedureChecklistService {
           // Ensure image URLs are Firebase URLs, not blob URLs
           image: item.image && item.image.startsWith('blob:') 
             ? undefined // Remove blob URLs from cached data
-            : item.image
+            : item.image,
+          // Sanitize sub-items recursively
+          subItems: item.subItems ? this.sanitizeSubItems(item.subItems) : undefined,
         }))
       }));
 
@@ -405,11 +415,22 @@ export class OfflineProcedureChecklistService {
   /**
    * Pre-download all images from procedures
    */
+  private static collectSubItemImages(subItems: ChecklistSubItem[], imageUrls: string[]): void {
+    subItems.forEach(subItem => {
+      if (subItem.image && !subItem.image.startsWith('blob:')) {
+        imageUrls.push(subItem.image);
+      }
+      if (subItem.subItems) {
+        this.collectSubItemImages(subItem.subItems, imageUrls);
+      }
+    });
+  }
+
   private static async preDownloadProcedureImages(procedures: ProcedureChecklist[]): Promise<void> {
     try {
       const imageUrls: string[] = [];
       
-      // Collect all image URLs from procedure items
+      // Collect all image URLs from procedure items and their sub-items
       procedures.forEach(procedure => {
         procedure.items.forEach(item => {
           if (item.image && !item.image.startsWith('blob:')) {
@@ -417,6 +438,10 @@ export class OfflineProcedureChecklistService {
             imageUrls.push(item.image);
           } else if (item.image && item.image.startsWith('blob:')) {
             console.warn('[OfflineProcedureService] Found blob URL in procedure data, skipping:', item.image);
+          }
+          // Collect sub-item images recursively
+          if (item.subItems) {
+            this.collectSubItemImages(item.subItems, imageUrls);
           }
         });
       });

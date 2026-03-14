@@ -17,7 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import ImageZoom from 'react-native-image-pan-zoom';
 import { Image } from 'expo-image';
 import ImageViewer from '@/components/ImageViewer';
-import { ProcedureChecklist, ChecklistItem } from '@/types/ProcedureChecklist';
+import SubItemRenderer from '@/components/SubItemRenderer';
+import { ProcedureChecklist, ChecklistItem, ChecklistSubItem } from '@/types/ProcedureChecklist';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
 import { OfflineProcedureChecklistService } from '@/services/offlineProcedureChecklistService';
@@ -28,6 +29,7 @@ import { useNetworkStatus } from '@/utils/useNetworkStatus';
 import OfflineInfoBar from '@/components/OfflineInfoBar';
 import { ImageCacheService } from '@/utils/imageCache';
 import { useResponsiveLayout } from '@/utils/useResponsiveLayout';
+import { getAllSubItemIds } from '@/utils/checklistUtils';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -39,6 +41,14 @@ export default function ProcedureExecuteScreen() {
   const [cachedImageUri, setCachedImageUri] = useState<string>('');
   const [executionStartTime] = useState<Date>(new Date());
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  // Expand-all toggle for sub-items of the current step
+  const [allSubItemsExpanded, setAllSubItemsExpanded] = useState(false);
+  // URI of the image currently shown in the ImageViewer (main item or sub-item)
+  const [viewerImageUri, setViewerImageUri] = useState<string>('');
+  // Completion tracking: set of completed top-level item ids
+  const [completedItems, setCompletedItems] = useState<Set<string>>(new Set());
+  // Completion tracking: flat set of completed sub-item ids (all nesting levels)
+  const [completedSubItems, setCompletedSubItems] = useState<Set<string>>(new Set());
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const { isConnected } = useNetworkStatus();
@@ -163,12 +173,14 @@ export default function ProcedureExecuteScreen() {
   const handlePrevious = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+      setAllSubItemsExpanded(false);
     }
   };
 
   const handleNext = () => {
     if (checklist && currentStep < checklist.items.length - 1) {
       setCurrentStep(currentStep + 1);
+      setAllSubItemsExpanded(false);
     }
   };
 
@@ -200,11 +212,77 @@ export default function ProcedureExecuteScreen() {
     }
   };
 
+
+  /**
+   * Toggle done state for a top-level checklist item.
+   * - Marking done: adds all descendant sub-item ids to completedSubItems and
+   *   collapses the sub-items section.
+   * - Un-marking done: removes all descendant sub-item ids from completedSubItems.
+   */
+  const handleToggleItemDone = useCallback((item: ChecklistItem) => {
+    setCompletedItems(prev => {
+      const nowDone = !prev.has(item.id);
+      const next = new Set(prev);
+      if (nowDone) next.add(item.id); else next.delete(item.id);
+
+      if (item.subItems?.length) {
+        const allIds = getAllSubItemIds(item.subItems);
+        setCompletedSubItems(subPrev => {
+          const subNext = new Set(subPrev);
+          if (nowDone) allIds.forEach(id => subNext.add(id));
+          else allIds.forEach(id => subNext.delete(id));
+          return subNext;
+        });
+        if (nowDone) setAllSubItemsExpanded(false);
+      }
+
+      return next;
+    });
+  }, []);
+
+  /**
+   * Toggle done state for a single sub-item (any nesting level).
+   * - Also marks/unmarks all descendants of the toggled sub-item.
+   * - When ALL descendant sub-items of the parent checklist item become done,
+   *   the parent item is automatically marked done and its sub-items are collapsed.
+   */
+  const handleToggleSubItemDone = useCallback((parentItem: ChecklistItem, subItem: ChecklistSubItem) => {
+    setCompletedSubItems(prev => {
+      const nowDone = !prev.has(subItem.id);
+      // Collect the toggled sub-item plus all its descendants
+      const idsToChange = [subItem.id, ...getAllSubItemIds(subItem.subItems || [])];
+      const next = new Set(prev);
+      if (nowDone) idsToChange.forEach(id => next.add(id));
+      else idsToChange.forEach(id => next.delete(id));
+
+      if (parentItem.subItems?.length) {
+        const allIds = getAllSubItemIds(parentItem.subItems);
+        const allDone = allIds.every(id => next.has(id));
+        if (allDone) {
+          setCompletedItems(itemPrev => new Set([...itemPrev, parentItem.id]));
+          setAllSubItemsExpanded(false);
+        } else {
+          setCompletedItems(itemPrev => { const s = new Set(itemPrev); s.delete(parentItem.id); return s; });
+        }
+      }
+
+      return next;
+    });
+  }, []);
+
   const handleImagePress = useCallback(() => {
     if (cachedImageUri) {
+      setViewerImageUri(cachedImageUri);
       setImageViewerVisible(true);
     }
   }, [cachedImageUri]);
+
+  const handleSubItemImagePress = useCallback((uri: string) => {
+    if (uri) {
+      setViewerImageUri(uri);
+      setImageViewerVisible(true);
+    }
+  }, []);
 
   if (loading) {
     return (
@@ -233,6 +311,7 @@ export default function ProcedureExecuteScreen() {
   const currentItem: ChecklistItem = checklist.items
     .sort((a, b) => a.number - b.number)[currentStep];
   const isLastStep = currentStep === checklist.items.length - 1;
+  const isCurrentItemDone = completedItems.has(currentItem.id);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -309,25 +388,76 @@ export default function ProcedureExecuteScreen() {
         ) : null}
 
         {/* Item details */}
-        <View style={styles.detailsContainer}>
+        <View style={[styles.detailsContainer, isCurrentItemDone && styles.detailsContainerDone]}>
           <View style={styles.itemHeader}>
-            <View style={styles.itemNumber}>
-              <Text style={styles.itemNumberText}>{currentItem.number}</Text>
+            <View style={[styles.itemNumber, isCurrentItemDone && styles.itemNumberDone]}>
+              {isCurrentItemDone ? (
+                <Ionicons name="checkmark" size={18} color="#fff" />
+              ) : (
+                <Text style={styles.itemNumberText}>{currentItem.number}</Text>
+              )}
             </View>
             <Text style={[
               styles.itemTopic,
-              { fontSize: responsive.fontSize.subtitle }
+              { fontSize: responsive.fontSize.subtitle },
+              isCurrentItemDone && styles.itemTopicDone,
             ]}>
               {currentItem.topic}
             </Text>
+            {/* Done / not-done checkbox */}
+            <TouchableOpacity
+              style={styles.doneButton}
+              onPress={() => handleToggleItemDone(currentItem)}
+              accessibilityLabel={isCurrentItemDone ? t('procedures.execute.markNotDone') : t('procedures.execute.markDone')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons
+                name={isCurrentItemDone ? 'checkmark-circle' : 'ellipse-outline'}
+                size={28}
+                color={isCurrentItemDone ? '#34C759' : '#aaa'}
+              />
+            </TouchableOpacity>
+            {/* Expand/collapse all sub-items button */}
+            {currentItem.subItems && currentItem.subItems.length > 0 && (
+              <TouchableOpacity
+                style={styles.expandAllButton}
+                onPress={() => setAllSubItemsExpanded(!allSubItemsExpanded)}
+                accessibilityLabel={allSubItemsExpanded ? t('procedures.subItems.collapseAll') : t('procedures.subItems.expandAll')}
+              >
+                <Ionicons
+                  name={allSubItemsExpanded ? 'contract-outline' : 'expand-outline'}
+                  size={20}
+                  color="#0066CC"
+                />
+              </TouchableOpacity>
+            )}
           </View>
 
-          <Text style={[
-            styles.itemContent,
-            { fontSize: responsive.fontSize.body }
-          ]}>
-            {currentItem.content}
-          </Text>
+          {!currentItem.subItems?.length && currentItem.content ? (
+            <Text style={[
+              styles.itemContent,
+              { fontSize: responsive.fontSize.body }
+            ]}>
+              {currentItem.content}
+            </Text>
+          ) : null}
+
+          {/* Nested sub-items */}
+          {currentItem.subItems && currentItem.subItems.length > 0 && (
+            <View style={styles.subItemsContainer}>
+              {currentItem.subItems.map((subItem) => (
+                <SubItemRenderer
+                  key={subItem.id}
+                  item={subItem}
+                  depth={0}
+                  onImagePress={handleSubItemImagePress}
+                  forceExpanded={allSubItemsExpanded}
+                  completedSubItemIds={completedSubItems}
+                  onToggleSubItemDone={(subItem) => handleToggleSubItemDone(currentItem, subItem)}
+                />
+              ))}
+            </View>
+          )}
 
           {currentItem.link && (
             <TouchableOpacity 
@@ -410,15 +540,19 @@ export default function ProcedureExecuteScreen() {
         )}
       </View>
 
-      {/* Image Viewer Modal */}
-      {currentItem?.image && cachedImageUri && (
+      {/* Image Viewer Modal – shown when imageViewerVisible is true;
+           viewerImageUri holds either the main step image or a sub-item image */}
+      {imageViewerVisible && viewerImageUri ? (
         <ImageViewer
-          images={[{ uri: cachedImageUri }]}
+          images={[{ uri: viewerImageUri }]}
           imageIndex={0}
           visible={imageViewerVisible}
-          onRequestClose={() => setImageViewerVisible(false)}
+          onRequestClose={() => {
+            setImageViewerVisible(false);
+            setViewerImageUri('');
+          }}
         />
-      )}
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -518,6 +652,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 16,
   },
+  detailsContainerDone: {
+    backgroundColor: '#f6fef9',
+  },
   itemHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -532,6 +669,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
+  itemNumberDone: {
+    backgroundColor: '#34C759',
+  },
   itemNumberText: {
     color: '#fff',
     fontSize: 16,
@@ -542,9 +682,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+  itemTopicDone: {
+    color: '#888',
+    textDecorationLine: 'line-through',
+  },
+  doneButton: {
+    padding: 4,
+    marginLeft: 4,
+  },
+  expandAllButton: {
+    padding: 4,
+    marginLeft: 8,
+  },
   itemContent: {
     color: '#333',
     lineHeight: 24,
+    marginBottom: 12,
+  },
+  subItemsContainer: {
+    marginTop: 4,
     marginBottom: 12,
   },
   linkButton: {

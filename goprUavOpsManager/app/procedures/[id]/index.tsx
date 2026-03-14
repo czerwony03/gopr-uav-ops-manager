@@ -14,6 +14,7 @@ import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import ImageViewer from '../../../components/ImageViewer';
+import SubItemRenderer from '../../../components/SubItemRenderer';
 import { ProcedureChecklist, ChecklistItem } from '@/types/ProcedureChecklist';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProcedureChecklistService } from '@/services/procedureChecklistService';
@@ -35,6 +36,8 @@ export default function ProcedureDetailsScreen() {
   const [updatedByName, setUpdatedByName] = useState<string>('');
   const [isFromCache, setIsFromCache] = useState(false);
   const [cachedImageUris, setCachedImageUris] = useState<Map<string, string>>(new Map());
+  // Tracks which top-level items have all their sub-items force-expanded
+  const [expandedItemIds, setExpandedItemIds] = useState<Set<string>>(new Set());
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const { isConnected } = useNetworkStatus();
@@ -124,12 +127,29 @@ export default function ProcedureDetailsScreen() {
     }
   }, [user, id, isConnected, router, t, crossPlatformAlert]);
 
-  // Load cached images for procedure items
+  // Load cached images for procedure items and their sub-items
   const loadCachedImages = useCallback(async (procedure: ProcedureChecklist) => {
     try {
       await ImageCacheService.initialize();
       
       const newCachedUris = new Map<string, string>();
+
+      const recursiveCacheSubItemImages = async (subItems: typeof procedure.items[0]['subItems']) => {
+        if (!subItems) return;
+        await Promise.all(
+          subItems.map(async (subItem) => {
+            if (subItem.image) {
+              try {
+                const cachedUri = await ImageCacheService.getCachedImage(subItem.image);
+                newCachedUris.set(subItem.image, cachedUri);
+              } catch {
+                newCachedUris.set(subItem.image, subItem.image);
+              }
+            }
+            await recursiveCacheSubItemImages(subItem.subItems);
+          })
+        );
+      };
       
       // Load cached images for all items that have images
       await Promise.all(
@@ -144,6 +164,7 @@ export default function ProcedureDetailsScreen() {
               newCachedUris.set(item.image, item.image);
             }
           }
+          await recursiveCacheSubItemImages(item.subItems);
         })
       );
       
@@ -260,15 +281,30 @@ export default function ProcedureDetailsScreen() {
 
   const canModifyChecklists = user?.role === 'manager' || user?.role === 'admin';
 
-  // Get all images from checklist items for the image viewer
+  // Collect all images from sub-items recursively
+  const collectSubItemImages = useCallback((subItems: ChecklistItem['subItems']): { uri: string }[] => {
+    if (!subItems) return [];
+    const images: { uri: string }[] = [];
+    subItems.forEach(subItem => {
+      if (subItem.image) images.push({ uri: subItem.image });
+      images.push(...collectSubItemImages(subItem.subItems));
+    });
+    return images;
+  }, []);
+
+  // Get all images from checklist items (including sub-items) for the image viewer
   const getImages = useCallback(() => {
     if (!checklist) return [];
     
-    return checklist.items
-      .filter(item => item.image)
+    const images: { uri: string }[] = [];
+    checklist.items
       .sort((a, b) => a.number - b.number)
-      .map(item => ({ uri: item.image! }));
-  }, [checklist]);
+      .forEach(item => {
+        if (item.image) images.push({ uri: item.image });
+        images.push(...collectSubItemImages(item.subItems));
+      });
+    return images;
+  }, [checklist, collectSubItemImages]);
 
   // Find the index of the selected image in the images array
   const getImageIndex = useCallback((selectedImage: string) => {
@@ -285,7 +321,23 @@ export default function ProcedureDetailsScreen() {
     }
   }, [getImageIndex]);
 
-  const renderChecklistItem = (item: ChecklistItem, _index: number) => (
+  const renderChecklistItem = (item: ChecklistItem, _index: number) => {
+    const hasSubItems = item.subItems && item.subItems.length > 0;
+    const allExpanded = expandedItemIds.has(item.id);
+
+    const toggleExpandAll = () => {
+      setExpandedItemIds(prev => {
+        const next = new Set(prev);
+        if (next.has(item.id)) {
+          next.delete(item.id);
+        } else {
+          next.add(item.id);
+        }
+        return next;
+      });
+    };
+
+    return (
     <View key={item.id} style={styles.itemContainer}>
       <View style={styles.itemHeader}>
         <View style={styles.itemNumber}>
@@ -294,6 +346,20 @@ export default function ProcedureDetailsScreen() {
         <View style={styles.itemContent}>
           <Text style={styles.itemTopic}>{item.topic}</Text>
         </View>
+        {/* Expand/collapse all sub-items button */}
+        {hasSubItems && (
+          <TouchableOpacity
+            style={styles.expandAllButton}
+            onPress={toggleExpandAll}
+            accessibilityLabel={allExpanded ? t('procedures.subItems.collapseAll') : t('procedures.subItems.expandAll')}
+          >
+            <Ionicons
+              name={allExpanded ? 'contract-outline' : 'expand-outline'}
+              size={20}
+              color="#0066CC"
+            />
+          </TouchableOpacity>
+        )}
       </View>
 
       {item.image && (
@@ -309,7 +375,26 @@ export default function ProcedureDetailsScreen() {
         </TouchableOpacity>
       )}
 
-      <Text style={styles.itemContentText}>{item.content}</Text>
+      {/* Flat content (old-style or items without sub-items) */}
+      {!item.subItems?.length && (
+        <Text style={styles.itemContentText}>{item.content}</Text>
+      )}
+
+      {/* Nested sub-items */}
+      {hasSubItems && (
+        <View style={styles.subItemsContainer}>
+          {item.subItems!.map((subItem) => (
+            <SubItemRenderer
+              key={subItem.id}
+              item={subItem}
+              depth={0}
+              cachedImageUris={cachedImageUris}
+              onImagePress={handleImagePress}
+              forceExpanded={allExpanded}
+            />
+          ))}
+        </View>
+      )}
 
       {item.link && (
         <TouchableOpacity 
@@ -332,6 +417,7 @@ export default function ProcedureDetailsScreen() {
       )}
     </View>
   );
+  };
 
   if (loading) {
     return (
@@ -728,6 +814,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+  expandAllButton: {
+    padding: 4,
+    marginLeft: 8,
+  },
   itemImageContainer: {
     marginBottom: 12,
   },
@@ -742,6 +832,10 @@ const styles = StyleSheet.create({
     color: '#333',
     lineHeight: 24,
     marginBottom: 12,
+  },
+  subItemsContainer: {
+    marginTop: 8,
+    marginBottom: 8,
   },
   linkButton: {
     flexDirection: 'row',
